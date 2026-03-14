@@ -280,7 +280,7 @@ for dir in "${SCAN_DIRS[@]}"; do
         --infected \
         --move="$QUARANTINE_DIR" \
         --log="$LOG_FILE" \
-        "$dir" 2>&1) || true
+        "$dir" 2>&1 | grep -v "LibClamAV Warning: cli_realpath") || true
 
     SCAN_OUTPUT+="$DIR_OUTPUT"$'\n'
 
