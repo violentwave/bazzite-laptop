@@ -26,15 +26,15 @@ SCAN_TYPE_DISPLAY="${SCAN_TYPE^}"
 
 # --- Resolve recipient ---
 TO_EMAIL=""
-if [[ -f ~/.msmtprc ]]; then
-    TO_EMAIL=$(awk '/^\s*from\s/ {print $2; exit}' ~/.msmtprc 2>/dev/null)
+if [[ -f /home/lch/.msmtprc ]]; then
+    TO_EMAIL=$(awk '/^\s*from\s/ {print $2; exit}' /home/lch/.msmtprc 2>/dev/null)
     if [[ -z "$TO_EMAIL" ]]; then
-        TO_EMAIL=$(awk '/^\s*user\s/ {print $2; exit}' ~/.msmtprc 2>/dev/null)
+        TO_EMAIL=$(awk '/^\s*user\s/ {print $2; exit}' /home/lch/.msmtprc 2>/dev/null)
     fi
 fi
 
 if [[ -z "$TO_EMAIL" ]]; then
-    echo "Warning: No recipient address found in ~/.msmtprc. Email alert skipped." >&2
+    echo "Warning: No recipient address found in /home/lch/.msmtprc. Email alert skipped." >&2
     exit 0
 fi
 
@@ -168,4 +168,4 @@ MIME-Version: 1.0
 </body>
 </html>
 EMAILEOF
-} | msmtp --read-recipients
+} | msmtp --file=/home/lch/.msmtprc --read-recipients
