@@ -101,10 +101,27 @@ for arg in "$@"; do
 done
 
 # ─────────────────────────────────────────────────────────────
+# Lockfile — prevent concurrent runs from corrupting deltas/logs
+# ─────────────────────────────────────────────────────────────
+
+readonly LOCK_FILE="${LOG_DIR}/.health-snapshot.lock"
+mkdir -p "$LOG_DIR"
+exec 9>"$LOCK_FILE"
+if ! flock -n 9; then
+    echo "Another health snapshot is already running — skipping." >&2
+    exit 0
+fi
+
+# ─────────────────────────────────────────────────────────────
 # Self-test mode (runs test then exits — separate from snapshot)
 # ─────────────────────────────────────────────────────────────
 
 if [[ "$RUN_SELFTEST" == true ]]; then
+    # Guard: smartctl must be installed for self-test mode
+    if ! command -v smartctl &>/dev/null; then
+        echo "Error: smartctl not installed (need smartmontools)" >&2
+        exit 3
+    fi
     echo "=== SMART Extended Self-Test ==="
     echo "This will take ~20 minutes. Sleep/suspend will be blocked."
     echo ""
@@ -195,9 +212,12 @@ pinfo() {
 }
 
 # Delta tracking — persistent key-value store for trend detection
+# Returns empty string (not error) when file missing or key not found
 delta_read() {
     local key="$1"
-    [[ -f "$DELTA_FILE" ]] && grep "^${key}=" "$DELTA_FILE" 2>/dev/null | tail -1 | cut -d= -f2
+    if [[ -f "$DELTA_FILE" ]]; then
+        grep "^${key}=" "$DELTA_FILE" 2>/dev/null | tail -1 | cut -d= -f2 || true
+    fi
 }
 
 delta_write() {
@@ -239,6 +259,19 @@ delta_check() {
 # ─────────────────────────────────────────────────────────────
 
 mkdir -p "$LOG_DIR"
+
+# Pre-check: verify log directory is writable before proceeding
+if ! touch "${LOG_FILE}" 2>/dev/null; then
+    echo "Error: Cannot write to ${LOG_DIR} — check permissions or disk space" >&2
+    exit 3
+fi
+
+# Initialize cross-section variables to safe defaults so set -u won't
+# crash in email/append sections when a drive is disconnected or a
+# tool is missing
+SDA_HEALTH="" SDA_TEMP="" SDA_WEAR="" SDA_REALLOC="" SDA_ATA_ERRORS=""
+SDB_HEALTH="" SDB_TEMP="" SDB_SPARE="" SDB_USED=""
+GPU_TEMP="" GPU_PSTATE=""
 
 log "System Health Snapshot"
 log "$(date '+%A %B %d, %Y — %I:%M:%S %p %Z')"
@@ -383,7 +416,9 @@ if command -v nvidia-smi &>/dev/null; then
         --query-gpu=temperature.gpu,power.draw,memory.used,memory.total,pstate,fan.speed,clocks.gr,clocks.mem \
         --format=csv,noheader,nounits 2>&1) || true
 
-    if [[ -n "$GPU_CSV" && ! "$GPU_CSV" =~ "Failed" && ! "$GPU_CSV" =~ "error" ]]; then
+    # Validate CSV has expected 8 fields before parsing
+    GPU_FIELD_COUNT=$(echo "$GPU_CSV" | tr -cd ',' | wc -c)
+    if [[ -n "$GPU_CSV" && ! "$GPU_CSV" =~ "Failed" && ! "$GPU_CSV" =~ "error" && "$GPU_FIELD_COUNT" -ge 7 ]]; then
         IFS=',' read -r GPU_TEMP GPU_POWER GPU_VRAM_USED GPU_VRAM_TOTAL \
                        GPU_PSTATE GPU_FAN GPU_CLK GPU_MCLK <<< "$GPU_CSV"
         # Trim whitespace
@@ -451,12 +486,16 @@ if command -v sensors &>/dev/null; then
         fi
     fi
 
-    # Per-core temps
-    while IFS= read -r line; do
-        CORE_NAME=$(echo "$line" | cut -d: -f1 | xargs)
-        CORE_TEMP=$(echo "$line" | grep -oP '\+\K[0-9.]+' | head -1)
-        pinfo "${CORE_NAME}:" "${CORE_TEMP}°C"
-    done <<< "$(echo "$SENSORS_OUT" | grep "Core ")"
+    # Per-core temps — skip if no core lines found
+    CORE_LINES=$(echo "$SENSORS_OUT" | grep "Core " || true)
+    if [[ -n "$CORE_LINES" ]]; then
+        while IFS= read -r line; do
+            [[ -z "$line" ]] && continue
+            CORE_NAME=$(echo "$line" | cut -d: -f1 | xargs)
+            CORE_TEMP=$(echo "$line" | grep -oP '\+\K[0-9.]+' | head -1)
+            pinfo "${CORE_NAME}:" "${CORE_TEMP:-?}°C"
+        done <<< "$CORE_LINES"
+    fi
 
     # Fan speeds
     FAN_LINE=$(echo "$SENSORS_OUT" | grep -i "fan" | head -1)
@@ -658,7 +697,7 @@ path = '$STATUS_FILE'
 try:
     with open(path, 'r') as f:
         st = json.load(f)
-except (FileNotFoundError, json.JSONDecodeError):
+except (FileNotFoundError, json.JSONDecodeError, PermissionError, OSError):
     st = {}
 
 st['health_status']    = '$STATUS'
@@ -668,10 +707,13 @@ st['health_critical']  = ${#CRITICAL[@]}
 st['health_last_check']= '$(date '+%Y-%m-%d %I:%M %p')'
 st['health_log']       = '$LOG_FILE'
 
-tmp = path + '.tmp'
-with open(tmp, 'w') as f:
-    json.dump(st, f, indent=2)
-os.rename(tmp, path)
+try:
+    tmp = path + '.tmp'
+    with open(tmp, 'w') as f:
+        json.dump(st, f, indent=2)
+    os.rename(tmp, path)
+except OSError:
+    pass
 " 2>/dev/null || true
 fi
 
