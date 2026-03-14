@@ -31,6 +31,7 @@ nvidia-drm.modeset=1
 | DistroShelf | com.ranfdev.DistroShelf | Distrobox GUI |
 | ProtonPlus | com.vysp3r.ProtonPlus | Proton version manager |
 | Warehouse | io.github.flattool.Warehouse | Flatpak manager |
+| Mission Center | io.missioncenter.MissionCenter | GUI system monitor |
 | Filelight | org.kde.filelight | Disk usage |
 | Gwenview | org.kde.gwenview | Image viewer |
 | Haruna | org.kde.haruna | Media player |
@@ -96,6 +97,7 @@ None installed.
 | clamav-quick.timer | Daily ClamAV quick scan | Daily noon |
 | clamav-deep.timer | Weekly ClamAV deep scan | Fri 11PM |
 | clamav-healthcheck.timer | Weekly security health check | Wed 2:00 PM |
+| system-health.timer | Daily system health snapshot | Daily 8AM |
 
 ### Disabled Services (by us)
 - sshd — SSH disabled
@@ -149,6 +151,13 @@ None installed.
 | `~/security/.status` | JSON status file for tray (atomic writes) |
 | `~/security/quarantine-hashes.log` | SHA256 hashes of quarantined files |
 | `~/.config/autostart/bazzite-security-tray.desktop` | Tray app autostart |
+| `/usr/local/bin/system-health-snapshot.sh` | System health monitor |
+| `/usr/local/bin/system-health-test.sh` | Health validation suite |
+| `/etc/systemd/system/system-health.service` | Health snapshot service unit |
+| `/etc/systemd/system/system-health.timer` | Daily 8AM health snapshot timer |
+| `/etc/logrotate.d/system-health` | Health log rotation (90-day) |
+| `/var/log/system-health/` | Health snapshot logs + delta tracking |
+| `~/.local/share/applications/security-health-*.desktop` | KDE health menu entries |
 
 ### USBGuard
 - Status: **Active**, policy-mode block

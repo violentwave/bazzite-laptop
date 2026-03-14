@@ -245,6 +245,17 @@ Custom flat backup to BazziteBackup flash drive (sdc3):
 ### Bitwarden ✅
 - Password manager for secure credential storage
 
+### System Monitoring Tools ✅
+- Mission Center: Flatpak (GUI system monitor)
+- btop: pre-installed (terminal system monitor)
+- nvtop: pre-installed (GPU terminal monitor)
+- smartmontools: pre-installed (SMART disk health)
+- lm-sensors: pre-installed (hardware temperatures)
+- system-health-snapshot.sh: custom health monitoring — SMART delta tracking,
+  GPU/CPU thermals, storage alerts, service checks, email alerts, tray integration
+- system-health-test.sh: 16-test validation suite
+- Daily 8AM timer (system-health.timer) with persistent catch-up
+
 ### Claude Code Setup ✅
 - At `~/.local/bin/claude`
 - Settings at `~/.claude/settings.json`
@@ -272,20 +283,7 @@ Test per-game (do NOT use PRIME offload vars — those crash games):
 - `PROTON_ENABLE_WAYLAND=1` — native Wayland rendering in Proton 10+
 - `PROTON_USE_NTSYNC=1` — improved synchronization primitives
 
-### 3. System Monitoring Tools
-| Tool | Method | Purpose |
-|------|--------|---------|
-| Mission Center | Flatpak | GUI system monitor (Task Manager equivalent) |
-| btop | `ujust bazzite-cli` | Terminal system monitor |
-| nvtop | rpm-ostree or Flatpak | Dual-GPU terminal monitor |
-| smartmontools | rpm-ostree | SSD health monitoring (SMART) |
-| lm-sensors | Check if pre-installed | Hardware temperature readings |
-
-**Disk health** — After installing smartmontools:
-- Internal: `sudo smartctl -a /dev/sda`
-- External: `sudo smartctl -a -d sat /dev/sdb`
-
-### 4. AI/Coding Setup (Deferred)
+### 3. AI/Coding Setup (Deferred)
 **Ollama with CUDA** — GTX 1060 6GB VRAM can run:
 - ✅ 7B parameter models (Llama 3.2, Mistral 7B, Qwen2.5-Coder 7B)
 - ⚠️ 13B models will be slow (heavy CPU offloading)
@@ -294,7 +292,7 @@ Test per-game (do NOT use PRIME offload vars — those crash games):
 **VS Code** — Install via Flatpak: `flatpak install flathub com.visualstudio.code`
 Connect to local Ollama via Continue extension.
 
-### 5. Downloads Folder Watcher
+### 4. Downloads Folder Watcher
 inotify-based auto-scan of ~/Downloads for new files — quarantine anything suspicious automatically.
 
 ---
@@ -344,8 +342,8 @@ inotify-based auto-scan of ~/Downloads for new files — quarantine anything sus
 | `/etc/systemd/resolved.conf.d/` | ✅ | dns-over-tls.conf |
 | `/etc/usbguard/` | ✅ | rules.conf |
 | `/etc/firewalld/` | ✅ | Custom zone configs |
-| `/etc/logrotate.d/` | ✅ | clamav-scans |
-| `/usr/local/bin/` | ✅ | clamav-scan.sh, clamav-alert.sh, clamav-healthcheck.sh, quarantine-release.sh, bazzite-security-test.sh, public-wifi-mode |
+| `/etc/logrotate.d/` | ✅ | clamav-scans, system-health |
+| `/usr/local/bin/` | ✅ | clamav-scan.sh, clamav-alert.sh, clamav-healthcheck.sh, quarantine-release.sh, bazzite-security-test.sh, public-wifi-mode, system-health-snapshot.sh, system-health-test.sh |
 | `~/.config/MangoHud/` | ✅ | MangoHud.conf |
 | `~/.config/scopebuddy/` | ✅ | Future ScopeBuddy configs |
 | `~/.claude/` | ✅ | Claude Code settings |
@@ -383,3 +381,8 @@ inotify-based auto-scan of ~/Downloads for new files — quarantine anything sus
 | Start tray icon | `python3 ~/security/bazzite-security-tray.py &` |
 | Check freshclam | `systemctl status clamav-freshclam.service` |
 | Check clamd | `systemctl status clamd@scan` |
+| Health snapshot | `sudo system-health-snapshot.sh` |
+| Health + email | `sudo system-health-snapshot.sh --email` |
+| SMART self-test | `sudo system-health-snapshot.sh --selftest` |
+| Health test suite | `sudo system-health-test.sh` |
+| View health log | `less /var/log/system-health/health-latest.log` |

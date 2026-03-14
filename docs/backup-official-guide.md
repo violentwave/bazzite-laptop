@@ -37,13 +37,17 @@ Everything needed to fully restore the system from a fresh Bazzite install:
 | `rules.d/` | `/etc/udev/rules.d/` |
 | `systemd-units/` | `/etc/systemd/system/` (ClamAV timers/services) |
 | `logrotate-clamav-scans` | `/etc/logrotate.d/clamav-scans` |
+| `logrotate-system-health` | `/etc/logrotate.d/system-health` |
 | `etc-clamd-scan.conf` | `/etc/clamd.d/scan.conf` |
 | `firewalld/` | `/etc/firewalld/` |
+| `health-deltas.dat` | `/var/log/system-health/health-deltas.dat` |
+| `system-health-units/` | `/etc/systemd/system/system-health.*` |
+| `health-desktop-entries/` | `~/.local/share/applications/security-health-*.desktop` |
 
 ### Scripts
 | Backup Name | Original Location |
 |-------------|-------------------|
-| `scripts/` | `/usr/local/bin/` — clamav-scan.sh, clamav-alert.sh, clamav-healthcheck.sh, quarantine-release.sh, bazzite-security-test.sh, public-wifi-mode |
+| `scripts/` | `/usr/local/bin/` — clamav-scan.sh, clamav-alert.sh, clamav-healthcheck.sh, quarantine-release.sh, bazzite-security-test.sh, public-wifi-mode, system-health-snapshot.sh, system-health-test.sh |
 
 ### User Configs
 | Backup Name | Original Location |

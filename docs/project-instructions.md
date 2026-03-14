@@ -46,13 +46,15 @@ Refer to these project documents (all in `docs/`) for full details:
 - Backup: Unified backup.sh/restore.sh on BazziteBackup flash drive (5 scenarios documented)
 - GitHub: Private repo at github.com:violentwave/bazzite-laptop.git
 - Deploy: `sudo ./scripts/deploy.sh [--dry-run]` syncs repo files to system locations
+- System health monitoring: system-health-snapshot.sh with SMART delta tracking,
+  GPU/CPU thermals, storage alerts, tray integration, daily 8AM timer, email alerts,
+  KDE Security menu entries, 16-test validation suite
 
 ### Remaining Work (Prioritized)
 1. **ScopeBuddy configuration** — Per-game advanced launch management
 2. **Proton environment variable testing** — WAYLAND, NTSYNC flags for compatible games
-3. **System monitoring tools** — Mission Center, btop, nvtop, smartmontools
-4. **AI/Coding setup** (deferred) — Ollama with CUDA, VS Code, local LLMs
-5. **Downloads folder watcher** — inotify auto-scan new downloads
+3. **AI/Coding setup** (deferred) — Ollama with CUDA, VS Code, local LLMs
+4. **Downloads folder watcher** — inotify auto-scan new downloads
 
 ### Repo Layout
 - `scripts/` — all shell scripts (clamav, backup, setup, deploy utilities)
@@ -67,6 +69,11 @@ Refer to these project documents (all in `docs/`) for full details:
 |------|---------|
 | Deploy repo to system | `sudo ./scripts/deploy.sh` |
 | Deploy (preview only) | `sudo ./scripts/deploy.sh --dry-run` |
+| Health snapshot | `sudo system-health-snapshot.sh` |
+| Health + email | `sudo system-health-snapshot.sh --email` |
+| SMART self-test | `sudo system-health-snapshot.sh --selftest` |
+| Health test suite | `sudo system-health-test.sh` |
+| View health log | `less /var/log/system-health/health-latest.log` |
 | Push to GitHub | `git push origin master` |
 
 ### Game Launch Options Quick Reference

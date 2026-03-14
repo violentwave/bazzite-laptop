@@ -35,3 +35,7 @@ ClamAV on-access scanning (NOT recommended for gaming): https://docs.clamav.net/
 EICAR test file info: https://www.eicar.org/download-anti-malware-testfile/
 AppIndicator3 (system tray): https://wiki.ubuntu.com/DesktopExperienceTeam/ApplicationIndicators
 Freedesktop icon theme spec: https://specifications.freedesktop.org/icon-theme-spec/latest/
+smartmontools docs: https://www.smartmontools.org/wiki/TocDoc
+NVIDIA SMI reference: https://developer.nvidia.com/nvidia-system-management-interface
+lm-sensors wiki: https://hwmon.wiki.kernel.org/
+Mission Center: https://missioncenter.io/
