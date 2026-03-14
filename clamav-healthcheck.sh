@@ -120,11 +120,11 @@ check_fail() {
 
 print_banner
 
-# --- Check 1: clamscan binary ---
-if command -v clamscan &>/dev/null; then
-    check_ok "ClamAV scanner present"
+# --- Check 1: clamdscan binary ---
+if command -v clamdscan &>/dev/null; then
+    check_ok "ClamAV daemon scanner present"
 else
-    check_fail "ClamAV scanner not found"
+    check_fail "ClamAV daemon scanner not found"
 fi
 
 # --- Check 2: freshclam binary ---
@@ -216,6 +216,13 @@ if touch "$STATUS_TMP" 2>/dev/null && rm -f "$STATUS_TMP" 2>/dev/null; then
     check_ok "Status file writable"
 else
     check_fail "Status file not writable"
+fi
+
+# --- Check 11: clamd@scan service configured ---
+if systemctl cat clamd@scan &>/dev/null; then
+    check_ok "clamd service configured"
+else
+    check_fail "clamd service not configured"
 fi
 
 # --- Terminal summary ---

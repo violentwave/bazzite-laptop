@@ -1,9 +1,10 @@
 #!/bin/bash
-# ClamAV scan script with terminal UI, status file, desktop notifications, and email alerts
+# ClamAV scan script using clamd daemon for fast parallel scanning
 # Deploy to: /usr/local/bin/clamav-scan.sh (chmod +x)
 # Usage: clamav-scan.sh {quick|deep}
 # Quick: scans /home/lch /tmp
 # Deep:  scans /home/lch /tmp /var
+# Pattern: start clamd → scan with clamdscan → stop clamd (reclaim ~1.1GB RAM)
 set -uo pipefail
 
 # --- Configuration ---
@@ -94,7 +95,7 @@ print_banner() {
 
 print_phase() {
     local label="$1"
-    local status="$2"  # running, done, error
+    local status="$2"  # running, starting, done, error
     $INTERACTIVE || return 0
     local dot color status_text
     case "$status" in
@@ -103,9 +104,17 @@ print_phase() {
             status_text="${YELLOW}[SCANNING]${RESET}"
             [[ "$label" == *"signatures"* ]] && status_text="${YELLOW}[UPDATING]${RESET}"
             ;;
+        starting)
+            dot="${YELLOW}●${RESET}"
+            status_text="${YELLOW}[STARTING]${RESET}"
+            ;;
         done)
             dot="${GREEN}●${RESET}"
             status_text="${GREEN}[DONE ✓]${RESET}"
+            ;;
+        ready)
+            dot="${GREEN}●${RESET}"
+            status_text="${GREEN}[READY ✓]${RESET}"
             ;;
         error)
             dot="${RED}●${RESET}"
@@ -169,7 +178,7 @@ send_alert() {
     fi
 }
 
-# --- Helper: parse clamscan summary ---
+# --- Helper: parse clamdscan summary ---
 parse_scan_output() {
     local output="$1"
     PARSED_FILES=$(echo "$output" | grep -oP 'Scanned files:\s*\K[0-9]+' || echo "0")
@@ -188,6 +197,14 @@ format_duration() {
     fi
 }
 
+# --- Helper: stop clamd (best effort) ---
+stop_clamd() {
+    systemctl stop clamd@scan 2>/dev/null || true
+    print_phase "Stopping scan daemon..." "done"
+    $INTERACTIVE && printf "\e[1A\e[2K"
+    print_phase "Stopping scan daemon..." "done"
+}
+
 # ===========================
 # MAIN
 # ===========================
@@ -195,6 +212,7 @@ format_duration() {
 print_banner
 
 # --- Phase 1: Update virus signatures ---
+# Run freshclam BEFORE starting clamd so it loads the latest signatures
 write_status "updating" "Updating virus signatures"
 print_phase "Updating virus signatures..." "running"
 
@@ -206,7 +224,7 @@ if [[ -f /run/clamav/freshclam.pid ]] || pgrep -x freshclam &>/dev/null; then
 else
     # Run freshclam manually
     FRESHCLAM_OK=true
-    if ! freshclam --quiet 2>"${LOG_DIR}/freshclam-update-error.log"; then
+    if ! freshclam --quiet 2>/dev/null; then
         FRESHCLAM_OK=false
     fi
 
@@ -220,7 +238,28 @@ else
     fi
 fi
 
-# --- Phase 2: Scanning ---
+# --- Phase 2: Start clamd ---
+write_status "scanning" "Starting scan daemon"
+print_phase "Starting scan daemon..." "starting"
+
+systemctl start clamd@scan 2>/dev/null
+
+# Wait for clamd to be ready (up to 120 seconds, ping every 2 seconds)
+if clamdscan --ping 60:2 2>/dev/null; then
+    $INTERACTIVE && printf "\e[1A\e[2K"
+    print_phase "Starting scan daemon..." "ready"
+else
+    $INTERACTIVE && printf "\e[1A\e[2K"
+    print_phase "Starting scan daemon..." "error"
+    $INTERACTIVE && echo -e "    ${DIM}Error: clamd failed to start within 120 seconds${RESET}"
+    write_status "complete" "Scan daemon startup failed" "" "0" "${#SCAN_DIRS[@]}" \
+        "error" "0" "0" "" "$(date -Iseconds)"
+    notify "critical" "Scan Error" "clamd daemon failed to start. Check: systemctl status clamd@scan"
+    systemctl stop clamd@scan 2>/dev/null || true
+    exit 2
+fi
+
+# --- Phase 3: Scanning with clamdscan ---
 SCAN_START=$(date +%s)
 SCAN_OUTPUT=""
 dirs_completed=0
@@ -228,15 +267,14 @@ dirs_completed=0
 for dir in "${SCAN_DIRS[@]}"; do
     dirs_completed=$((dirs_completed + 1))
     write_status "scanning" "Scanning ${dir}" "$dir" "$((dirs_completed - 1))" "${#SCAN_DIRS[@]}"
-    print_phase "Scanning ${dir}..." "running"
+    print_phase "Scanning ${dir}... (multiscan)" "running"
 
-    DIR_OUTPUT=$(clamscan \
+    DIR_OUTPUT=$(clamdscan \
+        --fdpass \
+        --multiscan \
         --infected \
-        --recursive \
         --move="$QUARANTINE_DIR" \
-        --exclude-dir="^/home/lch/\.cache" \
-        --exclude-dir="^/home/lch/\.local/share/Steam/steamapps/shadercache" \
-        --exclude-dir="^/home/lch/security/quarantine" \
+        --log="$LOG_FILE" \
         "$dir" 2>&1) || true
 
     SCAN_OUTPUT+="$DIR_OUTPUT"$'\n'
@@ -252,11 +290,17 @@ SCAN_SECONDS=$((SCAN_END - SCAN_START))
 DURATION=$(format_duration $SCAN_SECONDS)
 LAST_SCAN_TIME=$(date -Iseconds)
 
+# --- Phase 4: Stop clamd (reclaim ~1.1GB RAM) ---
+print_phase "Stopping scan daemon..." "running"
+systemctl stop clamd@scan 2>/dev/null || true
+$INTERACTIVE && printf "\e[1A\e[2K"
+print_phase "Stopping scan daemon..." "done"
+
 # --- Parse results ---
 parse_scan_output "$SCAN_OUTPUT"
 
-# Write clean log
-echo "$SCAN_OUTPUT" > "$LOG_FILE"
+# Write full output to log (clamdscan --log appends per-dir, also capture combined)
+echo "$SCAN_OUTPUT" >> "$LOG_FILE"
 
 # Determine exit code from threat count
 if echo "$SCAN_OUTPUT" | grep -q "ERROR"; then

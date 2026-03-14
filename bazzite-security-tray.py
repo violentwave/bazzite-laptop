@@ -3,6 +3,8 @@
 # Deploy to: /home/lch/security/bazzite-security-tray.py (chmod 755)
 # Reads ~/security/.status (JSON) and shows a colored shield icon in the KDE system tray.
 
+import signal
+import ctypes
 import gi
 gi.require_version('Gtk', '3.0')
 gi.require_version('AppIndicator3', '0.1')
@@ -13,6 +15,16 @@ import subprocess
 import sys
 from datetime import datetime
 from pathlib import Path
+
+# Set process title so "pkill clamscan" won't kill us (pkill uses substring matching)
+try:
+    libc = ctypes.CDLL('libc.so.6')
+    title = b'bazzite-security-tray'
+    libc.prctl(15, title, 0, 0, 0)  # PR_SET_NAME = 15
+except Exception:
+    pass
+
+signal.signal(signal.SIGTERM, lambda s, f: sys.exit(0))
 
 STATUS_FILE = Path.home() / "security" / ".status"
 POLL_INTERVAL = 3  # seconds
@@ -34,6 +46,11 @@ class SecurityTray:
         self.last_status_raw = None
         self.status = {}
         self.update_status()
+
+        # Force GTK to process events so the icon renders immediately
+        while Gtk.events_pending():
+            Gtk.main_iteration()
+
         self.build_menu()
         GLib.timeout_add_seconds(POLL_INTERVAL, self.poll)
 
