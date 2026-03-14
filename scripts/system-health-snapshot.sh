@@ -27,6 +27,8 @@ set -uo pipefail
 # Configuration
 # ─────────────────────────────────────────────────────────────
 
+readonly VERSION="1.0.0"
+
 readonly LOG_DIR="/var/log/system-health"
 readonly DELTA_FILE="${LOG_DIR}/health-deltas.dat"
 readonly STATUS_FILE="/home/lch/security/.status"
@@ -59,6 +61,13 @@ readonly THRESH_CPU_TEMP=90              # CPU package temperature °C
 readonly THRESH_DISK_PCT=85              # Filesystem usage %
 readonly THRESH_ZRAM_PCT=80              # ZRAM utilization %
 
+# ── Terminal colors ──
+RED='\033[0;31m'
+GRN='\033[0;32m'
+YLW='\033[0;33m'
+BLD='\033[1m'
+RST='\033[0m'
+
 # ─────────────────────────────────────────────────────────────
 # Argument parsing
 # ─────────────────────────────────────────────────────────────
@@ -74,12 +83,17 @@ for arg in "$@"; do
         --quiet)    QUIET=true ;;
         --append)   APPEND_MODE=true; QUIET=true ;;
         --selftest) RUN_SELFTEST=true ;;
+        --version)
+            echo "system-health-snapshot.sh v${VERSION}"
+            exit 0
+            ;;
         --help|-h)
-            echo "Usage: $(basename "$0") [--email] [--quiet] [--append] [--selftest]"
+            echo "Usage: $(basename "$0") [--email] [--quiet] [--append] [--selftest] [--version]"
             echo "  --email      Send email alert (always sends on warnings)"
             echo "  --quiet      Suppress terminal output (timer/cron use)"
             echo "  --append     Compact summary for embedding in scan emails"
             echo "  --selftest   Run SMART extended self-test with sleep inhibit"
+            echo "  --version    Print version and exit"
             exit 0
             ;;
         *) echo "Unknown option: $arg"; exit 3 ;;
@@ -155,17 +169,30 @@ log() {
     [[ "$QUIET" == false ]] && echo "$1"
 }
 
-section() {
-    log ""
-    log "══════════════════════════════════════════════════════════════"
-    log "  $1"
-    log "══════════════════════════════════════════════════════════════"
+tlog() {
+    local plain="$1" colored="$2"
+    echo "$plain" >> "$LOG_FILE"
+    [[ "$QUIET" == false ]] && echo -e "$colored"
 }
 
-ok()   { log "  ✔ $1"; }
-warn() { WARNINGS+=("$1"); log "  ⚠ WARNING: $1"; }
-crit() { CRITICAL+=("$1");  log "  ✖ CRITICAL: $1"; }
+section() {
+    local bar="══════════════════════════════════════════════════════════════"
+    tlog "" ""
+    tlog "$bar" "${BLD}${bar}${RST}"
+    tlog "  $1" "  ${BLD}$1${RST}"
+    tlog "$bar" "${BLD}${bar}${RST}"
+}
+
+ok()   { tlog "  ✔ $1" "  ${GRN}✔ $1${RST}"; }
+warn() { WARNINGS+=("$1"); tlog "  ⚠ WARNING: $1" "  ${YLW}⚠ WARNING: $1${RST}"; }
+crit() { CRITICAL+=("$1");  tlog "  ✖ CRITICAL: $1" "  ${RED}✖ CRITICAL: $1${RST}"; }
 info() { log "  · $1"; }
+
+# Padded info for SMART sections — label padded to 18 chars
+pinfo() {
+    local label="$1" value="$2"
+    log "  · $(printf '%-18s' "$label")${value}"
+}
 
 # Delta tracking — persistent key-value store for trend detection
 delta_read() {
@@ -254,16 +281,16 @@ if command -v smartctl &>/dev/null && [[ -b "$DEV_SDA" ]]; then
     SDA_ERASE_FAIL=$(sda_attr 172)
     SDA_ATA_ERRORS=$(echo "$SDA_RAW" | grep "ATA Error Count:" | awk '{print $4}')
 
-    info "Power-on:         ${SDA_HOURS:-?}h | ${SDA_CYCLES:-?} cycles"
-    info "Temperature:      ${SDA_TEMP:-?}°C"
-    info "Total writes:     ${SDA_WRITES:-?} GB | reads: ${SDA_READS:-?} GB"
-    info "Wear leveling:    ${SDA_WEAR:-?} avg cycles (min ${SDA_MIN_ERASE:-?} / max ${SDA_MAX_ERASE:-?})"
-    info "Reallocated:      ${SDA_REALLOC:-?} sectors"
-    info "Offline uncorrect:${SDA_UNCORRECT:-?}"
-    info "Reported uncorrect:${SDA_REPORTED:-?}"
-    info "ATA errors:       ${SDA_ATA_ERRORS:-?} (cumulative)"
-    info "Unexpected power:  ${SDA_POWERLOSS:-?} losses"
-    info "Program fails:    ${SDA_PROG_FAIL:-?} | Erase fails: ${SDA_ERASE_FAIL:-?}"
+    pinfo "Power-on:"         "${SDA_HOURS:-?}h | ${SDA_CYCLES:-?} cycles"
+    pinfo "Temperature:"      "${SDA_TEMP:-?}°C"
+    pinfo "Total writes:"     "${SDA_WRITES:-?} GB | reads: ${SDA_READS:-?} GB"
+    pinfo "Wear leveling:"    "${SDA_WEAR:-?} avg cycles (min ${SDA_MIN_ERASE:-?} / max ${SDA_MAX_ERASE:-?})"
+    pinfo "Reallocated:"      "${SDA_REALLOC:-?} sectors"
+    pinfo "Offline uncorrect:" "${SDA_UNCORRECT:-?}"
+    pinfo "Reported uncorrect:" "${SDA_REPORTED:-?}"
+    pinfo "ATA errors:"       "${SDA_ATA_ERRORS:-?} (cumulative)"
+    pinfo "Unexpected power:" "${SDA_POWERLOSS:-?} losses"
+    pinfo "Program fails:"    "${SDA_PROG_FAIL:-?} | Erase fails: ${SDA_ERASE_FAIL:-?}"
 
     # ── Delta checks (trend detection) ──
     delta_check "Reallocated sectors" "sda.realloc" "$SDA_REALLOC" "crit"
@@ -282,7 +309,6 @@ if command -v smartctl &>/dev/null && [[ -b "$DEV_SDA" ]]; then
     # ── Self-test result ──
     SELFTEST_LINE=$(smartctl -l selftest "$DEV_SDA" 2>/dev/null | grep "^#  *1" || true)
     if [[ -n "$SELFTEST_LINE" ]]; then
-        info "Last self-test: $(echo "$SELFTEST_LINE" | sed 's/^#  *1  *//')"
         if echo "$SELFTEST_LINE" | grep -qi "completed without error"; then
             ok "Last self-test: PASSED"
         elif echo "$SELFTEST_LINE" | grep -qi "error\|fail"; then
@@ -325,13 +351,13 @@ if command -v smartctl &>/dev/null && [[ -b "$DEV_SDB" ]]; then
     SDB_MEDIA_ERR=$(echo "$SDB_RAW" | grep "Media and Data Integrity Errors:" | awk '{print $NF}')
     SDB_ERR_LOG=$(echo "$SDB_RAW" | grep "Error Information Log Entries:" | awk '{print $NF}')
 
-    info "Temperature:      ${SDB_TEMP:-?}°C"
-    info "Available spare:  ${SDB_SPARE:-?}%"
-    info "Percentage used:  ${SDB_USED:-?}%"
-    info "Power-on:         ${SDB_HOURS:-?}h | ${SDB_CYCLES:-?} cycles"
-    info "Unsafe shutdowns: ${SDB_UNSAFE:-?}"
-    info "Media errors:     ${SDB_MEDIA_ERR:-?}"
-    info "Error log entries:${SDB_ERR_LOG:-?}"
+    pinfo "Temperature:"      "${SDB_TEMP:-?}°C"
+    pinfo "Available spare:"  "${SDB_SPARE:-?}%"
+    pinfo "Percentage used:"  "${SDB_USED:-?}%"
+    pinfo "Power-on:"         "${SDB_HOURS:-?}h | ${SDB_CYCLES:-?} cycles"
+    pinfo "Unsafe shutdowns:" "${SDB_UNSAFE:-?}"
+    pinfo "Media errors:"     "${SDB_MEDIA_ERR:-?}"
+    pinfo "Error log entries:" "${SDB_ERR_LOG:-?}"
 
     [[ -n "$SDB_SPARE" && "$SDB_SPARE" -le "$THRESH_NVME_SPARE" ]] \
         && crit "Available spare (${SDB_SPARE}%) ≤ threshold (${THRESH_NVME_SPARE}%)"
@@ -366,12 +392,12 @@ if command -v nvidia-smi &>/dev/null; then
         GPU_PSTATE="${GPU_PSTATE// /}"; GPU_FAN="${GPU_FAN// /}"
         GPU_CLK="${GPU_CLK// /}"; GPU_MCLK="${GPU_MCLK// /}"
 
-        info "Temperature:      ${GPU_TEMP}°C"
-        info "Power draw:       ${GPU_POWER} W"
-        info "VRAM:             ${GPU_VRAM_USED} / ${GPU_VRAM_TOTAL} MiB"
-        info "Perf state:       ${GPU_PSTATE}"
-        info "Fan:              ${GPU_FAN}%"
-        info "Clocks:           ${GPU_CLK} MHz core / ${GPU_MCLK} MHz mem"
+        pinfo "Temperature:"      "${GPU_TEMP}°C"
+        pinfo "Power draw:"       "${GPU_POWER} W"
+        pinfo "VRAM:"             "${GPU_VRAM_USED} / ${GPU_VRAM_TOTAL} MiB"
+        pinfo "Perf state:"       "${GPU_PSTATE}"
+        pinfo "Fan:"              "${GPU_FAN}%"
+        pinfo "Clocks:"           "${GPU_CLK} MHz core / ${GPU_MCLK} MHz mem"
 
         if [[ "$GPU_TEMP" =~ ^[0-9]+$ && "$GPU_TEMP" -ge "$THRESH_GPU_TEMP" ]]; then
             warn "GPU temperature (${GPU_TEMP}°C) ≥ threshold (${THRESH_GPU_TEMP}°C)"
@@ -396,7 +422,7 @@ if command -v nvidia-smi &>/dev/null; then
     # GPU switching mode
     if command -v supergfxctl &>/dev/null; then
         GPU_MODE=$(supergfxctl -g 2>/dev/null || echo "unknown")
-        info "supergfxctl mode:  ${GPU_MODE}"
+        pinfo "supergfxctl mode:" "${GPU_MODE}"
     fi
 else
     warn "nvidia-smi not found"
@@ -416,7 +442,7 @@ if command -v sensors &>/dev/null; then
     # Package temperature
     PKG_TEMP=$(echo "$SENSORS_OUT" | grep "Package id 0:" | grep -oP '\+\K[0-9.]+' | head -1)
     if [[ -n "$PKG_TEMP" ]]; then
-        info "Package temp:     ${PKG_TEMP}°C"
+        pinfo "Package temp:"    "${PKG_TEMP}°C"
         PKG_INT=${PKG_TEMP%.*}
         if [[ "$PKG_INT" -ge "$THRESH_CPU_TEMP" ]]; then
             warn "CPU package temp (${PKG_TEMP}°C) ≥ threshold (${THRESH_CPU_TEMP}°C)"
@@ -429,7 +455,7 @@ if command -v sensors &>/dev/null; then
     while IFS= read -r line; do
         CORE_NAME=$(echo "$line" | cut -d: -f1 | xargs)
         CORE_TEMP=$(echo "$line" | grep -oP '\+\K[0-9.]+' | head -1)
-        info "${CORE_NAME}:           ${CORE_TEMP}°C"
+        pinfo "${CORE_NAME}:" "${CORE_TEMP}°C"
     done <<< "$(echo "$SENSORS_OUT" | grep "Core ")"
 
     # Fan speeds
@@ -476,7 +502,8 @@ rm -f "$DISK_WARNS_TMP"
 # ── Inode usage (sneaky failure mode) ──
 log ""
 log "  Inode usage:"
-df -i --output=target,itotal,iused,iavail,ipcent / /boot 2>/dev/null | while IFS= read -r line; do
+df -i --output=target,itotal,iused,iavail,ipcent -x tmpfs -x devtmpfs -x efivarfs -x overlay 2>/dev/null | \
+while IFS= read -r line; do
     info "  $line"
 done
 
@@ -488,11 +515,18 @@ if [[ -f /sys/block/zram0/mm_stat ]]; then
     ORIG_MB=$((ORIG / 1048576))
     COMP_MB=$((COMP / 1048576))
     MEM_MB=$((MEM / 1048576))
-    RATIO="N/A"
-    [[ "$COMP" -gt 0 ]] && RATIO=$(echo "scale=2; $ORIG / $COMP" | bc 2>/dev/null || echo "?")
+    if [[ "$ORIG" -eq 0 || "$COMP" -eq 0 ]]; then
+        RATIO="N/A (no swap pressure)"
+    else
+        RATIO=$(echo "scale=2; $ORIG / $COMP" | bc 2>/dev/null || echo "?")
+    fi
 
     info "Original: ${ORIG_MB} MB | Compressed: ${COMP_MB} MB | Mem used: ${MEM_MB} MB"
-    info "Compression ratio: ${RATIO}:1"
+    if [[ "$RATIO" =~ ^[0-9] ]]; then
+        info "Compression ratio: ${RATIO}:1"
+    else
+        info "Compression ratio: ${RATIO}"
+    fi
 
     ZRAM_TOTAL=$(cat /sys/block/zram0/disksize 2>/dev/null || echo 0)
     if [[ "$ZRAM_TOTAL" -gt 0 ]]; then
@@ -571,29 +605,44 @@ TOTAL_ISSUES=$(( ${#WARNINGS[@]} + ${#CRITICAL[@]} ))
 if [[ ${#CRITICAL[@]} -gt 0 ]]; then
     STATUS="CRITICAL"
     EXIT_CODE=2
-    log "  Status: ✖ CRITICAL — ${#CRITICAL[@]} critical, ${#WARNINGS[@]} warnings"
+    tlog "  Status: ✖ CRITICAL — ${#CRITICAL[@]} critical, ${#WARNINGS[@]} warnings" \
+         "  ${RED}${BLD}Status: ✖ CRITICAL — ${#CRITICAL[@]} critical, ${#WARNINGS[@]} warnings${RST}"
 elif [[ ${#WARNINGS[@]} -gt 0 ]]; then
     STATUS="WARNING"
     EXIT_CODE=1
-    log "  Status: ⚠ WARNING — ${#WARNINGS[@]} issue(s) detected"
+    tlog "  Status: ⚠ WARNING — ${#WARNINGS[@]} issue(s) detected" \
+         "  ${YLW}${BLD}Status: ⚠ WARNING — ${#WARNINGS[@]} issue(s) detected${RST}"
 else
     STATUS="OK"
     EXIT_CODE=0
-    log "  Status: ✔ ALL OK — No issues detected"
+    tlog "  Status: ✔ ALL OK — No issues detected" \
+         "  ${GRN}${BLD}Status: ✔ ALL OK — No issues detected${RST}"
 fi
 
 if [[ ${#CRITICAL[@]} -gt 0 ]]; then
     log ""; log "  Critical:"
-    for c in "${CRITICAL[@]}"; do log "    ✖ $c"; done
+    for c in "${CRITICAL[@]}"; do tlog "    ✖ $c" "    ${RED}✖ $c${RST}"; done
 fi
 if [[ ${#WARNINGS[@]} -gt 0 ]]; then
     log ""; log "  Warnings:"
-    for w in "${WARNINGS[@]}"; do log "    ⚠ $w"; done
+    for w in "${WARNINGS[@]}"; do tlog "    ⚠ $w" "    ${YLW}⚠ $w${RST}"; done
 fi
 
 log ""
 log "  Log: ${LOG_FILE}"
 log "  Completed: $(date '+%I:%M:%S %p %Z')"
+
+# ── Reprint executive summary to terminal ──
+if [[ "$QUIET" == false ]]; then
+    echo ""
+    if [[ "$STATUS" == "CRITICAL" ]]; then
+        echo -e "${RED}${BLD}━━━ ✖ CRITICAL — ${#CRITICAL[@]} critical, ${#WARNINGS[@]} warnings ━━━${RST}"
+    elif [[ "$STATUS" == "WARNING" ]]; then
+        echo -e "${YLW}${BLD}━━━ ⚠ WARNING — ${#WARNINGS[@]} issue(s) detected ━━━${RST}"
+    else
+        echo -e "${GRN}${BLD}━━━ ✔ ALL OK — No issues detected ━━━${RST}"
+    fi
+fi
 
 # Symlink latest
 ln -sf "$LOG_FILE" "$LATEST_LINK"
