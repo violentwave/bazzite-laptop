@@ -245,7 +245,7 @@ if command -v smartctl &>/dev/null && [[ -b "$DEV_SDA" ]]; then
     SDA_UNCORRECT=$(sda_attr 198)
     SDA_REPORTED=$(sda_attr 187)
     SDA_POWERLOSS=$(sda_attr 174)
-    SDA_TEMP=$(sda_attr 194 | cut -d' ' -f1)
+    SDA_TEMP=$(echo "$SDA_RAW" | awk '$1 == 194 {for(i=10;i<=NF;i++){if($i~/^[0-9]+$/){print $i; exit}}}')
     SDA_WRITES=$(sda_attr 241)
     SDA_READS=$(sda_attr 242)
     SDA_MIN_ERASE=$(sda_attr 168)
@@ -283,12 +283,12 @@ if command -v smartctl &>/dev/null && [[ -b "$DEV_SDA" ]]; then
     SELFTEST_LINE=$(smartctl -l selftest "$DEV_SDA" 2>/dev/null | grep "^#  *1" || true)
     if [[ -n "$SELFTEST_LINE" ]]; then
         info "Last self-test: $(echo "$SELFTEST_LINE" | sed 's/^#  *1  *//')"
-        if echo "$SELFTEST_LINE" | grep -qi "error\|fail"; then
+        if echo "$SELFTEST_LINE" | grep -qi "completed without error"; then
+            ok "Last self-test: PASSED"
+        elif echo "$SELFTEST_LINE" | grep -qi "error\|fail"; then
             crit "Last SMART self-test reported errors"
         elif echo "$SELFTEST_LINE" | grep -qi "aborted"; then
             warn "Last SMART self-test was aborted (use --selftest to re-run)"
-        elif echo "$SELFTEST_LINE" | grep -qi "completed without error"; then
-            ok "Last self-test: PASSED"
         fi
     fi
 else
@@ -316,7 +316,7 @@ if command -v smartctl &>/dev/null && [[ -b "$DEV_SDB" ]]; then
     # NVMe health info parsing
     nvme_val() { echo "$SDB_RAW" | grep "^${1}:" | head -1 | awk -F': *' '{print $2}' | tr -d '% ,'; }
 
-    SDB_TEMP=$(nvme_val "Temperature")
+    SDB_TEMP=$(echo "$SDB_RAW" | grep "^Temperature:" | head -1 | grep -oP '[0-9]+' | head -1)
     SDB_SPARE=$(nvme_val "Available Spare")
     SDB_USED=$(nvme_val "Percentage Used")
     SDB_HOURS=$(nvme_val "Power On Hours")
