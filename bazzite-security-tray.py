@@ -37,6 +37,31 @@ class SecurityTray:
         self.build_menu()
         GLib.timeout_add_seconds(POLL_INTERVAL, self.poll)
 
+        # Debug: report which icons are available at startup
+        theme = Gtk.IconTheme.get_default()
+        for name in ["security-high", "security-medium", "security-low", "dialog-warning"]:
+            found = theme.has_icon(name)
+            resolved = self._get_icon_name(name)
+            print(f"Icon '{name}': exists={found}, using='{resolved}'", file=sys.stderr)
+
+    # --- Icon resolution ---
+
+    def _get_icon_name(self, desired):
+        """Return desired icon name if it exists in current theme, else fallback."""
+        theme = Gtk.IconTheme.get_default()
+        if theme.has_icon(desired):
+            return desired
+        fallbacks = {
+            "security-high": ["security-high-symbolic", "emblem-default", "dialog-ok"],
+            "security-medium": ["security-medium-symbolic", "emblem-warning", "dialog-warning"],
+            "security-low": ["security-low-symbolic", "emblem-important", "dialog-error"],
+            "dialog-warning": ["dialog-warning-symbolic", "emblem-warning"],
+        }
+        for fb in fallbacks.get(desired, []):
+            if theme.has_icon(fb):
+                return fb
+        return "dialog-information"
+
     # --- Status reading ---
 
     def read_status_file(self):
@@ -52,7 +77,7 @@ class SecurityTray:
         data = self.read_status_file()
         if data is None:
             self.status = {}
-            self.indicator.set_icon_full("dialog-warning", "Status unknown")
+            self.indicator.set_icon_full(self._get_icon_name("dialog-warning"), "Status unknown")
             return
 
         self.status = data
@@ -61,18 +86,18 @@ class SecurityTray:
         last_result = data.get("last_scan_result", "")
 
         if state in ("updating", "scanning"):
-            self.indicator.set_icon_full("security-medium", "Scan in progress")
+            self.indicator.set_icon_full(self._get_icon_name("security-medium"), "Scan in progress")
         elif state in ("idle", "complete"):
             if result == "threats":
-                self.indicator.set_icon_full("security-low", "Threats found")
+                self.indicator.set_icon_full(self._get_icon_name("security-low"), "Threats found")
             elif result == "error":
-                self.indicator.set_icon_full("dialog-warning", "Scan error")
+                self.indicator.set_icon_full(self._get_icon_name("dialog-warning"), "Scan error")
             elif result == "clean" or last_result == "clean":
-                self.indicator.set_icon_full("security-high", "All clear")
+                self.indicator.set_icon_full(self._get_icon_name("security-high"), "All clear")
             else:
-                self.indicator.set_icon_full("security-high", "Idle")
+                self.indicator.set_icon_full(self._get_icon_name("security-high"), "Idle")
         else:
-            self.indicator.set_icon_full("dialog-warning", "Status unknown")
+            self.indicator.set_icon_full(self._get_icon_name("dialog-warning"), "Status unknown")
 
     def poll(self):
         """Poll the status file and rebuild menu if changed."""

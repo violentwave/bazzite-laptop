@@ -198,19 +198,26 @@ print_banner
 write_status "updating" "Updating virus signatures"
 print_phase "Updating virus signatures..." "running"
 
-FRESHCLAM_OK=true
-if ! freshclam --quiet 2>"${LOG_DIR}/freshclam-update-error.log"; then
-    FRESHCLAM_OK=false
-fi
-
-if $FRESHCLAM_OK; then
-    # Move cursor up and overwrite
+if [[ -f /run/clamav/freshclam.pid ]] || pgrep -x freshclam &>/dev/null; then
+    # freshclam daemon is already running and keeping signatures current
     $INTERACTIVE && printf "\e[1A\e[2K"
-    print_phase "Updating virus signatures..." "done"
+    print_phase "Virus signatures up to date" "done"
+    write_status "updating" "Signatures managed by freshclam daemon"
 else
-    $INTERACTIVE && printf "\e[1A\e[2K"
-    print_phase "Updating virus signatures..." "error"
-    $INTERACTIVE && echo -e "    ${DIM}Warning: freshclam update failed, using existing signatures${RESET}"
+    # Run freshclam manually
+    FRESHCLAM_OK=true
+    if ! freshclam --quiet 2>"${LOG_DIR}/freshclam-update-error.log"; then
+        FRESHCLAM_OK=false
+    fi
+
+    if $FRESHCLAM_OK; then
+        $INTERACTIVE && printf "\e[1A\e[2K"
+        print_phase "Updating virus signatures..." "done"
+    else
+        $INTERACTIVE && printf "\e[1A\e[2K"
+        print_phase "Updating virus signatures..." "error"
+        $INTERACTIVE && echo -e "    ${DIM}Warning: freshclam update failed, using existing signatures${RESET}"
+    fi
 fi
 
 # --- Phase 2: Scanning ---
