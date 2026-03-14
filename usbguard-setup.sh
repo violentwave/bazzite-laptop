@@ -5,93 +5,237 @@
 # This script generates a policy from currently connected devices,
 # then enables USBGuard. NOT meant to be deployed permanently —
 # run once to configure, then manage with usbguard CLI commands.
+#
+# NOTES:
+# - The SanDisk Extreme SSD is connected via USB-C port — make sure it's
+#   plugged in during Round 1 (initial policy generation) if you use it regularly
+# - Make sure your primary input devices (keyboard, mouse) are connected for
+#   Round 1 — they MUST be in the initial policy or they'll be blocked
+# - Additional devices can be added in Round 2 via the interactive loop
+#   after USBGuard is enabled
 set -euo pipefail
+
+# --- Colors ---
+CYAN='\e[0;36m'
+BCYAN='\e[1;36m'
+GREEN='\e[0;32m'
+BGREEN='\e[1;32m'
+RED='\e[0;31m'
+BRED='\e[1;31m'
+YELLOW='\e[0;33m'
+BYELLOW='\e[1;33m'
+BWHITE='\e[1;37m'
+DIM='\e[2m'
+RESET='\e[0m'
+
+# --- Helpers ---
+confirm_yes() {
+    local prompt="$1"
+    echo ""
+    echo -e "  ${BYELLOW}${prompt}${RESET}"
+    echo -ne "  ${BWHITE}Type 'yes' to continue: ${RESET}"
+    read -r answer
+    if [[ "$answer" != "yes" ]]; then
+        echo ""
+        echo -e "  ${BRED}Aborted.${RESET} No changes were made."
+        exit 0
+    fi
+}
+
+separator() {
+    echo ""
+    echo -e "  ${DIM}──────────────────────────────────────────────${RESET}"
+    echo ""
+}
 
 # Must run as root
 if [[ $EUID -ne 0 ]]; then
-    echo "Error: This script must be run as root (use sudo)." >&2
+    echo -e "${RED}Error: This script must be run as root (use sudo).${RESET}" >&2
     exit 1
 fi
 
-# Step 1: Check that usbguard is installed
+# Check that usbguard is installed
 if ! command -v usbguard &>/dev/null; then
-    echo "Error: usbguard is not installed." >&2
+    echo -e "${RED}Error: usbguard is not installed.${RESET}" >&2
     echo "Install it with: rpm-ostree install usbguard && systemctl reboot" >&2
     exit 1
 fi
 
-# Step 2: Explain what's about to happen
-echo "========================================"
-echo "  USBGuard Initial Setup"
-echo "========================================"
+# ===========================
+# BANNER
+# ===========================
 echo ""
-echo "This script will:"
-echo "  1. Generate a USBGuard policy from your CURRENTLY connected USB devices"
-echo "  2. Save it to /etc/usbguard/rules.conf"
-echo "  3. Enable and start the usbguard service"
+echo -e "  ${BCYAN}┌──────────────────────────────────────┐${RESET}"
+echo -e "  ${BCYAN}│${RESET}  🛡  ${BWHITE}BAZZITE SECURITY SCANNER${RESET}       ${BCYAN}│${RESET}"
+echo -e "  ${BCYAN}│${RESET}  ${DIM}USBGuard Initial Setup${RESET}               ${BCYAN}│${RESET}"
+echo -e "  ${BCYAN}└──────────────────────────────────────┘${RESET}"
 echo ""
-echo "After this, any NEW USB device not in the policy will be BLOCKED by default."
-echo "Make sure all devices you use regularly are plugged in right now:"
-echo "  - Mouse, keyboard, external SSD, gaming peripherals, etc."
+echo -e "  ${DIM}This script will:${RESET}"
+echo -e "  ${DIM}  Round 1: Generate a policy from CURRENTLY connected USB devices${RESET}"
+echo -e "  ${DIM}  Round 2: Let you plug in additional devices and allow them${RESET}"
 echo ""
-read -rp "Press Enter to continue (or Ctrl+C to abort)... "
+echo -e "  ${BYELLOW}Before continuing, make sure these are plugged in NOW:${RESET}"
+echo -e "  ${BWHITE}  - Keyboard and mouse${RESET} (critical — will be blocked otherwise)"
+echo -e "  ${BWHITE}  - SanDisk Extreme SSD${RESET} (USB-C port, if used regularly)"
+echo -e "  ${BWHITE}  - Any other daily-use peripherals${RESET}"
+echo ""
+echo -e "  ${DIM}Devices NOT plugged in during Round 1 can be added in Round 2.${RESET}"
 
-# Step 3: Generate initial policy from currently connected devices
-echo ""
-echo "Generating policy from connected devices..."
-usbguard generate-policy | tee /etc/usbguard/rules.conf
-echo ""
-echo "Policy written to /etc/usbguard/rules.conf"
+separator
 
-# Step 4: Confirm before enabling
+# ===========================
+# ROUND 1 — GENERATE INITIAL POLICY
+# ===========================
+echo -e "  ${BCYAN}ROUND 1 — INITIAL POLICY FROM CONNECTED DEVICES${RESET}"
 echo ""
-echo "========================================"
-echo "  Review the policy above."
-echo "  Ready to enable USBGuard?"
-echo "========================================"
+echo -e "  ${DIM}Scanning currently connected USB devices...${RESET}"
 echo ""
-read -rp "Type 'yes' to enable USBGuard, anything else to abort: " CONFIRM
-if [[ "$CONFIRM" != "yes" ]]; then
-    echo "Aborted. Policy was saved but service was NOT enabled."
-    echo "You can enable it later with: sudo systemctl enable --now usbguard"
-    exit 0
-fi
+
+# Show what's connected
+lsusb | while IFS= read -r line; do
+    echo -e "    ${DIM}${line}${RESET}"
+done
+
+confirm_yes "Generate USBGuard policy from these devices?"
 
 echo ""
-echo "Enabling and starting usbguard..."
+echo -e "  ${YELLOW}Generating policy...${RESET}"
+echo ""
+
+usbguard generate-policy | tee /etc/usbguard/rules.conf | while IFS= read -r line; do
+    echo -e "    ${DIM}${line}${RESET}"
+done
+
+echo ""
+echo -e "  ${GREEN}[OK]${RESET} Policy written to /etc/usbguard/rules.conf"
+
+separator
+
+# ===========================
+# ENABLE USBGUARD
+# ===========================
+echo -e "  ${BCYAN}ENABLING USBGUARD${RESET}"
+echo ""
+echo -e "  ${BWHITE}Review the policy above.${RESET}"
+echo -e "  ${DIM}After enabling, any NEW USB device not in the policy will be ${BRED}BLOCKED${RESET}${DIM}.${RESET}"
+
+confirm_yes "Enable and start USBGuard now?"
+
+echo ""
+echo -e "  ${YELLOW}Enabling and starting usbguard service...${RESET}"
 systemctl enable --now usbguard
+echo ""
+echo -e "  ${GREEN}[OK]${RESET} USBGuard is now active"
 
-# Step 5: Show current policy
 echo ""
-echo "Current rules:"
-echo "----------------------------------------"
-usbguard list-rules
-echo "----------------------------------------"
+echo -e "  ${BWHITE}Current policy rules:${RESET}"
+echo ""
+usbguard list-rules | while IFS= read -r line; do
+    echo -e "    ${DIM}${line}${RESET}"
+done
 
-# Step 6: Useful commands reference
-echo ""
-echo "Useful USBGuard commands:"
-echo "  usbguard list-devices          — see all connected USB devices"
-echo "  usbguard allow-device <id>     — allow a new device (temporary)"
-echo "  usbguard block-device <id>     — block a device (temporary)"
-echo "  usbguard list-rules            — see current policy rules"
-echo "  usbguard append-rule 'allow ...' — permanently allow a device"
-echo ""
-echo "To permanently allow a new device, plug it in, then:"
-echo "  usbguard list-devices           # find the device ID"
-echo "  usbguard allow-device <id> -p   # allow and save to policy"
+separator
 
-# Step 7: Warning
+# ===========================
+# ROUND 2 — ADDING MORE DEVICES
+# ===========================
+echo -e "  ${BCYAN}ROUND 2 — ADDING MORE DEVICES${RESET}"
 echo ""
-echo "========================================"
-echo "  WARNING"
-echo "========================================"
-echo "Test ALL your USB devices NOW before logging out or rebooting!"
-echo "  - Mouse, keyboard, external SSD, gaming peripherals"
-echo "  - If a device is blocked, fix it while you're still logged in:"
-echo "    usbguard list-devices"
-echo "    usbguard allow-device <id> -p"
+echo -e "  ${DIM}Any NEW device plugged in from this point forward is blocked by default.${RESET}"
+echo -e "  ${DIM}Use this interactive loop to plug in additional devices and allow them.${RESET}"
 echo ""
-echo "If you get locked out (keyboard/mouse blocked), you can recover by"
-echo "booting into the previous ostree deployment from the GRUB menu."
-echo "========================================"
+echo -e "  ${DIM}How it works:${RESET}"
+echo -e "  ${DIM}  1. Plug in a device${RESET}"
+echo -e "  ${DIM}  2. Press Enter — the script will find the blocked device${RESET}"
+echo -e "  ${DIM}  3. Confirm the device ID to allow it permanently (-p flag)${RESET}"
+echo -e "  ${DIM}  4. Repeat, or type 'done' to finish${RESET}"
+
+echo ""
+
+while true; do
+    echo ""
+    echo -ne "  ${BYELLOW}Plug in a device and press Enter, or type 'done' to finish: ${RESET}"
+    read -r input
+
+    if [[ "$input" == "done" ]]; then
+        break
+    fi
+
+    # Find blocked devices
+    BLOCKED=$(usbguard list-devices 2>/dev/null | grep "block" || true)
+
+    if [[ -z "$BLOCKED" ]]; then
+        echo -e "  ${DIM}No blocked devices found. The device may already be allowed,${RESET}"
+        echo -e "  ${DIM}or it hasn't been detected yet. Try unplugging and replugging.${RESET}"
+        continue
+    fi
+
+    echo ""
+    echo -e "  ${BWHITE}Blocked device(s):${RESET}"
+    echo ""
+    echo "$BLOCKED" | while IFS= read -r line; do
+        echo -e "    ${RED}${line}${RESET}"
+    done
+
+    echo ""
+    echo -ne "  ${BYELLOW}Enter the device ID number to allow (or 'skip' to skip): ${RESET}"
+    read -r device_id
+
+    if [[ "$device_id" == "skip" ]]; then
+        echo -e "  ${DIM}Skipped.${RESET}"
+        continue
+    fi
+
+    # Validate it looks like a number
+    if ! [[ "$device_id" =~ ^[0-9]+$ ]]; then
+        echo -e "  ${RED}Invalid ID '${device_id}' — must be a number. Try again.${RESET}"
+        continue
+    fi
+
+    echo -e "  ${YELLOW}Allowing device ${device_id} permanently...${RESET}"
+    if usbguard allow-device "$device_id" -p 2>&1; then
+        echo -e "  ${GREEN}[OK]${RESET} Device ${device_id} allowed and saved to policy"
+    else
+        echo -e "  ${RED}[FAIL]${RESET} Could not allow device ${device_id}. Check the ID and try again."
+    fi
+done
+
+separator
+
+# ===========================
+# FINAL POLICY
+# ===========================
+echo -e "  ${BCYAN}FINAL POLICY${RESET}"
+echo ""
+echo -e "  ${BWHITE}Complete USBGuard rules:${RESET}"
+echo ""
+usbguard list-rules | while IFS= read -r line; do
+    echo -e "    ${DIM}${line}${RESET}"
+done
+
+separator
+
+# ===========================
+# USEFUL COMMANDS & RECOVERY
+# ===========================
+echo -e "  ${BCYAN}USEFUL COMMANDS${RESET}"
+echo ""
+echo -e "  ${DIM}usbguard list-devices${RESET}          — see all connected USB devices"
+echo -e "  ${DIM}usbguard allow-device <id> -p${RESET}  — allow a device permanently"
+echo -e "  ${DIM}usbguard block-device <id>${RESET}     — block a device (temporary)"
+echo -e "  ${DIM}usbguard list-rules${RESET}            — see current policy rules"
+
+separator
+
+echo -e "  ${BRED}┌─────────────────────────────────────────────────────────────────┐${RESET}"
+echo -e "  ${BRED}│${RESET}  ${BRED}RECOVERY — IF KEYBOARD/MOUSE GETS BLOCKED${RESET}                      ${BRED}│${RESET}"
+echo -e "  ${BRED}│${RESET}                                                                  ${BRED}│${RESET}"
+echo -e "  ${BRED}│${RESET}  If your keyboard or mouse is blocked after reboot:              ${BRED}│${RESET}"
+echo -e "  ${BRED}│${RESET}  1. Reboot and select the ${BWHITE}previous ostree deployment${RESET} from GRUB   ${BRED}│${RESET}"
+echo -e "  ${BRED}│${RESET}  2. Run: ${DIM}sudo systemctl disable usbguard${RESET}                         ${BRED}│${RESET}"
+echo -e "  ${BRED}│${RESET}  3. Reboot back into the current deployment                     ${BRED}│${RESET}"
+echo -e "  ${BRED}│${RESET}  4. Re-run this script with all devices plugged in               ${BRED}│${RESET}"
+echo -e "  ${BRED}└─────────────────────────────────────────────────────────────────┘${RESET}"
+echo ""
+echo -e "  ${BGREEN}USBGuard setup complete.${RESET} Test all your USB devices now!"
+echo ""

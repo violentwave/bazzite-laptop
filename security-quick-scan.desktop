@@ -1,0 +1,10 @@
+# ClamAV Quick Scan — KDE menu shortcut
+# Deploy to: ~/.local/share/applications/security-quick-scan.desktop
+[Desktop Entry]
+Type=Application
+Name=ClamAV Quick Scan
+Comment=Run a quick antivirus scan of home and tmp
+Exec=konsole -e sudo /usr/local/bin/clamav-scan.sh quick
+Icon=security-high
+Categories=Security;System;
+Terminal=false

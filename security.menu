@@ -1,0 +1,14 @@
+<!-- Security submenu for KDE application menu -->
+<!-- Deploy to: ~/.config/menus/applications-merged/security.menu -->
+<!DOCTYPE Menu PUBLIC "-//freedesktop//DTD Menu 1.0//EN"
+    "http://www.freedesktop.org/standards/menu-spec/menu-1.0.dtd">
+<Menu>
+    <Name>Applications</Name>
+    <Menu>
+        <Name>Security</Name>
+        <Directory>security-directory.desktop</Directory>
+        <Include>
+            <Category>Security</Category>
+        </Include>
+    </Menu>
+</Menu>

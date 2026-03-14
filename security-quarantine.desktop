@@ -1,0 +1,10 @@
+# View Quarantine — KDE menu shortcut
+# Deploy to: ~/.local/share/applications/security-quarantine.desktop
+[Desktop Entry]
+Type=Application
+Name=View Quarantine
+Comment=Open quarantine folder in file manager
+Exec=dolphin /home/lch/security/quarantine
+Icon=folder-locked
+Categories=Security;System;
+Terminal=false

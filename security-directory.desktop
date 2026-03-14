@@ -1,0 +1,7 @@
+# Security directory entry for KDE menu
+# Deploy to: ~/.local/share/desktop-directories/security-directory.desktop
+[Desktop Entry]
+Type=Directory
+Name=Security
+Comment=Security tools and scanners
+Icon=security-high

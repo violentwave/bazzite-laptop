@@ -1,0 +1,10 @@
+# Scan Logs — KDE menu shortcut
+# Deploy to: ~/.local/share/applications/security-scan-logs.desktop
+[Desktop Entry]
+Type=Application
+Name=Scan Logs
+Comment=Open ClamAV scan logs
+Exec=dolphin /home/lch/security/logs
+Icon=text-x-log
+Categories=Security;System;
+Terminal=false
