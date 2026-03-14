@@ -76,6 +76,26 @@ Disabled all unnecessary services to reduce attack surface and resource usage:
 - raid-check.timer — Weekly RAID check (no RAID)
 - qemu-guest-agent.service — QEMU agent (bare metal, not a VM)
 
+**Services to KEEP** (important for this system):
+
+| Service | Why keep |
+|---------|----------|
+| supergfxd | GPU switching — critical |
+| nvidia-powerd + nvidia-* | GPU power management |
+| thermald | Thermal management — important for laptop |
+| tuned + tuned-ppd | Performance profiles |
+| firewalld | Firewall — critical |
+| systemd-resolved | DNS-over-TLS |
+| smartd | Disk health monitoring |
+| lm_sensors | Temperature monitoring |
+| bluetooth | Currently blocked by firewall, keep for future use |
+| NetworkManager | Network management — critical |
+| fstrim.timer | SSD maintenance |
+| clamav-freshclam | Virus signature auto-updater |
+| clamd@scan | ClamAV daemon — on-demand only (started/stopped per scan) |
+
+> External SSD optimization note: current mount uses `relatime` — consider adding `noatime` via fstab or udisks2 rule to reduce unnecessary writes.
+
 ### Security Hardening ✅
 - **SSH**: Disabled (`sudo systemctl disable --now sshd`)
 - **Firewall**: firewalld set to DROP zone (all incoming blocked except dhcpv6-client)

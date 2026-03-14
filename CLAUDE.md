@@ -10,6 +10,14 @@
 - NEVER use PRIME offload env vars in game launch options — they crash games.
 - NEVER lower vm.swappiness — 180 is correct for ZRAM.
 
+## Repo Layout
+- scripts/ — all shell scripts (clamav, backup, setup utilities)
+- systemd/ — timer and service unit files
+- desktop/ — .desktop files and security.menu
+- configs/ — system config files (udev rules, sysctl, gamemode, etc.)
+- tray/ — security tray app (Python) + icons
+- docs/ — all documentation and guides
+
 ## Key Paths
 - Steam library: /run/media/lch/SteamLibrary
 - MangoHud config: ~/.config/MangoHud/MangoHud.conf
