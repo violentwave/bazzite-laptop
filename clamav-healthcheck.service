@@ -1,0 +1,7 @@
+[Unit]
+Description=Bazzite Security Health Check
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/clamav-healthcheck.sh
+User=root
