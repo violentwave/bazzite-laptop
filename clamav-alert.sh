@@ -2,7 +2,7 @@
 # ClamAV HTML email alert script using msmtp
 # Deploy to: /usr/local/bin/clamav-alert.sh (chmod +x)
 # Usage: clamav-alert.sh <scan_type> <status> <threat_count> <files_scanned> <duration> <log_file>
-#   scan_type:    quick | deep
+#   scan_type:    quick | deep | healthcheck
 #   status:       clean | threats | error
 #   threat_count: number of threats found
 #   files_scanned: total files scanned
@@ -20,6 +20,9 @@ LOG_FILE="${6:?Missing log_file}"
 
 HOSTNAME="$(hostname)"
 DATE_STR="$(date '+%B %d, %Y at %I:%M %p')"
+
+# Capitalize scan type for display (handles "healthcheck" → "Healthcheck")
+SCAN_TYPE_DISPLAY="${SCAN_TYPE^}"
 
 # --- Resolve recipient ---
 TO_EMAIL=""
@@ -47,7 +50,11 @@ case "$STATUS" in
         BANNER_ICON="&#x1F6A8;"
         ;;
     error)
-        SUBJECT="Bazzite Security Alert: Scan error — ${SCAN_TYPE} scan"
+        if [[ "$SCAN_TYPE" == "healthcheck" ]]; then
+            SUBJECT="Bazzite Security Alert: Health check failed"
+        else
+            SUBJECT="Bazzite Security Alert: Scan error — ${SCAN_TYPE} scan"
+        fi
         BANNER_COLOR="#f59e0b"
         BANNER_TEXT="SCAN ERROR"
         BANNER_ICON="&#x26A0;"
@@ -78,7 +85,7 @@ case "$STATUS" in
         BODY_CONTENT="
         <p style=\"font-size:15px;color:#1e293b;line-height:1.6;margin:0 0 20px 0\">Your scheduled <strong>${SCAN_TYPE}</strong> scan completed successfully with no threats detected.</p>
         <table style=\"width:100%;border-collapse:collapse;margin-bottom:24px\">
-            <tr style=\"background:#f1f5f9\"><td style=\"padding:10px 16px;font-size:14px;color:#64748b;width:40%\">Scan Type</td><td style=\"padding:10px 16px;font-size:14px;color:#1e293b;font-weight:600\">${SCAN_TYPE^}</td></tr>
+            <tr style=\"background:#f1f5f9\"><td style=\"padding:10px 16px;font-size:14px;color:#64748b;width:40%\">Scan Type</td><td style=\"padding:10px 16px;font-size:14px;color:#1e293b;font-weight:600\">${SCAN_TYPE_DISPLAY}</td></tr>
             <tr style=\"background:#ffffff\"><td style=\"padding:10px 16px;font-size:14px;color:#64748b\">Files Scanned</td><td style=\"padding:10px 16px;font-size:14px;color:#1e293b;font-weight:600\">${FILES_SCANNED}</td></tr>
             <tr style=\"background:#f1f5f9\"><td style=\"padding:10px 16px;font-size:14px;color:#64748b\">Threats Found</td><td style=\"padding:10px 16px;font-size:14px;color:#22c55e;font-weight:600\">0</td></tr>
             <tr style=\"background:#ffffff\"><td style=\"padding:10px 16px;font-size:14px;color:#64748b\">Duration</td><td style=\"padding:10px 16px;font-size:14px;color:#1e293b;font-weight:600\">${DURATION}</td></tr>
@@ -91,7 +98,7 @@ case "$STATUS" in
         BODY_CONTENT="
         <p style=\"font-size:15px;color:#1e293b;line-height:1.6;margin:0 0 20px 0\"><strong>${THREAT_COUNT} threat(s)</strong> were detected during the <strong>${SCAN_TYPE}</strong> scan. Infected files have been moved to quarantine.</p>
         <table style=\"width:100%;border-collapse:collapse;margin-bottom:24px\">
-            <tr style=\"background:#f1f5f9\"><td style=\"padding:10px 16px;font-size:14px;color:#64748b;width:40%\">Scan Type</td><td style=\"padding:10px 16px;font-size:14px;color:#1e293b;font-weight:600\">${SCAN_TYPE^}</td></tr>
+            <tr style=\"background:#f1f5f9\"><td style=\"padding:10px 16px;font-size:14px;color:#64748b;width:40%\">Scan Type</td><td style=\"padding:10px 16px;font-size:14px;color:#1e293b;font-weight:600\">${SCAN_TYPE_DISPLAY}</td></tr>
             <tr style=\"background:#ffffff\"><td style=\"padding:10px 16px;font-size:14px;color:#64748b\">Files Scanned</td><td style=\"padding:10px 16px;font-size:14px;color:#1e293b;font-weight:600\">${FILES_SCANNED}</td></tr>
             <tr style=\"background:#f1f5f9\"><td style=\"padding:10px 16px;font-size:14px;color:#64748b\">Threats Found</td><td style=\"padding:10px 16px;font-size:14px;color:#ef4444;font-weight:600\">${THREAT_COUNT}</td></tr>
             <tr style=\"background:#ffffff\"><td style=\"padding:10px 16px;font-size:14px;color:#64748b\">Duration</td><td style=\"padding:10px 16px;font-size:14px;color:#1e293b;font-weight:600\">${DURATION}</td></tr>
@@ -113,7 +120,7 @@ case "$STATUS" in
         BODY_CONTENT="
         <p style=\"font-size:15px;color:#1e293b;line-height:1.6;margin:0 0 20px 0\">An error occurred during the <strong>${SCAN_TYPE}</strong> scan. The scan may not have completed fully.</p>
         <table style=\"width:100%;border-collapse:collapse;margin-bottom:24px\">
-            <tr style=\"background:#f1f5f9\"><td style=\"padding:10px 16px;font-size:14px;color:#64748b;width:40%\">Scan Type</td><td style=\"padding:10px 16px;font-size:14px;color:#1e293b;font-weight:600\">${SCAN_TYPE^}</td></tr>
+            <tr style=\"background:#f1f5f9\"><td style=\"padding:10px 16px;font-size:14px;color:#64748b;width:40%\">Scan Type</td><td style=\"padding:10px 16px;font-size:14px;color:#1e293b;font-weight:600\">${SCAN_TYPE_DISPLAY}</td></tr>
             <tr style=\"background:#ffffff\"><td style=\"padding:10px 16px;font-size:14px;color:#64748b\">Files Scanned</td><td style=\"padding:10px 16px;font-size:14px;color:#1e293b;font-weight:600\">${FILES_SCANNED}</td></tr>
             <tr style=\"background:#f1f5f9\"><td style=\"padding:10px 16px;font-size:14px;color:#64748b\">Duration</td><td style=\"padding:10px 16px;font-size:14px;color:#1e293b;font-weight:600\">${DURATION}</td></tr>
             <tr style=\"background:#ffffff\"><td style=\"padding:10px 16px;font-size:14px;color:#64748b\">Completed</td><td style=\"padding:10px 16px;font-size:14px;color:#1e293b;font-weight:600\">${DATE_STR}</td></tr>

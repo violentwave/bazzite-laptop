@@ -181,11 +181,8 @@ send_alert() {
 # --- Helper: parse clamdscan summary ---
 parse_scan_output() {
     local output="$1"
-    PARSED_FILES=$(echo "$output" | grep -c 'OK\|FOUND' || echo "0")
-    PARSED_THREATS=$(echo "$output" | grep -oP 'Infected files:\s*\K[0-9]+' || echo "0")
-    # Sanitize: ensure single integers with no spaces
-    PARSED_FILES="${PARSED_FILES// /}"
-    PARSED_FILES="${PARSED_FILES:-0}"
+    # Count FOUND lines (each is a detected threat); --infected means no OK lines
+    PARSED_THREATS=$(echo "$output" | grep -c "FOUND" || true)
     PARSED_THREATS="${PARSED_THREATS// /}"
     PARSED_THREATS="${PARSED_THREATS:-0}"
 }
@@ -294,6 +291,10 @@ SCAN_END=$(date +%s)
 SCAN_SECONDS=$((SCAN_END - SCAN_START))
 DURATION=$(format_duration $SCAN_SECONDS)
 LAST_SCAN_TIME=$(date -Iseconds)
+
+# --- Count scanned files (clamdscan --infected doesn't report this) ---
+PARSED_FILES=$(timeout 30 find "${SCAN_DIRS[@]}" -type f 2>/dev/null | wc -l)
+PARSED_FILES="${PARSED_FILES:-0}"
 
 # --- Phase 4: Stop clamd (reclaim ~1.1GB RAM) ---
 print_phase "Stopping scan daemon..." "running"

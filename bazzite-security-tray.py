@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # Bazzite Security Tray — system tray monitor for ClamAV scan status
 # Deploy to: /home/lch/security/bazzite-security-tray.py (chmod 755)
+# Icons deployed to: /home/lch/security/icons/
 # Reads ~/security/.status (JSON) and shows a colored shield icon in the KDE system tray.
 
 import signal
@@ -28,24 +29,68 @@ signal.signal(signal.SIGTERM, lambda s, f: sys.exit(0))
 
 STATUS_FILE = Path.home() / "security" / ".status"
 POLL_INTERVAL = 3  # seconds
+ICON_THEME_PATH = "/home/lch/security/icons"
 
 SCAN_SCRIPT = "/usr/local/bin/clamav-scan.sh"
 HEALTHCHECK_SCRIPT = "/usr/local/bin/clamav-healthcheck.sh"
 QUARANTINE_DIR = str(Path.home() / "security" / "quarantine")
 LOG_DIR = "/var/log/clamav-scans"
 
+# --- Icon state machine ---
+
+STATE_HEALTHY_IDLE = "healthy_idle"
+STATE_SCAN_RUNNING = "scan_running"
+STATE_SCAN_COMPLETE = "scan_complete"
+STATE_WARNING = "warning"
+STATE_SCAN_FAILED = "scan_failed"
+STATE_SCAN_ABORTED = "scan_aborted"
+STATE_THREATS_FOUND = "threats_found"
+STATE_UNKNOWN = "unknown"
+
+STATE_CONFIG = {
+    STATE_HEALTHY_IDLE: {"icon": "bazzite-sec-green",  "desc": "All clear",              "blink": False},
+    STATE_SCAN_RUNNING: {"icon": "bazzite-sec-green",  "desc": "Scan in progress",       "blink": True,  "interval": 1000},
+    STATE_SCAN_COMPLETE: {"icon": "bazzite-sec-blue",  "desc": "Scan complete",           "blink": True,  "interval": 500},
+    STATE_WARNING:       {"icon": "bazzite-sec-yellow", "desc": "Warning",                "blink": False},
+    STATE_SCAN_FAILED:   {"icon": "bazzite-sec-red",   "desc": "Scan error",              "blink": False},
+    STATE_SCAN_ABORTED:  {"icon": "bazzite-sec-red",   "desc": "Scan aborted",            "blink": True,  "interval": 500},
+    STATE_THREATS_FOUND: {"icon": "bazzite-sec-red",   "desc": "Threats found",           "blink": True,  "interval": 1000},
+    STATE_UNKNOWN:       {"icon": "bazzite-sec-yellow", "desc": "Status unknown",          "blink": False},
+}
+
+MENU_HEADERS = {
+    STATE_HEALTHY_IDLE:  "\u25cf All clear",
+    STATE_SCAN_RUNNING:  "\u25cf Scan running...",
+    STATE_SCAN_COMPLETE: "\u25cf Scan complete \u2014 log updated",
+    STATE_WARNING:       "\u26a0 Warning \u2014 check signatures",
+    STATE_SCAN_FAILED:   "\u2717 Scan error",
+    STATE_SCAN_ABORTED:  "\u2717 Scan aborted",
+    STATE_THREATS_FOUND: "\u2717 {count} threat(s) found",
+    STATE_UNKNOWN:       "? Status unknown",
+}
+
 
 class SecurityTray:
     def __init__(self):
         self.indicator = AppIndicator3.Indicator.new(
             "bazzite-security",
-            "dialog-warning",
+            "bazzite-sec-yellow",
             AppIndicator3.IndicatorCategory.APPLICATION_STATUS,
         )
+        self.indicator.set_icon_theme_path(ICON_THEME_PATH)
         self.indicator.set_status(AppIndicator3.IndicatorStatus.ACTIVE)
+
+        self.current_state = None
+        self.current_icon = "bazzite-sec-yellow"
+        self.current_description = "Starting"
+        self.blink_timer_id = None
+        self.blink_visible = True
+        self.complete_timer_id = None
         self.last_status_raw = None
+        self.last_completion_timestamp = None
         self.status = {}
-        self.update_status()
+
+        self.set_state(STATE_UNKNOWN)
 
         # Force GTK to process events so the icon renders immediately
         while Gtk.events_pending():
@@ -54,70 +99,98 @@ class SecurityTray:
         self.build_menu()
         GLib.timeout_add_seconds(POLL_INTERVAL, self.poll)
 
-        # Debug: report which icons are available at startup
-        theme = Gtk.IconTheme.get_default()
-        for name in ["security-high", "security-medium", "security-low", "dialog-warning"]:
-            found = theme.has_icon(name)
-            resolved = self._get_icon_name(name)
-            print(f"Icon '{name}': exists={found}, using='{resolved}'", file=sys.stderr)
+    # --- State machine ---
 
-    # --- Icon resolution ---
+    def set_state(self, new_state):
+        if new_state == self.current_state:
+            return
 
-    def _get_icon_name(self, desired):
-        """Return desired icon name if it exists in current theme, else fallback."""
-        theme = Gtk.IconTheme.get_default()
-        if theme.has_icon(desired):
-            return desired
-        fallbacks = {
-            "security-high": ["security-high-symbolic", "emblem-default", "dialog-ok"],
-            "security-medium": ["security-medium-symbolic", "emblem-warning", "dialog-warning"],
-            "security-low": ["security-low-symbolic", "emblem-important", "dialog-error"],
-            "dialog-warning": ["dialog-warning-symbolic", "emblem-warning"],
-        }
-        for fb in fallbacks.get(desired, []):
-            if theme.has_icon(fb):
-                return fb
-        return "dialog-information"
+        # Cancel existing blink timer
+        if self.blink_timer_id is not None:
+            GLib.source_remove(self.blink_timer_id)
+            self.blink_timer_id = None
+
+        # Cancel complete→idle timer if changing away from SCAN_COMPLETE
+        if self.current_state == STATE_SCAN_COMPLETE and new_state != STATE_SCAN_COMPLETE:
+            if self.complete_timer_id is not None:
+                GLib.source_remove(self.complete_timer_id)
+                self.complete_timer_id = None
+
+        self.current_state = new_state
+        cfg = STATE_CONFIG[new_state]
+        self.current_icon = cfg["icon"]
+        self.current_description = cfg["desc"]
+        self.blink_visible = True
+
+        # Set icon immediately
+        self.indicator.set_icon_full(self.current_icon, self.current_description)
+
+        # Start blink timer if needed
+        if cfg["blink"]:
+            self.blink_timer_id = GLib.timeout_add(cfg["interval"], self._blink_toggle)
+
+        # Schedule transition back to idle after SCAN_COMPLETE
+        if new_state == STATE_SCAN_COMPLETE:
+            self.complete_timer_id = GLib.timeout_add_seconds(30, self._transition_to_idle)
+
+    def _blink_toggle(self):
+        self.blink_visible = not self.blink_visible
+        if self.blink_visible:
+            self.indicator.set_icon_full(self.current_icon, self.current_description)
+        else:
+            self.indicator.set_icon_full("bazzite-sec-blank", self.current_description)
+        return True
+
+    def _transition_to_idle(self):
+        self.complete_timer_id = None
+        self.set_state(STATE_HEALTHY_IDLE)
+        self.build_menu()
+        return False
 
     # --- Status reading ---
 
     def read_status_file(self):
-        """Read and parse the JSON status file. Returns dict or None."""
         try:
             text = STATUS_FILE.read_text(encoding="utf-8")
             return json.loads(text)
         except Exception:
             return None
 
-    def update_status(self):
-        """Read status file and update the tray icon."""
-        data = self.read_status_file()
+    def determine_state(self, data):
         if data is None:
-            self.status = {}
-            self.indicator.set_icon_full(self._get_icon_name("dialog-warning"), "Status unknown")
-            return
+            return STATE_UNKNOWN
 
-        self.status = data
         state = data.get("state", "")
         result = data.get("result", "")
-        last_result = data.get("last_scan_result", "")
 
-        if state in ("updating", "scanning"):
-            self.indicator.set_icon_full(self._get_icon_name("security-medium"), "Scan in progress")
-        elif state in ("idle", "complete"):
-            if result == "threats":
-                self.indicator.set_icon_full(self._get_icon_name("security-low"), "Threats found")
+        if state in ("scanning", "updating"):
+            return STATE_SCAN_RUNNING
+        elif state == "complete":
+            if result == "clean":
+                timestamp = data.get("last_scan_time") or data.get("timestamp", "")
+                if timestamp and timestamp != self.last_completion_timestamp:
+                    self.last_completion_timestamp = timestamp
+                    return STATE_SCAN_COMPLETE
+                else:
+                    return STATE_HEALTHY_IDLE
+            elif result == "threats":
+                return STATE_THREATS_FOUND
             elif result == "error":
-                self.indicator.set_icon_full(self._get_icon_name("dialog-warning"), "Scan error")
-            elif result == "clean" or last_result == "clean":
-                self.indicator.set_icon_full(self._get_icon_name("security-high"), "All clear")
+                return STATE_SCAN_FAILED
             else:
-                self.indicator.set_icon_full(self._get_icon_name("security-high"), "Idle")
+                return STATE_HEALTHY_IDLE
+        elif state == "idle":
+            last = data.get("last_scan_result", "")
+            if last == "threats":
+                return STATE_THREATS_FOUND
+            elif last == "error":
+                return STATE_SCAN_FAILED
+            else:
+                return STATE_HEALTHY_IDLE
         else:
-            self.indicator.set_icon_full(self._get_icon_name("dialog-warning"), "Status unknown")
+            return STATE_UNKNOWN
 
     def poll(self):
-        """Poll the status file and rebuild menu if changed."""
         try:
             raw = None
             try:
@@ -127,16 +200,23 @@ class SecurityTray:
 
             if raw != self.last_status_raw:
                 self.last_status_raw = raw
-                self.update_status()
+                data = None
+                if raw is not None:
+                    try:
+                        data = json.loads(raw)
+                    except Exception:
+                        data = None
+                self.status = data or {}
+                new_state = self.determine_state(data)
+                self.set_state(new_state)
                 self.build_menu()
         except Exception as e:
             print(f"Poll error: {e}", file=sys.stderr)
-        return True  # keep polling
+        return True
 
     # --- Menu building ---
 
     def build_menu(self):
-        """Build the full right-click context menu."""
         menu = Gtk.Menu()
 
         # 1. Status header
@@ -197,42 +277,25 @@ class SecurityTray:
         self.indicator.set_menu(menu)
 
     def _make_status_header(self):
-        """Create the status header menu item with bold markup."""
-        state = self.status.get("state", "")
-        result = self.status.get("result", "")
+        state = self.current_state or STATE_UNKNOWN
         threat_count = self.status.get("threat_count", 0)
 
-        if not self.status:
-            text = "<b>\u25cf Status Unknown</b>"
-        elif state in ("updating", "scanning"):
-            scan_type = self.status.get("scan_type", "")
-            current = self.status.get("current_dir", "")
-            label = f"Scanning {current}..." if current else f"{scan_type.title()} scan running..."
-            text = f"<b>\u25cf {label}</b>"
-        elif result == "threats":
+        header_template = MENU_HEADERS.get(state, MENU_HEADERS[STATE_UNKNOWN])
+        if state == STATE_THREATS_FOUND:
             count = threat_count if threat_count else "?"
-            text = f"<b>\u25cf {count} Threat(s) Found</b>"
-        elif result == "error":
-            text = "<b>\u25cf Scan Error</b>"
-        elif result == "clean":
-            text = "<b>\u25cf Idle \u2014 All Clear</b>"
+            header_text = header_template.format(count=count)
         else:
-            text = "<b>\u25cf Idle</b>"
+            header_text = header_template
 
         item = Gtk.MenuItem()
         item.set_sensitive(False)
-        label_widget = item.get_child()
-        if label_widget:
-            label_widget.set_markup(text)
-        else:
-            label_widget = Gtk.Label()
-            label_widget.set_markup(text)
-            label_widget.set_halign(Gtk.Align.START)
-            item.add(label_widget)
+        label_widget = Gtk.Label()
+        label_widget.set_markup(f"<b>{GLib.markup_escape_text(header_text)}</b>")
+        label_widget.set_halign(Gtk.Align.START)
+        item.add(label_widget)
         return item
 
     def _make_last_scan_items(self):
-        """Create info items showing last scan details."""
         items = []
         scan_type = self.status.get("scan_type", "")
         result = self.status.get("result", "")
@@ -241,7 +304,6 @@ class SecurityTray:
         last_scan_time = self.status.get("last_scan_time", "")
         timestamp = self.status.get("timestamp", "")
 
-        # Use last_scan_time if available, otherwise timestamp
         time_str = last_scan_time or timestamp
         display_time = self._format_scan_time(time_str)
 
@@ -272,7 +334,6 @@ class SecurityTray:
         return items
 
     def _make_schedule_items(self):
-        """Create items showing next scheduled scan times."""
         items = []
         for timer_name, label in [("clamav-quick.timer", "Next quick"),
                                    ("clamav-deep.timer", "Next deep")]:
@@ -281,13 +342,11 @@ class SecurityTray:
         return items
 
     def _info_item(self, text):
-        """Create a non-clickable informational menu item."""
         item = Gtk.MenuItem(label=text)
         item.set_sensitive(False)
         return item
 
     def _format_scan_time(self, iso_str):
-        """Format an ISO timestamp to a friendly display string."""
         if not iso_str:
             return "Unknown"
         try:
@@ -303,7 +362,6 @@ class SecurityTray:
             return iso_str
 
     def _get_next_timer_fire(self, timer_name):
-        """Get the next fire time for a systemd timer."""
         try:
             result = subprocess.run(
                 ["systemctl", "show", timer_name,
@@ -314,10 +372,7 @@ class SecurityTray:
                 value = result.stdout.strip().split("=", 1)[1]
                 if not value:
                     return "Not scheduled"
-                # systemctl returns something like "Thu 2026-03-19 12:00:00 EDT"
                 try:
-                    # Try to parse and reformat
-                    # Strip timezone abbreviation for parsing
                     parts = value.rsplit(" ", 1)
                     dt = datetime.strptime(parts[0], "%a %Y-%m-%d %H:%M:%S")
                     now = datetime.now()
@@ -328,7 +383,7 @@ class SecurityTray:
                         return f"Tomorrow {dt.strftime('%I:%M %p').lstrip('0')}"
                     return dt.strftime("%a %b %d, %I:%M %p").lstrip("0")
                 except Exception:
-                    return value  # return raw if parsing fails
+                    return value
         except Exception:
             pass
         return "Check systemctl"
@@ -338,21 +393,21 @@ class SecurityTray:
     def _on_run_quick(self, _widget):
         try:
             subprocess.Popen(
-                ["konsole", "-e", "sudo", SCAN_SCRIPT, "quick"])
+                ["konsole", "--hold", "-e", "sudo", SCAN_SCRIPT, "quick"])
         except Exception:
             pass
 
     def _on_run_deep(self, _widget):
         try:
             subprocess.Popen(
-                ["konsole", "-e", "sudo", SCAN_SCRIPT, "deep"])
+                ["konsole", "--hold", "-e", "sudo", SCAN_SCRIPT, "deep"])
         except Exception:
             pass
 
     def _on_run_healthcheck(self, _widget):
         try:
             subprocess.Popen(
-                ["konsole", "-e", "sudo", HEALTHCHECK_SCRIPT])
+                ["konsole", "--hold", "-e", "sudo", HEALTHCHECK_SCRIPT])
         except Exception:
             pass
 
