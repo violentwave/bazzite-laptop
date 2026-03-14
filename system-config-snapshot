@@ -1,0 +1,168 @@
+# System Configuration Snapshot
+## Acer Predator G3-571 — Bazzite 42/43
+## Last updated: 2026-03-14
+
+### Kernel Arguments
+```
+BOOT_IMAGE=(hd1,gpt2)/ostree/default-.../vmlinuz-6.17.7-ba28.fc43.x86_64
+rd.luks.uuid=luks-ec338b68-2489-477e-bd89-592d308f450c
+rhgb quiet
+root=UUID=a49a088b-4e6f-4b96-9d5e-f7f3ab9e9b3f
+rootflags=subvol=root rw
+bluetooth.disable_ertm=1
+nvidia-drm.modeset=1
+```
+
+### Layered Packages (rpm-ostree)
+- `clamav` — antivirus scanner
+- `clamav-freshclam` — signature updater (runs every 4 hours)
+- `gamemode` — CPU/GPU optimization during gaming
+- `msmtp` — SMTP client for email alerts
+- `usbguard` — USB device authorization
+
+### Flatpak Applications
+| App | ID | Purpose |
+|-----|----|---------|
+| Brave | com.brave.Browser | Web browser |
+| Discord | com.discordapp.Discord | Gaming comms |
+| Protontricks | com.github.Matoking.protontricks | Proton tweaks |
+| Flatseal | com.github.tchx84.Flatseal | Flatpak permissions manager |
+| DistroShelf | com.ranfdev.DistroShelf | Distrobox GUI |
+| ProtonPlus | com.vysp3r.ProtonPlus | Proton version manager |
+| Warehouse | io.github.flattool.Warehouse | Flatpak manager |
+| Filelight | org.kde.filelight | Disk usage |
+| Gwenview | org.kde.gwenview | Image viewer |
+| Haruna | org.kde.haruna | Media player |
+| KCalc | org.kde.kcalc | Calculator |
+| Okular | org.kde.okular | PDF viewer |
+| Hardware Probe | org.linux_hardware.hw-probe | HW diagnostics |
+
+### Homebrew Packages
+None installed.
+
+### Firewall (firewalld)
+- Default zone: **DROP**
+- Interfaces: enp3s0f1, wlan0
+- Allowed services: dhcpv6-client only
+- All incoming blocked
+
+### Firewall Logging
+- log-denied: **all** (permanent, set via `firewall-cmd --set-log-denied=all`)
+
+### DNS Configuration
+- DNS-over-TLS: **Enabled**
+- Primary: 1.1.1.1 (Cloudflare)
+- Secondary: 9.9.9.9 (Quad9)
+- Config file: `/etc/systemd/resolved.conf.d/dns-over-tls.conf`
+
+### SELinux
+- Status: **Enforcing**
+
+### LUKS Encryption
+- UUID: luks-ec338b68-2489-477e-bd89-592d308f450c
+- Partition: /dev/sda3
+- KDF: **Argon2id** (already set — verified with `luks-upgrade.sh`)
+- Header backup: `~/security/luks-backup/` + `/mnt/backup/luks-header-backup/`
+
+### ZRAM Swap
+- Size: 7.7GB (~50% of 16GB RAM)
+- Algorithm: zstd
+- Swappiness: 180 (Bazzite ZRAM default — do NOT change)
+
+### Storage Layout
+| Device | Size | Mount | Filesystem | Notes |
+|--------|------|-------|------------|-------|
+| /dev/sda1 | 600M | /boot/efi | EFI | Boot |
+| /dev/sda2 | 1G | /boot | ext4 | Kernel/initramfs |
+| /dev/sda3 | 236.9G | / (LUKS) | btrfs | OS — LUKS encrypted |
+| /dev/sdb1 | 1.8T | /run/media/lch/SteamLibrary | ext4 | Steam library (external SSD) |
+| /dev/zram0 | 7.7G | [SWAP] | zstd compressed | ZRAM swap |
+
+### External SSD Mount Options
+```
+/dev/sdb1 on /run/media/lch/SteamLibrary type ext4
+(rw,nosuid,nodev,relatime,seclabel,errors=remount-ro,stripe=256,uhelper=udisks2)
+```
+
+### Active Systemd Timers
+| Timer | Purpose | Schedule |
+|-------|---------|----------|
+| uupd.timer | Bazzite auto-updates | ~Daily |
+| fstrim.timer | SSD TRIM maintenance | Weekly |
+| logrotate.timer | Log rotation | Daily |
+| unbound-anchor.timer | DNSSEC anchor update | Daily |
+| systemd-tmpfiles-clean | Temp file cleanup | Daily |
+| rpm-ostree-countme | Usage telemetry | Weekly |
+| clamav-quick.timer | Daily ClamAV quick scan | Daily noon |
+| clamav-deep.timer | Weekly ClamAV deep scan | Fri 11PM |
+
+### Disabled Services (by us)
+- sshd — SSH disabled
+- cups — Printing disabled
+- avahi-daemon.service + avahi-daemon.socket — mDNS/Bonjour (not needed)
+- ModemManager.service — Modem manager (no modem on this machine)
+- virt* — All libvirt/virtualization daemons (libvirtd, virtlogd, virtstoraged, etc.)
+- vboxservice.service — VirtualBox guest additions
+- vmtoolsd.service, vgauthd.service — VMware tools
+- sssd.service, sssd-kcm.socket — System Security Services Daemon
+- iscsi-onboot.service, iscsi-starter.service, iscsid.socket, iscsiuio.socket — iSCSI storage
+- mdmonitor.service — MD RAID monitoring (no RAID)
+- raid-check.timer — Weekly RAID check (no RAID)
+- qemu-guest-agent.service — QEMU guest agent (bare metal, not a VM)
+
+### Custom Files
+| Path | Contents |
+|------|----------|
+| `/etc/systemd/resolved.conf.d/dns-over-tls.conf` | DNS-over-TLS config |
+| `/etc/gamemode.ini` | GameMode advanced config (GPU powermizer, CPU governor) |
+| `/etc/environment` | NVIDIA shader cache 4GB (`__GL_SHADER_DISK_CACHE_SIZE`) |
+| `/etc/udev/rules.d/60-ioschedulers.rules` | mq-deadline I/O scheduler for external SSD |
+| `/etc/sysctl.d/99-gaming-network.conf` | TCP Fast Open + no slow start after idle |
+| `/etc/systemd/system/clamav-quick.timer` | Daily noon ClamAV quick scan timer |
+| `/etc/systemd/system/clamav-quick.service` | ClamAV quick scan service unit |
+| `/etc/systemd/system/clamav-deep.timer` | Weekly Friday 11PM ClamAV deep scan timer |
+| `/etc/systemd/system/clamav-deep.service` | ClamAV deep scan service unit |
+| `/etc/logrotate.d/clamav-scans` | 60-day log rotation for ClamAV scan logs |
+| `/etc/usbguard/rules.conf` | USBGuard device whitelist (12 devices) |
+| `/etc/freshclam.conf` | freshclam config (4-hour signature update interval) |
+| `/usr/local/bin/clamav-scan.sh` | ClamAV scan script (quick/deep, quarantine, email alerts) |
+| `/usr/local/bin/clamav-alert.sh` | Email alert script via msmtp/Gmail |
+| `/usr/local/bin/public-wifi-mode` | WiFi security toggle script |
+| `~/.msmtprc` | Gmail SMTP config with app password (chmod 600) |
+| `~/.config/MangoHud/MangoHud.conf` | MangoHud overlay config |
+| `~/security/` | Security hub: quarantine, logs, LUKS backup, configs, READMEs |
+| `~/.local/share/applications/security-*.desktop` | KDE Security menu shortcuts (6 items) |
+| `~/.local/share/desktop-directories/security-directory.desktop` | KDE Security menu directory entry |
+| `~/.config/menus/applications-merged/security.menu` | KDE Security menu category definition |
+
+### USBGuard
+- Status: **Active**, policy-mode block
+- Rules: `/etc/usbguard/rules.conf`
+- Whitelisted devices (12):
+  - USB root hubs (internal)
+  - Lite-On Technology — internal WiFi/Bluetooth module
+  - Chicony Electronics — internal webcam
+  - SanDisk Extreme SSD (main USB storage)
+  - 2× ASolid flash drives
+  - 8BitDo controller (active state + idle state + port 2)
+  - Logitech mouse
+  - VOOPOO device
+
+### ClamAV
+- Status: **Active**
+- Quick scan: daily at noon — targets `/home/lch`, `/tmp`
+- Deep scan: weekly Friday 11PM — targets `/home/lch`, `/tmp`, `/var`
+- Quarantine: `~/security/quarantine/`
+- Scan logs: `/var/log/clamav-scans/` (60-day rotation via logrotate)
+- Email alerts: via msmtp/Gmail (deep scan always; quick scan on threats only)
+- Signature updates: freshclam every 4 hours
+- Script: `/usr/local/bin/clamav-scan.sh {quick|deep}`
+
+### Key Ports Listening
+| Port | Process | Interface | Risk |
+|------|---------|-----------|------|
+| 53 | systemd-resolved | localhost | None — local DNS |
+| 5355 | systemd-resolved | all | LLMNR — low risk, blocked by firewall |
+| 27036 | Steam | all interfaces | LAN game discovery — blocked by firewall |
+| 27060 | Steam | localhost | None — local only |
+| 1716 | KDE Connect | all interfaces | Blocked by firewall |
