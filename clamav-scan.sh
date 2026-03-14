@@ -43,6 +43,7 @@ fi
 # --- Create directories ---
 mkdir -p "$QUARANTINE_DIR"
 mkdir -p "$LOG_DIR"
+chmod 755 "$LOG_DIR"
 
 # --- Helper: write status file (atomic) ---
 write_status() {
@@ -261,6 +262,7 @@ else
     EXIT_CODE=0
     RESULT_STATUS="clean"
 fi
+chmod 644 "$LOG_FILE" 2>/dev/null
 
 # --- Final status file ---
 write_status "complete" "Scan complete" "" "${#SCAN_DIRS[@]}" "${#SCAN_DIRS[@]}" \
