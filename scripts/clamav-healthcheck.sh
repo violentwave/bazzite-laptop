@@ -14,7 +14,6 @@ INTERACTIVE=false
 [ -t 1 ] && INTERACTIVE=true
 
 # --- ANSI Colors ---
-CYAN='\e[0;36m'
 BCYAN='\e[1;36m'
 GREEN='\e[0;32m'
 RED='\e[0;31m'

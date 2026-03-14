@@ -200,7 +200,7 @@ LAYER1="${BACKUP_DIR}/layer1-critical"
 mkdir -p "$LAYER1"
 
 # LUKS header backup
-if [[ -f "${HOME_DIR}/security/luks-backup/luks-header-"*.bak ]]; then
+if compgen -G "${HOME_DIR}/security/luks-backup/luks-header-*.bak" >/dev/null 2>&1; then
     LUKS_SRC=$(ls -t "${HOME_DIR}/security/luks-backup/luks-header-"*.bak 2>/dev/null | head -1)
     cp -a "$LUKS_SRC" "${LAYER1}/luks-header.bak" && ok "luks-header.bak (from ${LUKS_SRC})" || fail "luks-header.bak"
 else
@@ -361,7 +361,6 @@ LAYER5="${BACKUP_DIR}/layer5-game-saves"
 COMPATDATA="${HOME_DIR}/.local/share/Steam/steamapps/compatdata"
 
 if [[ -d "$COMPATDATA" ]]; then
-    COMPAT_SIZE_KB=$(du -sk "$COMPATDATA" 2>/dev/null | awk '{print $1}')
     COMPAT_SIZE_HUMAN=$(dir_size "$COMPATDATA")
     info "compatdata size: ${COMPAT_SIZE_HUMAN}"
 

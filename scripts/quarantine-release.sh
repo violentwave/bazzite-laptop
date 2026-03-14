@@ -11,7 +11,6 @@ LOG_DIR="/var/log/clamav-scans"
 DEFAULT_DEST="/home/lch/Downloads"
 
 # --- ANSI Colors ---
-CYAN='\e[0;36m'
 BCYAN='\e[1;36m'
 GREEN='\e[0;32m'
 RED='\e[0;31m'

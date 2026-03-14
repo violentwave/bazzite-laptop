@@ -23,7 +23,8 @@ RST='\033[0m'
 
 result() {
     TOTAL=$((TOTAL + 1))
-    local num=$(printf "%2d" "$TOTAL")
+    local num
+    num=$(printf "%2d" "$TOTAL")
     case "$1" in
         PASS) PASS=$((PASS + 1)); echo -e "  ${GRN}[PASS]${RST} ${num}. $2" ;;
         FAIL) FAIL=$((FAIL + 1)); echo -e "  ${RED}[FAIL]${RST} ${num}. $2" ;;

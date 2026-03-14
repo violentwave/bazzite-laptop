@@ -19,7 +19,6 @@ INTERACTIVE=false
 [ -t 1 ] && INTERACTIVE=true
 
 # --- ANSI Colors ---
-CYAN='\e[0;36m'
 BCYAN='\e[1;36m'
 GREEN='\e[0;32m'
 RED='\e[0;31m'
@@ -100,7 +99,7 @@ print_phase() {
     local label="$1"
     local status="$2"  # running, starting, done, error
     $INTERACTIVE || return 0
-    local dot color status_text
+    local dot status_text
     case "$status" in
         running)
             dot="${YELLOW}●${RESET}"

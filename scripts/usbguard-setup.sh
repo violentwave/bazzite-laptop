@@ -16,7 +16,6 @@
 set -euo pipefail
 
 # --- Colors ---
-CYAN='\e[0;36m'
 BCYAN='\e[1;36m'
 GREEN='\e[0;32m'
 BGREEN='\e[1;32m'

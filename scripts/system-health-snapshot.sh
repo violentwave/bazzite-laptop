@@ -33,7 +33,8 @@ readonly LOG_DIR="/var/log/system-health"
 readonly DELTA_FILE="${LOG_DIR}/health-deltas.dat"
 readonly STATUS_FILE="/home/lch/security/.status"
 readonly MSMTPRC="/home/lch/.msmtprc"
-readonly TIMESTAMP=$(date '+%Y-%m-%d-%H%M')
+TIMESTAMP=$(date '+%Y-%m-%d-%H%M')
+readonly TIMESTAMP
 readonly LOG_FILE="${LOG_DIR}/health-${TIMESTAMP}.log"
 readonly LATEST_LINK="${LOG_DIR}/health-latest.log"
 
@@ -50,7 +51,6 @@ readonly SDB_LABEL="External NVMe (sdb — WD SN580E 2TB USB)"
 readonly THRESH_REALLOC=20               # Reallocated sector count
 readonly THRESH_UNCORRECT=100            # Offline uncorrectable sectors
 readonly THRESH_WEAR=500                 # Wear leveling cycles
-readonly THRESH_ATA_ERRORS_DELTA=50      # New ATA errors since last check
 # SMART (sdb — NVMe)
 readonly THRESH_NVME_SPARE=20            # Available spare % (warn if BELOW)
 readonly THRESH_NVME_USED=80             # Percentage used (warn if ABOVE)
@@ -541,10 +541,14 @@ rm -f "$DISK_WARNS_TMP"
 # ── Inode usage (sneaky failure mode) ──
 log ""
 log "  Inode usage:"
-df -i --output=target,itotal,iused,iavail,ipcent -x tmpfs -x devtmpfs -x efivarfs -x overlay 2>/dev/null | \
-while IFS= read -r line; do
-    info "  $line"
-done
+INODE_OUT=$(df -i --output=target,itotal,iused,iavail,ipcent / /boot 2>/dev/null || true)
+if [[ -n "$INODE_OUT" ]]; then
+    while IFS= read -r line; do
+        info "  $line"
+    done <<< "$INODE_OUT"
+else
+    info "  (inode data not available)"
+fi
 
 # ── ZRAM ──
 log ""
@@ -554,7 +558,7 @@ if [[ -f /sys/block/zram0/mm_stat ]]; then
     ORIG_MB=$((ORIG / 1048576))
     COMP_MB=$((COMP / 1048576))
     MEM_MB=$((MEM / 1048576))
-    if [[ "$ORIG" -eq 0 || "$COMP" -eq 0 ]]; then
+    if [[ "$ORIG_MB" -eq 0 || "$COMP_MB" -eq 0 ]]; then
         RATIO="N/A (no swap pressure)"
     else
         RATIO=$(echo "scale=2; $ORIG / $COMP" | bc 2>/dev/null || echo "?")

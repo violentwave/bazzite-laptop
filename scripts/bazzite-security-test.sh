@@ -25,7 +25,6 @@ TEST_REPORT="/home/lch/security/test-report-$(date +%Y%m%d-%H%M%S).log"
 LCH_UID="$(id -u lch)"
 
 # --- ANSI Colors ---
-CYAN='\e[0;36m'
 BCYAN='\e[1;36m'
 GREEN='\e[0;32m'
 RED='\e[0;31m'
@@ -273,7 +272,6 @@ fi
 if $TEST_STARTED_CLAMD; then
     EICAR_START=$(date +%s)
     SCAN_RESULT=$(clamdscan --fdpass --multiscan --infected --move="$QUARANTINE_DIR" "$EICAR_DIR" 2>&1) || true
-    EICAR_RC=$?
     EICAR_END=$(date +%s)
     EICAR_SECS=$((EICAR_END - EICAR_START))
 
