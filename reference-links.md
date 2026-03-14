@@ -1,4 +1,4 @@
-Your hardware probe: REDACTED
+Your hardware probe: [redacted — see browser history]
 Bazzite docs: https://docs.bazzite.gg/
 Bazzite ujust commands: https://docs.bazzite.gg/Installing_and_Managing_Software/ujust/
 Bazzite launch options guide: https://docs.bazzite.gg/Gaming/launch-options-env-variables/

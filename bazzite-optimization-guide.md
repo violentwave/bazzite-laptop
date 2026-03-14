@@ -2,7 +2,7 @@
 ## Acer Predator G3-571 — Project Reference Document
 
 **System**: Acer Predator G3-571 | Bazzite 42/43 (KDE6/Wayland) | Username: lch
-**Hardware probe**: REDACTED
+**Hardware probe**: [redacted — see browser history]
 **GPUs**: NVIDIA GTX 1060 Mobile 6GB + Intel HD 630 (Hybrid/Optimus)
 **CPU**: Intel i7-7700HQ | **RAM**: 16GB | **Vulkan**: 1.4.341
 **NVIDIA Driver**: 580.95.05 | **CUDA**: 13.0
