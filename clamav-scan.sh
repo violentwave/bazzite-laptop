@@ -29,14 +29,16 @@ DIM='\e[2m'
 RESET='\e[0m'
 
 # --- Validate argument ---
-if [[ "$SCAN_TYPE" != "quick" && "$SCAN_TYPE" != "deep" ]]; then
-    echo "Usage: $0 {quick|deep}" >&2
+if [[ "$SCAN_TYPE" != "quick" && "$SCAN_TYPE" != "deep" && "$SCAN_TYPE" != "test" ]]; then
+    echo "Usage: $0 {quick|deep|test}" >&2
     exit 2
 fi
 
 # --- Scan targets ---
 if [[ "$SCAN_TYPE" == "quick" ]]; then
     SCAN_DIRS=(/home/lch /tmp)
+elif [[ "$SCAN_TYPE" == "test" ]]; then
+    SCAN_DIRS=(/tmp)
 else
     SCAN_DIRS=(/home/lch /tmp /var)
 fi
@@ -83,6 +85,7 @@ print_banner() {
     $INTERACTIVE || return 0
     local scan_label="Quick Scan"
     [[ "$SCAN_TYPE" == "deep" ]] && scan_label="Deep Scan"
+    [[ "$SCAN_TYPE" == "test" ]] && scan_label="Test Scan"
     local date_str
     date_str="$(date '+%b %d, %Y %I:%M %p')"
     echo ""
@@ -244,6 +247,17 @@ else
     fi
 fi
 
+# --- Test mode: create EICAR test file ---
+if [[ "$SCAN_TYPE" == "test" ]]; then
+    EICAR_DIR="/tmp/clamav-test-$$"
+    mkdir -p "$EICAR_DIR"
+    echo 'X5O!P%@AP[4\PZX54(P^)7CC)7}$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$H+H*' > "$EICAR_DIR/eicar-test.txt"
+    if $INTERACTIVE; then
+        echo -e "    ${DIM}Created EICAR test file at $EICAR_DIR/eicar-test.txt${RESET}"
+    fi
+    SCAN_DIRS=("$EICAR_DIR")
+fi
+
 # --- Phase 2: Start clamd ---
 write_status "scanning" "Starting scan daemon"
 print_phase "Starting scan daemon..." "starting"
@@ -374,5 +388,30 @@ esac
 # --- Email alerts ---
 # Always send email after scan completion
 send_alert "$RESULT_STATUS" "$PARSED_THREATS" "$PARSED_FILES" "$DURATION"
+
+# --- Test mode: clean up EICAR test directory ---
+if [[ "$SCAN_TYPE" == "test" ]] && [[ -d "${EICAR_DIR:-}" ]]; then
+    rm -rf "$EICAR_DIR" 2>/dev/null
+fi
+
+# --- Test mode: clean up quarantined EICAR file and reset status ---
+if [[ "$SCAN_TYPE" == "test" ]]; then
+    EICAR_Q="$QUARANTINE_DIR/eicar-test.txt"
+    if [[ -f "$EICAR_Q" ]]; then
+        chattr -i "$EICAR_Q" 2>/dev/null
+        chmod 644 "$EICAR_Q" 2>/dev/null
+        rm -f "$EICAR_Q" 2>/dev/null
+    fi
+
+    # Reset status to idle/clean so tray goes back to green
+    write_status "idle" "Test complete — system clean" "" "0" "0" \
+        "clean" "0" "0" "" "" "clean"
+
+    if $INTERACTIVE; then
+        echo ""
+        echo -e "    ${DIM}Test cleanup: EICAR file removed from quarantine${RESET}"
+        echo -e "    ${DIM}Tray icon will return to green${RESET}"
+    fi
+fi
 
 exit $EXIT_CODE
