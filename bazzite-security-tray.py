@@ -254,6 +254,14 @@ class SecurityTray:
         item_health.connect("activate", self._on_run_healthcheck)
         menu.append(item_health)
 
+        item_test = Gtk.MenuItem(label="Run Test Scan")
+        item_test.connect("activate", self._on_run_test)
+        menu.append(item_test)
+
+        item_suite = Gtk.MenuItem(label="Run Test Suite")
+        item_suite.connect("activate", self._on_run_suite)
+        menu.append(item_suite)
+
         # 8. Separator
         menu.append(Gtk.SeparatorMenuItem())
 
@@ -406,6 +414,21 @@ class SecurityTray:
         try:
             subprocess.Popen(
                 ["konsole", "--hold", "-e", "sudo", SCAN_SCRIPT, "deep"])
+        except Exception:
+            pass
+
+    def _on_run_test(self, _widget):
+        try:
+            subprocess.Popen(
+                ["konsole", "--hold", "-e", "sudo", SCAN_SCRIPT, "test"])
+        except Exception:
+            pass
+
+    def _on_run_suite(self, _widget):
+        try:
+            subprocess.Popen(
+                ["konsole", "--hold", "-e", "sudo",
+                 "/usr/local/bin/bazzite-security-test.sh"])
         except Exception:
             pass
 
