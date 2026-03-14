@@ -1,0 +1,38 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Editor/IDE
+*.swp
+*.swo
+*~
+*.orig
+.idea
+.vscode
+
+# Temp/backup files
+*.bak
+*.tmp
+*.log
+
+# Shell config stubs (sandbox artifacts)
+.bash_profile
+.bashrc
+.profile
+.zprofile
+.zshrc
+.gitconfig
+.gitmodules
+.ripgreprc
+
+# Tool configs
+.mcp.json
+.claude/
+
+# Git bare repo artifacts (0-byte conflicts)
+/HEAD
+/config
+/hooks
+/objects
+/refs
