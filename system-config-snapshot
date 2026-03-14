@@ -16,6 +16,7 @@ nvidia-drm.modeset=1
 ### Layered Packages (rpm-ostree)
 - `clamav` — antivirus scanner
 - `clamav-freshclam` — signature updater (runs every 4 hours)
+- `clamd` — ClamAV scanning daemon (on-demand via clamd@scan)
 - `gamemode` — CPU/GPU optimization during gaming
 - `msmtp` — SMTP client for email alerts
 - `usbguard` — USB device authorization
@@ -95,6 +96,7 @@ None installed.
 | rpm-ostree-countme | Usage telemetry | Weekly |
 | clamav-quick.timer | Daily ClamAV quick scan | Daily noon |
 | clamav-deep.timer | Weekly ClamAV deep scan | Fri 11PM |
+| clamav-healthcheck.timer | Weekly security health check | Wed 2:00 PM |
 
 ### Disabled Services (by us)
 - sshd — SSH disabled
@@ -109,6 +111,9 @@ None installed.
 - mdmonitor.service — MD RAID monitoring (no RAID)
 - raid-check.timer — Weekly RAID check (no RAID)
 - qemu-guest-agent.service — QEMU guest agent (bare metal, not a VM)
+
+### Enabled Services (by us)
+- clamav-freshclam.service — virus signature auto-updater (enabled 2026-03-14)
 
 ### Custom Files
 | Path | Contents |
@@ -134,6 +139,17 @@ None installed.
 | `~/.local/share/applications/security-*.desktop` | KDE Security menu shortcuts (6 items) |
 | `~/.local/share/desktop-directories/security-directory.desktop` | KDE Security menu directory entry |
 | `~/.config/menus/applications-merged/security.menu` | KDE Security menu category definition |
+| `/etc/clamd.d/scan.conf` | clamd daemon config (socket, threads, excludes) |
+| `/etc/systemd/system/clamav-healthcheck.timer` | Weekly Wednesday 2PM health check timer |
+| `/etc/systemd/system/clamav-healthcheck.service` | Health check service unit |
+| `/usr/local/bin/clamav-healthcheck.sh` | Security system health checker |
+| `/usr/local/bin/quarantine-release.sh` | Quarantine file release manager |
+| `/usr/local/bin/bazzite-security-test.sh` | 15-test security validation suite |
+| `~/security/bazzite-security-tray.py` | System tray security monitor |
+| `~/security/icons/hicolor/` | Custom tray icons (5 SVGs + index.theme) |
+| `~/security/.status` | JSON status file for tray (atomic writes) |
+| `~/security/quarantine-hashes.log` | SHA256 hashes of quarantined files |
+| `~/.config/autostart/bazzite-security-tray.desktop` | Tray app autostart |
 
 ### USBGuard
 - Status: **Active**, policy-mode block
@@ -149,14 +165,27 @@ None installed.
   - VOOPOO device
 
 ### ClamAV
-- Status: **Active**
-- Quick scan: daily at noon — targets `/home/lch`, `/tmp`
-- Deep scan: weekly Friday 11PM — targets `/home/lch`, `/tmp`, `/var`
-- Quarantine: `~/security/quarantine/`
+- Status: **Active** — daemon mode (clamd@scan)
+- Scanner: clamdscan (not standalone clamscan)
+- Daemon: clamd@scan (on-demand, started/stopped per scan)
+- Config: /etc/clamd.d/scan.conf
+- Threads: 8 (MaxThreads)
+- Socket: /run/clamd.scan/clamd.sock
+- Memory: ~1.1GB when running, 0 when stopped
+- Scan time: ~20 min for quick scan (~76,000 files)
+- Quick scan: daily at noon — `/home/lch`, `/tmp`
+- Deep scan: weekly Friday 11PM — `/home/lch`, `/tmp`, `/var`
+- Test scan: EICAR file in /tmp (full pipeline test)
+- Quarantine: `~/security/quarantine/` — chmod 000 + chattr +i, root:lch 750
+- Release manager: `/usr/local/bin/quarantine-release.sh`
+- SHA256 hash log: `~/security/quarantine-hashes.log` with VirusTotal links
 - Scan logs: `/var/log/clamav-scans/` (60-day rotation via logrotate)
-- Email alerts: via msmtp/Gmail (deep scan always; quick scan on threats only)
-- Signature updates: freshclam every 4 hours
-- Script: `/usr/local/bin/clamav-scan.sh {quick|deep}`
+- Email alerts: HTML via msmtp/Gmail — sent after EVERY scan
+- Email config: /home/lch/.msmtprc (absolute path, script runs as root)
+- Signature updates: clamav-freshclam.service (daemon, continuous)
+- SELinux: antivirus_can_scan_system = on
+- Script: `/usr/local/bin/clamav-scan.sh {quick|deep|test}`
+- No external SSD scanning
 
 ### Key Ports Listening
 | Port | Process | Interface | Risk |

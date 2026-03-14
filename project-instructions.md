@@ -36,18 +36,22 @@ Refer to these project documents for full details:
 - MangoHud: F12 toggle overlay, F11 toggle logging
 - Services: Disabled avahi, ModemManager, virt*, vbox*, vmtools*, sssd, iscsi*, mdmonitor, raid-check, qemu-guest-agent
 - Performance: GameMode config, NVIDIA shader cache 4GB, I/O scheduler mq-deadline, TCP Fast Open
-- Security hardening: ClamAV (daily quick + weekly deep scans), USBGuard (12 devices whitelisted), LUKS Argon2id + header backup, firewall log-denied=all
-- Email alerts: msmtp + Gmail app password for ClamAV scan notifications
-- KDE Security menu: 6 shortcuts in app launcher (quick scan, deep scan, logs, quarantine, firewall, USB devices)
+- Security hardening: ClamAV clamd daemon mode (daily quick + weekly deep + test scans), USBGuard (12 devices whitelisted), LUKS Argon2id + header backup, firewall log-denied=all
+- Email alerts: HTML emails via msmtp + Gmail app password — sent after EVERY scan (quick/deep/test) + healthcheck failures
+- KDE Security menu: 10 shortcuts (deep scan, quick scan, firewall, firewall status, KWalletManager, scan logs, start security monitor, update email password, USB devices, view quarantine)
 - ~/security/ hub: centralized security folder with status file, quarantine dir, scan logs
+- Notification system: System tray app with 8-state icon machine (custom SVG icons), 3s polling, SIGHUP-resistant, autostart
+- Quarantine hardening: chmod 000 + chattr +i on quarantined files, root:lch 750 directory, release manager script
+- Healthcheck: /usr/local/bin/clamav-healthcheck.sh — 10+ checks, Wednesdays 2PM, email on failure
+- Test suite: /usr/local/bin/bazzite-security-test.sh — 15-test diagnostic with EICAR detection validation
 - Backup: Unified backup.sh/restore.sh on BazziteBackup flash drive (5 scenarios documented)
 
 ### Remaining Work (Prioritized)
-1. **Notification system overhaul** — Fancy terminal output, HTML emails, system tray security icon
-2. **ScopeBuddy configuration** — Per-game advanced launch management
-3. **Proton environment variable testing** — WAYLAND, NTSYNC flags for compatible games
-4. **System monitoring tools** — Mission Center, btop, nvtop, smartmontools
-5. **AI/Coding setup** (deferred) — Ollama with CUDA, VS Code, local LLMs
+1. **ScopeBuddy configuration** — Per-game advanced launch management
+2. **Proton environment variable testing** — WAYLAND, NTSYNC flags for compatible games
+3. **System monitoring tools** — Mission Center, btop, nvtop, smartmontools
+4. **AI/Coding setup** (deferred) — Ollama with CUDA, VS Code, local LLMs
+5. **Downloads folder watcher** — inotify auto-scan new downloads
 
 ### Game Launch Options Quick Reference
 | Game | Launch Options |
@@ -132,3 +136,17 @@ Create a `CLAUDE.md` file in any project directory. Claude Code reads this autom
 - Build backup scripts for game saves and system configs
 - Audit and harden system configurations
 - Help with future Ollama/VS Code/AI development setup
+
+### How to Test the Security System
+```
+sudo bazzite-security-test.sh    # Full 15-test validation
+sudo clamav-scan.sh test         # Quick EICAR detection test
+sudo clamav-healthcheck.sh       # Infrastructure health check
+```
+
+### Quarantine Management
+```
+sudo quarantine-release.sh --list         # View quarantined files
+sudo quarantine-release.sh --interactive  # Release files interactively
+```
+Quarantine location: `~/security/quarantine` (root:lch 750, files chmod 000 + chattr +i)

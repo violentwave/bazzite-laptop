@@ -35,6 +35,8 @@ These are enabled but not needed on a gaming laptop without VMs or modems:
 | bluetooth | Currently blocked by firewall, keep for future use |
 | NetworkManager | Network management — critical |
 | fstrim.timer | SSD maintenance |
+| clamav-freshclam | Virus signature auto-updater — enabled 2026-03-14 |
+| clamd@scan | ClamAV daemon — on-demand only (started/stopped per scan) |
 
 ### External SSD Optimization (minor)
 Current mount: `relatime` — consider adding `noatime` via fstab or udisks2 rule to reduce unnecessary writes.

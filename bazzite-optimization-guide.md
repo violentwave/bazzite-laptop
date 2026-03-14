@@ -86,18 +86,55 @@ Disabled all unnecessary services to reduce attack surface and resource usage:
   - `sudo public-wifi-mode on` — DROP zone (public WiFi)
   - `sudo public-wifi-mode off` — HOME zone (trusted network)
 - KDE Connect and Bluetooth: still enabled but blocked by firewall DROP zone
-- **KDE Security menu**: 6-item shortcut menu in KDE application launcher (scans, quarantine, firewall, USB, logs)
+- **KDE Security menu**: ClamAV Deep Scan, ClamAV Quick Scan, Firewall, Firewall Status, KWalletManager, Scan Logs, Start Security Monitor, Update Email Password, USB Devices, View Quarantine
 
 ### ClamAV ✅
-Layered packages: `clamav`, `clamav-freshclam`, `msmtp`
-- **Quick scan**: daily at noon — `/home/lch`, `/tmp` — email alert on threats only
-- **Deep scan**: weekly Friday 11PM — `/home/lch`, `/tmp`, `/var` — email alert always
-- **Quarantine**: `~/security/quarantine/`
+Layered packages: `clamav`, `clamav-freshclam`, `clamd`, `msmtp`
+- **Scanner**: clamdscan (daemon mode via clamd@scan, not standalone clamscan)
+- **On-demand pattern**: start clamd@scan → clamdscan --fdpass --multiscan → stop clamd@scan (reclaims ~1.1GB RAM)
+- **Scan time**: ~20 minutes (down from 75 min with standalone clamscan), 8 threads via MaxThreads in /etc/clamd.d/scan.conf
+- **Config**: /etc/clamd.d/scan.conf — ExcludePath directives (replaces --exclude-dir which clamdscan ignores)
+- **Socket**: /run/clamd.scan/clamd.sock
+- **Quick scan**: daily at noon — `/home/lch`, `/tmp`
+- **Deep scan**: weekly Friday 11PM — `/home/lch`, `/tmp`, `/var`
+- **Test scan**: EICAR detection test — full pipeline validation in ~30-60 seconds
+- **Quarantine**: `~/security/quarantine/` — files locked with chmod 000 + chattr +i, directory root:lch 750
+- **Quarantine release**: `/usr/local/bin/quarantine-release.sh` (--list, --interactive, direct release)
+- **SHA256 hash logging**: `~/security/quarantine-hashes.log` with VirusTotal links for every quarantined file
 - **Logs**: `/var/log/clamav-scans/` with 60-day rotation via `/etc/logrotate.d/clamav-scans`
-- **Email alerts**: via msmtp + Gmail app password (`~/.msmtprc` chmod 600)
-- **Signature updates**: freshclam every 4 hours (`/etc/freshclam.conf`)
-- **Script**: `/usr/local/bin/clamav-scan.sh {quick|deep}` — colored terminal UI, status file, desktop notifications
-- **Alert script**: `/usr/local/bin/clamav-alert.sh` — sends email with threat details
+- **clamd logs**: `/var/log/clamav-scans/clamd.log`
+- **Signature updates**: freshclam daemon (clamav-freshclam.service) — automatic, continuous updates
+- **SELinux boolean**: `antivirus_can_scan_system = on`
+- **Email alerts**: HTML emails via msmtp + Gmail app password, sent after EVERY scan (quick, deep, test)
+  - Config: /home/lch/.msmtprc (absolute path required — script runs as root via sudo)
+  - 3 templates: clean (green banner), threats (red with detail table), error (amber)
+  - Healthcheck failures also trigger email
+- **Script**: `/usr/local/bin/clamav-scan.sh {quick|deep|test}` — colored terminal UI, status file, desktop notifications
+- **Alert script**: `/usr/local/bin/clamav-alert.sh` — sends HTML email with threat details
+
+### Notification System ✅
+- **System tray app**: ~/security/bazzite-security-tray.py (Python + GObject + AppIndicator3)
+- **Custom icons**: 5 SVG shield+dot icons at ~/security/icons/hicolor/scalable/status/ with freedesktop index.theme
+- **8-state icon machine**: healthy_idle (green), scan_running (green blink), scan_complete (blue blink 30s), warning (yellow), scan_failed (red), scan_aborted (red blink), threats_found (red blink), unknown (yellow)
+- **Blink**: GLib.timeout_add toggles between colored icon and blank shield
+- **Autostart**: ~/.config/autostart/bazzite-security-tray.desktop (X-GNOME-Autostart-Delay=5)
+- **Resilience**: SIGHUP ignored (survives terminal closure), PR_SET_NAME prevents pkill clamscan from killing tray
+- **Status**: Polls ~/security/.status (JSON) every 3 seconds, atomic writes from scan script
+- **Menu**: Quick/deep/test scan, health check, test suite, quarantine view/release, logs, quit
+
+### Healthcheck System ✅
+- **Script**: `/usr/local/bin/clamav-healthcheck.sh` — 10+ automated checks
+- **Timer**: clamav-healthcheck.timer — Wednesdays 2:00 PM
+- **Checks**: binaries, signatures, timers, quarantine, logs, msmtp, disk space, clamd service
+- **Email**: Sends alert on failure
+
+### Security Test Suite ✅
+- **Script**: `/usr/local/bin/bazzite-security-test.sh` — 15-test diagnostic
+- **5 phases**: prerequisites, infrastructure, scanning (EICAR), notifications, tray/menu
+- **EICAR test**: Creates standard test virus, validates full detection → quarantine → lockdown pipeline
+- **Report**: Generates ~/security/test-report-*.log
+- **Safety**: Backs up/restores .status file, full cleanup on exit via trap
+- **Access**: Available from tray menu "Run Test Suite"
 
 ### USBGuard ✅
 Layered package: `usbguard`
@@ -128,6 +165,7 @@ Custom flat backup to BazziteBackup flash drive (sdc3):
 - Launch from project directories, never from `$HOME`
 
 ### Layered Packages (rpm-ostree)
+- `clamd` — ClamAV scanning daemon (on-demand, not persistent)
 - `clamav` — antivirus scanner
 - `clamav-freshclam` — signature updater
 - `gamemode` — CPU/GPU optimization during gaming
@@ -138,31 +176,16 @@ Custom flat backup to BazziteBackup flash drive (sdc3):
 
 ## REMAINING WORK — TO DO IN FUTURE CHATS
 
-### 1. Notification System Overhaul
-Current ClamAV alerts are basic. Upgrade to:
-- Fancy terminal output with progress bars and color-coded threat levels
-- HTML emails with formatted threat reports
-- KDE system tray icon showing scan status
-
-### 2. ScopeBuddy Configuration
+### 1. ScopeBuddy Configuration
 Pre-installed advanced game launch manager. Config at `~/.config/scopebuddy/`. Use `scb -- %command%` in launch options. Note: gamescope has beta NVIDIA support — may need `SCB_NOSCOPE=1` if issues arise.
 Docs: https://docs.bazzite.gg/Advanced/scopebuddy/
 
-### 3. Proton Environment Variables
+### 2. Proton Environment Variables
 Test per-game (do NOT use PRIME offload vars — those crash games):
 - `PROTON_ENABLE_WAYLAND=1` — native Wayland rendering in Proton 10+
 - `PROTON_USE_NTSYNC=1` — improved synchronization primitives
 
-### 4. AI/Coding Setup (Deferred)
-**Ollama with CUDA** — GTX 1060 6GB VRAM can run:
-- ✅ 7B parameter models (Llama 3.2, Mistral 7B, Qwen2.5-Coder 7B)
-- ⚠️ 13B models will be slow (heavy CPU offloading)
-- ❌ 70B+ models won't run well
-
-**VS Code** — Install via Flatpak: `flatpak install flathub com.visualstudio.code`
-Connect to local Ollama via Continue extension.
-
-### 5. System Monitoring Tools
+### 3. System Monitoring Tools
 | Tool | Method | Purpose |
 |------|--------|---------|
 | Mission Center | Flatpak | GUI system monitor (Task Manager equivalent) |
@@ -174,6 +197,18 @@ Connect to local Ollama via Continue extension.
 **Disk health** — After installing smartmontools:
 - Internal: `sudo smartctl -a /dev/sda`
 - External: `sudo smartctl -a -d sat /dev/sdb`
+
+### 4. AI/Coding Setup (Deferred)
+**Ollama with CUDA** — GTX 1060 6GB VRAM can run:
+- ✅ 7B parameter models (Llama 3.2, Mistral 7B, Qwen2.5-Coder 7B)
+- ⚠️ 13B models will be slow (heavy CPU offloading)
+- ❌ 70B+ models won't run well
+
+**VS Code** — Install via Flatpak: `flatpak install flathub com.visualstudio.code`
+Connect to local Ollama via Continue extension.
+
+### 5. Downloads Folder Watcher
+inotify-based auto-scan of ~/Downloads for new files — quarantine anything suspicious automatically.
 
 ---
 
@@ -223,7 +258,7 @@ Connect to local Ollama via Continue extension.
 | `/etc/usbguard/` | ✅ | rules.conf |
 | `/etc/firewalld/` | ✅ | Custom zone configs |
 | `/etc/logrotate.d/` | ✅ | clamav-scans |
-| `/usr/local/bin/` | ✅ | clamav-scan.sh, clamav-alert.sh, public-wifi-mode |
+| `/usr/local/bin/` | ✅ | clamav-scan.sh, clamav-alert.sh, clamav-healthcheck.sh, quarantine-release.sh, bazzite-security-test.sh, public-wifi-mode |
 | `~/.config/MangoHud/` | ✅ | MangoHud.conf |
 | `~/.config/scopebuddy/` | ✅ | Future ScopeBuddy configs |
 | `~/.claude/` | ✅ | Claude Code settings |
@@ -253,3 +288,11 @@ Connect to local Ollama via Continue extension.
 | View boot logs | `ujust logs-this-boot` |
 | Rollback system | `rpm-ostree rollback` |
 | List layered packages | `rpm-ostree status` |
+| Run test suite | `sudo bazzite-security-test.sh` |
+| Run test scan | `sudo clamav-scan.sh test` |
+| Run healthcheck | `sudo clamav-healthcheck.sh` |
+| Quarantine list | `sudo quarantine-release.sh --list` |
+| Release quarantine | `sudo quarantine-release.sh --interactive` |
+| Start tray icon | `python3 ~/security/bazzite-security-tray.py &` |
+| Check freshclam | `systemctl status clamav-freshclam.service` |
+| Check clamd | `systemctl status clamd@scan` |

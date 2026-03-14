@@ -30,3 +30,8 @@ USBGuard man page: https://wiki.archlinux.org/title/USBGuard
 msmtp documentation: https://marlam.de/msmtp/
 Gmail app passwords: https://myaccount.google.com/apppasswords
 Bazzite backup/restore: See backup-official-guide.md in this project
+ClamAV clamd documentation: https://docs.clamav.net/manual/Usage/Scanning.html
+ClamAV on-access scanning (NOT recommended for gaming): https://docs.clamav.net/manual/OnAccess.html
+EICAR test file info: https://www.eicar.org/download-anti-malware-testfile/
+AppIndicator3 (system tray): https://wiki.ubuntu.com/DesktopExperienceTeam/ApplicationIndicators
+Freedesktop icon theme spec: https://specifications.freedesktop.org/icon-theme-spec/latest/
