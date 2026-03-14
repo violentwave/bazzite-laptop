@@ -30,6 +30,17 @@ __pycache__/
 .mcp.json
 .claude/
 
+# Secrets and keys
+*.key
+*.pem
+.env
+.env.*
+.msmtprc
+id_rsa*
+id_ed25519*
+*.pub
+secrets/
+
 # Git bare repo artifacts (0-byte conflicts)
 /HEAD
 /config
