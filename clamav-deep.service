@@ -1,0 +1,11 @@
+# ClamAV weekly deep scan service
+# Deploy to: /etc/systemd/system/clamav-deep.service
+
+[Unit]
+Description=ClamAV deep scan (home + tmp + var + Steam library)
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/clamav-scan.sh deep
+Nice=15
+IOSchedulingClass=idle

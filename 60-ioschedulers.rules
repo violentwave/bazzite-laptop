@@ -1,0 +1,5 @@
+# I/O scheduler udev rule for external SATA SSD (sdb)
+# Deploy to: /etc/udev/rules.d/60-ioschedulers.rules
+# Sets mq-deadline scheduler for better latency on external SATA SSDs.
+
+ACTION=="add|change", KERNEL=="sd[b-z]", ATTR{queue/scheduler}="mq-deadline"

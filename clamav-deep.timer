@@ -1,0 +1,13 @@
+# ClamAV weekly deep scan timer — runs Friday at 11 PM
+# Deploy to: /etc/systemd/system/clamav-deep.timer
+# Enable with: sudo systemctl enable --now clamav-deep.timer
+
+[Unit]
+Description=Weekly ClamAV deep scan
+
+[Timer]
+OnCalendar=Fri *-*-* 23:00:00
+Persistent=true
+
+[Install]
+WantedBy=timers.target

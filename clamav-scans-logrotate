@@ -1,0 +1,10 @@
+# Logrotate config for ClamAV scan logs
+# Deploy to: /etc/logrotate.d/clamav-scans
+
+/var/log/clamav-scans/*.log {
+    weekly
+    rotate 8
+    compress
+    missingok
+    notifempty
+}

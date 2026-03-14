@@ -1,0 +1,11 @@
+# ClamAV daily quick scan service
+# Deploy to: /etc/systemd/system/clamav-quick.service
+
+[Unit]
+Description=ClamAV quick scan (home + tmp)
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/clamav-scan.sh quick
+Nice=15
+IOSchedulingClass=idle

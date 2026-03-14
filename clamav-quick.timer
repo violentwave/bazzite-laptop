@@ -1,0 +1,13 @@
+# ClamAV daily quick scan timer — runs at noon
+# Deploy to: /etc/systemd/system/clamav-quick.timer
+# Enable with: sudo systemctl enable --now clamav-quick.timer
+
+[Unit]
+Description=Daily ClamAV quick scan
+
+[Timer]
+OnCalendar=*-*-* 12:00:00
+Persistent=true
+
+[Install]
+WantedBy=timers.target
