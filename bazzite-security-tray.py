@@ -261,6 +261,10 @@ class SecurityTray:
         item_quarantine.connect("activate", self._on_view_quarantine)
         menu.append(item_quarantine)
 
+        item_release = Gtk.MenuItem(label="Release from Quarantine")
+        item_release.connect("activate", self._on_release_quarantine)
+        menu.append(item_release)
+
         item_logs = Gtk.MenuItem(label="View Scan Logs")
         item_logs.connect("activate", self._on_view_logs)
         menu.append(item_logs)
@@ -413,7 +417,17 @@ class SecurityTray:
 
     def _on_view_quarantine(self, _widget):
         try:
-            subprocess.Popen(["dolphin", QUARANTINE_DIR])
+            subprocess.Popen(
+                ["konsole", "--hold", "-e", "sudo",
+                 "/usr/local/bin/quarantine-release.sh", "--list"])
+        except Exception:
+            pass
+
+    def _on_release_quarantine(self, _widget):
+        try:
+            subprocess.Popen(
+                ["konsole", "-e", "sudo",
+                 "/usr/local/bin/quarantine-release.sh", "--interactive"])
         except Exception:
             pass
 

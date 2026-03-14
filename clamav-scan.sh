@@ -322,6 +322,17 @@ else
 fi
 chmod 644 "$LOG_FILE" 2>/dev/null
 
+# --- Lock down quarantined files ---
+if [[ -d "$QUARANTINE_DIR" ]]; then
+    # Remove all permissions from quarantined files (only root can access)
+    find "$QUARANTINE_DIR" -type f -exec chmod 000 {} \; 2>/dev/null
+    # Make quarantined files immutable (can't be modified, deleted, or executed)
+    find "$QUARANTINE_DIR" -type f -exec chattr +i {} \; 2>/dev/null
+    # Set directory permissions: root can read/write/enter, lch can list
+    chmod 750 "$QUARANTINE_DIR" 2>/dev/null
+    chown root:lch "$QUARANTINE_DIR" 2>/dev/null
+fi
+
 # --- Final status file ---
 write_status "complete" "Scan complete" "" "${#SCAN_DIRS[@]}" "${#SCAN_DIRS[@]}" \
     "$RESULT_STATUS" "$PARSED_THREATS" "$PARSED_FILES" "$DURATION" "$LAST_SCAN_TIME"
@@ -343,12 +354,7 @@ case $EXIT_CODE in
 esac
 
 # --- Email alerts ---
-# Deep scan: always send (weekly security report)
-# Quick scan: only on threats or errors
-if [[ "$SCAN_TYPE" == "deep" ]]; then
-    send_alert "$RESULT_STATUS" "$PARSED_THREATS" "$PARSED_FILES" "$DURATION"
-elif [[ $EXIT_CODE -eq 1 || $EXIT_CODE -eq 2 ]]; then
-    send_alert "$RESULT_STATUS" "$PARSED_THREATS" "$PARSED_FILES" "$DURATION"
-fi
+# Always send email after scan completion
+send_alert "$RESULT_STATUS" "$PARSED_THREATS" "$PARSED_FILES" "$DURATION"
 
 exit $EXIT_CODE
