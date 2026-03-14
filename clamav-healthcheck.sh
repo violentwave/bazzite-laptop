@@ -233,6 +233,33 @@ print_summary
     echo "[$(date -Iseconds)] Healthcheck: ${PASS_COUNT} passed, ${FAIL_COUNT} failed, ${WARN_COUNT} warnings"
 } >> "$HEALTHCHECK_LOG"
 
+# --- Write status file so tray app updates ---
+STATUS_FILE="/home/lch/security/.status"
+if [[ $FAIL_COUNT -gt 0 ]]; then
+    HC_RESULT="error"
+else
+    HC_RESULT="clean"
+fi
+cat > "$STATUS_TMP" << STATUSEOF
+{
+  "state": "idle",
+  "scan_type": "",
+  "message": "Healthcheck: ${PASS_COUNT} passed, ${FAIL_COUNT} failed, ${WARN_COUNT} warnings",
+  "current_dir": "",
+  "dirs_completed": 0,
+  "dirs_total": 0,
+  "result": "${HC_RESULT}",
+  "threat_count": 0,
+  "files_scanned": 0,
+  "duration": "",
+  "last_scan_time": "$(date -Iseconds)",
+  "last_scan_result": "${HC_RESULT}",
+  "timestamp": "$(date -Iseconds)"
+}
+STATUSEOF
+mv "$STATUS_TMP" "$STATUS_FILE" 2>/dev/null
+chown lch:lch "$STATUS_FILE" 2>/dev/null
+
 # --- Desktop notifications ---
 TOTAL_CHECKS=$((PASS_COUNT + WARN_COUNT + FAIL_COUNT))
 if [[ $FAIL_COUNT -gt 0 ]]; then
