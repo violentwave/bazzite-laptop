@@ -106,6 +106,65 @@ Disabled all unnecessary services to reduce attack surface and resource usage:
   - `sudo public-wifi-mode off` — HOME zone (trusted network)
 - KDE Connect and Bluetooth: still enabled but blocked by firewall DROP zone
 - **KDE Security menu**: ClamAV Deep Scan, ClamAV Quick Scan, Firewall, Firewall Status, KWalletManager, Scan Logs, Start Security Monitor, Update Email Password, USB Devices, View Quarantine
+- ## Brave Browser — Flatseal Permission Hardening
+**Status**: Completed
+**Date**: 2026-03-14
+**Tool**: Flatseal (com.github.tchx84.Flatseal)
+
+Brave Flatpak ships with overly broad default permissions that flag it as
+medium risk. The following changes were made in Flatseal to tighten the
+sandbox without breaking normal browsing.
+
+### Sockets
+| Permission | Change | Notes |
+|---|---|---|
+| X11 windowing | Disabled | Running Wayland natively — X11 has no app isolation |
+| Wayland windowing | Kept ON | Required — primary display server |
+| Fallback to X11 | Kept OFF | Leave off — would undermine X11 removal |
+| PulseAudio | Kept ON | Required for audio |
+| Smart cards | Disabled | Not using a physical smart card or YubiKey |
+| Printing (cups) | Disabled | Not printing from browser |
+
+### Filesystem
+| Permission | Change | Notes |
+|---|---|---|
+| filesystem=host | Kept OFF | Never needed |
+| filesystem=host-etc | Kept OFF | Brave does not need system config access |
+| filesystem=home | Kept OFF | Too broad |
+| xdg-download | Kept ON | Required for downloads |
+| xdg-desktop | Removed | Browser doesn't need Desktop folder access |
+| xdg-run/pipewire-0 | Kept | Required for audio/video |
+| xdg-run/dconf | Kept | Acceptable — KDE settings integration |
+| ~/.local/share/icons:create | Removed | Not using PWAs |
+| /run/.heim_org.h5l.kcm-socket | Removed | Kerberos auth socket — not needed |
+
+### Devices
+| Permission | Change | Notes |
+|---|---|---|
+| Bluetooth (org.bluez) | Disabled | Not using BT devices with browser |
+
+### Share / Environment / Persistent
+No changes — all settings in these sections were already appropriate.
+
+### Result
+Brave risk rating reduced from medium toward low. Residual medium
+classification is inherent to Chromium-based Flatpak sandbox model
+(Zypak) — not a config issue. On Bazzite with Wayland, enforcement
+is solid.
+
+### What still works after hardening
+- All browsing, downloads, file uploads (via xdg portal picker)
+- Audio and video in browser
+- KDE integration
+- GPU acceleration (GTX 1060)
+
+### What no longer works (intentional)
+- Drag-and-drop uploads from Desktop folder
+- PWA icons (removed ~/.local/share/icons:create)
+- Smart card auth
+- Printing directly from browser
+- Bluetooth device pairing through browser
+
 
 ### ClamAV ✅
 Layered packages: `clamav`, `clamav-freshclam`, `clamd`, `msmtp`
