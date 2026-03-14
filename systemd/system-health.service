@@ -1,0 +1,23 @@
+[Unit]
+Description=System health snapshot (SMART, GPU, thermals, storage)
+Documentation=file:///home/lch/projects/bazzite-laptop/docs/system-health-implementation.md
+After=network.target
+# Don't run during boot storm — let other services settle
+After=multi-user.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/system-health-snapshot.sh --email --quiet
+
+# Low priority — never interfere with gaming or scans
+Nice=19
+IOSchedulingClass=idle
+CPUSchedulingPolicy=idle
+
+# Timeout: snapshot should finish in 60s max (no long SMART tests)
+TimeoutStartSec=120
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=system-health

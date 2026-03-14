@@ -78,7 +78,7 @@ deploy_dir() {
 }
 
 echo "=== Scripts -> /usr/local/bin/ ==="
-for script in clamav-scan.sh clamav-alert.sh clamav-healthcheck.sh quarantine-release.sh bazzite-security-test.sh; do
+for script in clamav-scan.sh clamav-alert.sh clamav-healthcheck.sh quarantine-release.sh bazzite-security-test.sh system-health-snapshot.sh system-health-test.sh; do
     deploy "$REPO_DIR/scripts/$script" "/usr/local/bin/$script" 755
 done
 echo ""
@@ -108,6 +108,7 @@ deploy "$REPO_DIR/configs/99-gaming-network.conf"   "/etc/sysctl.d/99-gaming-net
 deploy "$REPO_DIR/configs/clamd-scan.conf"          "/etc/clamd.d/scan.conf"                  644
 deploy "$REPO_DIR/configs/gamemode.ini"             "/etc/gamemode.ini"                       644
 deploy "$REPO_DIR/configs/clamav-scans-logrotate"   "/etc/logrotate.d/clamav-scans"           644
+deploy "$REPO_DIR/configs/logrotate-system-health"  "/etc/logrotate.d/system-health"          644
 echo ""
 
 echo "=== Desktop files -> user directories ==="
@@ -130,6 +131,16 @@ echo "=== Tray app -> ~/security/ ==="
 deploy "$REPO_DIR/tray/bazzite-security-tray.py" \
     "$USER_HOME/security/bazzite-security-tray.py" 755 "lch:lch"
 deploy_dir "$REPO_DIR/tray/icons" "$USER_HOME/security/icons" "lch:lch"
+echo ""
+
+echo "=== Log directories ==="
+if [[ "$DRY_RUN" == false ]]; then
+    mkdir -p /var/log/system-health
+    chmod 755 /var/log/system-health
+    echo "[OK]       /var/log/system-health/"
+else
+    echo "[MKDIR]    /var/log/system-health/"
+fi
 echo ""
 
 echo "==============================="

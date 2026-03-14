@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=View Health Logs
+Comment=View latest system health snapshot log
+Icon=document-open-recent
+Exec=konsole --hold -e bash -c 'if [ -L /var/log/system-health/health-latest.log ]; then less /var/log/system-health/health-latest.log; else echo "No health logs yet — run a health snapshot first."; read -p "Press Enter to close..."; fi'
+Terminal=false
+Categories=Security;
+Keywords=health;logs;smart;monitoring;

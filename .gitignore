@@ -47,3 +47,7 @@ secrets/
 /hooks
 /objects
 /refs
+
+# ── System Health Monitoring (runtime, not source) ──
+health-deltas.dat
+/var/log/system-health/

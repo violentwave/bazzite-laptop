@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=System Health Snapshot
+Comment=Run SMART, GPU, thermal, and storage health check
+Icon=utilities-system-monitor
+Exec=konsole --hold -e sudo /usr/local/bin/system-health-snapshot.sh
+Terminal=false
+Categories=Security;
+Keywords=health;smart;gpu;temperature;disk;monitoring;

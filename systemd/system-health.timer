@@ -1,0 +1,16 @@
+[Unit]
+Description=Daily system health snapshot
+Documentation=file:///home/lch/projects/bazzite-laptop/docs/system-health-implementation.md
+
+[Timer]
+# Daily at 8:00 AM — after boot, before gaming sessions
+OnCalendar=*-*-* 08:00:00
+
+# If missed (laptop was off/sleeping), run on next boot
+Persistent=true
+
+# Jitter to avoid collision with other timers
+RandomizedDelaySec=300
+
+[Install]
+WantedBy=timers.target

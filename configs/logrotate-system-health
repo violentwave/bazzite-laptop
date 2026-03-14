@@ -1,0 +1,14 @@
+# System health monitoring log rotation
+# Matches the pattern of /etc/logrotate.d/clamav-scans
+/var/log/system-health/health-2*.log {
+    daily
+    rotate 90
+    missingok
+    notifempty
+    compress
+    delaycompress
+    dateext
+    dateformat -%Y%m%d
+    # health-latest.log (symlink) and health-deltas.dat are NOT rotated
+    sharedscripts
+}
