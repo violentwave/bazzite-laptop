@@ -4,7 +4,7 @@
 Type=Application
 Name=ClamAV Quick Scan
 Comment=Run a quick antivirus scan of home and tmp
-Exec=konsole -e sudo /usr/local/bin/clamav-scan.sh quick
+Exec=konsole --hold -e sudo /usr/local/bin/clamav-scan.sh quick
 Icon=security-high
 Categories=Security;System;
 Terminal=false

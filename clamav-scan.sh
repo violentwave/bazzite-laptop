@@ -215,28 +215,32 @@ print_banner
 
 # --- Phase 1: Update virus signatures ---
 # Run freshclam BEFORE starting clamd so it loads the latest signatures
-write_status "updating" "Updating virus signatures"
-print_phase "Updating virus signatures..." "running"
-
-if [[ -f /run/clamav/freshclam.pid ]] || pgrep -x freshclam &>/dev/null; then
-    # freshclam daemon is already running and keeping signatures current
-    $INTERACTIVE && printf "\e[1A\e[2K"
-    print_phase "Virus signatures up to date" "done"
+# Check if freshclam daemon is already running
+if systemctl is-active --quiet clamav-freshclam.service 2>/dev/null || \
+   pgrep -x freshclam &>/dev/null || \
+   [[ -f /run/clamav/freshclam.pid ]] || \
+   [[ -f /var/run/clamav/freshclam.pid ]] || \
+   [[ -f /run/freshclam.pid ]]; then
+    # Freshclam daemon is active — signatures are kept current automatically
+    if $INTERACTIVE; then
+        print_phase "Virus signatures up to date (daemon active)" "done"
+    fi
     write_status "updating" "Signatures managed by freshclam daemon"
 else
-    # Run freshclam manually
-    FRESHCLAM_OK=true
-    if ! freshclam --quiet 2>/dev/null; then
-        FRESHCLAM_OK=false
+    # No daemon running, try manual update
+    if $INTERACTIVE; then
+        print_phase "Updating virus signatures..." "running"
     fi
-
-    if $FRESHCLAM_OK; then
-        $INTERACTIVE && printf "\e[1A\e[2K"
-        print_phase "Updating virus signatures..." "done"
+    write_status "updating" "Updating virus signatures..."
+    if freshclam --quiet 2>/dev/null; then
+        if $INTERACTIVE; then
+            print_phase "Updating virus signatures..." "done"
+        fi
     else
-        $INTERACTIVE && printf "\e[1A\e[2K"
-        print_phase "Updating virus signatures..." "error"
-        $INTERACTIVE && echo -e "    ${DIM}Warning: freshclam update failed, using existing signatures${RESET}"
+        if $INTERACTIVE; then
+            print_phase "Updating virus signatures..." "error"
+            echo -e "    ${DIM}Warning: freshclam update failed, using existing signatures${RESET}"
+        fi
     fi
 fi
 

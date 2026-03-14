@@ -25,6 +25,7 @@ try:
 except Exception:
     pass
 
+signal.signal(signal.SIGHUP, signal.SIG_IGN)
 signal.signal(signal.SIGTERM, lambda s, f: sys.exit(0))
 
 STATUS_FILE = Path.home() / "security" / ".status"

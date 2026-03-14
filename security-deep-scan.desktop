@@ -4,7 +4,7 @@
 Type=Application
 Name=ClamAV Deep Scan
 Comment=Run a full antivirus scan of home, tmp, and var
-Exec=konsole -e sudo /usr/local/bin/clamav-scan.sh deep
+Exec=konsole --hold -e sudo /usr/local/bin/clamav-scan.sh deep
 Icon=security-high
 Categories=Security;System;
 Terminal=false

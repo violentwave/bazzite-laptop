@@ -1,0 +1,11 @@
+# Bazzite Security Tray — KDE menu shortcut to restart the tray icon
+# Deploy to: ~/.local/share/applications/security-tray-start.desktop
+[Desktop Entry]
+Type=Application
+Name=Start Security Monitor
+Comment=Restart the Bazzite Security tray icon
+Icon=security-high
+Exec=python3 /home/lch/security/bazzite-security-tray.py
+Terminal=false
+Categories=Security;System;
+StartupNotify=false
