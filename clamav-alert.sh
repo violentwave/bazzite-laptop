@@ -27,7 +27,10 @@ SCAN_TYPE_DISPLAY="${SCAN_TYPE^}"
 # --- Resolve recipient ---
 TO_EMAIL=""
 if [[ -f ~/.msmtprc ]]; then
-    TO_EMAIL=$(grep '^from ' ~/.msmtprc 2>/dev/null | awk '{print $2}' || true)
+    TO_EMAIL=$(awk '/^\s*from\s/ {print $2; exit}' ~/.msmtprc 2>/dev/null)
+    if [[ -z "$TO_EMAIL" ]]; then
+        TO_EMAIL=$(awk '/^\s*user\s/ {print $2; exit}' ~/.msmtprc 2>/dev/null)
+    fi
 fi
 
 if [[ -z "$TO_EMAIL" ]]; then
