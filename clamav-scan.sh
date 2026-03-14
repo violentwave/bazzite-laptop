@@ -337,6 +337,20 @@ if [[ -d "$QUARANTINE_DIR" ]]; then
     chown root:lch "$QUARANTINE_DIR" 2>/dev/null
 fi
 
+# --- Log SHA256 hashes of quarantined files for threat intelligence ---
+HASH_LOG="/home/lch/security/quarantine-hashes.log"
+if [[ "$PARSED_THREATS" -gt 0 ]] && [[ -d "$QUARANTINE_DIR" ]]; then
+    echo "--- $(date -Iseconds) --- $SCAN_TYPE scan ---" >> "$HASH_LOG"
+    find "$QUARANTINE_DIR" -type f -newer "$LOG_FILE" 2>/dev/null | while read -r qfile; do
+        chattr -i "$qfile" 2>/dev/null
+        HASH=$(sha256sum "$qfile" 2>/dev/null | awk '{print $1}')
+        chattr +i "$qfile" 2>/dev/null
+        FNAME=$(basename "$qfile")
+        echo "$HASH  $FNAME  https://www.virustotal.com/gui/file/$HASH" >> "$HASH_LOG"
+    done
+    chmod 644 "$HASH_LOG" 2>/dev/null
+fi
+
 # --- Final status file ---
 write_status "complete" "Scan complete" "" "${#SCAN_DIRS[@]}" "${#SCAN_DIRS[@]}" \
     "$RESULT_STATUS" "$PARSED_THREATS" "$PARSED_FILES" "$DURATION" "$LAST_SCAN_TIME"
