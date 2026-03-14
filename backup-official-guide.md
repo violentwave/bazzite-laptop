@@ -1,0 +1,241 @@
+# Bazzite Laptop — Official Backup & Restore Guide
+
+System: Acer Predator G3-571 | Bazzite 43 | NVIDIA GTX 1060 + Intel HD 630
+Flash drive: SanDisk 128GB — sdc1/sdc2 = Bazzite installer, sdc3 = BazziteBackup partition
+
+---
+
+## 1. What Is Backed Up
+
+Everything needed to fully restore the system from a fresh Bazzite install:
+
+### Critical State
+| File | Description |
+|------|-------------|
+| `luks-header.bak` | LUKS encryption header (most critical file) |
+| `cmdline.txt` | Kernel arguments at time of backup |
+| `rpm-ostree-status.txt` | Layered packages list |
+| `flatpak-list.txt` | Installed Flatpak apps |
+| `enabled-services.txt` | All enabled systemd services |
+| `disabled-services.txt` | Services we intentionally disabled |
+| `firewall-rules.txt` | Active firewall configuration |
+| `firewall-log-denied.txt` | Firewall log-denied setting |
+| `open-ports.txt` | Open ports at time of backup |
+| `dns-status.txt` | DNS resolution status |
+| `backup-timestamp.txt` | When the backup was taken |
+
+### System Configs (from /etc/)
+| Backup Name | Original Location |
+|-------------|-------------------|
+| `etc-gamemode.ini` | `/etc/gamemode.ini` |
+| `etc-environment` | `/etc/environment` |
+| `etc-freshclam.conf` | `/etc/freshclam.conf` |
+| `etc-usbguard-rules.conf` | `/etc/usbguard/rules.conf` |
+| `resolved.conf.d/` | `/etc/systemd/resolved.conf.d/` |
+| `sysctl.d/` | `/etc/sysctl.d/` |
+| `rules.d/` | `/etc/udev/rules.d/` |
+| `systemd-units/` | `/etc/systemd/system/` (ClamAV timers/services) |
+| `logrotate-clamav-scans` | `/etc/logrotate.d/clamav-scans` |
+| `firewalld/` | `/etc/firewalld/` |
+
+### Scripts
+| Backup Name | Original Location |
+|-------------|-------------------|
+| `scripts/` | `/usr/local/bin/` (all custom scripts) |
+
+### User Configs
+| Backup Name | Original Location |
+|-------------|-------------------|
+| `msmtprc` | `~/.msmtprc` (Gmail SMTP with app password) |
+| `MangoHud/` | `~/.config/MangoHud/` |
+| `dot-claude/` | `~/.claude/` (Claude Code settings) |
+| `kde-security-menu/` | KDE Security menu shortcuts |
+| `security/` | `~/security/` (quarantine, configs, LUKS backup, READMEs) |
+
+### Game Saves (space permitting)
+| Backup Name | Original Location |
+|-------------|-------------------|
+| `compatdata/` | `~/.local/share/Steam/steamapps/compatdata/` |
+
+### Flatpak Data (space permitting)
+| Backup Name | Original Location |
+|-------------|-------------------|
+| `flatpak-data/` | `~/.var/app/` (minus caches) |
+
+### Project Files
+| Backup Name | Original Location |
+|-------------|-------------------|
+| `bazzite-laptop/` | `~/projects/bazzite-laptop/` (this git repo) |
+
+### Redundant Copy (separate from latest/)
+| Location | Description |
+|----------|-------------|
+| `/mnt/backup/luks-header-backup/luks-header.bak` | Extra LUKS header copy outside latest/ |
+
+---
+
+## 2. What Is NOT Backed Up
+
+| Item | Why |
+|------|-----|
+| Steam games | Re-download from Steam (games are on external SSD anyway) |
+| Flatpak apps themselves | Reinstall from Flathub using `flatpak-list.txt` |
+| Flatpak/browser caches | Regenerate automatically, waste of space |
+| System packages | Reinstall via `rpm-ostree install` |
+| `/home/lch/.cache/` | Regenerates automatically |
+| Git history | Excluded from backup (push to remote for that) |
+| Proton/Wine runtime | Steam re-downloads these |
+| Shader caches | GPU regenerates these per-game |
+
+---
+
+## 3. How to Create a Backup
+
+```bash
+# 1. Plug in the BazziteBackup flash drive
+
+# 2. Mount it (if KDE doesn't auto-mount)
+sudo mount /dev/sdc3 /mnt/backup
+
+# 3. Run the backup script
+sudo bash /mnt/backup/backup.sh
+
+# 4. When done, unmount
+sudo umount /mnt/backup
+```
+
+The script will:
+- Delete and recreate `latest/` from scratch
+- Back up everything listed in Section 1
+- Skip game saves and flatpak data if less than 5GB would remain
+- Show a summary with file count, size, and any errors
+
+---
+
+## 4. How to Update an Existing Backup
+
+Same as creating a backup — just run `backup.sh` again. It replaces `latest/` entirely each time. There is no incremental/layered system; every backup is a full snapshot.
+
+**When to back up:**
+- Before any system changes (rpm-ostree, config edits, new scripts)
+- After major successful changes (like a security hardening session)
+- At least once a month
+- Before letting Claude Code modify system configs
+
+---
+
+## 5. Restore Scenarios
+
+### Scenario 1: Claude Code Messed Up Configs
+
+Something broke after a Claude Code session but the system still boots fine.
+
+```bash
+# Mount flash drive
+sudo mount /dev/sdc3 /mnt/backup
+
+# Run restore
+sudo bash /mnt/backup/restore.sh
+
+# Follow the manual steps printed at the end
+```
+
+The restore script lets you pick which sections to restore, so you can target just the broken configs.
+
+---
+
+### Scenario 2: System Broken but Bootable
+
+System boots but something is wrong (broken service, bad config, etc.).
+
+```bash
+# First try: rollback to previous rpm-ostree deployment
+sudo rpm-ostree rollback
+systemctl reboot
+
+# If that doesn't fix it: mount flash drive and restore
+sudo mount /dev/sdc3 /mnt/backup
+sudo bash /mnt/backup/restore.sh
+```
+
+---
+
+### Scenario 3: Hacked or Fully Compromised
+
+System is compromised or you want a clean slate.
+
+1. **Boot from Bazzite installer** on the flash drive (sdc1/sdc2):
+   - Plug in flash drive
+   - Press **F12** at boot to enter boot menu
+   - Select the USB drive
+   - Install Bazzite fresh
+
+2. **After first boot**, mount the backup partition and restore:
+   ```bash
+   sudo mount /dev/sdc3 /mnt/backup
+   sudo bash /mnt/backup/restore.sh
+   ```
+
+3. **Follow ALL 13 manual steps** printed by the restore script. This takes about 15 minutes.
+
+---
+
+### Scenario 4: Quick Undo After Bad Change
+
+You want to try something risky with a safety net.
+
+```bash
+# 1. Back up current state first
+sudo mount /dev/sdc3 /mnt/backup
+sudo bash /mnt/backup/backup.sh
+
+# 2. Make your changes
+# ...
+
+# 3. If things break, restore
+sudo bash /mnt/backup/restore.sh
+sudo umount /mnt/backup
+```
+
+---
+
+### Scenario 5: LUKS Header Corrupted (Emergency)
+
+If the LUKS header is corrupted, you cannot decrypt your drive. This is a data-loss emergency.
+
+1. **Boot from Bazzite live USB** (the installer on sdc1/sdc2)
+2. **Mount the backup partition:**
+   ```bash
+   sudo mount /dev/sdc3 /mnt/backup
+   ```
+3. **Restore the LUKS header:**
+   ```bash
+   sudo cryptsetup luksHeaderRestore /dev/sda3 \
+     --header-backup-file /mnt/backup/luks-header-backup/luks-header.bak
+   ```
+4. Reboot — your drive should be decryptable again with your existing passphrase
+
+**Warning:** If you changed your LUKS passphrase after the last backup, the backed-up header has the OLD passphrase.
+
+---
+
+## 6. Backup Schedule
+
+| When | Why |
+|------|-----|
+| Before system changes | rpm-ostree installs, config edits, new scripts |
+| After successful changes | Lock in the good state |
+| At least monthly | Catch config drift |
+| Before Claude Code sessions | Safety net for automated changes |
+
+---
+
+## 7. Important Notes
+
+- **Flash drive layout:** sdc1/sdc2 = Bazzite installer (bootable), sdc3 = BazziteBackup partition with backup.sh, restore.sh, and latest/
+- **LUKS header** is the most critical file. Losing it AND having a corrupted header = total data loss. The backup keeps a redundant copy at `/mnt/backup/luks-header-backup/` separate from latest/
+- **Gmail app password** is stored in `msmtprc`. If you change your Gmail password, you must regenerate the app password and update `~/.msmtprc`
+- **USBGuard rules** — if you get new USB devices, allow them with `usbguard allow-device` before backing up, or the new device won't be in the backup
+- **The restore script is interactive** — it asks for confirmation before each major section, so you can selectively restore only what you need
+- **Game saves and flatpak data** are only backed up if the flash drive has enough space (5GB minimum must remain free)
+- **Git history is not backed up** — push your repo to a remote (GitHub) for version history. The backup only preserves the working tree
