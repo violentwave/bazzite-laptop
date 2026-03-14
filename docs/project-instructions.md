@@ -19,11 +19,10 @@
 8. **Always check project documents** before suggesting config changes — the work may already be done.
 
 ### Current System State
-Refer to these project documents for full details:
+Refer to these project documents (all in `docs/`) for full details:
 - `bazzite-optimization-guide.md` — Master guide with completed/remaining work
 - `system-config-snapshot` — Exact system configuration for disaster recovery
 - `troubleshooting-log` — Problems already solved, do not re-debug
-- `services-optimize-current` — Services audit (all listed services have been disabled)
 - `reference-links` — Verified documentation links
 - `backup-official-guide.md` — Backup/restore procedures with 5 scenarios
 
@@ -45,6 +44,8 @@ Refer to these project documents for full details:
 - Healthcheck: /usr/local/bin/clamav-healthcheck.sh — 10+ checks, Wednesdays 2PM, email on failure
 - Test suite: /usr/local/bin/bazzite-security-test.sh — 15-test diagnostic with EICAR detection validation
 - Backup: Unified backup.sh/restore.sh on BazziteBackup flash drive (5 scenarios documented)
+- GitHub: Private repo at github.com:violentwave/bazzite-laptop.git
+- Deploy: `sudo ./scripts/deploy.sh [--dry-run]` syncs repo files to system locations
 
 ### Remaining Work (Prioritized)
 1. **ScopeBuddy configuration** — Per-game advanced launch management
@@ -52,6 +53,21 @@ Refer to these project documents for full details:
 3. **System monitoring tools** — Mission Center, btop, nvtop, smartmontools
 4. **AI/Coding setup** (deferred) — Ollama with CUDA, VS Code, local LLMs
 5. **Downloads folder watcher** — inotify auto-scan new downloads
+
+### Repo Layout
+- `scripts/` — all shell scripts (clamav, backup, setup, deploy utilities)
+- `systemd/` — timer and service unit files
+- `desktop/` — .desktop files and security.menu
+- `configs/` — system config files (udev rules, sysctl, gamemode, etc.)
+- `tray/` — security tray app (Python) + icons
+- `docs/` — all documentation and guides
+
+### Quick Reference
+| Task | Command |
+|------|---------|
+| Deploy repo to system | `sudo ./scripts/deploy.sh` |
+| Deploy (preview only) | `sudo ./scripts/deploy.sh --dry-run` |
+| Push to GitHub | `git push origin master` |
 
 ### Game Launch Options Quick Reference
 | Game | Launch Options |
@@ -115,6 +131,15 @@ Create a `CLAUDE.md` file in any project directory. Claude Code reads this autom
 - No third-party MCP servers — only Anthropic-official tools
 - Use `/sandbox` mode always
 - Check `claude doctor` if anything seems off
+
+#### GitHub Push Workflow
+```bash
+# From ~/projects/bazzite-laptop/
+git add <files>
+git commit -m "Description of changes"
+git push origin master
+```
+Remote is `github.com:violentwave/bazzite-laptop.git` (private repo, SSH key auth).
 
 #### Useful Commands Inside Claude Code
 | Command | Purpose |

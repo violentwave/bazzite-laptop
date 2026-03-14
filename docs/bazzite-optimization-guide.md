@@ -2,7 +2,6 @@
 ## Acer Predator G3-571 — Project Reference Document
 
 **System**: Acer Predator G3-571 | Bazzite 42/43 (KDE6/Wayland) | Username: lch
-**Hardware probe**: [redacted — see browser history]
 **GPUs**: NVIDIA GTX 1060 Mobile 6GB + Intel HD 630 (Hybrid/Optimus)
 **CPU**: Intel i7-7700HQ | **RAM**: 16GB | **Vulkan**: 1.4.341
 **NVIDIA Driver**: 580.95.05 | **CUDA**: 13.0
@@ -175,11 +174,20 @@ Using **Brave** (com.brave.Browser) — built-in ad/tracker blocking, fingerprin
 Custom flat backup to BazziteBackup flash drive (sdc3):
 - **backup.sh**: backs up all configs, scripts, user data, game saves, flatpak data, project files to `/mnt/backup/latest/`
 - **restore.sh**: interactive step-by-step restore with confirmation prompts and manual steps
+- **deploy.sh**: syncs repo files (scripts, systemd units, configs, desktop files, tray app) to their system locations — `sudo ./scripts/deploy.sh [--dry-run]`
 - **backup-official-guide.md**: full guide with 5 restore scenarios including LUKS emergency
 - Flash drive layout: sdc1/sdc2 = Bazzite installer (bootable), sdc3 = BazziteBackup
 
+### GitHub ✅
+- **Private repo**: github.com:violentwave/bazzite-laptop.git
+- All project files, scripts, configs, docs, and history tracked in git
+- Additional off-site backup for the project (supplements flash drive backup)
+
+### Bitwarden ✅
+- Password manager for secure credential storage
+
 ### Claude Code Setup ✅
-- Version 2.1.76 at `~/.local/bin/claude`
+- At `~/.local/bin/claude`
 - Settings at `~/.claude/settings.json`
 - Sandbox enabled (bubblewrap)
 - Launch from project directories, never from `$HOME`

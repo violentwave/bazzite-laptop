@@ -36,7 +36,6 @@ nvidia-drm.modeset=1
 | Haruna | org.kde.haruna | Media player |
 | KCalc | org.kde.kcalc | Calculator |
 | Okular | org.kde.okular | PDF viewer |
-| Hardware Probe | org.linux_hardware.hw-probe | HW diagnostics |
 
 ### Homebrew Packages
 None installed.

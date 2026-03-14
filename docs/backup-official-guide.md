@@ -256,7 +256,7 @@ If the LUKS header is corrupted, you cannot decrypt your drive. This is a data-l
 - **USBGuard rules** — if you get new USB devices, allow them with `usbguard allow-device` before backing up, or the new device won't be in the backup
 - **The restore script is interactive** — it asks for confirmation before each major section, so you can selectively restore only what you need
 - **Game saves and flatpak data** are only backed up if the flash drive has enough space (5GB minimum must remain free)
-- **Git history is not backed up** — push your repo to a remote (GitHub) for version history. The backup only preserves the working tree
+- **Git history is not backed up** — the project is pushed to GitHub (private repo at github.com:violentwave/bazzite-laptop.git) for version history. Run `git push origin master` to sync. The flash drive backup only preserves the working tree
 - After restore, you must re-enable freshclam: `sudo systemctl enable --now clamav-freshclam.service`
 - After restore, set SELinux boolean: `sudo setsebool -P antivirus_can_scan_system 1`
 - The clamd socket directory `/run/clamd.scan/` is created at runtime, no need to back up
