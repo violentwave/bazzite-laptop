@@ -125,7 +125,7 @@ fi
 # ===========================
 echo ""
 echo -e "  ${BCYAN}┌──────────────────────────────────────┐${RESET}"
-echo -e "  ${BCYAN}│${RESET}  🛡  ${BWHITE}BAZZITE SECURITY SCANNER${RESET}       ${BCYAN}│${RESET}"
+echo -e "  ${BCYAN}│${RESET}  🛡  ${BWHITE}BAZZITE BACKUP${RESET}                 ${BCYAN}│${RESET}"
 echo -e "  ${BCYAN}│${RESET}  ${DIM}System Backup · $(date '+%b %d, %Y %I:%M %p')${RESET} ${BCYAN}│${RESET}"
 echo -e "  ${BCYAN}└──────────────────────────────────────┘${RESET}"
 
@@ -270,14 +270,15 @@ copy_dir "/etc/firewalld" "${BACKUP_DIR}/firewalld" "firewalld/"
 
 # Systemd units (clamav timers and services)
 mkdir -p "${BACKUP_DIR}/systemd-units"
-for unit in /etc/systemd/system/clamav-*.timer /etc/systemd/system/clamav-*.service; do
+for unit in /etc/systemd/system/clamav-*.timer /etc/systemd/system/clamav-*.service \
+            /etc/systemd/system/system-health.service /etc/systemd/system/system-health.timer; do
     [[ -f "$unit" ]] && cp -a "$unit" "${BACKUP_DIR}/systemd-units/" 2>/dev/null
 done
 UNIT_COUNT=$(find "${BACKUP_DIR}/systemd-units" -type f 2>/dev/null | wc -l)
 if [[ "$UNIT_COUNT" -gt 0 ]]; then
     ok "systemd-units/ (${UNIT_COUNT} files)"
 else
-    warn "No clamav systemd units found in /etc/systemd/system/"
+    warn "No systemd units found in /etc/systemd/system/"
 fi
 
 # Logrotate
@@ -285,6 +286,11 @@ if [[ -f "/etc/logrotate.d/clamav-scans" ]]; then
     cp -a "/etc/logrotate.d/clamav-scans" "${BACKUP_DIR}/logrotate-clamav-scans" && ok "logrotate-clamav-scans" || fail "logrotate-clamav-scans"
 else
     warn "logrotate-clamav-scans not found"
+fi
+if [[ -f "/etc/logrotate.d/system-health" ]]; then
+    cp -a "/etc/logrotate.d/system-health" "${BACKUP_DIR}/logrotate-system-health" && ok "logrotate-system-health" || fail "logrotate-system-health"
+else
+    warn "logrotate-system-health not found"
 fi
 
 separator

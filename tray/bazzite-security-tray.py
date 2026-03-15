@@ -34,6 +34,8 @@ ICON_THEME_PATH = "/home/lch/security/icons"
 
 SCAN_SCRIPT = "/usr/local/bin/clamav-scan.sh"
 HEALTHCHECK_SCRIPT = "/usr/local/bin/clamav-healthcheck.sh"
+HEALTH_SNAPSHOT_SCRIPT = "/usr/local/bin/system-health-snapshot.sh"
+HEALTH_LOG = "/var/log/system-health/health-latest.log"
 QUARANTINE_DIR = str(Path.home() / "security" / "quarantine")
 LOG_DIR = "/var/log/clamav-scans"
 
@@ -241,6 +243,31 @@ class SecurityTray:
         # 6. Separator
         menu.append(Gtk.SeparatorMenuItem())
 
+        # 6b. System Health submenu
+        health_submenu = Gtk.Menu()
+
+        # Health status line
+        health_status_item = self._make_health_status_item()
+        health_submenu.append(health_status_item)
+        health_submenu.append(Gtk.SeparatorMenuItem())
+
+        # Run Health Snapshot
+        item_health_snap = Gtk.MenuItem(label="Run Health Snapshot")
+        item_health_snap.connect("activate", self._on_run_health_snapshot)
+        health_submenu.append(item_health_snap)
+
+        # View Health Logs
+        item_health_logs = Gtk.MenuItem(label="View Health Logs")
+        item_health_logs.connect("activate", self._on_view_health_logs)
+        health_submenu.append(item_health_logs)
+
+        health_menu_item = Gtk.MenuItem(label="System Health")
+        health_menu_item.set_submenu(health_submenu)
+        menu.append(health_menu_item)
+
+        # 6c. Separator
+        menu.append(Gtk.SeparatorMenuItem())
+
         # 7. Action buttons
         item_quick = Gtk.MenuItem(label="Run Quick Scan")
         item_quick.connect("activate", self._on_run_quick)
@@ -359,6 +386,43 @@ class SecurityTray:
         item.set_sensitive(False)
         return item
 
+    def _make_health_status_item(self):
+        health_status = self.status.get("health_status", "")
+        health_issues = self.status.get("health_issues", 0)
+        health_warnings = self.status.get("health_warnings", 0)
+        health_critical = self.status.get("health_critical", 0)
+        health_last = self.status.get("health_last_check", "")
+
+        if not health_status:
+            text = "No health data yet"
+        else:
+            age_str = self._format_health_age(health_last)
+            if health_status == "OK":
+                text = f"\u2713 All OK \u2014 {age_str}"
+            elif health_status == "CRITICAL":
+                text = f"\u2717 {health_critical} critical, {health_warnings} warnings \u2014 {age_str}"
+            else:
+                text = f"\u26a0 {health_issues} issue(s) \u2014 {age_str}"
+
+        return self._info_item(text)
+
+    def _format_health_age(self, timestamp_str):
+        if not timestamp_str:
+            return "unknown"
+        try:
+            dt = datetime.strptime(timestamp_str, "%Y-%m-%d %I:%M %p")
+            delta = datetime.now() - dt
+            hours = int(delta.total_seconds() / 3600)
+            if hours < 1:
+                return "just now"
+            elif hours < 24:
+                return f"{hours}h ago"
+            else:
+                days = hours // 24
+                return f"{days}d ago"
+        except Exception:
+            return timestamp_str
+
     def _format_scan_time(self, iso_str):
         if not iso_str:
             return "Unknown"
@@ -429,6 +493,20 @@ class SecurityTray:
             subprocess.Popen(
                 ["konsole", "--hold", "-e", "sudo",
                  "/usr/local/bin/bazzite-security-test.sh"])
+        except Exception:
+            pass
+
+    def _on_run_health_snapshot(self, _widget):
+        try:
+            subprocess.Popen(
+                ["konsole", "--hold", "-e", "sudo", HEALTH_SNAPSHOT_SCRIPT])
+        except Exception:
+            pass
+
+    def _on_view_health_logs(self, _widget):
+        try:
+            subprocess.Popen(
+                ["konsole", "--hold", "-e", "less", HEALTH_LOG])
         except Exception:
             pass
 

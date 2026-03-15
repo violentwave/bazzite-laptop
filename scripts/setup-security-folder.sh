@@ -12,8 +12,10 @@ echo "Setting up security folder at ${SECURITY_DIR}..."
 mkdir -p "${SECURITY_DIR}/quarantine"
 mkdir -p "${SECURITY_DIR}/configs"
 mkdir -p "${SECURITY_DIR}/usbguard"
+mkdir -p "${SECURITY_DIR}/luks-backup"
+mkdir -p "${SECURITY_DIR}/icons"
 
-# Create logs symlink (only if target exists)
+# Create ClamAV logs symlink (only if target exists)
 if [[ -d /var/log/clamav-scans ]]; then
     ln -sfn /var/log/clamav-scans "${SECURITY_DIR}/logs"
     echo "  Linked logs/ -> /var/log/clamav-scans"
@@ -23,10 +25,17 @@ else
     echo "  Re-run this script after ClamAV is set up to create the symlink."
 fi
 
+# Create health logs symlink (only if target exists)
+if [[ -d /var/log/system-health ]]; then
+    ln -sfn /var/log/system-health "${SECURITY_DIR}/health-logs"
+    echo "  Linked health-logs/ -> /var/log/system-health"
+else
+    echo "  Skipped health-logs/ symlink (/var/log/system-health doesn't exist yet)"
+fi
+
 # Create config symlinks
 ln -sf /etc/gamemode.ini "${SECURITY_DIR}/configs/gamemode.ini"
 ln -sf /etc/systemd/resolved.conf.d/dns-over-tls.conf "${SECURITY_DIR}/configs/dns-config"
-ln -sf /usr/local/bin/public-wifi-mode "${SECURITY_DIR}/configs/public-wifi-mode"
 
 # Create firewall-status.sh
 cat > "${SECURITY_DIR}/configs/firewall-status.sh" << 'EOF'
@@ -46,7 +55,6 @@ Symlinks and scripts for quick access to security-related configuration files.
 |------|-----------|---------|
 | gamemode.ini | /etc/gamemode.ini | GameMode performance tuning config |
 | dns-config | /etc/systemd/resolved.conf.d/dns-over-tls.conf | DNS-over-TLS resolver settings |
-| public-wifi-mode | /usr/local/bin/public-wifi-mode | Script to toggle public WiFi hardening |
 | firewall-status.sh | (local script) | Shows firewall rules and log-denied setting |
 EOF
 
@@ -60,8 +68,12 @@ Central security folder for the Bazzite gaming laptop (Acer Predator G3-571).
 
 - **quarantine/** — Files ClamAV flagged as infected are moved here automatically
 - **logs/** — ClamAV scan logs (symlink to /var/log/clamav-scans)
+- **health-logs/** — System health snapshots (symlink to /var/log/system-health)
 - **configs/** — Symlinks to security-related config files for easy reference and editing
 - **usbguard/** — USBGuard policy reference (populated after USBGuard setup)
+- **luks-backup/** — LUKS header backups
+- **icons/** — Tray app icon assets
+- **.status** — JSON status file shared between ClamAV scans, health monitoring, and the tray app
 
 ## Quick Commands
 
@@ -69,20 +81,20 @@ Central security folder for the Bazzite gaming laptop (Acer Predator G3-571).
 # Run a quick antivirus scan (home + tmp)
 sudo /usr/local/bin/clamav-scan.sh quick
 
-# Run a deep antivirus scan (includes Steam library)
+# Run a deep antivirus scan (home + tmp + var)
 sudo /usr/local/bin/clamav-scan.sh deep
+
+# Run system health snapshot
+sudo /usr/local/bin/system-health-snapshot.sh
+
+# View latest health log
+less /var/log/system-health/health-latest.log
 
 # Check firewall status
 sudo firewall-cmd --list-all
 
-# Check firewall log-denied setting
-sudo firewall-cmd --get-log-denied
-
 # List USB devices (USBGuard)
 usbguard list-devices
-
-# List USB devices (lsusb)
-lsusb
 
 # Check DNS resolution
 resolvectl status

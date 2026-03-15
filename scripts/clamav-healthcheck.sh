@@ -224,6 +224,26 @@ else
     check_fail "clamd service not configured"
 fi
 
+# --- Check 12: system-health.timer active ---
+if systemctl is-active --quiet system-health.timer 2>/dev/null; then
+    check_ok "Health snapshot timer active"
+else
+    check_fail "system-health.timer not active"
+fi
+
+# --- Check 13: health log freshness (warn if older than 48 hours) ---
+if [[ -L /var/log/system-health/health-latest.log ]]; then
+    HEALTH_AGE=$(( $(date +%s) - $(stat -c %Y /var/log/system-health/health-latest.log) ))
+    if [[ $HEALTH_AGE -gt 172800 ]]; then
+        check_warn "Health log older than 48 hours"
+    else
+        HEALTH_AGE_H=$(( HEALTH_AGE / 3600 ))
+        check_ok "Health log fresh (${HEALTH_AGE_H}h old)"
+    fi
+else
+    check_warn "No health log symlink found"
+fi
+
 # --- Terminal summary ---
 print_summary
 
@@ -232,31 +252,46 @@ print_summary
     echo "[$(date -Iseconds)] Healthcheck: ${PASS_COUNT} passed, ${FAIL_COUNT} failed, ${WARN_COUNT} warnings"
 } >> "$HEALTHCHECK_LOG"
 
-# --- Write status file so tray app updates ---
+# --- Write status file so tray app updates (preserves health_* keys) ---
 STATUS_FILE="/home/lch/security/.status"
 if [[ $FAIL_COUNT -gt 0 ]]; then
     HC_RESULT="error"
 else
     HC_RESULT="clean"
 fi
-cat > "$STATUS_TMP" << STATUSEOF
-{
-  "state": "idle",
-  "scan_type": "",
-  "message": "Healthcheck: ${PASS_COUNT} passed, ${FAIL_COUNT} failed, ${WARN_COUNT} warnings",
-  "current_dir": "",
-  "dirs_completed": 0,
-  "dirs_total": 0,
-  "result": "${HC_RESULT}",
-  "threat_count": 0,
-  "files_scanned": 0,
-  "duration": "",
-  "last_scan_time": "$(date -Iseconds)",
-  "last_scan_result": "${HC_RESULT}",
-  "timestamp": "$(date -Iseconds)"
-}
-STATUSEOF
-mv "$STATUS_TMP" "$STATUS_FILE" 2>/dev/null
+HC_TIMESTAMP="$(date -Iseconds)"
+HC_MSG="Healthcheck: ${PASS_COUNT} passed, ${FAIL_COUNT} failed, ${WARN_COUNT} warnings"
+python3 -c "
+import json, os
+path = '$STATUS_FILE'
+tmp = '${STATUS_TMP}'
+try:
+    with open(path, 'r') as f:
+        data = json.load(f)
+except (FileNotFoundError, json.JSONDecodeError, PermissionError, OSError):
+    data = {}
+data.update({
+    'state': 'idle',
+    'scan_type': '',
+    'message': '$HC_MSG',
+    'current_dir': '',
+    'dirs_completed': 0,
+    'dirs_total': 0,
+    'result': '$HC_RESULT',
+    'threat_count': 0,
+    'files_scanned': 0,
+    'duration': '',
+    'last_scan_time': '$HC_TIMESTAMP',
+    'last_scan_result': '$HC_RESULT',
+    'timestamp': '$HC_TIMESTAMP'
+})
+try:
+    with open(tmp, 'w') as f:
+        json.dump(data, f, indent=2)
+    os.rename(tmp, path)
+except (PermissionError, OSError):
+    pass
+" 2>/dev/null || true
 chown lch:lch "$STATUS_FILE" 2>/dev/null
 
 # --- Desktop notifications ---

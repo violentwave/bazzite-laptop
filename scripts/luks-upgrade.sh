@@ -76,7 +76,7 @@ fi
 # ===========================
 echo ""
 echo -e "  ${BCYAN}┌──────────────────────────────────────┐${RESET}"
-echo -e "  ${BCYAN}│${RESET}  🛡  ${BWHITE}BAZZITE SECURITY SCANNER${RESET}       ${BCYAN}│${RESET}"
+echo -e "  ${BCYAN}│${RESET}  🛡  ${BWHITE}LUKS UPGRADE${RESET}                   ${BCYAN}│${RESET}"
 echo -e "  ${BCYAN}│${RESET}  ${DIM}LUKS KDF Upgrade · PBKDF2 → Argon2id${RESET}${BCYAN}│${RESET}"
 echo -e "  ${BCYAN}└──────────────────────────────────────┘${RESET}"
 echo ""

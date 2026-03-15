@@ -1,22 +1,24 @@
 #!/bin/bash
 # ClamAV HTML email alert script using msmtp
 # Deploy to: /usr/local/bin/clamav-alert.sh (chmod +x)
-# Usage: clamav-alert.sh <scan_type> <status> <threat_count> <files_scanned> <duration> <log_file>
-#   scan_type:    quick | deep | healthcheck
-#   status:       clean | threats | error
-#   threat_count: number of threats found
-#   files_scanned: total files scanned
-#   duration:     human-readable duration string
-#   log_file:     path to the scan log file
+# Usage: clamav-alert.sh <scan_type> <status> <threat_count> <files_scanned> <duration> <log_file> [health_summary]
+#   scan_type:      quick | deep | healthcheck
+#   status:         clean | threats | error
+#   threat_count:   number of threats found
+#   files_scanned:  total files scanned
+#   duration:       human-readable duration string
+#   log_file:       path to the scan log file
+#   health_summary: optional health snapshot text (from --append mode)
 set -euo pipefail
 
 # --- Arguments ---
-SCAN_TYPE="${1:?Usage: $0 <scan_type> <status> <threat_count> <files_scanned> <duration> <log_file>}"
+SCAN_TYPE="${1:?Usage: $0 <scan_type> <status> <threat_count> <files_scanned> <duration> <log_file> [health_summary]}"
 STATUS="${2:?Missing status (clean|threats|error)}"
 THREAT_COUNT="${3:?Missing threat_count}"
 FILES_SCANNED="${4:?Missing files_scanned}"
 DURATION="${5:?Missing duration}"
 LOG_FILE="${6:?Missing log_file}"
+HEALTH_SUMMARY="${7:-}"
 
 HOSTNAME="$(hostname)"
 DATE_STR="$(date '+%B %d, %Y at %I:%M %p')"
@@ -160,6 +162,13 @@ MIME-Version: 1.0
     <tr><td style="padding:32px;background:#f8fafc">
         ${BODY_CONTENT}
     </td></tr>
+$(if [[ -n "$HEALTH_SUMMARY" ]]; then cat <<HEALTHEOF
+    <!-- Health Summary -->
+    <tr><td style="padding:16px 32px;background:#f1f5f9;border-top:1px solid #e2e8f0">
+        <pre style="margin:0;font-family:'Cascadia Code','Courier New',monospace;font-size:12px;color:#475569;white-space:pre-wrap">${HEALTH_SUMMARY}</pre>
+    </td></tr>
+HEALTHEOF
+fi)
     <!-- Footer -->
     <tr><td style="padding:20px 32px;text-align:center;border-top:1px solid #e2e8f0">
         <p style="margin:0;font-size:12px;color:#94a3b8">Bazzite Security &middot; Acer Predator G3-571</p>

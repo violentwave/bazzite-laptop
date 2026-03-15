@@ -242,9 +242,22 @@ else
     print_result 9 "Quarantine dir ownership/perms" "FAIL" "$QUARANTINE_DIR does not exist"
 fi
 
-# [10] Status file writable
+# [10] Status file writable (read-modify-write to preserve health_* keys)
 STATUS_TMP="/home/lch/security/.status.tmp.test"
-if echo '{"state":"test"}' > "$STATUS_TMP" 2>/dev/null && mv -f "$STATUS_TMP" "$STATUS_FILE" 2>/dev/null; then
+if python3 -c "
+import json, os
+path = '$STATUS_FILE'
+tmp = '$STATUS_TMP'
+try:
+    with open(path, 'r') as f:
+        data = json.load(f)
+except (FileNotFoundError, json.JSONDecodeError, PermissionError, OSError):
+    data = {}
+data['state'] = 'test'
+with open(tmp, 'w') as f:
+    json.dump(data, f, indent=2)
+os.rename(tmp, path)
+" 2>/dev/null; then
     print_result 10 "Status file atomic write" "PASS" "$STATUS_FILE writable"
 else
     print_result 10 "Status file atomic write" "FAIL" "Cannot write to $STATUS_FILE"
@@ -455,3 +468,6 @@ printf "  ${BORDER_COLOR}│${RESET}  Report: %-28s ${BORDER_COLOR}│${RESET}\n
 echo -e "  ${BORDER_COLOR}│${RESET}                                       ${BORDER_COLOR}│${RESET}"
 echo -e "  ${BORDER_COLOR}└───────────────────────────────────────┘${RESET}"
 echo ""
+
+[[ $FAIL_COUNT -gt 0 ]] && exit 1
+exit 0

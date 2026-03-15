@@ -89,7 +89,7 @@ fi
 # ===========================
 echo ""
 echo -e "  ${BCYAN}┌──────────────────────────────────────┐${RESET}"
-echo -e "  ${BCYAN}│${RESET}  🛡  ${BWHITE}BAZZITE SECURITY SCANNER${RESET}       ${BCYAN}│${RESET}"
+echo -e "  ${BCYAN}│${RESET}  🛡  ${BWHITE}BAZZITE RESTORE${RESET}                ${BCYAN}│${RESET}"
 echo -e "  ${BCYAN}│${RESET}  ${DIM}System Restore · $(date '+%b %d, %Y %I:%M %p')${RESET}${BCYAN}│${RESET}"
 echo -e "  ${BCYAN}└──────────────────────────────────────┘${RESET}"
 
@@ -163,6 +163,7 @@ else
 
     # Logrotate
     restore_file "${BACKUP_DIR}/logrotate-clamav-scans" "/etc/logrotate.d/clamav-scans" "logrotate-clamav-scans"
+    restore_file "${BACKUP_DIR}/logrotate-system-health" "/etc/logrotate.d/system-health" "logrotate-system-health"
 
     # USBGuard rules
     if [[ -f "${BACKUP_DIR}/etc-usbguard-rules.conf" ]]; then
@@ -375,9 +376,11 @@ echo -e "     ${DIM}sudo systemctl disable --now iscsi-onboot.service iscsi-star
 echo -e "     ${DIM}  iscsid.socket iscsiuio.socket${RESET}"
 echo ""
 
-echo -e "  ${BWHITE}6. Enable ClamAV timers:${RESET}"
+echo -e "  ${BWHITE}6. Enable ClamAV and health timers:${RESET}"
 echo -e "     ${DIM}sudo systemctl daemon-reload${RESET}"
 echo -e "     ${DIM}sudo systemctl enable --now clamav-quick.timer clamav-deep.timer${RESET}"
+echo -e "     ${DIM}sudo systemctl enable --now system-health.timer${RESET}"
+echo -e "     ${DIM}sudo mkdir -p /var/log/system-health${RESET}"
 echo ""
 
 echo -e "  ${BWHITE}7. Enable USBGuard:${RESET}"

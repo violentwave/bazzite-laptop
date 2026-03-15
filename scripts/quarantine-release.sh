@@ -102,7 +102,13 @@ release_file() {
             return 1
         fi
         chmod 644 "$filepath"
-        mv "$filepath" "${dest}/"
+        if ! mv "$filepath" "${dest}/"; then
+            # Re-lock the file since move failed
+            chmod 000 "$filepath" 2>/dev/null
+            chattr +i "$filepath" 2>/dev/null
+            echo -e "  ${RED}Error: Failed to move ${filename} — re-locked in quarantine${RESET}" >&2
+            return 1
+        fi
         echo -e "  ${GREEN}Released:${RESET} ${filename} → ${dest}/"
     fi
     return 0

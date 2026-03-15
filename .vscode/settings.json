@@ -1,0 +1,159 @@
+{
+    // ── Editor Defaults ──
+    "editor.tabSize": 4,
+    "editor.insertSpaces": true,
+    "editor.renderWhitespace": "boundary",
+    "editor.rulers": [100],
+    "files.trimTrailingWhitespace": true,
+    "files.insertFinalNewline": true,
+
+    // ── File Associations ──
+    "files.associations": {
+        "*.service": "ini",
+        "*.timer": "ini",
+        "*.conf": "ini",
+        "*.rules": "ini",
+        "*.menu": "xml",
+        "*.desktop": "ini",
+        "clamav-scans-logrotate": "plaintext",
+        "logrotate-system-health": "plaintext",
+        "msmtprc.template": "ini"
+    },
+
+    // ── ShellCheck ──
+    "shellcheck.enable": true,
+    "shellcheck.run": "onSave",
+    "shellcheck.enableQuickFix": true,
+    "shellcheck.customArgs": ["-x"],
+
+    // ── Bash IDE ──
+    "bashIde.enableSourceErrorDiagnostics": true,
+    "bashIde.includeAllWorkspaceSymbols": true,
+    "bashIde.globPattern": "scripts/**/*.sh",
+
+    // ── Python (tray app) ──
+    "python.defaultInterpreterPath": "/usr/bin/python3",
+    "[python]": {
+        "editor.defaultFormatter": "charliermarsh.ruff",
+        "editor.formatOnSave": true
+    },
+
+    // ── Ruff (Python linter/formatter) ──
+    "ruff.lint.enable": true,
+    "ruff.organizeImports": true,
+
+    // ── YAML ──
+    "yaml.validate": true,
+    "yaml.format.enable": true,
+    "redhat.telemetry.enabled": false,
+
+    // ── Error Lens ──
+    "errorLens.enabledDiagnosticLevels": ["error", "warning", "info"],
+    "errorLens.delay": 500,
+    "errorLens.fontWeight": "normal",
+    "errorLens.messageMaxChars": 120,
+
+    // ── Todo Tree ──
+    "todo-tree.general.tags": [
+        "TODO",
+        "FIXME",
+        "HACK",
+        "BUG",
+        "XXX",
+        "NOTE",
+        "WARN"
+    ],
+    "todo-tree.filtering.includeGlobs": [
+        "scripts/**/*.sh",
+        "tray/**/*.py",
+        "configs/**/*",
+        "docs/**/*.md",
+        "CLAUDE.md"
+    ],
+    "todo-tree.highlights.defaultHighlight": {
+        "type": "tag",
+        "foreground": "#fff",
+        "background": "#e2943b",
+        "iconColour": "#e2943b"
+    },
+    "todo-tree.highlights.customHighlight": {
+        "FIXME": { "background": "#d63031", "iconColour": "#d63031", "icon": "alert" },
+        "BUG":  { "background": "#d63031", "iconColour": "#d63031", "icon": "bug" },
+        "HACK": { "background": "#e17055", "iconColour": "#e17055", "icon": "tools" },
+        "NOTE": { "background": "#0984e3", "iconColour": "#0984e3", "icon": "info" }
+    },
+
+    // ── GitLens ──
+    "gitlens.codeLens.enabled": true,
+    "gitlens.currentLine.enabled": true,
+    "gitlens.hovers.currentLine.over": "line",
+
+    // ── Code Spell Checker ──
+    "cSpell.enabled": true,
+    "cSpell.language": "en",
+    "cSpell.words": [
+        "bazzite",
+        "clamav",
+        "clamd",
+        "clamdscan",
+        "freshclam",
+        "mangohud",
+        "msmtp",
+        "ostree",
+        "protondb",
+        "flatpak",
+        "distrobox",
+        "sysctl",
+        "systemctl",
+        "usbguard",
+        "gamemode",
+        "flock",
+        "logrotate",
+        "nvtop",
+        "smartctl",
+        "smartmontools",
+        "luks",
+        "argon2id",
+        "wayland",
+        "nvidia",
+        "pipewire",
+        "zram",
+        "swappiness",
+        "ioschedulers",
+        "ntsync",
+        "lch"
+    ],
+    "cSpell.ignorePaths": [
+        ".git",
+        ".vscode",
+        "tray/icons"
+    ],
+
+    // ── indent-rainbow ──
+    "indentRainbow.indicatorStyle": "light",
+
+    // ── Path Intellisense ──
+    "path-intellisense.autoSlashAfterDirectory": true,
+    "path-intellisense.showHiddenFiles": true,
+
+    // ── Markdown ──
+    "[markdown]": {
+        "editor.wordWrap": "on",
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+
+    // ── Prettier (markdown/yaml only) ──
+    "prettier.proseWrap": "preserve",
+    "[yaml]": {
+        "editor.defaultFormatter": "redhat.vscode-yaml"
+    },
+
+    // ── Exclude noise from explorer/search ──
+    "files.exclude": {
+        "**/__pycache__": true,
+        "**/*.pyc": true
+    },
+    "search.exclude": {
+        "**/tray/icons": true
+    }
+}

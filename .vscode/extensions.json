@@ -1,0 +1,19 @@
+{
+    "recommendations": [
+        "timonwong.shellcheck",
+        "mads-hartmann.bash-ide-vscode",
+        "redhat.vscode-yaml",
+        "eamodio.gitlens",
+        "usernamehw.errorlens",
+        "gruntfuggly.todo-tree",
+        "oderwat.indent-rainbow",
+        "streetsidesoftware.code-spell-checker",
+        "christian-kohler.path-intellisense",
+        "tamasfe.even-better-toml",
+        "shd101wyy.markdown-preview-enhanced",
+        "alefragnani.project-manager",
+        "ms-python.python",
+        "charliermarsh.ruff",
+        "esbenp.prettier-vscode"
+    ]
+}

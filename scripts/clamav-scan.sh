@@ -47,7 +47,7 @@ mkdir -p "$QUARANTINE_DIR"
 mkdir -p "$LOG_DIR"
 chmod 755 "$LOG_DIR"
 
-# --- Helper: write status file (atomic) ---
+# --- Helper: write status file (atomic, preserves health_* keys) ---
 write_status() {
     local state="$1"
     local message="${2:-}"
@@ -59,24 +59,39 @@ write_status() {
     local files_scanned="${8:-0}"
     local duration="${9:-}"
     local last_scan_time="${10:-}"
+    local timestamp
+    timestamp="$(date -Iseconds)"
 
-    cat > "$STATUS_TMP" << STATUSEOF
-{
-  "state": "${state}",
-  "scan_type": "${SCAN_TYPE}",
-  "message": "${message}",
-  "current_dir": "${current_dir}",
-  "dirs_completed": ${dirs_completed},
-  "dirs_total": ${dirs_total},
-  "result": "${result}",
-  "threat_count": ${threat_count},
-  "files_scanned": ${files_scanned},
-  "duration": "${duration}",
-  "last_scan_time": "${last_scan_time}",
-  "timestamp": "$(date -Iseconds)"
-}
-STATUSEOF
-    mv -f "$STATUS_TMP" "$STATUS_FILE"
+    python3 -c "
+import json, os
+path = '$STATUS_FILE'
+tmp = '${STATUS_TMP}'
+try:
+    with open(path, 'r') as f:
+        data = json.load(f)
+except (FileNotFoundError, json.JSONDecodeError, PermissionError, OSError):
+    data = {}
+data.update({
+    'state': '$state',
+    'scan_type': '$SCAN_TYPE',
+    'message': '$message',
+    'current_dir': '$current_dir',
+    'dirs_completed': $dirs_completed,
+    'dirs_total': $dirs_total,
+    'result': '$result',
+    'threat_count': $threat_count,
+    'files_scanned': $files_scanned,
+    'duration': '$duration',
+    'last_scan_time': '$last_scan_time',
+    'timestamp': '$timestamp'
+})
+try:
+    with open(tmp, 'w') as f:
+        json.dump(data, f, indent=2)
+    os.rename(tmp, path)
+except (PermissionError, OSError):
+    pass
+" 2>/dev/null || true
 }
 
 # --- Helper: terminal output (only when interactive) ---
@@ -170,14 +185,19 @@ notify() {
         notify-send --app-name="Bazzite Security" --icon="$icon" --urgency="$urgency" "$summary" "$body"
 }
 
-# --- Helper: send email alert ---
+# --- Helper: send email alert (with optional health summary) ---
 send_alert() {
     local status="$1"
     local threat_count="$2"
     local files_scanned="$3"
     local duration="$4"
     if command -v /usr/local/bin/clamav-alert.sh &>/dev/null; then
-        /usr/local/bin/clamav-alert.sh "$SCAN_TYPE" "$status" "$threat_count" "$files_scanned" "$duration" "$LOG_FILE"
+        # Capture health summary to embed in scan email
+        local health_summary=""
+        if command -v /usr/local/bin/system-health-snapshot.sh &>/dev/null; then
+            health_summary=$(/usr/local/bin/system-health-snapshot.sh --append 2>&1) || true
+        fi
+        /usr/local/bin/clamav-alert.sh "$SCAN_TYPE" "$status" "$threat_count" "$files_scanned" "$duration" "$LOG_FILE" "$health_summary"
     fi
 }
 
@@ -406,7 +426,7 @@ if [[ "$SCAN_TYPE" == "test" ]]; then
 
     # Reset status to idle/clean so tray goes back to green
     write_status "idle" "Test complete — system clean" "" "0" "0" \
-        "clean" "0" "0" "" "" "clean"
+        "clean" "0" "0" "" ""
 
     if $INTERACTIVE; then
         echo ""

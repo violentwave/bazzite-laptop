@@ -65,7 +65,7 @@ fi
 # ===========================
 echo ""
 echo -e "  ${BCYAN}┌──────────────────────────────────────┐${RESET}"
-echo -e "  ${BCYAN}│${RESET}  🛡  ${BWHITE}BAZZITE SECURITY SCANNER${RESET}       ${BCYAN}│${RESET}"
+echo -e "  ${BCYAN}│${RESET}  🛡  ${BWHITE}USBGUARD SETUP${RESET}                 ${BCYAN}│${RESET}"
 echo -e "  ${BCYAN}│${RESET}  ${DIM}USBGuard Initial Setup${RESET}               ${BCYAN}│${RESET}"
 echo -e "  ${BCYAN}└──────────────────────────────────────┘${RESET}"
 echo ""

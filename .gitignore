@@ -9,7 +9,9 @@ __pycache__/
 *~
 *.orig
 .idea
-.vscode
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
 
 # Temp/backup files
 *.bak
