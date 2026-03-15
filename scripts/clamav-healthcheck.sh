@@ -8,7 +8,7 @@ set -uo pipefail
 QUARANTINE_DIR="/home/lch/security/quarantine"
 LOG_DIR="/var/log/clamav-scans"
 HEALTHCHECK_LOG="/home/lch/security/.healthcheck.log"
-STATUS_TMP="/home/lch/security/.status.tmp"
+STATUS_TMP="/home/lch/security/.status.tmp.$$"
 LCH_UID="$(id -u lch)"
 INTERACTIVE=false
 [ -t 1 ] && INTERACTIVE=true
@@ -21,6 +21,9 @@ YELLOW='\e[0;33m'
 BWHITE='\e[1;37m'
 DIM='\e[2m'
 RESET='\e[0m'
+
+# --- Cleanup stale tmp on exit ---
+trap 'rm -f "$STATUS_TMP" 2>/dev/null' EXIT
 
 # --- Counters ---
 PASS_COUNT=0

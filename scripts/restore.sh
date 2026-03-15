@@ -189,8 +189,8 @@ if ! confirm "Restore scripts to /usr/local/bin/?"; then
 else
     if [[ -d "${BACKUP_DIR}/scripts" ]] && [[ -n "$(ls -A "${BACKUP_DIR}/scripts/" 2>/dev/null)" ]]; then
         cp -a "${BACKUP_DIR}/scripts/"* /usr/local/bin/ 2>/dev/null && ok "scripts -> /usr/local/bin/" || fail "scripts/"
-        chmod +x /usr/local/bin/* 2>/dev/null
-        ok "chmod +x /usr/local/bin/*"
+        chmod +x /usr/local/bin/*.sh 2>/dev/null
+        ok "chmod +x /usr/local/bin/*.sh"
     else
         warn "No scripts in backup"
     fi

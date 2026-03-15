@@ -30,7 +30,7 @@ signal.signal(signal.SIGTERM, lambda s, f: sys.exit(0))
 
 STATUS_FILE = Path.home() / "security" / ".status"
 POLL_INTERVAL = 3  # seconds
-ICON_THEME_PATH = "/home/lch/security/icons"
+ICON_THEME_PATH = str(Path.home() / "security" / "icons")
 
 SCAN_SCRIPT = "/usr/local/bin/clamav-scan.sh"
 HEALTHCHECK_SCRIPT = "/usr/local/bin/clamav-healthcheck.sh"
@@ -476,8 +476,8 @@ class SecurityTray:
                     return dt.strftime("%a %b %d, %I:%M %p").lstrip("0")
                 except Exception:
                     return value
-        except Exception:
-            pass
+        except Exception as e:
+            print(f"[tray] Action failed: {e}", file=sys.stderr)
         return "Check systemctl"
 
     # --- Action handlers ---
@@ -486,73 +486,73 @@ class SecurityTray:
         try:
             subprocess.Popen(
                 ["konsole", "--hold", "-e", "sudo", SCAN_SCRIPT, "quick"])
-        except Exception:
-            pass
+        except Exception as e:
+            print(f"[tray] Action failed: {e}", file=sys.stderr)
 
     def _on_run_deep(self, _widget):
         try:
             subprocess.Popen(
                 ["konsole", "--hold", "-e", "sudo", SCAN_SCRIPT, "deep"])
-        except Exception:
-            pass
+        except Exception as e:
+            print(f"[tray] Action failed: {e}", file=sys.stderr)
 
     def _on_run_test(self, _widget):
         try:
             subprocess.Popen(
                 ["konsole", "--hold", "-e", "sudo", SCAN_SCRIPT, "test"])
-        except Exception:
-            pass
+        except Exception as e:
+            print(f"[tray] Action failed: {e}", file=sys.stderr)
 
     def _on_run_suite(self, _widget):
         try:
             subprocess.Popen(
                 ["konsole", "--hold", "-e", "sudo",
                  "/usr/local/bin/bazzite-security-test.sh"])
-        except Exception:
-            pass
+        except Exception as e:
+            print(f"[tray] Action failed: {e}", file=sys.stderr)
 
     def _on_run_health_snapshot(self, _widget):
         try:
             subprocess.Popen(
                 ["konsole", "--hold", "-e", "sudo", HEALTH_SNAPSHOT_SCRIPT])
-        except Exception:
-            pass
+        except Exception as e:
+            print(f"[tray] Action failed: {e}", file=sys.stderr)
 
     def _on_view_health_logs(self, _widget):
         try:
             subprocess.Popen(
                 ["konsole", "--hold", "-e", "less", HEALTH_LOG])
-        except Exception:
-            pass
+        except Exception as e:
+            print(f"[tray] Action failed: {e}", file=sys.stderr)
 
     def _on_run_healthcheck(self, _widget):
         try:
             subprocess.Popen(
                 ["konsole", "--hold", "-e", "sudo", HEALTHCHECK_SCRIPT])
-        except Exception:
-            pass
+        except Exception as e:
+            print(f"[tray] Action failed: {e}", file=sys.stderr)
 
     def _on_view_quarantine(self, _widget):
         try:
             subprocess.Popen(
                 ["konsole", "--hold", "-e", "sudo",
                  "/usr/local/bin/quarantine-release.sh", "--list"])
-        except Exception:
-            pass
+        except Exception as e:
+            print(f"[tray] Action failed: {e}", file=sys.stderr)
 
     def _on_release_quarantine(self, _widget):
         try:
             subprocess.Popen(
                 ["konsole", "-e", "sudo",
                  "/usr/local/bin/quarantine-release.sh", "--interactive"])
-        except Exception:
-            pass
+        except Exception as e:
+            print(f"[tray] Action failed: {e}", file=sys.stderr)
 
     def _on_view_logs(self, _widget):
         try:
             subprocess.Popen(["dolphin", LOG_DIR])
-        except Exception:
-            pass
+        except Exception as e:
+            print(f"[tray] Action failed: {e}", file=sys.stderr)
 
     def _on_quit(self, _widget):
         Gtk.main_quit()

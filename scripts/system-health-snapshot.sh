@@ -721,6 +721,7 @@ except OSError:
 ' "$STATUS_FILE" "$STATUS" "$TOTAL_ISSUES" "${#WARNINGS[@]}" "${#CRITICAL[@]}" \
         "$(date '+%Y-%m-%d %I:%M %p')" "$LOG_FILE" \
         2>/dev/null || true
+    chown lch:lch "$STATUS_FILE" 2>/dev/null || true
 fi
 
 # ═════════════════════════════════════════════════════════════

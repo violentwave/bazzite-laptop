@@ -13,7 +13,7 @@ QUARANTINE_DIR="/home/lch/security/quarantine"
 LOG_DIR="/var/log/clamav-scans"
 LOG_FILE="${LOG_DIR}/scan-$(date +%Y%m%d-%H%M%S).log"
 STATUS_FILE="/home/lch/security/.status"
-STATUS_TMP="/home/lch/security/.status.tmp"
+STATUS_TMP="/home/lch/security/.status.tmp.$$"
 LCH_UID="$(id -u lch)"
 INTERACTIVE=false
 [ -t 1 ] && INTERACTIVE=true
@@ -41,6 +41,9 @@ elif [[ "$SCAN_TYPE" == "test" ]]; then
 else
     SCAN_DIRS=(/home/lch /tmp /var)
 fi
+
+# --- Cleanup stale tmp on exit ---
+trap 'rm -f "$STATUS_TMP" 2>/dev/null' EXIT
 
 # --- Create directories ---
 mkdir -p "$QUARANTINE_DIR"
@@ -95,6 +98,7 @@ except (PermissionError, OSError):
         "$dirs_completed" "$dirs_total" "$result" "$threat_count" \
         "$files_scanned" "$duration" "$last_scan_time" "$timestamp" \
         2>/dev/null || true
+    chown lch:lch "$STATUS_FILE" 2>/dev/null || true
 }
 
 # --- Helper: terminal output (only when interactive) ---

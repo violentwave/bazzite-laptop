@@ -553,12 +553,19 @@ sudo systemctl enable clamav-quick.timer
 sudo systemctl enable clamav-deep.timer
 sudo systemctl start clamav-quick.timer
 sudo systemctl start clamav-deep.timer
+
+# Enable health monitoring timer
+sudo systemctl enable --now system-health.timer
+
+# Create health log directory
+sudo mkdir -p /var/log/system-health
 ```
 
 ## Step 5: Restore Logrotate Config
 
 ```bash
 sudo cp layer2-etc/logrotate/clamav-scans /etc/logrotate.d/clamav-scans
+sudo cp layer2-etc/logrotate/system-health /etc/logrotate.d/system-health
 ```
 
 ## Step 6: Restore Scripts

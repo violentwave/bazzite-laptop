@@ -243,7 +243,7 @@ else
 fi
 
 # [10] Status file writable (read-modify-write to preserve health_* keys)
-STATUS_TMP="/home/lch/security/.status.tmp.test"
+STATUS_TMP="/home/lch/security/.status.tmp.test.$$"
 if python3 -c '
 import json, os, sys
 path, tmp = sys.argv[1], sys.argv[2]
@@ -257,6 +257,7 @@ with open(tmp, "w") as f:
     json.dump(data, f, indent=2)
 os.rename(tmp, path)
 ' "$STATUS_FILE" "$STATUS_TMP" 2>/dev/null; then
+    chown lch:lch "$STATUS_FILE" 2>/dev/null || true
     print_result 10 "Status file atomic write" "PASS" "$STATUS_FILE writable"
 else
     print_result 10 "Status file atomic write" "FAIL" "Cannot write to $STATUS_FILE"
@@ -402,7 +403,7 @@ fi
 # [15] Custom icons exist
 ICONS_OK=true
 ICONS_MISSING=""
-for icon in bazzite-sec-green bazzite-sec-yellow bazzite-sec-red bazzite-sec-blue bazzite-sec-blank; do
+for icon in bazzite-sec-green bazzite-sec-teal bazzite-sec-blue bazzite-sec-yellow bazzite-sec-red bazzite-sec-blank bazzite-sec-health-warn; do
     if [[ ! -f "$ICON_DIR/${icon}.svg" ]]; then
         ICONS_OK=false
         ICONS_MISSING+=" ${icon}.svg"
@@ -414,7 +415,7 @@ if ! [[ -f "$ICON_THEME" ]]; then
 fi
 
 if $ICONS_OK; then
-    print_result 15 "Custom tray icons installed" "PASS" "5 SVGs + index.theme"
+    print_result 15 "Custom tray icons installed" "PASS" "7 SVGs + index.theme"
 else
     print_result 15 "Custom tray icons installed" "FAIL" "Missing:${ICONS_MISSING}"
 fi

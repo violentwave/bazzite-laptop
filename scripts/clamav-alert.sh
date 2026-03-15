@@ -20,9 +20,19 @@ DURATION="${5:?Missing duration}"
 LOG_FILE="${6:?Missing log_file}"
 HEALTH_SUMMARY="${7:-}"
 
-# HTML-escape health summary to prevent broken email rendering
+# HTML-escape helper — prevents broken email rendering from special characters
+html_escape() {
+    local text="$1"
+    text="${text//&/&amp;}"
+    text="${text//</&lt;}"
+    text="${text//>/&gt;}"
+    text="${text//\"/&quot;}"
+    printf '%s' "$text"
+}
+
+# Escape health summary
 if [[ -n "$HEALTH_SUMMARY" ]]; then
-    HEALTH_SUMMARY=$(printf '%s' "$HEALTH_SUMMARY" | sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g; s/"/\&quot;/g')
+    HEALTH_SUMMARY=$(html_escape "$HEALTH_SUMMARY")
 fi
 
 HOSTNAME="$(hostname)"
@@ -81,9 +91,10 @@ if [[ "$STATUS" == "threats" && -f "$LOG_FILE" ]]; then
     while IFS= read -r line; do
         # Lines look like: /path/to/file: ThreatName FOUND
         filepath="${line%%: * FOUND}"
-        filename=$(basename "$filepath")
-        threatname=$(echo "$line" | sed 's/^.*: //' | sed 's/ FOUND$//')
-        THREAT_TABLE_ROWS+="<tr style=\"border-bottom:1px solid #e2e8f0;\"><td style=\"padding:10px 12px;font-family:'Courier New',monospace;font-size:13px;color:#1e293b\">${filename}</td><td style=\"padding:10px 12px;font-size:13px;color:#64748b;word-break:break-all\">${filepath}</td><td style=\"padding:10px 12px;font-size:13px;color:#ef4444;font-weight:600\">${threatname}</td><td style=\"padding:10px 12px;font-size:13px;color:#22c55e\">Quarantined</td></tr>"
+        filename=$(html_escape "$(basename "$filepath")")
+        filepath_esc=$(html_escape "$filepath")
+        threatname=$(html_escape "$(echo "$line" | sed 's/^.*: //' | sed 's/ FOUND$//')")
+        THREAT_TABLE_ROWS+="<tr style=\"border-bottom:1px solid #e2e8f0;\"><td style=\"padding:10px 12px;font-family:'Courier New',monospace;font-size:13px;color:#1e293b\">${filename}</td><td style=\"padding:10px 12px;font-size:13px;color:#64748b;word-break:break-all\">${filepath_esc}</td><td style=\"padding:10px 12px;font-size:13px;color:#ef4444;font-weight:600\">${threatname}</td><td style=\"padding:10px 12px;font-size:13px;color:#22c55e\">Quarantined</td></tr>"
     done < <(grep "FOUND$" "$LOG_FILE" 2>/dev/null || true)
 fi
 
