@@ -14,9 +14,10 @@ ignore = ["S603", "S607"]
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = ["S101"]
+"tray/**" = ["E402", "I001"]
 
 [tool.bandit]
-exclude_dirs = ["tests", ".venv"]
+exclude_dirs = ["tests", ".venv", "tray"]
 skips = ["B603", "B607"]
 
 [tool.pytest.ini_options]

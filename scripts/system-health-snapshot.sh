@@ -226,12 +226,12 @@ delta_read() {
 delta_write() {
     local key="$1" val="$2"
     if [[ -f "$DELTA_FILE" ]]; then
-        grep -v "^${key}=" "$DELTA_FILE" > "${DELTA_FILE}.tmp" 2>/dev/null || true
+        grep -v "^${key}=" "$DELTA_FILE" > "${DELTA_FILE}.tmp.$$" 2>/dev/null || true
     else
-        : > "${DELTA_FILE}.tmp"
+        : > "${DELTA_FILE}.tmp.$$"
     fi
-    echo "${key}=${val}" >> "${DELTA_FILE}.tmp"
-    mv -f "${DELTA_FILE}.tmp" "$DELTA_FILE"
+    echo "${key}=${val}" >> "${DELTA_FILE}.tmp.$$"
+    mv -f "${DELTA_FILE}.tmp.$$" "$DELTA_FILE"
 }
 
 # Compare current vs previous value, flag if growing
@@ -715,7 +715,7 @@ st["health_last_check"] = sys.argv[6]
 st["health_log"]        = sys.argv[7]
 
 try:
-    tmp = path + ".tmp"
+    tmp = path + ".tmp." + str(os.getpid())
     with open(tmp, "w") as f:
         json.dump(st, f, indent=2)
     os.rename(tmp, path)

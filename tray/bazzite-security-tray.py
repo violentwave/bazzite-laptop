@@ -23,7 +23,7 @@ try:
     libc = ctypes.CDLL('libc.so.6')
     title = b'bazzite-security-tray'
     libc.prctl(15, title, 0, 0, 0)  # PR_SET_NAME = 15
-except Exception:
+except Exception:  # noqa: S110
     pass
 
 signal.signal(signal.SIGHUP, signal.SIG_IGN)
@@ -54,15 +54,39 @@ STATE_HEALTH_WARNING = "health_warning"
 STATE_UNKNOWN = "unknown"
 
 STATE_CONFIG = {
-    STATE_HEALTHY_IDLE: {"icon": "bazzite-sec-green",  "desc": "All clear",              "blink": False},
-    STATE_SCAN_RUNNING: {"icon": "bazzite-sec-teal",   "desc": "Scan in progress",       "blink": True,  "interval": 1000},
-    STATE_SCAN_COMPLETE: {"icon": "bazzite-sec-blue",  "desc": "Scan complete",           "blink": True,  "interval": 500},
-    STATE_WARNING:       {"icon": "bazzite-sec-yellow", "desc": "Warning",                "blink": False},
-    STATE_SCAN_FAILED:   {"icon": "bazzite-sec-red",   "desc": "Scan error",              "blink": False},
-    STATE_SCAN_ABORTED:  {"icon": "bazzite-sec-red",   "desc": "Scan aborted",            "blink": True,  "interval": 500},
-    STATE_THREATS_FOUND: {"icon": "bazzite-sec-red",   "desc": "Threats found",           "blink": True,  "interval": 1000},
-    STATE_HEALTH_WARNING: {"icon": "bazzite-sec-health-warn", "desc": "Health warnings detected", "blink": False},
-    STATE_UNKNOWN:       {"icon": "bazzite-sec-yellow", "desc": "Status unknown",          "blink": False},
+    STATE_HEALTHY_IDLE: {
+        "icon": "bazzite-sec-green", "desc": "All clear", "blink": False,
+    },
+    STATE_SCAN_RUNNING: {
+        "icon": "bazzite-sec-teal", "desc": "Scan in progress",
+        "blink": True, "interval": 1000,
+    },
+    STATE_SCAN_COMPLETE: {
+        "icon": "bazzite-sec-blue", "desc": "Scan complete",
+        "blink": True, "interval": 500,
+    },
+    STATE_WARNING: {
+        "icon": "bazzite-sec-yellow", "desc": "Warning", "blink": False,
+    },
+    STATE_SCAN_FAILED: {
+        "icon": "bazzite-sec-red", "desc": "Scan error", "blink": False,
+    },
+    STATE_SCAN_ABORTED: {
+        "icon": "bazzite-sec-red", "desc": "Scan aborted",
+        "blink": True, "interval": 500,
+    },
+    STATE_THREATS_FOUND: {
+        "icon": "bazzite-sec-red", "desc": "Threats found",
+        "blink": True, "interval": 1000,
+    },
+    STATE_HEALTH_WARNING: {
+        "icon": "bazzite-sec-health-warn",
+        "desc": "Health warnings detected", "blink": False,
+    },
+    STATE_UNKNOWN: {
+        "icon": "bazzite-sec-yellow", "desc": "Status unknown",
+        "blink": False,
+    },
 }
 
 MENU_HEADERS = {
@@ -213,7 +237,7 @@ class SecurityTray:
             raw = None
             try:
                 raw = STATUS_FILE.read_bytes()
-            except Exception:
+            except Exception:  # noqa: S110
                 pass
 
             if raw != self.last_status_raw:
@@ -418,7 +442,10 @@ class SecurityTray:
             if health_status == "OK":
                 text = f"\u2713 All OK \u2014 {age_str}"
             elif health_status == "CRITICAL":
-                text = f"\u2717 {health_critical} critical, {health_warnings} warnings \u2014 {age_str}"
+                text = (
+                    f"\u2717 {health_critical} critical,"
+                    f" {health_warnings} warnings \u2014 {age_str}"
+                )
             else:
                 text = f"\u26a0 {health_issues} issue(s) \u2014 {age_str}"
 

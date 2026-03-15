@@ -8,7 +8,10 @@
     "cohere": {"rpm": 20, "rpd": null, "calls_per_month": 1000},
     "github_models": {"rpm": 15, "rpd": null},
     "nvidia_nim": {"rpm": 40, "rpd": null},
-    "cloudflare": {"rpm": null, "rpd": null, "neurons_per_day": 10000}
+    "cloudflare": {"rpm": null, "rpd": null, "neurons_per_day": 10000},
+    "anthropic": {"rpm": 50, "rpd": null, "note": "Claude Max subscription"},
+    "gemini": {"rpm": 60, "rpd": null, "note": "Gemini Pro subscription"},
+    "xai": {"rpm": 60, "rpd": null, "note": "Grok $30/mo subscription"}
   },
   "threat_intel": {
     "virustotal": {"rpm": 4, "rpd": 500},
