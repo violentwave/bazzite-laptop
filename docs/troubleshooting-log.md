@@ -103,3 +103,21 @@
 **Problem**: ClamAV scan and health snapshot can write to ~/security/.status simultaneously, corrupting JSON
 **Root cause**: Both scripts write the full .status file independently. If they overlap, one overwrites the other's data.
 **Fix**: Both scripts now use read-modify-write pattern: read existing JSON → update only their keys → atomic write (write to .status.tmp then `mv` to .status). The `mv` is atomic on the same filesystem, so readers always see valid JSON. ClamAV scan states take priority in the tray app — health_warning only displays when ClamAV is idle+healthy.
+
+### 20. KDE menu icons not showing custom bazzite-sec-* icons
+**Problem**: .desktop files in KDE Security menu showed generic document icons instead of custom shield SVGs
+**Root cause**: KDE's desktop file icon resolver does NOT search `~/.local/share/icons/hicolor/` for custom icon theme names, even with a proper `index.theme` and symlinks. Using `Icon=bazzite-sec-green` simply doesn't resolve.
+**Fix**: Changed all .desktop files to use absolute paths: `Icon=/home/lch/security/icons/hicolor/scalable/status/bazzite-sec-green.svg`. This is the pragmatic solution — KDE reliably loads absolute SVG paths.
+**Verify**: Log out and back in, or run `kbuildsycoca6 --noincremental` to rebuild the KDE menu cache.
+
+### 21. "Start Security Monitor" kills tray but doesn't restart
+**Problem**: Clicking "Start Security Monitor" in KDE Security menu killed the running tray instance but failed to start a new one
+**Root cause**: The launcher script (`start-security-tray.sh`) was never deployed to `/usr/local/bin/`. The .desktop file's `Exec=` pointed to a nonexistent path, so only the `pkill` portion (embedded in the old script logic) executed.
+**Fix**: Fixed the launcher script (pgrep/pkill specificity with `[.]py` regex, dynamic wait loop for graceful shutdown, setsid for process detachment) and added it to `deploy.sh` so it actually gets deployed to `/usr/local/bin/`.
+**Verify**: `ls -la /usr/local/bin/start-security-tray.sh` should exist after deploy.
+
+### 22. Tray icon not visually updating after health snapshot
+**Problem**: After running system-health-snapshot.sh, the tray icon didn't visibly change
+**Root cause**: Not a bug. The health snapshot writes to `.status` at completion, the tray polls every 3s and picks it up. But if health status stays "OK" (no warnings), there's no visible state transition — the icon remains green/healthy_idle. The health_warning state (amber EKG icon) only appears when actual warnings are detected (e.g., high temperature, SMART errors).
+**Fix**: No fix needed — expected behavior. To verify tray picks up changes, check the Health submenu which shows current health status and issue count.
+**Also fixed**: AppIndicator3 icon caching — KDE caches icons by name string, so setting the same icon name is a no-op. Fix: `set_icon_full("")` before `set_icon_full(new_icon)` forces a refresh.

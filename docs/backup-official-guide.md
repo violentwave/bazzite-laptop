@@ -47,7 +47,7 @@ Everything needed to fully restore the system from a fresh Bazzite install:
 ### Scripts
 | Backup Name | Original Location |
 |-------------|-------------------|
-| `scripts/` | `/usr/local/bin/` — clamav-scan.sh, clamav-alert.sh, clamav-healthcheck.sh, quarantine-release.sh, bazzite-security-test.sh, public-wifi-mode, system-health-snapshot.sh, system-health-test.sh |
+| `scripts/` | `/usr/local/bin/` — clamav-scan.sh, clamav-alert.sh, clamav-healthcheck.sh, quarantine-release.sh, bazzite-security-test.sh, public-wifi-mode, system-health-snapshot.sh, system-health-test.sh, start-security-tray.sh, integration-test.sh |
 
 ### User Configs
 | Backup Name | Original Location |

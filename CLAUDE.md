@@ -24,8 +24,19 @@
 - MangoHud config: ~/.config/MangoHud/MangoHud.conf
 - DNS config: /etc/systemd/resolved.conf.d/dns-over-tls.conf
 - WiFi script: /usr/local/bin/public-wifi-mode
+- Tray launcher: /usr/local/bin/start-security-tray.sh
+- Integration tests: /usr/local/bin/integration-test.sh
 - Claude Code settings: ~/.claude/settings.json
 - Backup scripts: /mnt/backup/ (on USB flash drive sdc3)
+
+## Desktop Files
+- All custom icons use absolute SVG paths (KDE doesn't resolve custom icon theme names)
+- Terminal-based entries use `konsole -e bash -c '...; echo "Press Enter to close"; read'`
+- Never use `konsole --hold` (no visible prompt to close)
+
+## Systemd Hardening
+All ClamAV and health services include: NoNewPrivileges, ProtectSystem=strict,
+ProtectHome=read-only, PrivateTmp=yes, ReadWritePaths whitelist.
 
 ## System Health Monitoring
 

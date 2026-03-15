@@ -37,7 +37,7 @@ Refer to these project documents (all in `docs/`) for full details:
 - Performance: GameMode config, NVIDIA shader cache 4GB, I/O scheduler mq-deadline, TCP Fast Open
 - Security hardening: ClamAV clamd daemon mode (daily quick + weekly deep + test scans), USBGuard (12 devices whitelisted), LUKS Argon2id + header backup, firewall log-denied=all
 - Email alerts: HTML emails via msmtp + Gmail app password — sent after EVERY scan (quick/deep/test) + healthcheck failures
-- KDE Security menu: 12 shortcuts (deep scan, quick scan, firewall, firewall status, KWalletManager, scan logs, start security monitor, system health snapshot, update email password, USB devices, view health logs, view quarantine)
+- KDE Security menu: 12 shortcuts (deep scan, quick scan, firewall, firewall status, KWalletManager, scan logs, start security monitor, system health snapshot, update email password, USB devices, view health logs, view quarantine). All custom icons use absolute SVG paths (KDE doesn't resolve custom icon theme names in .desktop files).
 - ~/security/ hub: centralized security folder with status file, quarantine dir, scan logs
 - Notification system: System tray app with 9-state icon machine (7 custom SVG icons with shape-differentiated badges for colorblind accessibility), 3s polling, SIGHUP-resistant, autostart, health submenu
 - Quarantine hardening: chmod 000 + chattr +i on quarantined files, root:lch 750 directory, release manager script
@@ -46,6 +46,8 @@ Refer to these project documents (all in `docs/`) for full details:
 - Backup: Unified backup.sh/restore.sh on BazziteBackup flash drive (5 scenarios documented)
 - GitHub: Private repo at github.com:violentwave/bazzite-laptop.git
 - Deploy: `sudo ./scripts/deploy.sh [--dry-run]` syncs repo files to system locations
+- Tray launcher: `/usr/local/bin/start-security-tray.sh` — kills existing tray, starts fresh with setsid
+- Integration tests: `/usr/local/bin/integration-test.sh` — 26-test validation (security, desktop, firewall)
 - System health monitoring: system-health-snapshot.sh with SMART delta tracking,
   GPU/CPU thermals, storage alerts, tray integration (health_warning state with amber EKG pulse icon),
   daily 8AM timer, email alerts, health summary in scan emails, KDE Security menu entries, 16-test validation suite
@@ -76,6 +78,8 @@ Refer to these project documents (all in `docs/`) for full details:
 | SMART self-test | `sudo system-health-snapshot.sh --selftest` |
 | Health test suite | `sudo system-health-test.sh` |
 | View health log | `less /var/log/system-health/health-latest.log` |
+| Integration tests | `sudo integration-test.sh` |
+| Start tray (launcher) | `start-security-tray.sh` |
 | Push to GitHub | `git push origin master` |
 
 ### Game Launch Options Quick Reference

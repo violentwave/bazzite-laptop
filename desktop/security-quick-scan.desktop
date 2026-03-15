@@ -4,7 +4,7 @@
 Type=Application
 Name=Quick Scan
 Comment=Scan home and tmp directories
-Exec=konsole --hold -e sudo /usr/local/bin/clamav-scan.sh quick
+Exec=konsole -e bash -c "sudo /usr/local/bin/clamav-scan.sh quick; echo; echo Press Enter to close; read"
 Icon=/home/lch/security/icons/hicolor/scalable/status/bazzite-sec-green.svg
 Categories=Security;System;
 Terminal=false

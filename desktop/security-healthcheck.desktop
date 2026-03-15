@@ -4,7 +4,7 @@
 Type=Application
 Name=Run Health Check
 Comment=Run ClamAV infrastructure health check
-Exec=konsole --hold -e sudo /usr/local/bin/clamav-healthcheck.sh
+Exec=konsole -e bash -c "sudo /usr/local/bin/clamav-healthcheck.sh; echo; echo Press Enter to close; read"
 Icon=/home/lch/security/icons/hicolor/scalable/status/bazzite-sec-blue.svg
 Categories=Security;System;
 Terminal=false

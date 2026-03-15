@@ -189,6 +189,7 @@ Layered packages: `clamav`, `clamav-freshclam`, `clamd`, `msmtp`
   - Healthcheck failures also trigger email
 - **Script**: `/usr/local/bin/clamav-scan.sh {quick|deep|test}` — colored terminal UI, status file, desktop notifications
 - **Alert script**: `/usr/local/bin/clamav-alert.sh` — sends HTML email with threat details
+- **Signal handling**: Scan script traps INT/TERM — stops clamd, resets tray status to idle on interrupt
 
 ### Notification System ✅
 - **System tray app**: ~/security/bazzite-security-tray.py (Python + GObject + AppIndicator3)
@@ -224,6 +225,20 @@ Layered packages: `clamav`, `clamav-freshclam`, `clamd`, `msmtp`
 - **Report**: Generates ~/security/test-report-*.log
 - **Safety**: Backs up/restores .status file, full cleanup on exit via trap
 - **Access**: Available from tray menu "Run Test Suite"
+
+### Integration Test Suite ✅
+- **Script**: `/usr/local/bin/integration-test.sh` — 26 automated checks
+- **Covers**: lock files, .desktop icon paths, path traversal prevention, firewall zones, SELinux, USBGuard, ClamAV signatures, msmtp binary
+- **Access**: Run manually via `sudo integration-test.sh`
+
+### Systemd Service Hardening ✅
+All ClamAV and health systemd services include security directives:
+- `NoNewPrivileges=yes` — prevents privilege escalation via setuid binaries
+- `ProtectSystem=strict` — entire filesystem read-only except API filesystems
+- `ProtectHome=read-only` — home directories read-only
+- `PrivateTmp=yes` — private /tmp namespace
+- `ReadWritePaths=` — explicit write whitelist (e.g., `/var/log/clamav-scans /home/lch/security`)
+- Applied to: clamav-quick.service, clamav-deep.service, clamav-healthcheck.service, system-health.service
 
 ### USBGuard ✅
 Layered package: `usbguard`
@@ -354,7 +369,7 @@ inotify-based auto-scan of ~/Downloads for new files — quarantine anything sus
 | `/etc/usbguard/` | ✅ | rules.conf |
 | `/etc/firewalld/` | ✅ | Custom zone configs |
 | `/etc/logrotate.d/` | ✅ | clamav-scans, system-health |
-| `/usr/local/bin/` | ✅ | clamav-scan.sh, clamav-alert.sh, clamav-healthcheck.sh, quarantine-release.sh, bazzite-security-test.sh, public-wifi-mode, system-health-snapshot.sh, system-health-test.sh |
+| `/usr/local/bin/` | ✅ | clamav-scan.sh, clamav-alert.sh, clamav-healthcheck.sh, quarantine-release.sh, bazzite-security-test.sh, public-wifi-mode, system-health-snapshot.sh, system-health-test.sh, start-security-tray.sh, integration-test.sh |
 | `~/.config/MangoHud/` | ✅ | MangoHud.conf |
 | `~/.config/scopebuddy/` | ✅ | Future ScopeBuddy configs |
 | `~/.claude/` | ✅ | Claude Code settings |
@@ -389,7 +404,8 @@ inotify-based auto-scan of ~/Downloads for new files — quarantine anything sus
 | Run healthcheck | `sudo clamav-healthcheck.sh` |
 | Quarantine list | `sudo quarantine-release.sh --list` |
 | Release quarantine | `sudo quarantine-release.sh --interactive` |
-| Start tray icon | `python3 ~/security/bazzite-security-tray.py &` |
+| Start tray icon | `start-security-tray.sh` |
+| Integration tests | `sudo integration-test.sh` |
 | Check freshclam | `systemctl status clamav-freshclam.service` |
 | Check clamd | `systemctl status clamd@scan` |
 | Health snapshot | `sudo system-health-snapshot.sh` |
