@@ -2,8 +2,8 @@
 Type=Application
 Name=Bazzite Security Monitor
 Comment=System tray security status monitor
-Icon=security-high
-Exec=python3 /home/lch/security/bazzite-security-tray.py
+Icon=bazzite-sec-green
+Exec=bash -c 'pkill -f bazzite-security-tray 2>/dev/null; sleep 1; nohup python3 /home/lch/security/bazzite-security-tray.py &>/dev/null & disown'
 Terminal=false
 Categories=Security;System;
 StartupNotify=false

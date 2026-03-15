@@ -112,9 +112,19 @@ deploy "$REPO_DIR/configs/logrotate-system-health"  "/etc/logrotate.d/system-hea
 echo ""
 
 echo "=== Desktop files -> user directories ==="
+# Clean up misplaced directory entry from earlier deployments
+MISPLACED="$USER_HOME/.local/share/applications/security-directory.desktop"
+if [[ -f "$MISPLACED" ]]; then
+    if [[ "$DRY_RUN" == false ]]; then
+        rm -f "$MISPLACED"
+        echo "[CLEANUP]  Removed misplaced $MISPLACED"
+    else
+        echo "[CLEANUP]  Would remove misplaced $MISPLACED"
+    fi
+fi
 for f in "$REPO_DIR"/desktop/security-*.desktop; do
     local_name="$(basename "$f")"
-    # security-directory.desktop goes to desktop-directories
+    # security-directory.desktop goes to desktop-directories (not applications/)
     if [[ "$local_name" == "security-directory.desktop" ]]; then
         deploy "$f" "$USER_HOME/.local/share/desktop-directories/$local_name" 644 "lch:lch"
     else
@@ -131,6 +141,18 @@ echo "=== Tray app -> ~/security/ ==="
 deploy "$REPO_DIR/tray/bazzite-security-tray.py" \
     "$USER_HOME/security/bazzite-security-tray.py" 755 "lch:lch"
 deploy_dir "$REPO_DIR/tray/icons" "$USER_HOME/security/icons" "lch:lch"
+
+# Link tray icons into standard user icon path for KDE .desktop file resolution
+if [[ "$DRY_RUN" == false ]]; then
+    mkdir -p "$USER_HOME/.local/share/icons/hicolor/scalable/status"
+    for svg in "$USER_HOME/security/icons/hicolor/scalable/status"/bazzite-sec-*.svg; do
+        ln -sf "$svg" "$USER_HOME/.local/share/icons/hicolor/scalable/status/$(basename "$svg")"
+    done
+    chown -R lch:lch "$USER_HOME/.local/share/icons/hicolor/scalable/status"
+    echo "[OK]       Symlinked tray icons into ~/.local/share/icons/hicolor/"
+else
+    echo "[SYMLINK]  Tray icons -> ~/.local/share/icons/hicolor/scalable/status/"
+fi
 echo ""
 
 echo "=== Log directories ==="
