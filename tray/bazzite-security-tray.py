@@ -48,6 +48,7 @@ STATE_WARNING = "warning"
 STATE_SCAN_FAILED = "scan_failed"
 STATE_SCAN_ABORTED = "scan_aborted"
 STATE_THREATS_FOUND = "threats_found"
+STATE_HEALTH_WARNING = "health_warning"
 STATE_UNKNOWN = "unknown"
 
 STATE_CONFIG = {
@@ -58,6 +59,7 @@ STATE_CONFIG = {
     STATE_SCAN_FAILED:   {"icon": "bazzite-sec-red",   "desc": "Scan error",              "blink": False},
     STATE_SCAN_ABORTED:  {"icon": "bazzite-sec-red",   "desc": "Scan aborted",            "blink": True,  "interval": 500},
     STATE_THREATS_FOUND: {"icon": "bazzite-sec-red",   "desc": "Threats found",           "blink": True,  "interval": 1000},
+    STATE_HEALTH_WARNING: {"icon": "bazzite-sec-health-warn", "desc": "Health warnings detected", "blink": False},
     STATE_UNKNOWN:       {"icon": "bazzite-sec-yellow", "desc": "Status unknown",          "blink": False},
 }
 
@@ -69,6 +71,7 @@ MENU_HEADERS = {
     STATE_SCAN_FAILED:   "\u2717 Scan error",
     STATE_SCAN_ABORTED:  "\u2717 Scan aborted",
     STATE_THREATS_FOUND: "\u2717 {count} threat(s) found",
+    STATE_HEALTH_WARNING: "\u26a0 System health: {issues} warning(s)",
     STATE_UNKNOWN:       "? Status unknown",
 }
 
@@ -175,13 +178,13 @@ class SecurityTray:
                     self.last_completion_timestamp = timestamp
                     return STATE_SCAN_COMPLETE
                 else:
-                    return STATE_HEALTHY_IDLE
+                    return self._check_health_overlay(data)
             elif result == "threats":
                 return STATE_THREATS_FOUND
             elif result == "error":
                 return STATE_SCAN_FAILED
             else:
-                return STATE_HEALTHY_IDLE
+                return self._check_health_overlay(data)
         elif state == "idle":
             last = data.get("last_scan_result", "")
             if last == "threats":
@@ -189,9 +192,16 @@ class SecurityTray:
             elif last == "error":
                 return STATE_SCAN_FAILED
             else:
-                return STATE_HEALTHY_IDLE
+                return self._check_health_overlay(data)
         else:
             return STATE_UNKNOWN
+
+    def _check_health_overlay(self, data):
+        """When ClamAV is idle/healthy, check if health monitoring has warnings."""
+        health = data.get("health_status", "").upper()
+        if health in ("WARNING", "CRITICAL"):
+            return STATE_HEALTH_WARNING
+        return STATE_HEALTHY_IDLE
 
     def poll(self):
         try:
@@ -324,6 +334,9 @@ class SecurityTray:
         if state == STATE_THREATS_FOUND:
             count = threat_count if threat_count else "?"
             header_text = header_template.format(count=count)
+        elif state == STATE_HEALTH_WARNING:
+            issues = self.status.get("health_issues", 0)
+            header_text = header_template.format(issues=issues if issues else "?")
         else:
             header_text = header_template
 
