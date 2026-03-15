@@ -7,7 +7,8 @@
 set -uo pipefail
 
 # --- Configuration ---
-FLASH_DEV="/dev/sdc3"
+# Dynamic device lookup — avoids hardcoded /dev/sdX that changes with device ordering
+FLASH_DEV=$(findfs LABEL=BazziteBackup 2>/dev/null) || FLASH_DEV=""
 MOUNT_POINT="/mnt/backup"
 BACKUP_DIR="${MOUNT_POINT}/latest"
 LUKS_REDUNDANT="${MOUNT_POINT}/luks-header-backup"
@@ -134,17 +135,18 @@ echo -e "  ${BCYAN}└───────────────────�
 # ===========================
 phase "PRE-FLIGHT CHECKS"
 
-if [[ ! -b "$FLASH_DEV" ]]; then
-    echo -e "  ${BRED}Flash drive ${FLASH_DEV} not found.${RESET}"
+if [[ -z "$FLASH_DEV" || ! -b "$FLASH_DEV" ]]; then
+    echo -e "  ${BRED}BazziteBackup partition not found.${RESET}"
     echo ""
     echo -ne "  ${BYELLOW}Plug in the flash drive and press Enter (or Ctrl+C to abort): ${RESET}"
     read -r
-    if [[ ! -b "$FLASH_DEV" ]]; then
-        fail "${FLASH_DEV} still not found. Aborting."
+    FLASH_DEV=$(findfs LABEL=BazziteBackup 2>/dev/null) || FLASH_DEV=""
+    if [[ -z "$FLASH_DEV" || ! -b "$FLASH_DEV" ]]; then
+        fail "BazziteBackup partition still not found. Aborting."
         exit 1
     fi
 fi
-ok "${FLASH_DEV} found"
+ok "${FLASH_DEV} found (label: BazziteBackup)"
 
 # Mount if not already mounted
 if mountpoint -q "$MOUNT_POINT" 2>/dev/null; then
@@ -190,15 +192,18 @@ phase "CRITICAL FILES"
 if compgen -G "${HOME_DIR}/security/luks-backup/luks-header-"*.bak >/dev/null 2>&1; then
     LUKS_SRC=$(find "${HOME_DIR}/security/luks-backup/" -name "luks-header-*.bak" -printf '%T@ %p\n' 2>/dev/null | sort -rn | head -1 | cut -d' ' -f2-)
     cp -a "$LUKS_SRC" "${BACKUP_DIR}/luks-header.bak" \
-        && { chmod 600 "${BACKUP_DIR}/luks-header.bak"; ok "luks-header.bak (from ${LUKS_SRC})"; } \
+        && { chmod 400 "${BACKUP_DIR}/luks-header.bak"; chown root:root "${BACKUP_DIR}/luks-header.bak"; ok "luks-header.bak (from ${LUKS_SRC})"; } \
         || fail "luks-header.bak"
 else
     info "No existing LUKS header backup found, creating one..."
-    if cryptsetup luksHeaderBackup /dev/sda3 --header-backup-file "${BACKUP_DIR}/luks-header.bak" 2>/dev/null; then
-        chmod 600 "${BACKUP_DIR}/luks-header.bak"
-        ok "luks-header.bak (fresh from /dev/sda3)"
+    # Dynamic device lookup for LUKS partition
+    LUKS_PART=$(blkid -U "luks-ec338b68-2489-477e-bd89-592d308f450c" 2>/dev/null) || LUKS_PART=""
+    if [[ -n "$LUKS_PART" ]] && cryptsetup luksHeaderBackup "$LUKS_PART" --header-backup-file "${BACKUP_DIR}/luks-header.bak" 2>/dev/null; then
+        chmod 400 "${BACKUP_DIR}/luks-header.bak"
+        chown root:root "${BACKUP_DIR}/luks-header.bak"
+        ok "luks-header.bak (fresh from ${LUKS_PART})"
     else
-        warn "Could not back up LUKS header — cryptsetup failed"
+        warn "Could not back up LUKS header — LUKS partition not found or cryptsetup failed"
     fi
 fi
 
@@ -441,7 +446,7 @@ phase "REDUNDANT LUKS HEADER COPY"
 mkdir -p "$LUKS_REDUNDANT"
 if [[ -f "${BACKUP_DIR}/luks-header.bak" ]]; then
     cp -a "${BACKUP_DIR}/luks-header.bak" "${LUKS_REDUNDANT}/luks-header.bak" 2>/dev/null \
-        && ok "Redundant LUKS header saved to ${LUKS_REDUNDANT}/" \
+        && { chmod 400 "${LUKS_REDUNDANT}/luks-header.bak"; chown root:root "${LUKS_REDUNDANT}/luks-header.bak"; ok "Redundant LUKS header saved to ${LUKS_REDUNDANT}/"; } \
         || fail "Could not copy redundant LUKS header"
 else
     warn "No LUKS header to copy"

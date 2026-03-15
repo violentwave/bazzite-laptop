@@ -322,7 +322,7 @@ def _append_enriched(report: ThreatReport) -> None:
     """Append a report to the enriched hashes JSONL file."""
     try:
         ENRICHED_HASHES.parent.mkdir(parents=True, exist_ok=True)
-        with open(ENRICHED_HASHES, "a") as f:
+        with open(ENRICHED_HASHES, "a", encoding="utf-8") as f:
             f.write(report.to_jsonl() + "\n")
     except OSError as e:
         logger.warning("Could not write to enriched hashes file: %s", e)

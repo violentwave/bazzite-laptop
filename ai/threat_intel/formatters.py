@@ -65,8 +65,10 @@ def format_single_row(report: ThreatReport) -> str:
     # File column: filename or truncated hash
     if report.filename:
         file_display = html.escape(report.filename)
-    else:
+    elif len(report.hash) > 12:
         file_display = html.escape(report.hash[:12]) + "..."
+    else:
+        file_display = html.escape(report.hash)
 
     # Detection column
     if report.has_data and report.detection_ratio:
@@ -97,8 +99,8 @@ def format_single_row(report: ThreatReport) -> str:
         f"{html.escape(risk.upper())}</span>"
     )
 
-    # Source column
-    if report.has_data and report.vt_link:
+    # Source column (validate URL scheme to prevent javascript: XSS)
+    if report.has_data and report.vt_link and report.vt_link.startswith("https://"):
         source_display = (
             f'<a href="{html.escape(report.vt_link)}" '
             f'style="color:#3b82f6;text-decoration:none">'

@@ -68,24 +68,24 @@ class RateLimiter:
             return {}
 
     def _write_state(self, state: dict) -> None:
-        """Atomic write: write to tmp file then os.rename() over the real file.
+        """Atomic write: lock shared file, write tmp, rename over state file.
 
-        Follows the exact pattern from clamav-scan.sh write_status():
-        read existing → update → write tmp → rename.
+        Uses a dedicated .lock file for coordination (not the tmp file),
+        ensuring concurrent writers serialize properly.
         """
         self.state_path.parent.mkdir(parents=True, exist_ok=True)
+        lock_path = self.state_path.with_suffix(".lock")
         tmp_path = self.state_path.with_suffix(f".tmp.{os.getpid()}")
         try:
-            with open(tmp_path, "w") as f:
-                fcntl.flock(f.fileno(), fcntl.LOCK_EX)
-                json.dump(state, f, indent=2)
-                f.flush()
-                os.fsync(f.fileno())
-                fcntl.flock(f.fileno(), fcntl.LOCK_UN)
-            os.rename(tmp_path, self.state_path)
+            with open(lock_path, "w") as lock_f:
+                fcntl.flock(lock_f.fileno(), fcntl.LOCK_EX)
+                with open(tmp_path, "w") as f:
+                    json.dump(state, f, indent=2)
+                    f.flush()
+                    os.fsync(f.fileno())
+                os.rename(tmp_path, self.state_path)
         except (PermissionError, OSError) as e:
             logger.warning("Failed to write rate limiter state: %s", e)
-            # Clean up tmp file on failure
             try:
                 tmp_path.unlink(missing_ok=True)
             except OSError:

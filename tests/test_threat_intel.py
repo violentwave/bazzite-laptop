@@ -431,9 +431,12 @@ class TestHTMLFormatter:
             risk_level="low",
         )
         row = format_single_row(report)
-        # The detection cell should not have the red color
-        # Split on "Detection" area — check the detection td specifically
         assert "2/72" in row
+        # The detection cell should NOT have the red danger color
+        # Extract the detection <td> (second td in the row)
+        tds = row.split("</td>")
+        detection_td = tds[1] if len(tds) > 1 else ""
+        assert "#ef4444" not in detection_td
 
     def test_vt_link_rendered(self, sample_report):
         row = format_single_row(sample_report)

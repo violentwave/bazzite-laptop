@@ -58,12 +58,13 @@ class TestKeyLoading:
     def test_load_keys_exists(self, tmp_path):
         fake_env = tmp_path / "keys.env"
         fake_env.write_text("TEST_KEY_FOR_CONFIG=hello123\n")
-        with patch("ai.config.KEYS_ENV", fake_env):
-            result = load_keys()
-        assert result is True
-        assert os.environ.get("TEST_KEY_FOR_CONFIG") == "hello123"
-        # Cleanup
-        os.environ.pop("TEST_KEY_FOR_CONFIG", None)
+        try:
+            with patch("ai.config.KEYS_ENV", fake_env):
+                result = load_keys()
+            assert result is True
+            assert os.environ.get("TEST_KEY_FOR_CONFIG") == "hello123"
+        finally:
+            os.environ.pop("TEST_KEY_FOR_CONFIG", None)
 
     def test_get_key_returns_none_for_missing(self):
         assert get_key("DEFINITELY_NOT_SET_KEY_XYZ_12345") is None

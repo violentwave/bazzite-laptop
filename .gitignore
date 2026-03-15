@@ -32,6 +32,11 @@ __pycache__/
 .mcp.json
 .claude/
 
+# Other AI tools
+.roo/
+.roomodes
+plans/
+
 # Secrets and keys
 *.key
 *.pem

@@ -28,7 +28,7 @@ def _load_config() -> dict:
         return _config
     try:
         with open(LITELLM_CONFIG) as f:
-            _config = yaml.safe_load(f)
+            _config = yaml.safe_load(f) or {}
     except (FileNotFoundError, yaml.YAMLError) as e:
         logger.warning("Could not load LiteLLM config: %s", e)
         _config = {}

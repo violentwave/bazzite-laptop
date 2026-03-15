@@ -6,10 +6,37 @@
 set -uo pipefail
 
 # --- Configuration ---
-LUKS_DEVICE="/dev/sda3"
 LUKS_UUID="luks-ec338b68-2489-477e-bd89-592d308f450c"
+# Dynamic device lookup — avoids hardcoded /dev/sdX that changes with device ordering
+# Note: color vars not yet defined, so use plain echo for early-exit error
+LUKS_DEVICE=$(blkid -U "$LUKS_UUID" 2>/dev/null) || {
+    echo "Error: LUKS device with UUID ${LUKS_UUID} not found. Is the drive connected?" >&2
+    exit 1
+}
 BACKUP_DIR="/home/lch/security/luks-backup"
 BACKUP_FILE="${BACKUP_DIR}/luks-header-$(date +%Y%m%d).bak"
+
+# --- Audit logging ---
+AUDIT_LOG="/var/log/security-audit.log"
+audit_log() {
+    local msg="$1"
+    local log_dir
+    log_dir=$(dirname "$AUDIT_LOG")
+    if [[ ! -d "$log_dir" ]]; then
+        mkdir -p "$log_dir" 2>/dev/null || {
+            echo "audit_log: cannot create ${log_dir}" >&2
+            return
+        }
+    fi
+    if [[ -e "$AUDIT_LOG" && ! -w "$AUDIT_LOG" ]]; then
+        echo "audit_log: ${AUDIT_LOG} is not writable" >&2
+        return
+    fi
+    local ts
+    ts=$(date '+%Y-%m-%d %H:%M:%S')
+    local user="${SUDO_USER:-$(whoami)}"
+    echo "${ts} [luks-upgrade] [${user}] ${msg}" >> "$AUDIT_LOG"
+}
 
 # --- Colors ---
 BCYAN='\e[1;36m'
@@ -86,6 +113,7 @@ echo -e "  ${DIM}Argon2id, which is more resistant to GPU-based brute force atta
 echo ""
 echo -e "  ${DIM}Device: ${LUKS_DEVICE}${RESET}"
 echo -e "  ${DIM}UUID:   ${LUKS_UUID}${RESET}"
+audit_log "Script started — LUKS device resolved to ${LUKS_DEVICE} (UUID: ${LUKS_UUID})"
 separator
 
 # ===========================
@@ -135,10 +163,12 @@ if [[ -z "$CURRENT_KDF" ]]; then
 fi
 
 echo -e "  ${BWHITE}Current KDF:${RESET} ${CURRENT_KDF}"
+audit_log "KDF check: current KDF is ${CURRENT_KDF}"
 
 if [[ "${CURRENT_KDF,,}" == "argon2id" ]]; then
     echo ""
     success "Already using Argon2id — no upgrade needed!"
+    audit_log "Already using Argon2id — no upgrade needed, exiting"
     echo ""
     echo -e "  ${DIM}Your LUKS encryption is already using the recommended KDF.${RESET}"
     echo -e "  ${DIM}No changes are necessary.${RESET}"
@@ -234,9 +264,11 @@ echo ""
 if cryptsetup luksConvertKey "$LUKS_DEVICE" --pbkdf argon2id; then
     echo ""
     success "KDF successfully upgraded to Argon2id"
+    audit_log "KDF upgrade SUCCESS — converted to Argon2id on ${LUKS_DEVICE}"
 else
     echo ""
     fail "luksConvertKey failed"
+    audit_log "KDF upgrade FAILED — luksConvertKey returned error on ${LUKS_DEVICE}"
     echo ""
     echo -e "  ${YELLOW}The upgrade did not complete. Your drive should still work with${RESET}"
     echo -e "  ${YELLOW}the existing PBKDF2 key. If you have issues, restore the header:${RESET}"
@@ -294,4 +326,5 @@ echo -e "  ${DIM}  cp ${BACKUP_FILE} /mnt/backup/${RESET}"
 echo ""
 echo -e "  ${DIM}Your system will use the new KDF at next boot when you enter${RESET}"
 echo -e "  ${DIM}your LUKS passphrase. No further action is needed.${RESET}"
+audit_log "Script completed successfully"
 echo ""

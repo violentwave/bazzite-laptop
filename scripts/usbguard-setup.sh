@@ -15,6 +15,28 @@
 #   after USBGuard is enabled
 set -euo pipefail
 
+# --- Audit logging ---
+AUDIT_LOG="/var/log/security-audit.log"
+audit_log() {
+    local msg="$1"
+    local log_dir
+    log_dir=$(dirname "$AUDIT_LOG")
+    if [[ ! -d "$log_dir" ]]; then
+        mkdir -p "$log_dir" 2>/dev/null || {
+            echo "audit_log: cannot create ${log_dir}" >&2
+            return
+        }
+    fi
+    if [[ -e "$AUDIT_LOG" && ! -w "$AUDIT_LOG" ]]; then
+        echo "audit_log: ${AUDIT_LOG} is not writable" >&2
+        return
+    fi
+    local ts
+    ts=$(date '+%Y-%m-%d %H:%M:%S')
+    local user="${SUDO_USER:-$(whoami)}"
+    echo "${ts} [usbguard-setup] [${user}] ${msg}" >> "$AUDIT_LOG"
+}
+
 # --- Colors ---
 BCYAN='\e[1;36m'
 GREEN='\e[0;32m'
@@ -52,6 +74,8 @@ if [[ $EUID -ne 0 ]]; then
     echo -e "${RED}Error: This script must be run as root (use sudo).${RESET}" >&2
     exit 1
 fi
+
+audit_log "Script started"
 
 # Check that usbguard is installed
 if ! command -v usbguard &>/dev/null; then
@@ -101,10 +125,34 @@ echo ""
 echo -e "  ${YELLOW}Generating policy...${RESET}"
 echo ""
 
-usbguard generate-policy | tee /etc/usbguard/rules.conf | while IFS= read -r line; do
+GENERATED_POLICY=$(usbguard generate-policy 2>/dev/null) || true
+
+# Validate generated policy before writing
+if [[ -z "$GENERATED_POLICY" ]]; then
+    echo -e "  ${RED}[FAIL]${RESET} usbguard generate-policy returned empty output. Aborting."
+    exit 1
+fi
+
+if ! echo "$GENERATED_POLICY" | grep -q "^allow"; then
+    echo -e "  ${RED}[FAIL]${RESET} Generated policy contains no 'allow' rules — this would block ALL devices."
+    echo -e "  ${DIM}Make sure USB devices are connected and try again.${RESET}"
+    exit 1
+fi
+
+ALLOW_COUNT=$(echo "$GENERATED_POLICY" | grep -c "^allow" || true)
+DEVICE_COUNT=$(lsusb 2>/dev/null | wc -l || echo "?")
+audit_log "Policy generated — ${ALLOW_COUNT} allow rules from ${DEVICE_COUNT} connected USB devices"
+echo -e "  ${BWHITE}Generated policy (${ALLOW_COUNT} allow rules):${RESET}"
+echo ""
+echo "$GENERATED_POLICY" | while IFS= read -r line; do
     echo -e "    ${DIM}${line}${RESET}"
 done
 
+echo ""
+confirm_yes "Write this policy to /etc/usbguard/rules.conf?"
+
+echo "$GENERATED_POLICY" > /etc/usbguard/rules.conf
+audit_log "Policy written to /etc/usbguard/rules.conf (${ALLOW_COUNT} allow rules)"
 echo ""
 echo -e "  ${GREEN}[OK]${RESET} Policy written to /etc/usbguard/rules.conf"
 
@@ -236,5 +284,6 @@ echo -e "  ${BRED}│${RESET}  3. Reboot back into the current deployment       
 echo -e "  ${BRED}│${RESET}  4. Re-run this script with all devices plugged in               ${BRED}│${RESET}"
 echo -e "  ${BRED}└─────────────────────────────────────────────────────────────────┘${RESET}"
 echo ""
+audit_log "Script completed — USBGuard setup finished"
 echo -e "  ${BGREEN}USBGuard setup complete.${RESET} Test all your USB devices now!"
 echo ""

@@ -13,7 +13,7 @@ QUARANTINE_DIR="/home/lch/security/quarantine"
 LOG_DIR="/var/log/clamav-scans"
 LOG_FILE="${LOG_DIR}/scan-$(date +%Y%m%d-%H%M%S).log"
 STATUS_FILE="/home/lch/security/.status"
-STATUS_TMP="/home/lch/security/.status.tmp.$$"
+# STATUS_TMP no longer needed — Python write_status uses mkstemp internally
 LCH_UID="$(id -u lch)"
 INTERACTIVE=false
 [ -t 1 ] && INTERACTIVE=true
@@ -51,7 +51,7 @@ cleanup_scan() {
         systemctl stop clamd@scan 2>/dev/null || true
         write_status "idle" "Scan interrupted" "" "0" "${#SCAN_DIRS[@]}" "" "0" "0" "" "" 2>/dev/null || true
     fi
-    rm -f "$STATUS_TMP" 2>/dev/null
+    # Temp files cleaned up by Python mkstemp on success; orphans are harmless
     [[ "$sig" == "INT" ]] && exit 130
     [[ "$sig" == "TERM" ]] && exit 143
 }
@@ -80,34 +80,40 @@ write_status() {
     timestamp="$(date -Iseconds)"
 
     python3 -c '
-import json, os, sys
-path, tmp = sys.argv[1], sys.argv[2]
+import json, os, sys, tempfile
+path = sys.argv[1]
 try:
     with open(path, "r") as f:
         data = json.load(f)
 except (FileNotFoundError, json.JSONDecodeError, PermissionError, OSError):
     data = {}
 data.update({
-    "state": sys.argv[3],
-    "scan_type": sys.argv[4],
-    "message": sys.argv[5],
-    "current_dir": sys.argv[6],
-    "dirs_completed": int(sys.argv[7]),
-    "dirs_total": int(sys.argv[8]),
-    "result": sys.argv[9],
-    "threat_count": int(sys.argv[10]),
-    "files_scanned": int(sys.argv[11]),
-    "duration": sys.argv[12],
-    "last_scan_time": sys.argv[13],
-    "timestamp": sys.argv[14]
+    "state": sys.argv[2],
+    "scan_type": sys.argv[3],
+    "message": sys.argv[4],
+    "current_dir": sys.argv[5],
+    "dirs_completed": int(sys.argv[6]),
+    "dirs_total": int(sys.argv[7]),
+    "result": sys.argv[8],
+    "threat_count": int(sys.argv[9]),
+    "files_scanned": int(sys.argv[10]),
+    "duration": sys.argv[11],
+    "last_scan_time": sys.argv[12],
+    "timestamp": sys.argv[13]
 })
+tmp = None
 try:
-    with open(tmp, "w") as f:
+    fd, tmp = tempfile.mkstemp(dir=os.path.dirname(path))
+    with os.fdopen(fd, "w") as f:
         json.dump(data, f, indent=2)
     os.rename(tmp, path)
 except (PermissionError, OSError):
-    pass
-' "$STATUS_FILE" "$STATUS_TMP" \
+    if tmp:
+        try:
+            os.unlink(tmp)
+        except OSError:
+            pass
+' "$STATUS_FILE" \
         "$state" "$SCAN_TYPE" "$message" "$current_dir" \
         "$dirs_completed" "$dirs_total" "$result" "$threat_count" \
         "$files_scanned" "$duration" "$last_scan_time" "$timestamp" \

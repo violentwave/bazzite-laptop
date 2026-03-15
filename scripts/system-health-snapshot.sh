@@ -24,7 +24,7 @@
 set -uo pipefail
 
 # --- Cleanup temp files on exit ---
-trap 'rm -f "${DISK_WARNS_TMP:-}" 2>/dev/null' EXIT
+trap 'rm -f "${DISK_WARNS_TMP:-}" "${DELTA_TMP:-}" 2>/dev/null' EXIT
 
 # ─────────────────────────────────────────────────────────────
 # Configuration
@@ -41,13 +41,30 @@ readonly TIMESTAMP
 readonly LOG_FILE="${LOG_DIR}/health-${TIMESTAMP}.log"
 readonly LATEST_LINK="${LOG_DIR}/health-latest.log"
 
-# Internal SSD — SK hynix HFS256G39TND-N210A (SATA M.2)
-readonly DEV_SDA="/dev/sda"
-readonly SDA_LABEL="Internal SSD (sda — SK hynix 256GB SATA)"
+# Dynamic device lookup — avoids hardcoded /dev/sdX that changes with device ordering
+# Internal SSD: resolve from LUKS UUID to parent disk device for SMART checks
+_LUKS_PART=$(blkid -U "luks-ec338b68-2489-477e-bd89-592d308f450c" 2>/dev/null) || true
+_DEV_SDA=""
+if [[ -n "$_LUKS_PART" ]]; then
+    _SDA_PARENT=$(lsblk -no pkname "$_LUKS_PART" 2>/dev/null | head -1)
+    [[ -n "$_SDA_PARENT" ]] && _DEV_SDA="/dev/${_SDA_PARENT}"
+fi
+readonly DEV_SDA="$_DEV_SDA"
+readonly SDA_LABEL="Internal SSD (${DEV_SDA:-not found} — SK hynix 256GB SATA)"
 
-# External NVMe — WD SN580E 2TB (USB enclosure)
-readonly DEV_SDB="/dev/sdb"
-readonly SDB_LABEL="External NVMe (sdb — WD SN580E 2TB USB)"
+# External NVMe: resolve from mount point to parent disk device for SMART checks
+_SDB_PART=$(findmnt -no SOURCE /run/media/lch/SteamLibrary 2>/dev/null) || true
+_DEV_SDB=""
+if [[ -n "$_SDB_PART" ]]; then
+    _SDB_PARENT=$(lsblk -no pkname "$_SDB_PART" 2>/dev/null | head -1)
+    if [[ -n "$_SDB_PARENT" ]]; then
+        _DEV_SDB="/dev/${_SDB_PARENT}"
+    else
+        _DEV_SDB="$_SDB_PART"
+    fi
+fi
+readonly DEV_SDB="$_DEV_SDB"
+readonly SDB_LABEL="External NVMe (${DEV_SDB:-not found} — WD SN580E 2TB USB)"
 
 # ── Thresholds ──
 # SMART (sda — SATA SSD)
@@ -123,6 +140,10 @@ if [[ "$RUN_SELFTEST" == true ]]; then
     # Guard: smartctl must be installed for self-test mode
     if ! command -v smartctl &>/dev/null; then
         echo "Error: smartctl not installed (need smartmontools)" >&2
+        exit 3
+    fi
+    if [[ -z "$DEV_SDA" || ! -b "$DEV_SDA" ]]; then
+        echo "Error: Internal SSD not found — cannot run SMART self-test" >&2
         exit 3
     fi
     echo "=== SMART Extended Self-Test ==="
@@ -223,15 +244,18 @@ delta_read() {
     fi
 }
 
+DELTA_TMP=""
 delta_write() {
     local key="$1" val="$2"
+    DELTA_TMP=$(mktemp "${DELTA_FILE}.XXXXXX")
     if [[ -f "$DELTA_FILE" ]]; then
-        grep -v "^${key}=" "$DELTA_FILE" > "${DELTA_FILE}.tmp.$$" 2>/dev/null || true
+        grep -v "^${key}=" "$DELTA_FILE" > "$DELTA_TMP" 2>/dev/null || true
     else
-        : > "${DELTA_FILE}.tmp.$$"
+        : > "$DELTA_TMP"
     fi
-    echo "${key}=${val}" >> "${DELTA_FILE}.tmp.$$"
-    mv -f "${DELTA_FILE}.tmp.$$" "$DELTA_FILE"
+    echo "${key}=${val}" >> "$DELTA_TMP"
+    mv -f "$DELTA_TMP" "$DELTA_FILE"
+    DELTA_TMP=""
 }
 
 # Compare current vs previous value, flag if growing
@@ -714,13 +738,19 @@ st["health_critical"]   = int(sys.argv[5])
 st["health_last_check"] = sys.argv[6]
 st["health_log"]        = sys.argv[7]
 
+import tempfile
+tmp = None
 try:
-    tmp = path + ".tmp." + str(os.getpid())
-    with open(tmp, "w") as f:
+    fd, tmp = tempfile.mkstemp(dir=os.path.dirname(path))
+    with os.fdopen(fd, "w") as f:
         json.dump(st, f, indent=2)
     os.rename(tmp, path)
 except OSError:
-    pass
+    if tmp:
+        try:
+            os.unlink(tmp)
+        except OSError:
+            pass
 ' "$STATUS_FILE" "$STATUS" "$TOTAL_ISSUES" "${#WARNINGS[@]}" "${#CRITICAL[@]}" \
         "$(date '+%Y-%m-%d %I:%M %p')" "$LOG_FILE" \
         2>/dev/null || true
