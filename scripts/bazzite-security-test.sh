@@ -262,6 +262,7 @@ echo ""
 # [11] EICAR threat detection
 EICAR_DIR="/tmp/bazzite-test-$$"
 mkdir -p "$EICAR_DIR"
+# shellcheck disable=SC2016
 echo 'X5O!P%@AP[4\PZX54(P^)7CC)7}$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$H+H*' > "$EICAR_DIR/eicar-test.txt"
 
 if ! $TEST_STARTED_CLAMD; then
@@ -448,6 +449,7 @@ if (( WARN_COUNT > 0 )); then
     echo -e "  ${BORDER_COLOR}│${RESET}                                       ${BORDER_COLOR}│${RESET}"
 fi
 
+# shellcheck disable=SC2088
 REPORT_SHORT="~/security/$(basename "$TEST_REPORT")"
 printf "  ${BORDER_COLOR}│${RESET}  Report: %-28s ${BORDER_COLOR}│${RESET}\n" "$REPORT_SHORT"
 echo -e "  ${BORDER_COLOR}│${RESET}                                       ${BORDER_COLOR}│${RESET}"

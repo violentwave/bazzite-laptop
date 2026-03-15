@@ -153,6 +153,7 @@ print_results() {
     echo -e "  ${border_color}│${RESET}  Scanned:   $(printf '%-25s' "${files_scanned} files")${border_color}│${RESET}"
     echo -e "  ${border_color}│${RESET}  Threats:   $(printf '%-25s' "${threat_count}")${border_color}│${RESET}"
     echo -e "  ${border_color}│${RESET}  Duration:  $(printf '%-25s' "${duration}")${border_color}│${RESET}"
+    # shellcheck disable=SC2088
     echo -e "  ${border_color}│${RESET}  Quarantine: $(printf '%-24s' "~/security/quarantine")${border_color}│${RESET}"
     echo -e "  ${border_color}└───────────────────────────────────────┘${RESET}"
     echo ""
@@ -202,6 +203,7 @@ format_duration() {
 }
 
 # --- Helper: stop clamd (best effort) ---
+# shellcheck disable=SC2329
 stop_clamd() {
     systemctl stop clamd@scan 2>/dev/null || true
     print_phase "Stopping scan daemon..." "done"
@@ -250,6 +252,7 @@ fi
 if [[ "$SCAN_TYPE" == "test" ]]; then
     EICAR_DIR="/tmp/clamav-test-$$"
     mkdir -p "$EICAR_DIR"
+    # shellcheck disable=SC2016
     echo 'X5O!P%@AP[4\PZX54(P^)7CC)7}$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$H+H*' > "$EICAR_DIR/eicar-test.txt"
     if $INTERACTIVE; then
         echo -e "    ${DIM}Created EICAR test file at $EICAR_DIR/eicar-test.txt${RESET}"

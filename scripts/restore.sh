@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2015
 # restore.sh — Restore Bazzite laptop state from flat backup
 # Deploy to: /mnt/backup/restore.sh (on BazziteBackup partition)
 # Usage: sudo bash /mnt/backup/restore.sh

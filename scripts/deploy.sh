@@ -71,7 +71,7 @@ deploy_dir() {
     local owner="$3"
 
     find "$src_dir" -type f | while read -r src; do
-        local rel="${src#$src_dir/}"
+        local rel="${src#"$src_dir"/}"
         local dst="$dst_dir/$rel"
         deploy "$src" "$dst" 644 "$owner"
     done

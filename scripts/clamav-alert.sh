@@ -73,7 +73,7 @@ THREAT_TABLE_ROWS=""
 if [[ "$STATUS" == "threats" && -f "$LOG_FILE" ]]; then
     while IFS= read -r line; do
         # Lines look like: /path/to/file: ThreatName FOUND
-        filepath=$(echo "$line" | sed 's/: .* FOUND$//')
+        filepath="${line%%: * FOUND}"
         filename=$(basename "$filepath")
         threatname=$(echo "$line" | sed 's/^.*: //' | sed 's/ FOUND$//')
         THREAT_TABLE_ROWS+="<tr style=\"border-bottom:1px solid #e2e8f0;\"><td style=\"padding:10px 12px;font-family:'Courier New',monospace;font-size:13px;color:#1e293b\">${filename}</td><td style=\"padding:10px 12px;font-size:13px;color:#64748b;word-break:break-all\">${filepath}</td><td style=\"padding:10px 12px;font-size:13px;color:#ef4444;font-weight:600\">${threatname}</td><td style=\"padding:10px 12px;font-size:13px;color:#22c55e\">Quarantined</td></tr>"

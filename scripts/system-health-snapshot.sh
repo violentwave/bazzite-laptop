@@ -758,6 +758,7 @@ if [[ "$APPEND_MODE" == false && ( "$SEND_EMAIL" == true || "$STATUS" != "OK" ) 
                 *)        COLOR="#28a745"; ICON="🟢" ;;
             esac
 
+            # shellcheck disable=SC2015
             {
                 echo "Subject: ${SUBJECT}"
                 echo "Content-Type: text/html; charset=utf-8"

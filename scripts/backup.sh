@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2015
 # backup.sh — Flat backup of entire Bazzite laptop state to USB flash drive
 # Deploy to: /mnt/backup/backup.sh (on BazziteBackup partition)
 # Usage: sudo bash /mnt/backup/backup.sh
@@ -187,7 +188,7 @@ phase "CRITICAL FILES"
 
 # LUKS header backup
 if compgen -G "${HOME_DIR}/security/luks-backup/luks-header-"*.bak >/dev/null 2>&1; then
-    LUKS_SRC=$(ls -t "${HOME_DIR}/security/luks-backup/luks-header-"*.bak 2>/dev/null | head -1)
+    LUKS_SRC=$(find "${HOME_DIR}/security/luks-backup/" -name "luks-header-*.bak" -printf '%T@ %p\n' 2>/dev/null | sort -rn | head -1 | cut -d' ' -f2-)
     cp -a "$LUKS_SRC" "${BACKUP_DIR}/luks-header.bak" && ok "luks-header.bak (from ${LUKS_SRC})" || fail "luks-header.bak"
 else
     info "No existing LUKS header backup found, creating one..."
@@ -324,6 +325,7 @@ if [[ -d "${HOME_DIR}/.claude" ]]; then
     [[ -d "${HOME_DIR}/.claude/projects" ]] && cp -a "${HOME_DIR}/.claude/projects" "${BACKUP_DIR}/dot-claude/" 2>/dev/null
     ok "dot-claude/"
 else
+    # shellcheck disable=SC2088
     warn "~/.claude/ not found"
 fi
 
@@ -383,6 +385,7 @@ FLATPAK_DATA="${HOME_DIR}/.var/app"
 
 if [[ -d "$FLATPAK_DATA" ]]; then
     FLATPAK_SIZE_HUMAN=$(dir_size "$FLATPAK_DATA")
+    # shellcheck disable=SC2088
     info "~/.var/app/ size: ${FLATPAK_SIZE_HUMAN}"
 
     FREE_GB=$(get_free_gb)
@@ -399,6 +402,7 @@ if [[ -d "$FLATPAK_DATA" ]]; then
             || fail "flatpak-data/"
     fi
 else
+    # shellcheck disable=SC2088
     warn "~/.var/app/ not found"
 fi
 
@@ -413,6 +417,7 @@ if [[ -d "${HOME_DIR}/projects/bazzite-laptop" ]]; then
     copy_dir "${HOME_DIR}/projects/bazzite-laptop" "${BACKUP_DIR}/bazzite-laptop" "bazzite-laptop/" \
         --exclude=".git" --exclude="__pycache__" --exclude="*.pyc" --exclude="*.tmp" --exclude=".cache"
 else
+    # shellcheck disable=SC2088
     warn "~/projects/bazzite-laptop/ not found"
 fi
 

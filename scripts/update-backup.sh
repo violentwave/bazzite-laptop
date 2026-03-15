@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2015,SC2129
 # update-backup.sh — Comprehensive system state backup to USB flash drive
 # Captures the entire Bazzite laptop configuration in layered structure
 # Usage: sudo ./update-backup.sh
@@ -201,7 +202,7 @@ mkdir -p "$LAYER1"
 
 # LUKS header backup
 if compgen -G "${HOME_DIR}/security/luks-backup/luks-header-*.bak" >/dev/null 2>&1; then
-    LUKS_SRC=$(ls -t "${HOME_DIR}/security/luks-backup/luks-header-"*.bak 2>/dev/null | head -1)
+    LUKS_SRC=$(find "${HOME_DIR}/security/luks-backup/" -name "luks-header-*.bak" -printf '%T@ %p\n' 2>/dev/null | sort -rn | head -1 | cut -d' ' -f2-)
     cp -a "$LUKS_SRC" "${LAYER1}/luks-header.bak" && ok "luks-header.bak (from ${LUKS_SRC})" || fail "luks-header.bak"
 else
     # Try generating fresh
@@ -336,6 +337,7 @@ if [[ -f "${HOME_DIR}/.claude/settings.json" ]]; then
     mkdir -p "${LAYER4}/claude-settings"
     cp -a "${HOME_DIR}/.claude/settings.json" "${LAYER4}/claude-settings/" && ok "claude-settings/" || fail "claude-settings/"
 else
+    # shellcheck disable=SC2088
     warn "~/.claude/settings.json not found"
 fi
 
@@ -343,6 +345,7 @@ fi
 if [[ -d "${HOME_DIR}/security" ]]; then
     copy_dir "${HOME_DIR}/security" "${LAYER4}/security" --exclude=".status.tmp"
 else
+    # shellcheck disable=SC2088
     warn "~/security/ not found"
 fi
 
@@ -396,6 +399,7 @@ FLATPAK_DATA="${HOME_DIR}/.var/app"
 
 if [[ -d "$FLATPAK_DATA" ]]; then
     FLATPAK_SIZE_HUMAN=$(dir_size "$FLATPAK_DATA")
+    # shellcheck disable=SC2088
     info "~/.var/app/ size: ${FLATPAK_SIZE_HUMAN}"
 
     FREE_GB=$(get_free_gb)
@@ -413,6 +417,7 @@ if [[ -d "$FLATPAK_DATA" ]]; then
             || fail "var-app/"
     fi
 else
+    # shellcheck disable=SC2088
     warn "~/.var/app/ not found"
 fi
 
@@ -434,6 +439,7 @@ if [[ -d "${HOME_DIR}/projects/bazzite-laptop" ]]; then
     copy_dir "${HOME_DIR}/projects/bazzite-laptop" "${LAYER7}/bazzite-laptop" \
         --exclude=".git" --exclude="__pycache__" --exclude="*.pyc" --exclude="*.tmp"
 else
+    # shellcheck disable=SC2088
     warn "~/projects/bazzite-laptop/ not found"
 fi
 
@@ -470,9 +476,10 @@ Bazzite installation to restore the complete system state.
 RESTORE_HEADER
 
 # Add actual packages
-echo "rpm-ostree install ${LAYERED_PKGS}" >> "${LAYER8}/RESTORE.md"
+{
+echo "rpm-ostree install ${LAYERED_PKGS}"
 
-cat >> "${LAYER8}/RESTORE.md" << 'RESTORE_STEP2'
+cat << 'RESTORE_STEP2'
 systemctl reboot
 ```
 
@@ -483,10 +490,12 @@ Wait for reboot, then continue.
 Current kernel arguments at time of backup:
 ```
 RESTORE_STEP2
+} >> "${LAYER8}/RESTORE.md"
 
-echo "${KARGS}" >> "${LAYER8}/RESTORE.md"
+{
+echo "${KARGS}"
 
-cat >> "${LAYER8}/RESTORE.md" << 'RESTORE_STEP2B'
+cat << 'RESTORE_STEP2B'
 ```
 
 To add custom kernel arguments (check what's non-default):
@@ -583,6 +592,7 @@ cp layer4-user-configs/kde-security-menu/security-directory.desktop ~/.local/sha
 
 ```bash
 RESTORE_STEP2B
+} >> "${LAYER8}/RESTORE.md"
 
 # Add flatpak install commands
 echo "$FLATPAK_APPS" | while IFS= read -r app; do
@@ -644,8 +654,10 @@ mangohud --version
 
 RESTORE_STEP9
 
-echo "Backup created: $(date '+%Y-%m-%d %H:%M:%S')" >> "${LAYER8}/RESTORE.md"
-echo "Hostname: $(hostname)" >> "${LAYER8}/RESTORE.md"
+{
+echo "Backup created: $(date '+%Y-%m-%d %H:%M:%S')"
+echo "Hostname: $(hostname)"
+} >> "${LAYER8}/RESTORE.md"
 
 ok "RESTORE.md generated"
 
