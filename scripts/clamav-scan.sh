@@ -5,7 +5,7 @@
 # Quick: scans /home/lch /tmp
 # Deep:  scans /home/lch /tmp /var
 # Pattern: start clamd → scan with clamdscan → stop clamd (reclaim ~1.1GB RAM)
-set -uo pipefail
+set -euo pipefail
 
 # --- Configuration ---
 SCAN_TYPE="${1:-quick}"

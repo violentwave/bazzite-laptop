@@ -2,7 +2,7 @@
 # ClamAV security system health check with terminal UI, notifications, and logging
 # Deploy to: /usr/local/bin/clamav-healthcheck.sh (chmod 755)
 # Runs weekly via systemd timer to verify the entire security notification pipeline
-set -uo pipefail
+set -euo pipefail
 
 # --- Configuration ---
 QUARANTINE_DIR="/home/lch/security/quarantine"

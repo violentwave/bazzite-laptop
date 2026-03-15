@@ -55,6 +55,26 @@ if [[ -z "$TO_EMAIL" ]]; then
     exit 0
 fi
 
+# --- Email rate limiting (max 6 emails per hour) ---
+EMAIL_RATE_FILE="/tmp/.bazzite-email-rate"
+EMAIL_MAX_PER_HOUR=6
+_now=$(date +%s)
+if [[ -f "$EMAIL_RATE_FILE" ]]; then
+    # Read timestamps and filter to last hour only
+    _recent=$(awk -v cutoff="$((_now - 3600))" '$1 > cutoff' "$EMAIL_RATE_FILE" 2>/dev/null | wc -l)
+    if [[ "$_recent" -ge "$EMAIL_MAX_PER_HOUR" ]]; then
+        echo "Email rate limit reached (${EMAIL_MAX_PER_HOUR}/hour). Alert skipped." >&2
+        exit 0
+    fi
+fi
+# Record this send attempt
+echo "$_now" >> "$EMAIL_RATE_FILE"
+# Prune entries older than 1 hour
+if [[ -f "$EMAIL_RATE_FILE" ]]; then
+    awk -v cutoff="$((_now - 3600))" '$1 > cutoff' "$EMAIL_RATE_FILE" > "${EMAIL_RATE_FILE}.tmp" 2>/dev/null
+    mv -f "${EMAIL_RATE_FILE}.tmp" "$EMAIL_RATE_FILE" 2>/dev/null || true
+fi
+
 # --- Determine subject and banner ---
 case "$STATUS" in
     clean)
@@ -208,4 +228,10 @@ fi)
 </body>
 </html>
 EMAILEOF
-} | msmtp --file=/home/lch/.msmtprc --read-recipients
+} | if command -v gpg &>/dev/null && gpg --list-keys "$TO_EMAIL" &>/dev/null; then
+    # Encrypt with recipient's GPG key if available
+    gpg --batch --yes --armor --encrypt --recipient "$TO_EMAIL" | \
+        msmtp --file=/home/lch/.msmtprc "$TO_EMAIL"
+else
+    msmtp --file=/home/lch/.msmtprc --read-recipients
+fi

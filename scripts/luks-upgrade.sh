@@ -6,7 +6,22 @@
 set -uo pipefail
 
 # --- Configuration ---
-LUKS_UUID="luks-ec338b68-2489-477e-bd89-592d308f450c"
+# Source device UUIDs from central config (keeps identifiers out of git history)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+UUID_CONF="${SCRIPT_DIR}/../configs/device-uuids.conf"
+if [[ -f "$UUID_CONF" ]]; then
+    # shellcheck source=../configs/device-uuids.conf
+    source "$UUID_CONF"
+else
+    # Fallback to deployed location
+    UUID_CONF="/etc/bazzite-security/device-uuids.conf"
+    if [[ -f "$UUID_CONF" ]]; then
+        source "$UUID_CONF"
+    else
+        echo "Error: device-uuids.conf not found" >&2
+        exit 1
+    fi
+fi
 # Dynamic device lookup — avoids hardcoded /dev/sdX that changes with device ordering
 # Note: color vars not yet defined, so use plain echo for early-exit error
 LUKS_DEVICE=$(blkid -U "$LUKS_UUID" 2>/dev/null) || {

@@ -41,9 +41,19 @@ readonly TIMESTAMP
 readonly LOG_FILE="${LOG_DIR}/health-${TIMESTAMP}.log"
 readonly LATEST_LINK="${LOG_DIR}/health-latest.log"
 
+# Source device UUIDs from central config
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+UUID_CONF="${SCRIPT_DIR}/../configs/device-uuids.conf"
+if [[ -f "$UUID_CONF" ]]; then
+    # shellcheck source=../configs/device-uuids.conf
+    source "$UUID_CONF"
+elif [[ -f "/etc/bazzite-security/device-uuids.conf" ]]; then
+    source "/etc/bazzite-security/device-uuids.conf"
+fi
+
 # Dynamic device lookup — avoids hardcoded /dev/sdX that changes with device ordering
 # Internal SSD: resolve from LUKS UUID to parent disk device for SMART checks
-_LUKS_PART=$(blkid -U "luks-ec338b68-2489-477e-bd89-592d308f450c" 2>/dev/null) || true
+_LUKS_PART=$(blkid -U "${LUKS_UUID:-}" 2>/dev/null) || true
 _DEV_SDA=""
 if [[ -n "$_LUKS_PART" ]]; then
     _SDA_PARENT=$(lsblk -no pkname "$_LUKS_PART" 2>/dev/null | head -1)
@@ -53,7 +63,7 @@ readonly DEV_SDA="$_DEV_SDA"
 readonly SDA_LABEL="Internal SSD (${DEV_SDA:-not found} — SK hynix 256GB SATA)"
 
 # External NVMe: resolve from mount point to parent disk device for SMART checks
-_SDB_PART=$(findmnt -no SOURCE /run/media/lch/SteamLibrary 2>/dev/null) || true
+_SDB_PART=$(findmnt -no SOURCE "${NVME_MOUNT:-/run/media/lch/SteamLibrary}" 2>/dev/null) || true
 _DEV_SDB=""
 if [[ -n "$_SDB_PART" ]]; then
     _SDB_PARENT=$(lsblk -no pkname "$_SDB_PART" 2>/dev/null | head -1)

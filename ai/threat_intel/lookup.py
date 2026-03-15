@@ -15,11 +15,14 @@ CLI:
 """
 
 import argparse
+import functools
 import json
 import logging
 import re
+import signal
 import sys
 import time
+from contextlib import contextmanager
 from datetime import UTC, datetime
 
 import requests
@@ -32,6 +35,50 @@ from ai.threat_intel.models import ThreatReport
 logger = logging.getLogger(APP_NAME)
 
 _SHA256_RE = re.compile(r"^[0-9a-fA-F]{64}$")
+
+
+# ── Timeout Context Manager ──
+
+
+class LookupTimeoutError(Exception):
+    """Raised when the overall lookup cascade exceeds the time limit."""
+
+
+@contextmanager
+def _lookup_timeout(seconds: int = 30):
+    """Context manager that raises LookupTimeoutError after `seconds`."""
+    def _handler(signum, frame):
+        raise LookupTimeoutError(f"Lookup timed out after {seconds}s")
+
+    old_handler = signal.signal(signal.SIGALRM, _handler)
+    signal.alarm(seconds)
+    try:
+        yield
+    finally:
+        signal.alarm(0)
+        signal.signal(signal.SIGALRM, old_handler)
+
+
+# ── Retry Decorator (available but not applied) ──
+
+
+def _retry_on_failure(max_retries: int = 1, backoff: float = 2.0):
+    """Decorator that retries provider functions on transient failures."""
+    def decorator(fn):
+        @functools.wraps(fn)
+        def wrapper(sha256: str, rate_limiter: RateLimiter) -> ThreatReport | None:
+            for attempt in range(max_retries + 1):
+                result = fn(sha256, rate_limiter)
+                if result is not None:
+                    return result
+                if attempt < max_retries:
+                    wait = backoff * (attempt + 1)
+                    logger.info("Retrying %s in %.1fs (attempt %d/%d)",
+                                fn.__name__, wait, attempt + 2, max_retries + 1)
+                    time.sleep(wait)
+            return None
+        return wrapper
+    return decorator
 
 
 # ── Provider Functions (private) ──
@@ -50,7 +97,19 @@ def _lookup_virustotal(sha256: str, rate_limiter: RateLimiter) -> ThreatReport |
 
     try:
         with vt.Client(api_key, timeout=10) as client:
-            file_obj = client.get_object(f"/files/{sha256}")
+            try:
+                file_obj = client.get_object(f"/files/{sha256}")
+            except vt.error.APIError as e:
+                if "NotFoundError" in str(e):
+                    raise
+                # Single retry on transient VT API errors
+                logger.info("VT API error, retrying once...")
+                time.sleep(1)
+                try:
+                    file_obj = client.get_object(f"/files/{sha256}")
+                except vt.error.APIError as retry_e:
+                    logger.warning("VT retry failed for %s: %s", sha256[:16], retry_e)
+                    return None
 
         rate_limiter.record_call("virustotal")
 
@@ -116,10 +175,24 @@ def _lookup_otx(sha256: str, rate_limiter: RateLimiter) -> ThreatReport | None:
     try:
         url = f"https://otx.alienvault.com/api/v1/indicators/file/{sha256}/general"
         headers = {"X-OTX-API-KEY": api_key}
-        resp = requests.get(url, headers=headers, timeout=5)
+        try:
+            resp = requests.get(url, headers=headers, timeout=5)
+        except requests.exceptions.ConnectionError:
+            # Single retry on connection error
+            logger.info("OTX connection error, retrying once...")
+            time.sleep(1)
+            try:
+                resp = requests.get(url, headers=headers, timeout=5)
+            except requests.exceptions.RequestException as e:
+                logger.warning("OTX retry failed for %s: %s", sha256[:16], e)
+                return None
         rate_limiter.record_call("otx")  # count the call even if status is error
         resp.raise_for_status()
         data = resp.json()
+
+        if not isinstance(data, dict):
+            logger.warning("OTX returned non-dict response for %s", sha256[:16])
+            return None
 
         pulse_info = data.get("pulse_info", {})
         pulse_count = pulse_info.get("count", 0)
@@ -178,17 +251,33 @@ def _lookup_malwarebazaar(sha256: str, rate_limiter: RateLimiter) -> ThreatRepor
     try:
         url = "https://mb-api.abuse.ch/api/v1/"
         post_data = {"query": "get_info", "hash": sha256}
-        resp = requests.post(url, data=post_data, timeout=5)  # data= NOT json=
+        try:
+            resp = requests.post(url, data=post_data, timeout=5)  # data= NOT json=
+        except requests.exceptions.ConnectionError:
+            # Single retry on connection error
+            logger.info("MalwareBazaar connection error, retrying once...")
+            time.sleep(1)
+            try:
+                resp = requests.post(url, data=post_data, timeout=5)
+            except requests.exceptions.RequestException as e:
+                logger.warning("MalwareBazaar retry failed for %s: %s", sha256[:16], e)
+                return None
         rate_limiter.record_call("malwarebazaar")  # count the call even if status is error
         resp.raise_for_status()
         data = resp.json()
+
+        if not isinstance(data, dict):
+            logger.warning("MalwareBazaar returned non-dict response for %s", sha256[:16])
+            return None
 
         status = data.get("query_status", "")
         if status in ("hash_not_found", "no_results"):
             return None
 
         entries = data.get("data", [])
-        entry = entries[0] if entries else {}
+        if not isinstance(entries, list) or not entries:
+            return None
+        entry = entries[0]
 
         family = entry.get("signature", "") or ""
         filename = entry.get("file_name", "") or ""
@@ -248,7 +337,12 @@ def lookup_hash(
 
     if full:
         # Full mode: call all providers, prefer VT data, merge tags
-        results = [fn(sha256, rate_limiter) for fn in providers]
+        try:
+            with _lookup_timeout(30):
+                results = [fn(sha256, rate_limiter) for fn in providers]
+        except LookupTimeoutError:
+            logger.warning("Lookup cascade timed out for %s (full mode)", sha256[:16])
+            results = []
         valid = [r for r in results if r is not None and r.has_data]
 
         if not valid:
@@ -270,11 +364,15 @@ def lookup_hash(
         return report
 
     # Cascading mode: stop on first hit
-    for fn in providers:
-        result = fn(sha256, rate_limiter)
-        if result is not None and result.has_data:
-            _append_enriched(result)
-            return result
+    try:
+        with _lookup_timeout(30):
+            for fn in providers:
+                result = fn(sha256, rate_limiter)
+                if result is not None and result.has_data:
+                    _append_enriched(result)
+                    return result
+    except LookupTimeoutError:
+        logger.warning("Lookup cascade timed out for %s", sha256[:16])
 
     return ThreatReport(
         hash=sha256,
