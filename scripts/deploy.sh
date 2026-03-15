@@ -78,7 +78,7 @@ deploy_dir() {
 }
 
 echo "=== Scripts -> /usr/local/bin/ ==="
-for script in clamav-scan.sh clamav-alert.sh clamav-healthcheck.sh quarantine-release.sh bazzite-security-test.sh system-health-snapshot.sh system-health-test.sh; do
+for script in clamav-scan.sh clamav-alert.sh clamav-healthcheck.sh quarantine-release.sh bazzite-security-test.sh system-health-snapshot.sh system-health-test.sh start-security-tray.sh integration-test.sh; do
     deploy "$REPO_DIR/scripts/$script" "/usr/local/bin/$script" 755
 done
 echo ""
@@ -142,16 +142,45 @@ deploy "$REPO_DIR/tray/bazzite-security-tray.py" \
     "$USER_HOME/security/bazzite-security-tray.py" 755 "lch:lch"
 deploy_dir "$REPO_DIR/tray/icons" "$USER_HOME/security/icons" "lch:lch"
 
-# Link tray icons into standard user icon path for KDE .desktop file resolution
+# Link tray icons into standard user icon paths for KDE .desktop file resolution
+# Icons go into both status/ (for tray) and apps/ (for application menu entries)
 if [[ "$DRY_RUN" == false ]]; then
     mkdir -p "$USER_HOME/.local/share/icons/hicolor/scalable/status"
+    mkdir -p "$USER_HOME/.local/share/icons/hicolor/scalable/apps"
     for svg in "$USER_HOME/security/icons/hicolor/scalable/status"/bazzite-sec-*.svg; do
-        ln -sf "$svg" "$USER_HOME/.local/share/icons/hicolor/scalable/status/$(basename "$svg")"
+        local_name="$(basename "$svg")"
+        ln -sf "$svg" "$USER_HOME/.local/share/icons/hicolor/scalable/status/$local_name"
+        ln -sf "$svg" "$USER_HOME/.local/share/icons/hicolor/scalable/apps/$local_name"
     done
     chown -R lch:lch "$USER_HOME/.local/share/icons/hicolor/scalable/status"
-    echo "[OK]       Symlinked tray icons into ~/.local/share/icons/hicolor/"
+    chown -R lch:lch "$USER_HOME/.local/share/icons/hicolor/scalable/apps"
+    # Create index.theme so KDE recognizes this as a valid icon directory
+    cat > "$USER_HOME/.local/share/icons/hicolor/index.theme" <<'ICONTHEME'
+[Icon Theme]
+Name=Hicolor
+Comment=Hicolor Icon Theme
+Directories=scalable/status,scalable/apps
+
+[scalable/status]
+Size=48
+Type=Scalable
+MinSize=16
+MaxSize=512
+Context=Status
+
+[scalable/apps]
+Size=48
+Type=Scalable
+MinSize=16
+MaxSize=512
+Context=Applications
+ICONTHEME
+    chown lch:lch "$USER_HOME/.local/share/icons/hicolor/index.theme"
+    # Rebuild icon cache so KDE picks up new/changed icons
+    gtk-update-icon-cache -f -t "$USER_HOME/.local/share/icons/hicolor/" 2>/dev/null || true
+    echo "[OK]       Symlinked tray icons into ~/.local/share/icons/hicolor/ (status + apps)"
 else
-    echo "[SYMLINK]  Tray icons -> ~/.local/share/icons/hicolor/scalable/status/"
+    echo "[SYMLINK]  Tray icons -> ~/.local/share/icons/hicolor/scalable/{status,apps}/"
 fi
 echo ""
 
@@ -162,6 +191,16 @@ if [[ "$DRY_RUN" == false ]]; then
     echo "[OK]       /var/log/system-health/"
 else
     echo "[MKDIR]    /var/log/system-health/"
+fi
+echo ""
+
+echo "=== KDE cache rebuild ==="
+if [[ "$DRY_RUN" == false ]]; then
+    # Rebuild KDE's system configuration cache so new desktop entries and icons appear
+    sudo -u lch kbuildsycoca6 2>/dev/null && echo "[OK]       kbuildsycoca6 rebuilt" \
+        || echo "[SKIP]     kbuildsycoca6 not available"
+else
+    echo "[CACHE]    Would rebuild kbuildsycoca6"
 fi
 echo ""
 
