@@ -17,6 +17,13 @@ CPUSchedulingPolicy=idle
 # Timeout: snapshot should finish in 60s max (no long SMART tests)
 TimeoutStartSec=120
 
+# Security hardening
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=read-only
+PrivateTmp=yes
+ReadWritePaths=/var/log/system-health /home/lch/security
+
 # Logging
 StandardOutput=journal
 StandardError=journal

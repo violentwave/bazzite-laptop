@@ -11,3 +11,10 @@ Nice=15
 IOSchedulingClass=idle
 MemoryMax=2G
 CPUQuota=50%
+
+# Security hardening
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=read-only
+PrivateTmp=yes
+ReadWritePaths=/var/log/clamav-scans /home/lch/security

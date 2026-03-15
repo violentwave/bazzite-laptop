@@ -23,6 +23,9 @@
 
 set -uo pipefail
 
+# --- Cleanup temp files on exit ---
+trap 'rm -f "${DISK_WARNS_TMP:-}" 2>/dev/null' EXIT
+
 # ─────────────────────────────────────────────────────────────
 # Configuration
 # ─────────────────────────────────────────────────────────────
