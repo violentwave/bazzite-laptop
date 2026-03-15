@@ -37,9 +37,9 @@ Refer to these project documents (all in `docs/`) for full details:
 - Performance: GameMode config, NVIDIA shader cache 4GB, I/O scheduler mq-deadline, TCP Fast Open
 - Security hardening: ClamAV clamd daemon mode (daily quick + weekly deep + test scans), USBGuard (12 devices whitelisted), LUKS Argon2id + header backup, firewall log-denied=all
 - Email alerts: HTML emails via msmtp + Gmail app password — sent after EVERY scan (quick/deep/test) + healthcheck failures
-- KDE Security menu: 10 shortcuts (deep scan, quick scan, firewall, firewall status, KWalletManager, scan logs, start security monitor, update email password, USB devices, view quarantine)
+- KDE Security menu: 12 shortcuts (deep scan, quick scan, firewall, firewall status, KWalletManager, scan logs, start security monitor, system health snapshot, update email password, USB devices, view health logs, view quarantine)
 - ~/security/ hub: centralized security folder with status file, quarantine dir, scan logs
-- Notification system: System tray app with 8-state icon machine (custom SVG icons), 3s polling, SIGHUP-resistant, autostart
+- Notification system: System tray app with 9-state icon machine (7 custom SVG icons with shape-differentiated badges for colorblind accessibility), 3s polling, SIGHUP-resistant, autostart, health submenu
 - Quarantine hardening: chmod 000 + chattr +i on quarantined files, root:lch 750 directory, release manager script
 - Healthcheck: /usr/local/bin/clamav-healthcheck.sh — 10+ checks, Wednesdays 2PM, email on failure
 - Test suite: /usr/local/bin/bazzite-security-test.sh — 15-test diagnostic with EICAR detection validation
@@ -47,8 +47,9 @@ Refer to these project documents (all in `docs/`) for full details:
 - GitHub: Private repo at github.com:violentwave/bazzite-laptop.git
 - Deploy: `sudo ./scripts/deploy.sh [--dry-run]` syncs repo files to system locations
 - System health monitoring: system-health-snapshot.sh with SMART delta tracking,
-  GPU/CPU thermals, storage alerts, tray integration, daily 8AM timer, email alerts,
-  KDE Security menu entries, 16-test validation suite
+  GPU/CPU thermals, storage alerts, tray integration (health_warning state with amber EKG pulse icon),
+  daily 8AM timer, email alerts, health summary in scan emails, KDE Security menu entries, 16-test validation suite
+- VS Code workspace: .vscode/settings.json + extensions.json for SVG preview and design tools
 
 ### Remaining Work (Prioritized)
 1. **ScopeBuddy configuration** — Per-game advanced launch management
@@ -62,6 +63,7 @@ Refer to these project documents (all in `docs/`) for full details:
 - `desktop/` — .desktop files and security.menu
 - `configs/` — system config files (udev rules, sysctl, gamemode, etc.)
 - `tray/` — security tray app (Python) + icons
+- `.vscode/` — VS Code workspace settings and extension recommendations
 - `docs/` — all documentation and guides
 
 ### Quick Reference

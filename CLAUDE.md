@@ -15,7 +15,8 @@
 - systemd/ — timer and service unit files
 - desktop/ — .desktop files and security.menu
 - configs/ — system config files (udev rules, sysctl, gamemode, etc.)
-- tray/ — security tray app (Python) + icons
+- tray/ — security tray app (Python) + 7 SVG icons (9-state machine)
+- .vscode/ — VS Code workspace settings and extension recommendations
 - docs/ — all documentation and guides
 
 ## Key Paths
@@ -46,7 +47,8 @@ system. Collects SMART disk health, GPU state, CPU thermals, storage/ZRAM stats.
 ### Health Monitoring Constraints
 - Health snapshots must complete in <30 seconds (no long SMART tests inline)
 - The --selftest flag handles SMART tests separately with sleep inhibit
-- Tray status updates use atomic write (tmp + rename) to avoid corruption
+- Tray status updates use read-modify-write + atomic write (tmp + rename) to avoid corruption
+- .status is shared JSON: ClamAV owns scan keys, health owns health keys — never overwrite the whole file
 - Delta file format: simple key=value, one per line in health-deltas.dat
 - Never start clamd — that is the scan script's job
 - Never modify ~/security/quarantine or ClamAV scan logs

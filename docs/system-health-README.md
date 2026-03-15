@@ -82,16 +82,23 @@ logs. The only shared touchpoints are:
 2. **Email infrastructure** — uses the same msmtp + Gmail app password config
 3. **KDE Security menu** — new entries added alongside existing scan shortcuts
 
-### Integration Options (Phase 2)
+### Completed Integrations (Phase 2)
 
-After the core system is validated, these optional integrations can be added:
+All Phase 2 integrations have been implemented:
 
-- **Scan email attachment**: Add `--append` flag call to clamav-scan.sh to
-  include a health summary in every scan email
-- **Tray app submenu**: Read `health_status` from .status in the existing
-  tray app's 3-second poll cycle
-- **Healthcheck inclusion**: Add timer/log freshness checks to
-  clamav-healthcheck.sh
+- **Tray app health state**: 9th state (`health_warning`) added to tray state machine.
+  When ClamAV is idle+healthy but `health_status` reports WARNING or CRITICAL,
+  the tray shows a green shield with amber EKG pulse badge (steady, no blink).
+  ClamAV scan states always take priority over health state.
+- **Tray health submenu**: Health status and issue count displayed in tray right-click menu,
+  read from `.status` JSON during 3-second poll cycle.
+- **Status file read-modify-write**: Health script reads existing `.status` JSON,
+  updates only health keys, writes atomically (tmp + rename) to avoid corrupting
+  ClamAV scan status.
+- **Scan email health summary**: `--append` flag generates compact health summary
+  included in every ClamAV scan email.
+- **Icon refresh**: 7 SVG icons with shape-differentiated badges (viewBox 48x48)
+  for colorblind accessibility — each state has a unique badge shape.
 
 ---
 

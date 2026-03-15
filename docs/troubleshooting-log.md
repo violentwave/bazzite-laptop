@@ -98,3 +98,8 @@
 **Problem**: Hundreds of "LibClamAV Warning: cli_realpath: Invalid arguments" in scan logs
 **Root cause**: Known ClamAV 1.4.x bug with clamdscan --fdpass and symlinks
 **Fix**: Filter with `grep -v "LibClamAV Warning: cli_realpath"` in output capture
+
+### 19. .status file race condition between scan and health scripts
+**Problem**: ClamAV scan and health snapshot can write to ~/security/.status simultaneously, corrupting JSON
+**Root cause**: Both scripts write the full .status file independently. If they overlap, one overwrites the other's data.
+**Fix**: Both scripts now use read-modify-write pattern: read existing JSON → update only their keys → atomic write (write to .status.tmp then `mv` to .status). The `mv` is atomic on the same filesystem, so readers always see valid JSON. ClamAV scan states take priority in the tray app — health_warning only displays when ClamAV is idle+healthy.

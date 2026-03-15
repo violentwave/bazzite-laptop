@@ -235,24 +235,27 @@ Mission Center: https://missioncenter.io/
 
 ---
 
-## Phase 2 Integration (Future — after core is validated)
+## Phase 2 Integration (Completed)
 
-### Tray app health display
-Read `health_status` from .status JSON in the existing 3-second poll.
-Display in tooltip or submenu. No icon state changes.
+All Phase 2 integrations are implemented and committed:
 
-### Scan email health summary
-Add to `clamav-scan.sh` before email send:
-```bash
-HEALTH=$(/usr/local/bin/system-health-snapshot.sh --append 2>&1)
-```
+### Tray app health state (completed)
+- 9th state `STATE_HEALTH_WARNING` added to tray state machine
+- Green shield + amber EKG pulse badge icon (`bazzite-sec-health-warn.svg`)
+- Shows when ClamAV is idle+healthy AND `health_status` is WARNING or CRITICAL
+- ClamAV scan states always take priority over health state
+- Health submenu shows status and issue count in tray right-click menu
 
-### Healthcheck integration
-Add to `clamav-healthcheck.sh`:
-```bash
-systemctl is-active --quiet system-health.timer || FAILURES+=("system-health.timer not active")
-if [[ -L /var/log/system-health/health-latest.log ]]; then
-    AGE=$(( $(date +%s) - $(stat -c %Y /var/log/system-health/health-latest.log) ))
-    [[ $AGE -gt 172800 ]] && FAILURES+=("Health log older than 48 hours")
-fi
-```
+### Icon refresh (completed)
+- 7 SVG icons with shape-differentiated badges (viewBox 48x48)
+- Unique badge shapes per state for colorblind accessibility
+- Interior glyphs (checkmarks, exclamation, X marks) visible at 22px panel size
+- freedesktop index.theme with Context=Status, MinSize=16, MaxSize=256
+
+### Scan email health summary (completed)
+- `--append` flag on system-health-snapshot.sh generates compact summary
+- Included in every ClamAV scan email
+
+### Status file safety (completed)
+- Read-modify-write pattern: read existing → update health keys → atomic write
+- Prevents race condition between scan and health scripts writing to ~/security/.status

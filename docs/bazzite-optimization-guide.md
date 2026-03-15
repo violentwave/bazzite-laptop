@@ -105,7 +105,7 @@ Disabled all unnecessary services to reduce attack surface and resource usage:
   - `sudo public-wifi-mode on` — DROP zone (public WiFi)
   - `sudo public-wifi-mode off` — HOME zone (trusted network)
 - KDE Connect and Bluetooth: still enabled but blocked by firewall DROP zone
-- **KDE Security menu**: ClamAV Deep Scan, ClamAV Quick Scan, Firewall, Firewall Status, KWalletManager, Scan Logs, Start Security Monitor, Update Email Password, USB Devices, View Quarantine
+- **KDE Security menu**: ClamAV Deep Scan, ClamAV Quick Scan, Firewall, Firewall Status, KWalletManager, Scan Logs, Start Security Monitor, System Health Snapshot, Update Email Password, USB Devices, View Health Logs, View Quarantine
 - ## Brave Browser — Flatseal Permission Hardening
 **Status**: Completed
 **Date**: 2026-03-14
@@ -192,19 +192,30 @@ Layered packages: `clamav`, `clamav-freshclam`, `clamd`, `msmtp`
 
 ### Notification System ✅
 - **System tray app**: ~/security/bazzite-security-tray.py (Python + GObject + AppIndicator3)
-- **Custom icons**: 5 SVG shield+dot icons at ~/security/icons/hicolor/scalable/status/ with freedesktop index.theme
-- **8-state icon machine**: healthy_idle (green), scan_running (green blink), scan_complete (blue blink 30s), warning (yellow), scan_failed (red), scan_aborted (red blink), threats_found (red blink), unknown (yellow)
+- **Custom icons**: 7 SVG shield icons at ~/security/icons/hicolor/scalable/status/ with freedesktop index.theme (viewBox 48x48)
+  - Shape-differentiated badges for colorblind accessibility: filled circle (healthy), hollow ring (scanning), checkmark (complete), triangle (warning), X mark (error/threats), EKG pulse (health warning), outline-only (blink frame)
+- **9-state icon machine**:
+  - healthy_idle (green, filled circle badge)
+  - scan_running (teal blink, ring badge)
+  - scan_complete (blue blink 30s, checkmark badge)
+  - warning (yellow, triangle badge)
+  - scan_failed (red, X badge)
+  - scan_aborted (red blink, X badge)
+  - threats_found (red blink, X badge)
+  - health_warning (green shield + amber EKG pulse badge, steady — shows when ClamAV idle but health has warnings)
+  - unknown (yellow, triangle badge)
 - **Blink**: GLib.timeout_add toggles between colored icon and blank shield
 - **Autostart**: ~/.config/autostart/bazzite-security-tray.desktop (X-GNOME-Autostart-Delay=5)
 - **Resilience**: SIGHUP ignored (survives terminal closure), PR_SET_NAME prevents pkill clamscan from killing tray
-- **Status**: Polls ~/security/.status (JSON) every 3 seconds, atomic writes from scan script
-- **Menu**: Quick/deep/test scan, health check, test suite, quarantine view/release, logs, quit
+- **Status**: Polls ~/security/.status (JSON) every 3 seconds, atomic writes from scan/health scripts (read-modify-write pattern)
+- **Menu**: Quick/deep/test scan, health snapshot, health submenu (status + issue count), test suite, quarantine view/release, logs, quit
 
 ### Healthcheck System ✅
 - **Script**: `/usr/local/bin/clamav-healthcheck.sh` — 10+ automated checks
 - **Timer**: clamav-healthcheck.timer — Wednesdays 2:00 PM
 - **Checks**: binaries, signatures, timers, quarantine, logs, msmtp, disk space, clamd service
 - **Email**: Sends alert on failure
+- **Scan email integration**: Health summary appended to every ClamAV scan email
 
 ### Security Test Suite ✅
 - **Script**: `/usr/local/bin/bazzite-security-test.sh` — 15-test diagnostic

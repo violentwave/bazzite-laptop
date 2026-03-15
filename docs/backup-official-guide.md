@@ -198,6 +198,7 @@ System is compromised or you want a clean slate.
    - Set SELinux antivirus boolean: `sudo setsebool -P antivirus_can_scan_system 1`
    - Create clamd socket directory: `sudo mkdir -p /run/clamd.scan`
    - Deploy tray app icons to `~/security/icons/hicolor/`
+   - Enable health timer: `sudo systemctl enable --now system-health.timer`
    - Launch tray app: `python3 ~/security/bazzite-security-tray.py &`
 
 ---
