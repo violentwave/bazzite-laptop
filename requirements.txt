@@ -1,4 +1,5 @@
 # Core AI infrastructure
+sentry-sdk>=2.1.1
 litellm>=1.60.0
 lancedb>=0.15.0
 python-dotenv>=1.0.0

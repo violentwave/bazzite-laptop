@@ -169,5 +169,8 @@
     "python.testing.unittestEnabled": false,
     "python.testing.pytestArgs": ["-v"],
     "coderabbit.agentType": "Claude Code",
-    "coderabbit.autoReviewMode": "auto"
+    "coderabbit.autoReviewMode": "auto",
+    "robotcode.disableExtension": false,
+    "robotcode.run.openOutputAfterRun": "log",
+    "robotcode.debug.outputMessages": true
 }
