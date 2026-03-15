@@ -129,7 +129,12 @@ echo ""
 
 # --- Step 8: Run tests ---
 echo "=== Running tests ==="
-python -m pytest tests/ -v --tb=short 2>&1 | tail -5
+python -m pytest tests/ -v --tb=short 2>&1 | tail -20
+TEST_EXIT=${PIPESTATUS[0]}
+if [[ "$TEST_EXIT" -ne 0 ]]; then
+    echo "[WARN] Some tests failed (exit code $TEST_EXIT)"
+    FAIL=1
+fi
 echo ""
 
 # --- Summary ---

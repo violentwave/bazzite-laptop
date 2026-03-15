@@ -36,6 +36,8 @@ _keys_loaded = False
 def load_keys() -> bool:
     """Load API keys from keys.env into environment. Returns True if file was found."""
     global _keys_loaded  # noqa: PLW0603
+    if _keys_loaded:
+        return True
     if KEYS_ENV.exists():
         load_dotenv(KEYS_ENV)
         _keys_loaded = True
