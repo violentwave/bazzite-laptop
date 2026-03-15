@@ -3,7 +3,9 @@
 <path d="M24 4L8 11v11c0 10.5 6.8 20.3 16 23 9.2-2.7 16-12.5 16-23V11L24 4z" fill="#0D47A1" stroke="#2196F3" stroke-width="2" stroke-linejoin="round"/>
 <!-- Inner shield -->
 <path d="M24 8.5L11.5 14v8c0 8.2 5.3 15.8 12.5 18.3 7.2-2.5 12.5-10.1 12.5-18.3v-8L24 8.5z" fill="#1565C0"/>
+<!-- Interior checkmark -->
+<path d="M17.5 24l4.5 4.5 8.5-9.5" fill="none" stroke="#BBDEFB" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
 <!-- Badge: checkmark (complete) -->
 <circle cx="37" cy="37" r="7" fill="#111"/>
-<path d="M33 37l3 3.5 5-6" fill="none" stroke="#2196F3" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M33.5 37l2.5 2.5 5-5.5" fill="none" stroke="#2196F3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>

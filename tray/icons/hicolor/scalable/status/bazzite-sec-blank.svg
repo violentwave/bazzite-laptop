@@ -2,5 +2,5 @@
 <!-- Shield body — outline only (blink frame) -->
 <path d="M24 4L8 11v11c0 10.5 6.8 20.3 16 23 9.2-2.7 16-12.5 16-23V11L24 4z" fill="none" stroke="#616161" stroke-width="2" stroke-linejoin="round"/>
 <!-- Inner shield -->
-<path d="M24 8.5L11.5 14v8c0 8.2 5.3 15.8 12.5 18.3 7.2-2.5 12.5-10.1 12.5-18.3v-8L24 8.5z" fill="none" stroke="#424242" stroke-width="0.8" stroke-linejoin="round"/>
+<path d="M24 8.5L11.5 14v8c0 8.2 5.3 15.8 12.5 18.3 7.2-2.5 12.5-10.1 12.5-18.3v-8L24 8.5z" fill="none" stroke="#616161" stroke-width="0.5" stroke-linejoin="round"/>
 </svg>

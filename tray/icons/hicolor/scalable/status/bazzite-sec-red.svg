@@ -3,7 +3,9 @@
 <path d="M24 4L8 11v11c0 10.5 6.8 20.3 16 23 9.2-2.7 16-12.5 16-23V11L24 4z" fill="#7F0000" stroke="#F44336" stroke-width="2" stroke-linejoin="round"/>
 <!-- Inner shield -->
 <path d="M24 8.5L11.5 14v8c0 8.2 5.3 15.8 12.5 18.3 7.2-2.5 12.5-10.1 12.5-18.3v-8L24 8.5z" fill="#B71C1C"/>
+<!-- Interior X mark -->
+<path d="M18 18l12 12M30 18l-12 12" fill="none" stroke="#FFCDD2" stroke-width="3" stroke-linecap="round"/>
 <!-- Badge: X mark (error/threats) -->
 <circle cx="37" cy="37" r="7" fill="#111"/>
-<path d="M34 34l6 6M40 34l-6 6" fill="none" stroke="#F44336" stroke-width="2.5" stroke-linecap="round"/>
+<path d="M34 34l6 6M40 34l-6 6" fill="none" stroke="#F44336" stroke-width="2" stroke-linecap="round"/>
 </svg>
