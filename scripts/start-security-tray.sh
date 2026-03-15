@@ -10,15 +10,24 @@ log() { echo "[$(date '+%H:%M:%S')] $*" >> "$LOG_FILE"; }
 
 log "--- start-security-tray.sh invoked ---"
 
-# Kill any existing instance
-if pgrep -f "bazzite-security-tray" &>/dev/null; then
+# Kill any existing instance (use [.]py regex trick to avoid matching grep itself)
+if pgrep -f "bazzite-security-tray[.]py" &>/dev/null; then
     log "Killing existing tray instance"
-    pkill -f "bazzite-security-tray" 2>/dev/null
-    # Wait for the old process to fully exit and release the lock
-    sleep 2
+    pkill -f "bazzite-security-tray[.]py" 2>/dev/null
+    # Wait up to 5 seconds for the process to exit
+    for _ in $(seq 1 10); do
+        pgrep -f "bazzite-security-tray[.]py" &>/dev/null || break
+        sleep 0.5
+    done
+    # Force kill if still running
+    if pgrep -f "bazzite-security-tray[.]py" &>/dev/null; then
+        log "Force killing stubborn tray instance"
+        pkill -9 -f "bazzite-security-tray[.]py" 2>/dev/null
+        sleep 1
+    fi
 fi
 
-# Remove stale lock file if the old process didn't clean up
+# Remove stale lock file (flock is FD-based, so this just cleans up the file)
 rm -f "$LOCK_FILE" 2>/dev/null
 
 # Verify the script exists
@@ -32,12 +41,11 @@ fi
 # Start fresh instance (setsid creates a new session so KDE won't kill it)
 log "Starting tray: setsid python3 $TRAY_SCRIPT"
 setsid python3 "$TRAY_SCRIPT" &>/dev/null &
-TRAY_PID=$!
 
 # Brief wait to check if it actually started
 sleep 1
-if pgrep -f "bazzite-security-tray" &>/dev/null; then
-    log "Tray started successfully (PID: $TRAY_PID)"
+if pgrep -f "bazzite-security-tray[.]py" &>/dev/null; then
+    log "Tray started successfully"
 else
     log "ERROR: Tray process died immediately"
     notify-send --app-name="Bazzite Security" --urgency=critical \

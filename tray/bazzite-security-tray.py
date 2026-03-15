@@ -130,7 +130,8 @@ class SecurityTray:
         self.current_description = cfg["desc"]
         self.blink_visible = True
 
-        # Set icon immediately
+        # Force AppIndicator3 to refresh (it caches by icon name)
+        self.indicator.set_icon_full("", self.current_description)
         self.indicator.set_icon_full(self.current_icon, self.current_description)
 
         # Start blink timer if needed

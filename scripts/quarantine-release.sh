@@ -79,7 +79,16 @@ list_files() {
 release_file() {
     local filename="$1"
     local dest="${2:-}"
-    local filepath="${QUARANTINE_DIR}/${filename}"
+
+    # Prevent path traversal — only bare filenames allowed
+    local basename_only
+    basename_only=$(basename "$filename")
+    if [[ "$filename" != "$basename_only" ]]; then
+        echo -e "${RED}Error: Path components not allowed in filename${RESET}" >&2
+        return 1
+    fi
+
+    local filepath="${QUARANTINE_DIR}/${basename_only}"
 
     if [[ ! -e "$filepath" ]]; then
         echo -e "  ${RED}Error: '${filename}' not found in quarantine${RESET}" >&2

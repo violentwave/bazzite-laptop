@@ -9,3 +9,5 @@ Type=oneshot
 ExecStart=/usr/local/bin/clamav-scan.sh quick
 Nice=15
 IOSchedulingClass=idle
+MemoryMax=2G
+CPUQuota=50%

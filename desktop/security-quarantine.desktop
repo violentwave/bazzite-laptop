@@ -5,6 +5,6 @@ Type=Application
 Name=View Quarantine
 Comment=View quarantined threat files
 Exec=dolphin /home/lch/security/quarantine
-Icon=bazzite-sec-red
+Icon=/home/lch/security/icons/hicolor/scalable/status/bazzite-sec-red.svg
 Categories=Security;System;
 Terminal=false

@@ -189,10 +189,13 @@ phase "CRITICAL FILES"
 # LUKS header backup
 if compgen -G "${HOME_DIR}/security/luks-backup/luks-header-"*.bak >/dev/null 2>&1; then
     LUKS_SRC=$(find "${HOME_DIR}/security/luks-backup/" -name "luks-header-*.bak" -printf '%T@ %p\n' 2>/dev/null | sort -rn | head -1 | cut -d' ' -f2-)
-    cp -a "$LUKS_SRC" "${BACKUP_DIR}/luks-header.bak" && ok "luks-header.bak (from ${LUKS_SRC})" || fail "luks-header.bak"
+    cp -a "$LUKS_SRC" "${BACKUP_DIR}/luks-header.bak" \
+        && { chmod 600 "${BACKUP_DIR}/luks-header.bak"; ok "luks-header.bak (from ${LUKS_SRC})"; } \
+        || fail "luks-header.bak"
 else
     info "No existing LUKS header backup found, creating one..."
     if cryptsetup luksHeaderBackup /dev/sda3 --header-backup-file "${BACKUP_DIR}/luks-header.bak" 2>/dev/null; then
+        chmod 600 "${BACKUP_DIR}/luks-header.bak"
         ok "luks-header.bak (fresh from /dev/sda3)"
     else
         warn "Could not back up LUKS header — cryptsetup failed"
@@ -314,8 +317,9 @@ separator
 # ===========================
 phase "USER CONFIGS"
 
-# msmtprc
+# msmtprc (restrict permissions — contains email credentials)
 copy_file "${HOME_DIR}/.msmtprc" "${BACKUP_DIR}/msmtprc"
+chmod 600 "${BACKUP_DIR}/msmtprc" 2>/dev/null
 
 # MangoHud
 copy_dir "${HOME_DIR}/.config/MangoHud" "${BACKUP_DIR}/MangoHud" "MangoHud/"

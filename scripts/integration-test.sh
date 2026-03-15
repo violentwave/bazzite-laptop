@@ -126,6 +126,17 @@ else
     result FAIL "start-security-tray.sh not deployed or not executable"
 fi
 
+# [05] Lock file exists (tray is holding it)
+if [[ -f "$LOCK_FILE" ]]; then
+    result PASS "Tray lock file exists" "$LOCK_FILE"
+else
+    if [[ "$TRAY_COUNT" -ge 1 ]]; then
+        result FAIL "Tray running but no lock file" "$LOCK_FILE"
+    else
+        result WARN "No lock file (tray not running)" "$LOCK_FILE"
+    fi
+fi
+
 echo ""
 
 # ═══════════════════════════════════════════════════════════
@@ -259,6 +270,21 @@ else
     result FAIL "Autostart entry missing" "$AUTOSTART_FILE"
 fi
 
+# [13] All .desktop Icon= absolute paths resolve to actual files
+ICONS_MISSING=""
+for f in "$DESKTOP_DIR"/security-*.desktop; do
+    [[ -f "$f" ]] || continue
+    icon_val=$(grep '^Icon=' "$f" 2>/dev/null | cut -d= -f2)
+    if [[ "$icon_val" == /* ]] && [[ ! -f "$icon_val" ]]; then
+        ICONS_MISSING+=" $(basename "$f")"
+    fi
+done
+if [[ -z "$ICONS_MISSING" ]]; then
+    result PASS "All .desktop absolute Icon= paths resolve"
+else
+    result FAIL "Missing icon files:$ICONS_MISSING"
+fi
+
 echo ""
 
 # ═══════════════════════════════════════════════════════════
@@ -386,6 +412,87 @@ else:
     esac
 else
     result FAIL ".status file missing"
+fi
+
+echo ""
+
+# ═══════════════════════════════════════════════════════════
+# SECTION 7: Quarantine Security
+# ═══════════════════════════════════════════════════════════
+echo -e "  ${BLD}Section 7: Quarantine Security${RST}"
+echo ""
+
+# Path traversal blocked in quarantine-release.sh
+if [[ -x "/usr/local/bin/quarantine-release.sh" ]]; then
+    TRAVERSAL_OUTPUT=$(/usr/local/bin/quarantine-release.sh "../../etc/passwd" /tmp 2>&1)
+    TRAVERSAL_EXIT=$?
+    if [[ $TRAVERSAL_EXIT -ne 0 ]]; then
+        result PASS "Path traversal blocked in quarantine-release.sh"
+    else
+        result FAIL "Path traversal NOT blocked" "../../etc/passwd was accepted"
+    fi
+else
+    result WARN "quarantine-release.sh not deployed" "Cannot test path traversal"
+fi
+
+echo ""
+
+# ═══════════════════════════════════════════════════════════
+# SECTION 8: System Security Services
+# ═══════════════════════════════════════════════════════════
+echo -e "  ${BLD}Section 8: Security Services${RST}"
+echo ""
+
+# Firewall active, zone=drop
+if systemctl is-active --quiet firewalld 2>/dev/null; then
+    DEFAULT_ZONE=$(firewall-cmd --get-default-zone 2>/dev/null)
+    if [[ "$DEFAULT_ZONE" == "drop" ]]; then
+        result PASS "Firewall active, default zone=drop"
+    else
+        result WARN "Firewall active but zone=$DEFAULT_ZONE" "Expected: drop"
+    fi
+else
+    result FAIL "Firewall not running"
+fi
+
+# SELinux enforcing
+SELINUX_MODE=$(getenforce 2>/dev/null || echo "unknown")
+if [[ "$SELINUX_MODE" == "Enforcing" ]]; then
+    result PASS "SELinux enforcing"
+else
+    result WARN "SELinux mode=$SELINUX_MODE" "Expected: Enforcing"
+fi
+
+# USBGuard active
+if systemctl is-active --quiet usbguard 2>/dev/null; then
+    result PASS "USBGuard active"
+else
+    result WARN "USBGuard not running"
+fi
+
+# ClamAV signatures fresh (< 7 days)
+SIG_DIR="/var/lib/clamav"
+if [[ -d "$SIG_DIR" ]]; then
+    NEWEST_SIG=$(find "$SIG_DIR" \( -name "*.cvd" -o -name "*.cld" \) -printf '%T@ %p\n' 2>/dev/null | sort -rn | head -1 | cut -d' ' -f2-)
+    if [[ -n "$NEWEST_SIG" ]]; then
+        SIG_AGE_DAYS=$(( ($(date +%s) - $(stat -c '%Y' "$NEWEST_SIG")) / 86400 ))
+        if [[ "$SIG_AGE_DAYS" -le 7 ]]; then
+            result PASS "ClamAV signatures fresh" "${SIG_AGE_DAYS}d old ($(basename "$NEWEST_SIG"))"
+        else
+            result WARN "ClamAV signatures stale" "${SIG_AGE_DAYS} days old"
+        fi
+    else
+        result FAIL "No ClamAV signature files found" "$SIG_DIR"
+    fi
+else
+    result FAIL "ClamAV signature directory missing" "$SIG_DIR"
+fi
+
+# msmtp binary available
+if command -v msmtp &>/dev/null; then
+    result PASS "msmtp binary available"
+else
+    result WARN "msmtp not installed" "Email alerts won't work"
 fi
 
 echo ""

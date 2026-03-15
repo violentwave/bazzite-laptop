@@ -42,8 +42,22 @@ else
     SCAN_DIRS=(/home/lch /tmp /var)
 fi
 
-# --- Cleanup stale tmp on exit ---
-trap 'rm -f "$STATUS_TMP" 2>/dev/null' EXIT
+# --- Cleanup on exit and handle interrupts ---
+cleanup_scan() {
+    local sig="$1"
+    if [[ "$sig" == "INT" || "$sig" == "TERM" ]]; then
+        echo ""
+        echo -e "  ${RED}Scan interrupted (SIG${sig}), stopping clamd...${RESET}" >&2
+        systemctl stop clamd@scan 2>/dev/null || true
+        write_status "idle" "Scan interrupted" "" "0" "${#SCAN_DIRS[@]}" "" "0" "0" "" "" 2>/dev/null || true
+    fi
+    rm -f "$STATUS_TMP" 2>/dev/null
+    [[ "$sig" == "INT" ]] && exit 130
+    [[ "$sig" == "TERM" ]] && exit 143
+}
+trap 'cleanup_scan EXIT' EXIT
+trap 'cleanup_scan INT' INT
+trap 'cleanup_scan TERM' TERM
 
 # --- Create directories ---
 mkdir -p "$QUARANTINE_DIR"

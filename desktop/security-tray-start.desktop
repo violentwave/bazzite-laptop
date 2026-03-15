@@ -4,7 +4,7 @@
 Type=Application
 Name=Start Security Monitor
 Comment=Start or restart the security tray monitor
-Icon=bazzite-sec-teal
+Icon=/home/lch/security/icons/hicolor/scalable/status/bazzite-sec-teal.svg
 Exec=/usr/local/bin/start-security-tray.sh
 Terminal=false
 Categories=Security;System;
