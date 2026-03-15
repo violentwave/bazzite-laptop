@@ -6,6 +6,7 @@
 
 import signal
 import ctypes
+import fcntl
 import gi
 gi.require_version('Gtk', '3.0')
 gi.require_version('AppIndicator3', '0.1')
@@ -29,6 +30,7 @@ signal.signal(signal.SIGHUP, signal.SIG_IGN)
 signal.signal(signal.SIGTERM, lambda s, f: sys.exit(0))
 
 STATUS_FILE = Path.home() / "security" / ".status"
+LOCK_FILE = Path.home() / "security" / ".tray.lock"
 POLL_INTERVAL = 3  # seconds
 ICON_THEME_PATH = str(Path.home() / "security" / "icons")
 
@@ -558,7 +560,21 @@ class SecurityTray:
         Gtk.main_quit()
 
 
+def acquire_lock():
+    """Prevent multiple tray instances via file lock."""
+    lock_fd = open(LOCK_FILE, 'w')
+    try:
+        fcntl.flock(lock_fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        lock_fd.write(str(os.getpid()))
+        lock_fd.flush()
+        return lock_fd  # Keep reference alive so lock persists
+    except BlockingIOError:
+        print("[tray] Another instance is already running", file=sys.stderr)
+        sys.exit(0)
+
+
 if __name__ == "__main__":
+    _lock = acquire_lock()
     tray = SecurityTray()
     try:
         Gtk.main()

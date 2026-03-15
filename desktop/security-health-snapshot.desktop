@@ -2,7 +2,7 @@
 Type=Application
 Name=System Health Snapshot
 Comment=Run SMART, GPU, thermal, and storage health check
-Icon=utilities-system-monitor
+Icon=bazzite-sec-blue
 Exec=konsole --hold -e sudo /usr/local/bin/system-health-snapshot.sh
 Terminal=false
 Categories=Security;

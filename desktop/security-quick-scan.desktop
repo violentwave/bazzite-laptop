@@ -2,9 +2,9 @@
 # Deploy to: ~/.local/share/applications/security-quick-scan.desktop
 [Desktop Entry]
 Type=Application
-Name=ClamAV Quick Scan
-Comment=Run a quick antivirus scan of home and tmp
+Name=Quick Scan
+Comment=Scan home and tmp directories
 Exec=konsole --hold -e sudo /usr/local/bin/clamav-scan.sh quick
-Icon=security-high
+Icon=bazzite-sec-green
 Categories=Security;System;
 Terminal=false

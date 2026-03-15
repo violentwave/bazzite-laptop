@@ -1,0 +1,10 @@
+# ClamAV Health Check — KDE menu shortcut
+# Deploy to: ~/.local/share/applications/security-healthcheck.desktop
+[Desktop Entry]
+Type=Application
+Name=Run Health Check
+Comment=Run ClamAV infrastructure health check
+Exec=konsole --hold -e sudo /usr/local/bin/clamav-healthcheck.sh
+Icon=bazzite-sec-blue
+Categories=Security;System;
+Terminal=false

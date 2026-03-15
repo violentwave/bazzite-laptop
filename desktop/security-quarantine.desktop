@@ -3,8 +3,8 @@
 [Desktop Entry]
 Type=Application
 Name=View Quarantine
-Comment=Open quarantine folder in file manager
+Comment=View quarantined threat files
 Exec=dolphin /home/lch/security/quarantine
-Icon=folder-locked
+Icon=bazzite-sec-red
 Categories=Security;System;
 Terminal=false

@@ -2,9 +2,9 @@
 # Deploy to: ~/.local/share/applications/security-deep-scan.desktop
 [Desktop Entry]
 Type=Application
-Name=ClamAV Deep Scan
-Comment=Run a full antivirus scan of home, tmp, and var
+Name=Deep Scan
+Comment=Full scan of home, tmp, and var
 Exec=konsole --hold -e sudo /usr/local/bin/clamav-scan.sh deep
-Icon=security-high
+Icon=bazzite-sec-green
 Categories=Security;System;
 Terminal=false

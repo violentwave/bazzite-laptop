@@ -2,9 +2,9 @@
 # Deploy to: ~/.local/share/applications/security-scan-logs.desktop
 [Desktop Entry]
 Type=Application
-Name=Scan Logs
-Comment=Open ClamAV scan logs
+Name=View Scan Logs
+Comment=Open ClamAV scan log directory
 Exec=dolphin /home/lch/security/logs
-Icon=text-x-log
+Icon=folder-documents
 Categories=Security;System;
 Terminal=false

@@ -3,7 +3,7 @@
 [Desktop Entry]
 Type=Application
 Name=USB Devices
-Comment=List connected USB devices and USBGuard status
+Comment=View and manage USB device authorization
 Exec=konsole -e bash -c "usbguard list-devices 2>/dev/null || echo 'USBGuard not running'; echo '---'; lsusb; echo '---'; echo 'Press Enter to close'; read"
 Icon=drive-removable-media
 Categories=Security;System;

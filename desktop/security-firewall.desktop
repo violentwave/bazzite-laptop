@@ -1,10 +1,10 @@
-# Firewall Status — KDE menu shortcut
+# Firewall — KDE menu shortcut
 # Deploy to: ~/.local/share/applications/security-firewall.desktop
 [Desktop Entry]
 Type=Application
-Name=Firewall Status
-Comment=Check firewall configuration and logging
+Name=Firewall
+Comment=Check firewall rules and logging
 Exec=konsole -e bash -c "sudo firewall-cmd --list-all; echo '---'; sudo firewall-cmd --get-log-denied; echo '---'; echo 'Press Enter to close'; read"
-Icon=network-firewall
+Icon=preferences-security-firewall
 Categories=Security;System;
 Terminal=false
