@@ -96,6 +96,20 @@ if [[ "$STATUS" == "threats" && -f "$LOG_FILE" ]]; then
         threatname=$(html_escape "$(echo "$line" | sed 's/^.*: //' | sed 's/ FOUND$//')")
         THREAT_TABLE_ROWS+="<tr style=\"border-bottom:1px solid #e2e8f0;\"><td style=\"padding:10px 12px;font-family:'Courier New',monospace;font-size:13px;color:#1e293b\">${filename}</td><td style=\"padding:10px 12px;font-size:13px;color:#64748b;word-break:break-all\">${filepath_esc}</td><td style=\"padding:10px 12px;font-size:13px;color:#ef4444;font-weight:600\">${threatname}</td><td style=\"padding:10px 12px;font-size:13px;color:#22c55e\">Quarantined</td></tr>"
     done < <(grep "FOUND$" "$LOG_FILE" 2>/dev/null || true)
+
+    # --- Extract hashes for AI threat intel enrichment ---
+    HASH_LOG="/home/lch/security/quarantine-hashes.log"
+    if [[ -f "$HASH_LOG" ]]; then
+        THREAT_HASHES=$(tac "$HASH_LOG" 2>/dev/null | sed '/^---/q' | grep -v '^---' | awk 'NF{print $1}' | tac)
+    fi
+fi
+
+# --- AI Threat Intelligence enrichment (optional, graceful degradation) ---
+THREAT_INTEL_HTML=""
+if [[ -n "${THREAT_HASHES:-}" ]]; then
+    if command -v /usr/local/bin/threat-lookup.sh &>/dev/null; then
+        THREAT_INTEL_HTML=$(echo "$THREAT_HASHES" | timeout 30 runuser -u lch -- /usr/local/bin/threat-lookup.sh --batch --format html 2>/dev/null) || THREAT_INTEL_HTML=""
+    fi
 fi
 
 # --- Build body content based on status ---
@@ -130,6 +144,7 @@ case "$STATUS" in
             <tr style=\"background:#1e293b\"><th style=\"padding:10px 12px;font-size:12px;color:#f8fafc;text-align:left;text-transform:uppercase;letter-spacing:0.5px\">File</th><th style=\"padding:10px 12px;font-size:12px;color:#f8fafc;text-align:left;text-transform:uppercase;letter-spacing:0.5px\">Original Path</th><th style=\"padding:10px 12px;font-size:12px;color:#f8fafc;text-align:left;text-transform:uppercase;letter-spacing:0.5px\">Threat Detected</th><th style=\"padding:10px 12px;font-size:12px;color:#f8fafc;text-align:left;text-transform:uppercase;letter-spacing:0.5px\">Action</th></tr>
             ${THREAT_TABLE_ROWS}
         </table>
+        ${THREAT_INTEL_HTML}
         <p style=\"font-size:14px;color:#64748b;line-height:1.6;margin:0\">Review the quarantined files and delete them if they are confirmed threats. Log file: <code style=\"background:#f1f5f9;padding:2px 6px;border-radius:3px;font-size:13px\">${LOG_FILE}</code></p>"
         ;;
 

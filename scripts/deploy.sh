@@ -83,6 +83,12 @@ for script in clamav-scan.sh clamav-alert.sh clamav-healthcheck.sh quarantine-re
 done
 echo ""
 
+echo "=== AI Layer Scripts -> /usr/local/bin/ ==="
+for script in threat-lookup.sh; do
+    deploy "$REPO_DIR/scripts/$script" "/usr/local/bin/$script" 755
+done
+echo ""
+
 echo "=== Systemd units -> /etc/systemd/system/ ==="
 SYSTEMD_CHANGED=false
 for unit in "$REPO_DIR"/systemd/*.service "$REPO_DIR"/systemd/*.timer; do
