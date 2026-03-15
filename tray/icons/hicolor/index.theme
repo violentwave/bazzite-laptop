@@ -4,7 +4,8 @@ Comment=Bazzite Security tray icons
 Directories=scalable/status
 
 [scalable/status]
-Size=24
+Size=48
 Type=Scalable
 MinSize=16
 MaxSize=256
+Context=Status

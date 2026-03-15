@@ -14,6 +14,10 @@
         "alefragnani.project-manager",
         "ms-python.python",
         "charliermarsh.ruff",
-        "esbenp.prettier-vscode"
+        "esbenp.prettier-vscode",
+        "jock.svg",
+        "simonsiefke.svg-preview",
+        "naumovs.color-highlight",
+        "royaction.color-manager"
     ]
 }

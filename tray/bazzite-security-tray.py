@@ -52,7 +52,7 @@ STATE_UNKNOWN = "unknown"
 
 STATE_CONFIG = {
     STATE_HEALTHY_IDLE: {"icon": "bazzite-sec-green",  "desc": "All clear",              "blink": False},
-    STATE_SCAN_RUNNING: {"icon": "bazzite-sec-green",  "desc": "Scan in progress",       "blink": True,  "interval": 1000},
+    STATE_SCAN_RUNNING: {"icon": "bazzite-sec-teal",   "desc": "Scan in progress",       "blink": True,  "interval": 1000},
     STATE_SCAN_COMPLETE: {"icon": "bazzite-sec-blue",  "desc": "Scan complete",           "blink": True,  "interval": 500},
     STATE_WARNING:       {"icon": "bazzite-sec-yellow", "desc": "Warning",                "blink": False},
     STATE_SCAN_FAILED:   {"icon": "bazzite-sec-red",   "desc": "Scan error",              "blink": False},

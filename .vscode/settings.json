@@ -148,6 +148,15 @@
         "editor.defaultFormatter": "redhat.vscode-yaml"
     },
 
+    // ── SVG Preview ──
+    "svg.preview.mode": "svg",
+    "svg.preview.background": "dark-transparent",
+
+    // ── Color Highlight ──
+    "color-highlight.enable": true,
+    "color-highlight.markerType": "dot-before",
+    "color-highlight.matchRgbWithNoFunction": true,
+
     // ── Exclude noise from explorer/search ──
     "files.exclude": {
         "**/__pycache__": true,
