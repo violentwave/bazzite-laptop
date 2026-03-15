@@ -62,36 +62,39 @@ write_status() {
     local timestamp
     timestamp="$(date -Iseconds)"
 
-    python3 -c "
-import json, os
-path = '$STATUS_FILE'
-tmp = '${STATUS_TMP}'
+    python3 -c '
+import json, os, sys
+path, tmp = sys.argv[1], sys.argv[2]
 try:
-    with open(path, 'r') as f:
+    with open(path, "r") as f:
         data = json.load(f)
 except (FileNotFoundError, json.JSONDecodeError, PermissionError, OSError):
     data = {}
 data.update({
-    'state': '$state',
-    'scan_type': '$SCAN_TYPE',
-    'message': '$message',
-    'current_dir': '$current_dir',
-    'dirs_completed': $dirs_completed,
-    'dirs_total': $dirs_total,
-    'result': '$result',
-    'threat_count': $threat_count,
-    'files_scanned': $files_scanned,
-    'duration': '$duration',
-    'last_scan_time': '$last_scan_time',
-    'timestamp': '$timestamp'
+    "state": sys.argv[3],
+    "scan_type": sys.argv[4],
+    "message": sys.argv[5],
+    "current_dir": sys.argv[6],
+    "dirs_completed": int(sys.argv[7]),
+    "dirs_total": int(sys.argv[8]),
+    "result": sys.argv[9],
+    "threat_count": int(sys.argv[10]),
+    "files_scanned": int(sys.argv[11]),
+    "duration": sys.argv[12],
+    "last_scan_time": sys.argv[13],
+    "timestamp": sys.argv[14]
 })
 try:
-    with open(tmp, 'w') as f:
+    with open(tmp, "w") as f:
         json.dump(data, f, indent=2)
     os.rename(tmp, path)
 except (PermissionError, OSError):
     pass
-" 2>/dev/null || true
+' "$STATUS_FILE" "$STATUS_TMP" \
+        "$state" "$SCAN_TYPE" "$message" "$current_dir" \
+        "$dirs_completed" "$dirs_total" "$result" "$threat_count" \
+        "$files_scanned" "$duration" "$last_scan_time" "$timestamp" \
+        2>/dev/null || true
 }
 
 # --- Helper: terminal output (only when interactive) ---

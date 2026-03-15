@@ -198,8 +198,10 @@ class SecurityTray:
 
     def _check_health_overlay(self, data):
         """When ClamAV is idle/healthy, check if health monitoring has warnings."""
-        health = data.get("health_status", "").upper()
-        if health in ("WARNING", "CRITICAL"):
+        health = data.get("health_status", "")
+        if not isinstance(health, str):
+            return STATE_HEALTHY_IDLE
+        if health.upper() in ("WARNING", "CRITICAL"):
             return STATE_HEALTH_WARNING
         return STATE_HEALTHY_IDLE
 

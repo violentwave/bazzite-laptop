@@ -381,6 +381,7 @@ echo -e "     ${DIM}sudo systemctl daemon-reload${RESET}"
 echo -e "     ${DIM}sudo systemctl enable --now clamav-quick.timer clamav-deep.timer${RESET}"
 echo -e "     ${DIM}sudo systemctl enable --now system-health.timer${RESET}"
 echo -e "     ${DIM}sudo mkdir -p /var/log/system-health${RESET}"
+echo -e "     ${DIM}sudo cp configs/logrotate-system-health /etc/logrotate.d/system-health${RESET}"
 echo ""
 
 echo -e "  ${BWHITE}7. Enable USBGuard:${RESET}"

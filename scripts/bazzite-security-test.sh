@@ -244,20 +244,19 @@ fi
 
 # [10] Status file writable (read-modify-write to preserve health_* keys)
 STATUS_TMP="/home/lch/security/.status.tmp.test"
-if python3 -c "
-import json, os
-path = '$STATUS_FILE'
-tmp = '$STATUS_TMP'
+if python3 -c '
+import json, os, sys
+path, tmp = sys.argv[1], sys.argv[2]
 try:
-    with open(path, 'r') as f:
+    with open(path, "r") as f:
         data = json.load(f)
 except (FileNotFoundError, json.JSONDecodeError, PermissionError, OSError):
     data = {}
-data['state'] = 'test'
-with open(tmp, 'w') as f:
+data["state"] = "test"
+with open(tmp, "w") as f:
     json.dump(data, f, indent=2)
 os.rename(tmp, path)
-" 2>/dev/null; then
+' "$STATUS_FILE" "$STATUS_TMP" 2>/dev/null; then
     print_result 10 "Status file atomic write" "PASS" "$STATUS_FILE writable"
 else
     print_result 10 "Status file atomic write" "FAIL" "Cannot write to $STATUS_FILE"

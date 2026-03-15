@@ -231,11 +231,13 @@ else
     check_fail "system-health.timer not active"
 fi
 
-# --- Check 13: health log freshness (warn if older than 48 hours) ---
+# --- Check 13: health log freshness (warn if older than threshold) ---
+HEALTH_MAX_AGE_S=172800  # 48 hours in seconds
 if [[ -L /var/log/system-health/health-latest.log ]]; then
+    # stat -c is GNU coreutils (Fedora/Bazzite); BSD uses stat -f
     HEALTH_AGE=$(( $(date +%s) - $(stat -c %Y /var/log/system-health/health-latest.log) ))
-    if [[ $HEALTH_AGE -gt 172800 ]]; then
-        check_warn "Health log older than 48 hours"
+    if [[ $HEALTH_AGE -gt $HEALTH_MAX_AGE_S ]]; then
+        check_warn "Health log older than $(( HEALTH_MAX_AGE_S / 3600 )) hours"
     else
         HEALTH_AGE_H=$(( HEALTH_AGE / 3600 ))
         check_ok "Health log fresh (${HEALTH_AGE_H}h old)"
@@ -261,37 +263,38 @@ else
 fi
 HC_TIMESTAMP="$(date -Iseconds)"
 HC_MSG="Healthcheck: ${PASS_COUNT} passed, ${FAIL_COUNT} failed, ${WARN_COUNT} warnings"
-python3 -c "
-import json, os
-path = '$STATUS_FILE'
-tmp = '${STATUS_TMP}'
+python3 -c '
+import json, os, sys
+path, tmp = sys.argv[1], sys.argv[2]
+msg, result, ts = sys.argv[3], sys.argv[4], sys.argv[5]
 try:
-    with open(path, 'r') as f:
+    with open(path, "r") as f:
         data = json.load(f)
 except (FileNotFoundError, json.JSONDecodeError, PermissionError, OSError):
     data = {}
 data.update({
-    'state': 'idle',
-    'scan_type': '',
-    'message': '$HC_MSG',
-    'current_dir': '',
-    'dirs_completed': 0,
-    'dirs_total': 0,
-    'result': '$HC_RESULT',
-    'threat_count': 0,
-    'files_scanned': 0,
-    'duration': '',
-    'last_scan_time': '$HC_TIMESTAMP',
-    'last_scan_result': '$HC_RESULT',
-    'timestamp': '$HC_TIMESTAMP'
+    "state": "idle",
+    "scan_type": "",
+    "message": msg,
+    "current_dir": "",
+    "dirs_completed": 0,
+    "dirs_total": 0,
+    "result": result,
+    "threat_count": 0,
+    "files_scanned": 0,
+    "duration": "",
+    "last_scan_time": ts,
+    "last_scan_result": result,
+    "timestamp": ts
 })
 try:
-    with open(tmp, 'w') as f:
+    with open(tmp, "w") as f:
         json.dump(data, f, indent=2)
     os.rename(tmp, path)
 except (PermissionError, OSError):
     pass
-" 2>/dev/null || true
+' "$STATUS_FILE" "$STATUS_TMP" "$HC_MSG" "$HC_RESULT" "$HC_TIMESTAMP" \
+    2>/dev/null || true
 chown lch:lch "$STATUS_FILE" 2>/dev/null
 
 # --- Desktop notifications ---

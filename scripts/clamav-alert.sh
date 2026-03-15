@@ -20,6 +20,11 @@ DURATION="${5:?Missing duration}"
 LOG_FILE="${6:?Missing log_file}"
 HEALTH_SUMMARY="${7:-}"
 
+# HTML-escape health summary to prevent broken email rendering
+if [[ -n "$HEALTH_SUMMARY" ]]; then
+    HEALTH_SUMMARY=$(printf '%s' "$HEALTH_SUMMARY" | sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g; s/"/\&quot;/g')
+fi
+
 HOSTNAME="$(hostname)"
 DATE_STR="$(date '+%B %d, %Y at %I:%M %p')"
 

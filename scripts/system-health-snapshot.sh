@@ -695,30 +695,32 @@ ln -sf "$LOG_FILE" "$LATEST_LINK"
 # ═════════════════════════════════════════════════════════════
 
 if [[ -d "$(dirname "$STATUS_FILE")" ]]; then
-    python3 -c "
-import json, os
-path = '$STATUS_FILE'
+    python3 -c '
+import json, os, sys
+path = sys.argv[1]
 try:
-    with open(path, 'r') as f:
+    with open(path, "r") as f:
         st = json.load(f)
 except (FileNotFoundError, json.JSONDecodeError, PermissionError, OSError):
     st = {}
 
-st['health_status']    = '$STATUS'
-st['health_issues']    = $TOTAL_ISSUES
-st['health_warnings']  = ${#WARNINGS[@]}
-st['health_critical']  = ${#CRITICAL[@]}
-st['health_last_check']= '$(date '+%Y-%m-%d %I:%M %p')'
-st['health_log']       = '$LOG_FILE'
+st["health_status"]     = sys.argv[2]
+st["health_issues"]     = int(sys.argv[3])
+st["health_warnings"]   = int(sys.argv[4])
+st["health_critical"]   = int(sys.argv[5])
+st["health_last_check"] = sys.argv[6]
+st["health_log"]        = sys.argv[7]
 
 try:
-    tmp = path + '.tmp'
-    with open(tmp, 'w') as f:
+    tmp = path + ".tmp"
+    with open(tmp, "w") as f:
         json.dump(st, f, indent=2)
     os.rename(tmp, path)
 except OSError:
     pass
-" 2>/dev/null || true
+' "$STATUS_FILE" "$STATUS" "$TOTAL_ISSUES" "${#WARNINGS[@]}" "${#CRITICAL[@]}" \
+        "$(date '+%Y-%m-%d %I:%M %p')" "$LOG_FILE" \
+        2>/dev/null || true
 fi
 
 # ═════════════════════════════════════════════════════════════
