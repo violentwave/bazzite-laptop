@@ -53,3 +53,11 @@ secrets/
 # ── System Health Monitoring (runtime, not source) ──
 health-deltas.dat
 /var/log/system-health/
+
+# ── AI Layer ──
+.venv/
+.ruff_cache/
+.mypy_cache/
+.pytest_cache/
+keys.env
+*.env.local

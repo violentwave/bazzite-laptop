@@ -1,0 +1,24 @@
+{
+  "_comment": "Static rate limit definitions. Read by ai/rate_limiter.py. Do not edit at runtime.",
+  "llm_providers": {
+    "groq": {"rpm": 30, "rpd": 14400},
+    "cerebras": {"rpm": 30, "rpd": null, "tokens_per_day": 1000000, "max_context": 8192},
+    "mistral": {"rpm": 2, "rpd": null, "tokens_per_month": 1000000000},
+    "openrouter": {"rpm": 20, "rpd": 50},
+    "cohere": {"rpm": 20, "rpd": null, "calls_per_month": 1000},
+    "github_models": {"rpm": 15, "rpd": null},
+    "nvidia_nim": {"rpm": 40, "rpd": null},
+    "cloudflare": {"rpm": null, "rpd": null, "neurons_per_day": 10000}
+  },
+  "threat_intel": {
+    "virustotal": {"rpm": 4, "rpd": 500},
+    "abuseipdb": {"rpm": 60, "rpd": 1000},
+    "otx": {"rpm": 166, "rpd": null, "rph": 10000},
+    "nvd": {"rpm": null, "rpd": null, "requests_per_30s": 50},
+    "greynoise": {"rpm": null, "rpd": null, "per_week": 50},
+    "hybrid_analysis": {"rpm": 5, "rpd": null, "rph": 200},
+    "malwarebazaar": {"rpm": null, "rpd": null},
+    "urlhaus": {"rpm": null, "rpd": null},
+    "threatfox": {"rpm": null, "rpd": null}
+  }
+}

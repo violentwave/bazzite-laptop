@@ -1,0 +1,50 @@
+# LiteLLM Provider Routing Config
+# Used by ai/router.py to route LLM calls to the best available provider.
+# Keys are loaded at runtime from ~/.config/bazzite-ai/keys.env via python-dotenv.
+
+model_list:
+  # ── INTERACTIVE (speed-first) ──
+  - model_name: "fast"
+    litellm_params:
+      model: groq/llama-3.3-70b-versatile
+      api_key: os.environ/GROQ_API_KEY
+  - model_name: "fast"
+    litellm_params:
+      model: cerebras/llama-4-scout-17b-16e-instruct
+      api_key: os.environ/CEREBRAS_API_KEY
+
+  # ── DEEP ANALYSIS (reasoning-first) ──
+  - model_name: "reason"
+    litellm_params:
+      model: anthropic/claude-sonnet-4-20250514
+      api_key: os.environ/ANTHROPIC_API_KEY
+  - model_name: "reason"
+    litellm_params:
+      model: gemini/gemini-2.5-flash
+      api_key: os.environ/GEMINI_API_KEY
+
+  # ── BATCH (volume-first) ──
+  - model_name: "batch"
+    litellm_params:
+      model: mistral/codestral-latest
+      api_key: os.environ/MISTRAL_API_KEY
+  - model_name: "batch"
+    litellm_params:
+      model: gemini/gemini-2.0-flash
+      api_key: os.environ/GEMINI_API_KEY
+
+  # ── EMBEDDINGS (local-first) ──
+  - model_name: "embed"
+    litellm_params:
+      model: ollama/nomic-embed-text
+      api_base: http://localhost:11434
+  - model_name: "embed"
+    litellm_params:
+      model: mistral/mistral-embed
+      api_key: os.environ/MISTRAL_API_KEY
+
+router_settings:
+  routing_strategy: "simple-shuffle"
+  num_retries: 2
+  timeout: 30
+  allowed_fails: 1

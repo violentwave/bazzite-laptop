@@ -1,0 +1,17 @@
+# Core AI infrastructure
+litellm>=1.60.0
+lancedb>=0.15.0
+python-dotenv>=1.0.0
+
+# Threat intelligence (Phase 1)
+vt-py>=0.18.0
+requests>=2.31.0
+
+# Utilities
+rich>=13.0.0
+tenacity>=8.2.0
+
+# Dev/test
+ruff>=0.8.0
+bandit>=1.7.0
+pytest>=8.0.0

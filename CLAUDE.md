@@ -11,11 +11,13 @@
 - NEVER lower vm.swappiness — 180 is correct for ZRAM.
 
 ## Repo Layout
-- scripts/ — all shell scripts (clamav, backup, setup utilities)
+- scripts/ — all shell scripts (clamav, backup, setup utilities, AI wrappers)
 - systemd/ — timer and service unit files
 - desktop/ — .desktop files and security.menu
-- configs/ — system config files (udev rules, sysctl, gamemode, etc.)
+- configs/ — system config files (udev rules, sysctl, gamemode, litellm, rate-limits, etc.)
 - tray/ — security tray app (Python) + 7 SVG icons (9-state machine)
+- ai/ — AI enhancement layer (Python modules: threat intel, RAG, code quality, gaming)
+- tests/ — Python unit tests for the AI layer
 - .vscode/ — VS Code workspace settings and extension recommendations
 - docs/ — all documentation and guides
 
@@ -80,3 +82,133 @@ system. Collects SMART disk health, GPU state, CPU thermals, storage/ZRAM stats.
 - Latest symlink: `/var/log/system-health/health-latest.log`
 - Delta tracking: `/var/log/system-health/health-deltas.dat`
 - Tray status: `~/security/.status` (shared with ClamAV, health keys added)
+
+---
+
+## AI Enhancement Layer
+
+### Overview
+Cloud-brain AI integrations that enrich the existing security/gaming system.
+All AI logic lives in `ai/`. Shell wrappers live in `scripts/`. Nothing runs as
+a persistent daemon — everything is on-demand (scan triggers, timers, user action).
+
+### AI Layer Rules (NEVER violate)
+1. **NEVER run local LLM generation models.** Only `nomic-embed-text` (~300MB VRAM) via Ollama.
+2. **NEVER store API keys in code, scripts, or git.** Keys: `~/.config/bazzite-ai/keys.env` (chmod 600).
+3. **NEVER install Python packages globally.** Use `uv` + project venv at `.venv/`.
+4. **NEVER run AI as persistent daemons.** On-demand only. Gaming takes priority.
+5. **NEVER call cloud APIs without `ai/rate_limiter.py`.** Coordinates cross-script rate limits.
+6. **NEVER hardcode API providers.** All LLM calls go through `ai/router.py` (LiteLLM).
+7. **All shell wrappers in `scripts/`, all Python logic in `ai/`.**
+8. **LanceDB at `~/security/vector-db/`.** Not in repo, not in /tmp. Backed up by backup.sh.
+9. **Atomic writes for `~/security/.status`.** Read-modify-write + tmp + mv. Only update AI keys.
+
+### AI Key Paths
+| Path | Purpose |
+|------|---------|
+| `ai/` | All AI Python modules |
+| `ai/config.py` | Paths, constants, key loading |
+| `ai/router.py` | LiteLLM wrapper for provider routing |
+| `ai/rate_limiter.py` | Cross-script rate limit coordinator |
+| `ai/threat_intel/` | Phase 1: VT, OTX, MalwareBazaar lookups |
+| `ai/rag/` | Phase 2: LanceDB, embeddings, queries |
+| `ai/code_quality/` | Phase 3: Linter orchestration, AI fixes |
+| `ai/gaming/` | Phase 4: MangoHud analysis, ScopeBuddy |
+| `tests/` | Python unit tests |
+| `.venv/` | Python virtual environment (managed by uv) |
+| `configs/litellm-config.yaml` | LiteLLM provider routing config |
+| `configs/ai-rate-limits.json` | Per-provider rate limit definitions |
+| `configs/keys.env.enc` | sops-encrypted API keys (IN git) |
+| `~/.config/bazzite-ai/keys.env` | Plaintext API keys (chmod 600, NOT in git) |
+| `~/security/vector-db/` | LanceDB data (disk-based, backed up) |
+
+### AI Layer Notes
+- `litellm`, `rich`, and `python-dotenv` do not expose `__version__`. Use `importlib.metadata.version("package-name")` instead.
+
+### AI Commands
+| Task | Command |
+|------|---------|
+| Activate AI venv | `source .venv/bin/activate` |
+| Run threat lookup | `python -m ai.threat_intel.lookup --hash <sha256>` |
+| Run RAG query | `python -m ai.rag.query "question here"` |
+| Run all linters | `bash scripts/code-quality.sh` |
+| Run AI unit tests | `python -m pytest tests/ -v` |
+| Ruff check | `ruff check ai/ tests/` |
+| Bandit scan | `bandit -r ai/ -c pyproject.toml` |
+| Install/update deps | `uv pip install -r requirements.txt` |
+| Encrypt keys | `sops --config ~/.config/bazzite-ai/.sops.yaml --input-type dotenv --output-type dotenv -e ~/.config/bazzite-ai/keys.env > configs/keys.env.enc` |
+| Decrypt keys | `sops --config ~/.config/bazzite-ai/.sops.yaml --input-type dotenv --output-type dotenv -d configs/keys.env.enc` |
+
+---
+
+## Claude Code Permissions (VS Code)
+
+### Sandbox
+Claude Code runs as user `lch` inside bubblewrap sandbox. No root access.
+Settings at `~/.claude/settings.json`. Sandbox is ALWAYS enabled.
+Launch from `~/projects/bazzite-laptop/` — NEVER from $HOME.
+
+### What Claude Code CAN Do
+- Create/edit files in `~/projects/bazzite-laptop/`
+- Run `git add`, `git commit`, `git push`
+- Run Python scripts and `pytest` in the .venv
+- Run Ruff, Bandit, ShellCheck on project files
+- Create directories under the project root
+- Read files anywhere (read-only access outside project)
+- **Install tools via `curl`, `wget`, `brew`** (user-space only)
+- **Manage Python env via `uv`** (venv, pip install)
+- **Run `gpg` and `sops`** for key management
+- **Run `ollama`** (pull models, generate embeddings)
+- **Run AI Python modules** (threat intel, RAG queries, etc.)
+
+### What Claude Code CANNOT Do (requires manual terminal)
+- `sudo` anything — no root commands
+- `systemctl enable/start/stop` — no service management
+- `rpm-ostree` — no system package management
+- `rm -rf` — destructive deletion blocked
+- Read `*.env`, `*.key`, `*.pem` files — secrets are runtime-only
+- Write to `/usr/local/bin/` — no script deployment
+- Write to `/etc/` — no system config changes
+- Run `deploy.sh` — requires sudo
+- Run `integration-test.sh` — requires sudo
+
+### Approved AI Toolchain (Claude Code can run these directly)
+| Tool | What It Does | Install Method |
+|------|-------------|----------------|
+| `uv` | Python venv + package manager | `curl -LsSf https://astral.sh/uv/install.sh \| sh` |
+| `sops` | Encrypt/decrypt API keys | `brew install sops` |
+| `gpg` | GPG key management for sops | Pre-installed on Bazzite |
+| `ollama` | Local embedding model server | Flatpak or curl installer |
+| `ruff` | Python linter/formatter | `uv pip install ruff` (in venv) |
+| `bandit` | Python security scanner | `uv pip install bandit` (in venv) |
+| `shellcheck` | Bash linter | Pre-installed on Bazzite |
+| `pytest` | Python test runner | `uv pip install pytest` (in venv) |
+
+### Security Settings
+```json
+{
+  "sandbox": {
+    "enabled": true,
+    "autoAllowBashIfSandboxed": true
+  },
+  "permissions": {
+    "disableBypassPermissionsMode": "disable",
+    "deny": [
+      "Read(**/.env)", "Read(**/.env.*)", "Read(**/secrets/**)",
+      "Read(**/*.key)", "Read(**/*.pem)",
+      "Bash(sudo:*)", "Bash(rm -rf:*)",
+      "Bash(rpm-ostree:*)", "Bash(systemctl:*)"
+    ]
+  },
+  "env": {
+    "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC": "1"
+  }
+}
+```
+
+### Two-Phase Workflow (still applies for system-level changes)
+- **Phase A**: Claude Code creates/edits files in the repo + runs approved tools
+- **Phase B**: User manually runs sudo commands (deploy.sh, systemctl, integration tests)
+
+Phase B is only needed for deploying to system paths. All development, testing,
+venv management, and tool installation is Phase A (Claude Code handles it directly).
