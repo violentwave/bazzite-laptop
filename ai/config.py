@@ -28,6 +28,12 @@ VECTOR_DB_DIR = SECURITY_DIR / "vector-db"
 STATUS_FILE = SECURITY_DIR / ".status"
 ENRICHED_HASHES = SECURITY_DIR / "quarantine-hashes-enriched.jsonl"
 
+# Gaming optimization (Phase 4)
+GAME_PROFILES = Path.home() / ".config" / "bazzite-ai" / "game-profiles.json"
+MANGOHUD_CONFIG = Path.home() / ".config" / "MangoHud" / "MangoHud.conf"
+MANGOHUD_LOG_DIR = Path.home() / ".local" / "share" / "MangoHud"
+STEAM_LIBRARY_DEFAULT = Path("/run/media/lch/SteamLibrary")
+
 # ── Key Loading ──
 
 _keys_loaded = False

@@ -1,0 +1,14 @@
+# RAG embedding timer — daily at 09:00 (after health snapshot at 08:00)
+# Deploy to: /etc/systemd/system/rag-embed.timer
+# Enable with: sudo systemctl enable --now rag-embed.timer
+
+[Unit]
+Description=RAG Embedding — Daily 09:00
+
+[Timer]
+OnCalendar=*-*-* 09:00:00
+Persistent=true
+RandomizedDelaySec=300
+
+[Install]
+WantedBy=timers.target

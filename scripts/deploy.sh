@@ -84,7 +84,7 @@ done
 echo ""
 
 echo "=== AI Layer Scripts -> /usr/local/bin/ ==="
-for script in threat-lookup.sh; do
+for script in threat-lookup.sh rag-embed.sh rag-query.sh code-quality.sh gaming-analyze.sh gaming-profile.sh; do
     deploy "$REPO_DIR/scripts/$script" "/usr/local/bin/$script" 755
 done
 echo ""
