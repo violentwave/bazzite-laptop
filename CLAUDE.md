@@ -124,6 +124,10 @@ a persistent daemon — everything is on-demand (scan triggers, timers, user act
 
 ### AI Layer Notes
 - `litellm`, `rich`, and `python-dotenv` do not expose `__version__`. Use `importlib.metadata.version("package-name")` instead.
+- `ai/router.py` is live (not scaffold). Uses `litellm.Router` in-process with lazy init.
+- Task types: `fast` (Groq, z.ai), `reason` (Gemini, z.ai, OpenRouter), `batch` (Mistral, Gemini), `code` (z.ai GLM-4-32B), `embed` (Ollama local, Mistral fallback).
+- z.ai uses OpenAI-compatible API at `https://api.z.ai/api/paas/v4`. Key: `ZAI_API_KEY`.
+- `socksio` is required for httpx SOCKS proxy support (used by litellm in sandboxed environments).
 
 ### AI Commands
 | Task | Command |
@@ -136,8 +140,9 @@ a persistent daemon — everything is on-demand (scan triggers, timers, user act
 | Ruff check | `ruff check ai/ tests/` |
 | Bandit scan | `bandit -r ai/ -c pyproject.toml` |
 | Install/update deps | `uv pip install -r requirements.txt` |
-| Encrypt keys | `sops --config ~/.config/bazzite-ai/.sops.yaml --input-type dotenv --output-type dotenv -e ~/.config/bazzite-ai/keys.env > configs/keys.env.enc` |
-| Decrypt keys | `sops --config ~/.config/bazzite-ai/.sops.yaml --input-type dotenv --output-type dotenv -d configs/keys.env.enc` |
+| Test LLM router | `python -c "from ai.config import load_keys; from ai.router import route_query; load_keys(); print(route_query('fast', 'Say hello'))"` |
+| Encrypt keys | `cd ~/projects/bazzite-laptop && SOPS_CONFIG=~/.config/bazzite-ai/.sops.yaml sops -e --input-type dotenv --output-type dotenv ~/.config/bazzite-ai/keys.env > configs/keys.env.enc` |
+| Decrypt keys | `SOPS_CONFIG=~/.config/bazzite-ai/.sops.yaml sops -d --input-type dotenv --output-type dotenv configs/keys.env.enc` |
 
 ---
 
