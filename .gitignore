@@ -37,6 +37,15 @@ __pycache__/
 .roomodes
 plans/
 
+# Claude Flow / Swarm runtime state
+.claude-flow/
+.swarm/
+
+# Node.js (claude-flow dependencies)
+node_modules/
+package.json
+package-lock.json
+
 # Secrets and keys
 *.key
 *.pem
