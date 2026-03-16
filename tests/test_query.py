@@ -16,7 +16,6 @@ from ai.rag.query import (
     rag_query,
 )
 
-
 # ── Fixtures ──
 
 

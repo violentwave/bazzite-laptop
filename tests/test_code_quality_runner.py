@@ -4,9 +4,7 @@ import json
 import subprocess
 from unittest.mock import MagicMock, patch
 
-import pytest
-
-from ai.code_quality.models import LintFinding, LintSummary, Severity
+from ai.code_quality.models import LintSummary, Severity
 from ai.code_quality.runner import (
     _run_bandit,
     _run_ruff,

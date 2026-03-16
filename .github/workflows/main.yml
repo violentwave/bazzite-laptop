@@ -53,6 +53,35 @@ jobs:
           done
           exit $FAIL
 
+  python:
+    name: Python Lint & Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install uv
+        run: pip install uv
+      - name: Create venv and install deps
+        run: |
+          uv venv .venv
+          source .venv/bin/activate
+          uv pip install -r requirements.txt
+      - name: Ruff lint
+        run: |
+          source .venv/bin/activate
+          ruff check ai/ tests/
+      - name: Bandit security scan
+        run: |
+          source .venv/bin/activate
+          bandit -r ai/ -c pyproject.toml
+      - name: Run tests
+        run: |
+          source .venv/bin/activate
+          python -m pytest tests/ --ignore=tests/test_embedder.py -q
+
   desktop:
     name: Desktop Entry Validation
     runs-on: ubuntu-latest

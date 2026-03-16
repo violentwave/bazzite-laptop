@@ -2,8 +2,6 @@
 
 from unittest.mock import MagicMock, patch
 
-import pytest
-
 from ai.code_quality.analyzer import (
     _build_fix_prompt,
     _read_source_context,

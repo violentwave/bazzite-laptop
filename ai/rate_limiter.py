@@ -18,6 +18,7 @@ import fcntl
 import json
 import logging
 import os
+import tempfile
 import time
 from datetime import date, datetime
 from pathlib import Path
@@ -75,21 +76,32 @@ class RateLimiter:
         """
         self.state_path.parent.mkdir(parents=True, exist_ok=True)
         lock_path = self.state_path.with_suffix(".lock")
-        tmp_path = self.state_path.with_suffix(f".tmp.{os.getpid()}")
+        fd = None
+        tmp_path = None
         try:
+            fd, tmp_name = tempfile.mkstemp(
+                dir=self.state_path.parent, prefix=".state-", suffix=".tmp"
+            )
+            tmp_path = Path(tmp_name)
             with open(lock_path, "w") as lock_f:
                 fcntl.flock(lock_f.fileno(), fcntl.LOCK_EX)
-                with open(tmp_path, "w") as f:
+                with os.fdopen(fd, "w") as f:
+                    fd = None  # os.fdopen takes ownership
                     json.dump(state, f, indent=2)
                     f.flush()
                     os.fsync(f.fileno())
                 os.rename(tmp_path, self.state_path)
+                tmp_path = None  # rename succeeded, nothing to clean up
         except (PermissionError, OSError) as e:
             logger.warning("Failed to write rate limiter state: %s", e)
-            try:
-                tmp_path.unlink(missing_ok=True)
-            except OSError:
-                pass
+        finally:
+            if fd is not None:
+                os.close(fd)
+            if tmp_path is not None:
+                try:
+                    tmp_path.unlink(missing_ok=True)
+                except OSError:
+                    pass
 
     def _get_provider_state(self, state: dict, provider: str) -> dict:
         """Get a provider's state entry, resetting stale windows."""

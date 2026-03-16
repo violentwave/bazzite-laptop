@@ -7,7 +7,6 @@ import pytest
 from ai.code_quality.formatter import format_results
 from ai.code_quality.models import LintFinding, LintSummary, Severity
 
-
 # ── Fixtures ──
 
 
@@ -128,7 +127,10 @@ class TestJsonFormat:
         result = format_results([populated_summary], fmt="json")
         parsed = json.loads(result)
         finding = parsed["summaries"][0]["findings"][0]
-        expected_keys = {"tool", "file", "line", "column", "code", "message", "severity", "fix_suggestion"}
+        expected_keys = {
+            "tool", "file", "line", "column", "code",
+            "message", "severity", "fix_suggestion",
+        }
         assert set(finding.keys()) == expected_keys
 
     def test_json_totals_correct(self, populated_summary: LintSummary) -> None:

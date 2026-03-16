@@ -10,18 +10,34 @@ model_list:
       api_key: os.environ/GROQ_API_KEY
   - model_name: "fast"
     litellm_params:
-      model: cerebras/llama-4-scout-17b-16e-instruct
-      api_key: os.environ/CEREBRAS_API_KEY
+      model: openai/GLM-4.7-Flash
+      api_key: os.environ/ZAI_API_KEY
+      api_base: https://api.z.ai/api/paas/v4
+  - model_name: "fast"
+    litellm_params:
+      model: openai/GLM-4.5-Air
+      api_key: os.environ/ZAI_API_KEY
+      api_base: https://api.z.ai/api/paas/v4
 
   # ── DEEP ANALYSIS (reasoning-first) ──
   - model_name: "reason"
     litellm_params:
-      model: anthropic/claude-sonnet-4-20250514
-      api_key: os.environ/ANTHROPIC_API_KEY
-  - model_name: "reason"
-    litellm_params:
       model: gemini/gemini-2.5-flash
       api_key: os.environ/GEMINI_API_KEY
+  - model_name: "reason"
+    litellm_params:
+      model: openai/GLM-5
+      api_key: os.environ/ZAI_API_KEY
+      api_base: https://api.z.ai/api/paas/v4
+  - model_name: "reason"
+    litellm_params:
+      model: openai/GLM-4.7
+      api_key: os.environ/ZAI_API_KEY
+      api_base: https://api.z.ai/api/paas/v4
+  - model_name: "reason"
+    litellm_params:
+      model: openrouter/anthropic/claude-sonnet-4
+      api_key: os.environ/OPENROUTER_API_KEY
 
   # ── BATCH (volume-first) ──
   - model_name: "batch"
@@ -32,6 +48,13 @@ model_list:
     litellm_params:
       model: gemini/gemini-2.0-flash
       api_key: os.environ/GEMINI_API_KEY
+
+  # ── CODING (z.ai code endpoint) ──
+  - model_name: "code"
+    litellm_params:
+      model: openai/GLM-4-32B-0414-128K
+      api_key: os.environ/ZAI_API_KEY
+      api_base: https://api.z.ai/api/coding/paas/v4
 
   # ── EMBEDDINGS (local-first) ──
   - model_name: "embed"

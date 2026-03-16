@@ -19,8 +19,8 @@ import functools
 import json
 import logging
 import re
-import signal
 import sys
+import threading
 import time
 from contextlib import contextmanager
 from datetime import UTC, datetime
@@ -46,17 +46,19 @@ class LookupTimeoutError(Exception):
 
 @contextmanager
 def _lookup_timeout(seconds: int = 30):
-    """Context manager that raises LookupTimeoutError after `seconds`."""
-    def _handler(signum, frame):
-        raise LookupTimeoutError(f"Lookup timed out after {seconds}s")
+    """Context manager that sets a timed_out event after `seconds`.
 
-    old_handler = signal.signal(signal.SIGALRM, _handler)
-    signal.alarm(seconds)
+    Yields a threading.Event that provider loops should check between calls.
+    If the timer fires, the event is set and callers should stop early.
+    """
+    timed_out = threading.Event()
+    timer = threading.Timer(seconds, timed_out.set)
+    timer.daemon = True
+    timer.start()
     try:
-        yield
+        yield timed_out
     finally:
-        signal.alarm(0)
-        signal.signal(signal.SIGALRM, old_handler)
+        timer.cancel()
 
 
 # ── Retry Decorator (available but not applied) ──
@@ -337,12 +339,13 @@ def lookup_hash(
 
     if full:
         # Full mode: call all providers, prefer VT data, merge tags
-        try:
-            with _lookup_timeout(30):
-                results = [fn(sha256, rate_limiter) for fn in providers]
-        except LookupTimeoutError:
-            logger.warning("Lookup cascade timed out for %s (full mode)", sha256[:16])
-            results = []
+        results: list[ThreatReport | None] = []
+        with _lookup_timeout(30) as timed_out:
+            for fn in providers:
+                if timed_out.is_set():
+                    logger.warning("Lookup cascade timed out for %s (full mode)", sha256[:16])
+                    break
+                results.append(fn(sha256, rate_limiter))
         valid = [r for r in results if r is not None and r.has_data]
 
         if not valid:
@@ -364,15 +367,15 @@ def lookup_hash(
         return report
 
     # Cascading mode: stop on first hit
-    try:
-        with _lookup_timeout(30):
-            for fn in providers:
-                result = fn(sha256, rate_limiter)
-                if result is not None and result.has_data:
-                    _append_enriched(result)
-                    return result
-    except LookupTimeoutError:
-        logger.warning("Lookup cascade timed out for %s", sha256[:16])
+    with _lookup_timeout(30) as timed_out:
+        for fn in providers:
+            if timed_out.is_set():
+                logger.warning("Lookup cascade timed out for %s", sha256[:16])
+                break
+            result = fn(sha256, rate_limiter)
+            if result is not None and result.has_data:
+                _append_enriched(result)
+                return result
 
     return ThreatReport(
         hash=sha256,

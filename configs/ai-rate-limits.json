@@ -11,7 +11,7 @@
     "cloudflare": {"rpm": null, "rpd": null, "neurons_per_day": 10000},
     "anthropic": {"rpm": 50, "rpd": null, "note": "Claude Max subscription"},
     "gemini": {"rpm": 60, "rpd": null, "note": "Gemini Pro subscription"},
-    "xai": {"rpm": 60, "rpd": null, "note": "Grok $30/mo subscription"}
+    "openai": {"rpm": 60, "rpd": null, "note": "z.ai paid subscription (OpenAI-compatible)"}
   },
   "threat_intel": {
     "virustotal": {"rpm": 4, "rpd": 500},

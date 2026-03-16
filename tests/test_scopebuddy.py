@@ -8,7 +8,6 @@ import pytest
 
 from ai.gaming.models import GameProfile, HardwareSnapshot
 from ai.gaming.scopebuddy import (
-    MANGOHUD_PRESETS,
     _filter_banned,
     _parse_vdf_simple,
     apply_mangohud_preset,
@@ -156,7 +155,13 @@ class TestSteamScanner:
         (steamapps / "appmanifest_730.acf").write_text(SAMPLE_ACF)
 
         # Create a VDF pointing to tmp_path
-        vdf_content = f'"libraryfolders"\n{{\n    "0"\n    {{\n        "path"    "{tmp_path}"\n        "apps"\n        {{\n            "730"    "15789432"\n        }}\n    }}\n}}\n'
+        vdf_content = (
+            f'"libraryfolders"\n{{\n    "0"\n    {{\n'
+            f'        "path"    "{tmp_path}"\n'
+            f'        "apps"\n        {{\n'
+            f'            "730"    "15789432"\n'
+            f'        }}\n    }}\n}}\n'
+        )
         vdf_file = tmp_path / "libraryfolders.vdf"
         vdf_file.write_text(vdf_content)
 
