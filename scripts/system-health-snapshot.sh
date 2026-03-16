@@ -168,42 +168,42 @@ if [[ "$RUN_SELFTEST" == true ]]; then
         echo "Waiting for completion..."
         systemd-inhibit --what=sleep --who="smartctl" \
             --why="SMART self-test in progress" --mode=block \
-            bash -c "
+            bash -c '
                 while true; do
-                    R=\$(smartctl -c $DEV_SDA 2>/dev/null | grep 'remaining' | grep -oP '[0-9]+%')
-                    if [ -z \"\$R\" ]; then
-                        echo ''
-                        echo 'Test complete!'
-                        smartctl -l selftest $DEV_SDA
+                    R=$(smartctl -c "$1" 2>/dev/null | grep "remaining" | grep -oP "[0-9]+%")
+                    if [ -z "$R" ]; then
+                        echo ""
+                        echo "Test complete!"
+                        smartctl -l selftest "$1"
                         break
                     else
-                        echo \"\$(date +%H:%M:%S) — \${R} remaining...\"
+                        echo "$(date +%H:%M:%S) — ${R} remaining..."
                         sleep 60
                     fi
                 done
-            "
+            ' _ "$DEV_SDA"
     else
         echo "Starting extended test on ${DEV_SDA}..."
         systemd-inhibit --what=sleep --who="smartctl" \
             --why="SMART extended self-test" --mode=block \
-            bash -c "
-                smartctl -t long $DEV_SDA
-                echo 'Test started. Polling every 60 seconds...'
-                echo ''
+            bash -c '
+                smartctl -t long "$1"
+                echo "Test started. Polling every 60 seconds..."
+                echo ""
                 sleep 30
                 while true; do
-                    R=\$(smartctl -c $DEV_SDA 2>/dev/null | grep 'remaining' | grep -oP '[0-9]+%')
-                    if [ -z \"\$R\" ]; then
-                        echo ''
-                        echo 'Test complete!'
-                        smartctl -l selftest $DEV_SDA
+                    R=$(smartctl -c "$1" 2>/dev/null | grep "remaining" | grep -oP "[0-9]+%")
+                    if [ -z "$R" ]; then
+                        echo ""
+                        echo "Test complete!"
+                        smartctl -l selftest "$1"
                         break
                     else
-                        echo \"\$(date +%H:%M:%S) — \${R} remaining...\"
+                        echo "$(date +%H:%M:%S) — ${R} remaining..."
                         sleep 60
                     fi
                 done
-            "
+            ' _ "$DEV_SDA"
     fi
     exit 0
 fi

@@ -3,12 +3,13 @@
 # update-backup.sh — Comprehensive system state backup to USB flash drive
 # Captures the entire Bazzite laptop configuration in layered structure
 # Usage: sudo ./update-backup.sh
-# Flash drive: /dev/sdc3 mounted at /mnt/backup
+# Flash drive: BazziteBackup partition (looked up dynamically via findfs)
 # Safe to run multiple times (idempotent). Rotates one previous backup.
 set -uo pipefail
 
 # --- Configuration ---
-FLASH_DEV="/dev/sdc3"
+# Dynamic device lookup — avoids hardcoded /dev/sdX that changes with device ordering
+FLASH_DEV=$(findfs LABEL=BazziteBackup 2>/dev/null) || FLASH_DEV=""
 MOUNT_POINT="/mnt/backup"
 BACKUP_DIR="${MOUNT_POINT}/latest"
 PREVIOUS_DIR="${MOUNT_POINT}/previous"
@@ -17,6 +18,18 @@ HOME_DIR="/home/lch"
 MIN_FREE_GB=5
 ERRORS=0
 WARNINGS=0
+
+# Source device UUIDs config (for LUKS partition lookup)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(dirname "$SCRIPT_DIR")"
+UUID_CONF="${REPO_ROOT}/configs/device-uuids.conf"
+if [[ -f "$UUID_CONF" ]]; then
+    # shellcheck source=../configs/device-uuids.conf
+    source "$UUID_CONF"
+else
+    # Fallback: define inline so the script still works without the config file
+    LUKS_UUID="luks-ec338b68-2489-477e-bd89-592d308f450c"
+fi
 
 # --- Colors ---
 BCYAN='\e[1;36m'
@@ -137,18 +150,19 @@ echo -e "  ${BCYAN}└───────────────────�
 # ===========================
 phase "PRE-FLIGHT CHECKS"
 
-# Check if device exists
-if [[ ! -b "$FLASH_DEV" ]]; then
-    echo -e "  ${BRED}Flash drive ${FLASH_DEV} not found.${RESET}"
+# Check if device was found by findfs
+if [[ -z "$FLASH_DEV" ]]; then
+    echo -e "  ${BRED}Flash drive (LABEL=BazziteBackup) not found.${RESET}"
     echo ""
     echo -ne "  ${BYELLOW}Plug in the flash drive and press Enter (or Ctrl+C to abort): ${RESET}"
     read -r
-    if [[ ! -b "$FLASH_DEV" ]]; then
-        fail "${FLASH_DEV} still not found. Aborting."
+    FLASH_DEV=$(findfs LABEL=BazziteBackup 2>/dev/null) || FLASH_DEV=""
+    if [[ -z "$FLASH_DEV" ]]; then
+        fail "BazziteBackup partition still not found. Aborting."
         exit 1
     fi
 fi
-ok "${FLASH_DEV} found"
+ok "${FLASH_DEV} found (LABEL=BazziteBackup)"
 
 # Mount if not already mounted
 if mountpoint -q "$MOUNT_POINT" 2>/dev/null; then
@@ -205,12 +219,13 @@ if compgen -G "${HOME_DIR}/security/luks-backup/luks-header-*.bak" >/dev/null 2>
     LUKS_SRC=$(find "${HOME_DIR}/security/luks-backup/" -name "luks-header-*.bak" -printf '%T@ %p\n' 2>/dev/null | sort -rn | head -1 | cut -d' ' -f2-)
     cp -a "$LUKS_SRC" "${LAYER1}/luks-header.bak" && ok "luks-header.bak (from ${LUKS_SRC})" || fail "luks-header.bak"
 else
-    # Try generating fresh
+    # Try generating fresh — dynamic device lookup for LUKS partition
     info "No existing LUKS header backup found, creating one..."
-    if cryptsetup luksHeaderBackup /dev/sda3 --header-backup-file "${LAYER1}/luks-header.bak" 2>/dev/null; then
-        ok "luks-header.bak (fresh from /dev/sda3)"
+    LUKS_PART=$(blkid -U "$LUKS_UUID" 2>/dev/null) || LUKS_PART=""
+    if [[ -n "$LUKS_PART" ]] && cryptsetup luksHeaderBackup "$LUKS_PART" --header-backup-file "${LAYER1}/luks-header.bak" 2>/dev/null; then
+        ok "luks-header.bak (fresh from ${LUKS_PART})"
     else
-        warn "Could not back up LUKS header — cryptsetup failed"
+        warn "Could not back up LUKS header — LUKS partition not found or cryptsetup failed"
     fi
 fi
 
@@ -641,7 +656,11 @@ cd ~/projects/bazzite-laptop && git init
 
 Only use this if the LUKS header is corrupted:
 ```bash
-sudo cryptsetup luksHeaderRestore /dev/sda3 --header-backup-file layer1-critical/luks-header.bak
+# Look up the LUKS partition dynamically (device letters may differ after reinstall)
+LUKS_PART=$(blkid -t TYPE=crypto_LUKS -o device | head -1)
+echo "Found LUKS partition: $LUKS_PART"
+# Verify this is correct, then restore:
+sudo cryptsetup luksHeaderRestore "$LUKS_PART" --header-backup-file layer1-critical/luks-header.bak
 ```
 
 ## Step 13: Final Checks

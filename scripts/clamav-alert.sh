@@ -41,6 +41,15 @@ DATE_STR="$(date '+%B %d, %Y at %I:%M %p')"
 # Capitalize scan type for display (handles "healthcheck" → "Healthcheck")
 SCAN_TYPE_DISPLAY="${SCAN_TYPE^}"
 
+# HTML-escape all variables interpolated into email body (H5 security fix)
+H_SCAN_TYPE=$(html_escape "$SCAN_TYPE")
+H_SCAN_TYPE_DISPLAY=$(html_escape "$SCAN_TYPE_DISPLAY")
+H_FILES_SCANNED=$(html_escape "$FILES_SCANNED")
+H_DURATION=$(html_escape "$DURATION")
+H_DATE_STR=$(html_escape "$DATE_STR")
+H_LOG_FILE=$(html_escape "$LOG_FILE")
+H_THREAT_COUNT=$(html_escape "$THREAT_COUNT")
+
 # --- Resolve recipient ---
 TO_EMAIL=""
 if [[ -f /home/lch/.msmtprc ]]; then
@@ -56,7 +65,12 @@ if [[ -z "$TO_EMAIL" ]]; then
 fi
 
 # --- Email rate limiting (max 6 emails per hour) ---
-EMAIL_RATE_FILE="/tmp/.bazzite-email-rate"
+# Rate file in root-owned log dir (not world-writable /tmp)
+EMAIL_RATE_DIR="/var/log/clamav-scans"
+mkdir -p "$EMAIL_RATE_DIR"
+EMAIL_RATE_FILE="${EMAIL_RATE_DIR}/.email-rate"
+# Ensure restrictive permissions on rate file
+[[ -f "$EMAIL_RATE_FILE" ]] || { touch "$EMAIL_RATE_FILE"; chmod 600 "$EMAIL_RATE_FILE"; }
 EMAIL_MAX_PER_HOUR=6
 _now=$(date +%s)
 if [[ -f "$EMAIL_RATE_FILE" ]]; then
@@ -114,7 +128,7 @@ if [[ "$STATUS" == "threats" && -f "$LOG_FILE" ]]; then
         filename=$(html_escape "$(basename "$filepath")")
         filepath_esc=$(html_escape "$filepath")
         threatname=$(html_escape "$(echo "$line" | sed 's/^.*: //' | sed 's/ FOUND$//')")
-        THREAT_TABLE_ROWS+="<tr style=\"border-bottom:1px solid #e2e8f0;\"><td style=\"padding:10px 12px;font-family:'Courier New',monospace;font-size:13px;color:#1e293b\">${filename}</td><td style=\"padding:10px 12px;font-size:13px;color:#64748b;word-break:break-all\">${filepath_esc}</td><td style=\"padding:10px 12px;font-size:13px;color:#ef4444;font-weight:600\">${threatname}</td><td style=\"padding:10px 12px;font-size:13px;color:#22c55e\">Quarantined</td></tr>"
+        THREAT_TABLE_ROWS+="<tr style=\"border-bottom:1px solid #334155;background:#1e293b\"><td style=\"padding:10px 12px;font-family:'JetBrains Mono','Courier New',monospace;font-size:12px;color:#e2e8f0\">${filename}</td><td style=\"padding:10px 12px;font-size:12px;color:#64748b;word-break:break-all\">${filepath_esc}</td><td style=\"padding:10px 12px;font-size:12px;color:#ef4444;font-weight:700\">${threatname}</td><td style=\"padding:10px 12px;font-size:12px;color:#22c55e;font-weight:600\">Quarantined</td></tr>"
     done < <(grep "FOUND$" "$LOG_FILE" 2>/dev/null || true)
 
     # --- Extract hashes for AI threat intel enrichment ---
@@ -138,34 +152,42 @@ BODY_CONTENT=""
 case "$STATUS" in
     clean)
         BODY_CONTENT="
-        <p style=\"font-size:15px;color:#1e293b;line-height:1.6;margin:0 0 20px 0\">Your scheduled <strong>${SCAN_TYPE}</strong> scan completed successfully with no threats detected.</p>
-        <table style=\"width:100%;border-collapse:collapse;margin-bottom:24px\">
-            <tr style=\"background:#f1f5f9\"><td style=\"padding:10px 16px;font-size:14px;color:#64748b;width:40%\">Scan Type</td><td style=\"padding:10px 16px;font-size:14px;color:#1e293b;font-weight:600\">${SCAN_TYPE_DISPLAY}</td></tr>
-            <tr style=\"background:#ffffff\"><td style=\"padding:10px 16px;font-size:14px;color:#64748b\">Files Scanned</td><td style=\"padding:10px 16px;font-size:14px;color:#1e293b;font-weight:600\">${FILES_SCANNED}</td></tr>
-            <tr style=\"background:#f1f5f9\"><td style=\"padding:10px 16px;font-size:14px;color:#64748b\">Threats Found</td><td style=\"padding:10px 16px;font-size:14px;color:#22c55e;font-weight:600\">0</td></tr>
-            <tr style=\"background:#ffffff\"><td style=\"padding:10px 16px;font-size:14px;color:#64748b\">Duration</td><td style=\"padding:10px 16px;font-size:14px;color:#1e293b;font-weight:600\">${DURATION}</td></tr>
-            <tr style=\"background:#f1f5f9\"><td style=\"padding:10px 16px;font-size:14px;color:#64748b\">Completed</td><td style=\"padding:10px 16px;font-size:14px;color:#1e293b;font-weight:600\">${DATE_STR}</td></tr>
+        <p style=\"font-size:15px;color:#e2e8f0;line-height:1.6;margin:0 0 20px 0\">Your scheduled <strong style=\"color:#00d4ff\">${H_SCAN_TYPE}</strong> scan completed successfully with no threats detected.</p>
+        <table style=\"width:100%;border-collapse:collapse;margin-bottom:24px;border-radius:8px;overflow:hidden\">
+            <tr style=\"background:#0f172a\"><td style=\"padding:12px 16px;font-size:14px;color:#94a3b8;width:40%;border-bottom:1px solid #334155\">Scan Type</td><td style=\"padding:12px 16px;font-size:14px;color:#e2e8f0;font-weight:600;border-bottom:1px solid #334155\">${H_SCAN_TYPE_DISPLAY}</td></tr>
+            <tr style=\"background:#0f172a\"><td style=\"padding:12px 16px;font-size:14px;color:#94a3b8;border-bottom:1px solid #334155\">Files Scanned</td><td style=\"padding:12px 16px;font-size:14px;color:#e2e8f0;font-weight:600;border-bottom:1px solid #334155\">${H_FILES_SCANNED}</td></tr>
+            <tr style=\"background:#0f172a\"><td style=\"padding:12px 16px;font-size:14px;color:#94a3b8;border-bottom:1px solid #334155\">Threats Found</td><td style=\"padding:12px 16px;font-size:14px;color:#22c55e;font-weight:700;border-bottom:1px solid #334155\">0</td></tr>
+            <tr style=\"background:#0f172a\"><td style=\"padding:12px 16px;font-size:14px;color:#94a3b8;border-bottom:1px solid #334155\">Duration</td><td style=\"padding:12px 16px;font-size:14px;color:#e2e8f0;font-weight:600;border-bottom:1px solid #334155\">${H_DURATION}</td></tr>
+            <tr style=\"background:#0f172a\"><td style=\"padding:12px 16px;font-size:14px;color:#94a3b8\">Completed</td><td style=\"padding:12px 16px;font-size:14px;color:#e2e8f0;font-weight:600\">${H_DATE_STR}</td></tr>
         </table>
+        <!-- Visual health bar -->
+        <table style=\"width:100%;border-collapse:collapse;margin-bottom:20px\"><tr>
+            <td style=\"background:#22c55e;height:4px;border-radius:4px\"></td>
+        </tr></table>
         <p style=\"font-size:14px;color:#64748b;line-height:1.6;margin:0\">Your system remains protected. Virus signatures are kept up to date automatically before each scan.</p>"
         ;;
 
     threats)
         BODY_CONTENT="
-        <p style=\"font-size:15px;color:#1e293b;line-height:1.6;margin:0 0 20px 0\"><strong>${THREAT_COUNT} threat(s)</strong> were detected during the <strong>${SCAN_TYPE}</strong> scan. Infected files have been moved to quarantine.</p>
-        <table style=\"width:100%;border-collapse:collapse;margin-bottom:24px\">
-            <tr style=\"background:#f1f5f9\"><td style=\"padding:10px 16px;font-size:14px;color:#64748b;width:40%\">Scan Type</td><td style=\"padding:10px 16px;font-size:14px;color:#1e293b;font-weight:600\">${SCAN_TYPE_DISPLAY}</td></tr>
-            <tr style=\"background:#ffffff\"><td style=\"padding:10px 16px;font-size:14px;color:#64748b\">Files Scanned</td><td style=\"padding:10px 16px;font-size:14px;color:#1e293b;font-weight:600\">${FILES_SCANNED}</td></tr>
-            <tr style=\"background:#f1f5f9\"><td style=\"padding:10px 16px;font-size:14px;color:#64748b\">Threats Found</td><td style=\"padding:10px 16px;font-size:14px;color:#ef4444;font-weight:600\">${THREAT_COUNT}</td></tr>
-            <tr style=\"background:#ffffff\"><td style=\"padding:10px 16px;font-size:14px;color:#64748b\">Duration</td><td style=\"padding:10px 16px;font-size:14px;color:#1e293b;font-weight:600\">${DURATION}</td></tr>
-            <tr style=\"background:#f1f5f9\"><td style=\"padding:10px 16px;font-size:14px;color:#64748b\">Quarantine</td><td style=\"padding:10px 16px;font-size:14px;color:#1e293b;font-weight:600\">~/security/quarantine</td></tr>
+        <p style=\"font-size:15px;color:#e2e8f0;line-height:1.6;margin:0 0 20px 0\"><strong style=\"color:#ef4444\">${H_THREAT_COUNT} threat(s)</strong> were detected during the <strong style=\"color:#00d4ff\">${H_SCAN_TYPE}</strong> scan. Infected files have been moved to quarantine.</p>
+        <table style=\"width:100%;border-collapse:collapse;margin-bottom:24px;border-radius:8px;overflow:hidden\">
+            <tr style=\"background:#0f172a\"><td style=\"padding:12px 16px;font-size:14px;color:#94a3b8;width:40%;border-bottom:1px solid #334155\">Scan Type</td><td style=\"padding:12px 16px;font-size:14px;color:#e2e8f0;font-weight:600;border-bottom:1px solid #334155\">${H_SCAN_TYPE_DISPLAY}</td></tr>
+            <tr style=\"background:#0f172a\"><td style=\"padding:12px 16px;font-size:14px;color:#94a3b8;border-bottom:1px solid #334155\">Files Scanned</td><td style=\"padding:12px 16px;font-size:14px;color:#e2e8f0;font-weight:600;border-bottom:1px solid #334155\">${H_FILES_SCANNED}</td></tr>
+            <tr style=\"background:#0f172a\"><td style=\"padding:12px 16px;font-size:14px;color:#94a3b8;border-bottom:1px solid #334155\">Threats Found</td><td style=\"padding:12px 16px;font-size:14px;color:#ef4444;font-weight:700;border-bottom:1px solid #334155\">${H_THREAT_COUNT}</td></tr>
+            <tr style=\"background:#0f172a\"><td style=\"padding:12px 16px;font-size:14px;color:#94a3b8;border-bottom:1px solid #334155\">Duration</td><td style=\"padding:12px 16px;font-size:14px;color:#e2e8f0;font-weight:600;border-bottom:1px solid #334155\">${H_DURATION}</td></tr>
+            <tr style=\"background:#0f172a\"><td style=\"padding:12px 16px;font-size:14px;color:#94a3b8\">Quarantine</td><td style=\"padding:12px 16px;font-size:14px;color:#f59e0b;font-weight:600\">~/security/quarantine</td></tr>
         </table>
-        <h3 style=\"font-size:16px;color:#ef4444;margin:0 0 12px 0\">Threat Details</h3>
-        <table style=\"width:100%;border-collapse:collapse;margin-bottom:24px;border:1px solid #e2e8f0\">
-            <tr style=\"background:#1e293b\"><th style=\"padding:10px 12px;font-size:12px;color:#f8fafc;text-align:left;text-transform:uppercase;letter-spacing:0.5px\">File</th><th style=\"padding:10px 12px;font-size:12px;color:#f8fafc;text-align:left;text-transform:uppercase;letter-spacing:0.5px\">Original Path</th><th style=\"padding:10px 12px;font-size:12px;color:#f8fafc;text-align:left;text-transform:uppercase;letter-spacing:0.5px\">Threat Detected</th><th style=\"padding:10px 12px;font-size:12px;color:#f8fafc;text-align:left;text-transform:uppercase;letter-spacing:0.5px\">Action</th></tr>
+        <!-- Threat severity bar -->
+        <table style=\"width:100%;border-collapse:collapse;margin-bottom:20px\"><tr>
+            <td style=\"background:#ef4444;height:4px;border-radius:4px\"></td>
+        </tr></table>
+        <h3 style=\"font-size:15px;color:#ef4444;margin:0 0 12px 0;letter-spacing:1px;text-transform:uppercase\">Threat Details</h3>
+        <table style=\"width:100%;border-collapse:collapse;margin-bottom:24px;border:1px solid #334155;border-radius:8px;overflow:hidden\">
+            <tr style=\"background:#0f172a\"><th style=\"padding:10px 12px;font-size:11px;color:#00d4ff;text-align:left;text-transform:uppercase;letter-spacing:1px\">File</th><th style=\"padding:10px 12px;font-size:11px;color:#00d4ff;text-align:left;text-transform:uppercase;letter-spacing:1px\">Original Path</th><th style=\"padding:10px 12px;font-size:11px;color:#00d4ff;text-align:left;text-transform:uppercase;letter-spacing:1px\">Threat Detected</th><th style=\"padding:10px 12px;font-size:11px;color:#00d4ff;text-align:left;text-transform:uppercase;letter-spacing:1px\">Action</th></tr>
             ${THREAT_TABLE_ROWS}
         </table>
         ${THREAT_INTEL_HTML}
-        <p style=\"font-size:14px;color:#64748b;line-height:1.6;margin:0\">Review the quarantined files and delete them if they are confirmed threats. Log file: <code style=\"background:#f1f5f9;padding:2px 6px;border-radius:3px;font-size:13px\">${LOG_FILE}</code></p>"
+        <p style=\"font-size:14px;color:#64748b;line-height:1.6;margin:0\">Review the quarantined files and delete them if they are confirmed threats. Log: <code style=\"background:#0f172a;color:#94a3b8;padding:3px 8px;border-radius:4px;font-size:12px;border:1px solid #334155\">${H_LOG_FILE}</code></p>"
         ;;
 
     error)
@@ -174,16 +196,20 @@ case "$STATUS" in
             ERROR_DETAILS=$(tail -20 "$LOG_FILE" 2>/dev/null | sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g' || echo "Could not read log file")
         fi
         BODY_CONTENT="
-        <p style=\"font-size:15px;color:#1e293b;line-height:1.6;margin:0 0 20px 0\">An error occurred during the <strong>${SCAN_TYPE}</strong> scan. The scan may not have completed fully.</p>
-        <table style=\"width:100%;border-collapse:collapse;margin-bottom:24px\">
-            <tr style=\"background:#f1f5f9\"><td style=\"padding:10px 16px;font-size:14px;color:#64748b;width:40%\">Scan Type</td><td style=\"padding:10px 16px;font-size:14px;color:#1e293b;font-weight:600\">${SCAN_TYPE_DISPLAY}</td></tr>
-            <tr style=\"background:#ffffff\"><td style=\"padding:10px 16px;font-size:14px;color:#64748b\">Files Scanned</td><td style=\"padding:10px 16px;font-size:14px;color:#1e293b;font-weight:600\">${FILES_SCANNED}</td></tr>
-            <tr style=\"background:#f1f5f9\"><td style=\"padding:10px 16px;font-size:14px;color:#64748b\">Duration</td><td style=\"padding:10px 16px;font-size:14px;color:#1e293b;font-weight:600\">${DURATION}</td></tr>
-            <tr style=\"background:#ffffff\"><td style=\"padding:10px 16px;font-size:14px;color:#64748b\">Completed</td><td style=\"padding:10px 16px;font-size:14px;color:#1e293b;font-weight:600\">${DATE_STR}</td></tr>
+        <p style=\"font-size:15px;color:#e2e8f0;line-height:1.6;margin:0 0 20px 0\">An error occurred during the <strong style=\"color:#00d4ff\">${H_SCAN_TYPE}</strong> scan. The scan may not have completed fully.</p>
+        <table style=\"width:100%;border-collapse:collapse;margin-bottom:24px;border-radius:8px;overflow:hidden\">
+            <tr style=\"background:#0f172a\"><td style=\"padding:12px 16px;font-size:14px;color:#94a3b8;width:40%;border-bottom:1px solid #334155\">Scan Type</td><td style=\"padding:12px 16px;font-size:14px;color:#e2e8f0;font-weight:600;border-bottom:1px solid #334155\">${H_SCAN_TYPE_DISPLAY}</td></tr>
+            <tr style=\"background:#0f172a\"><td style=\"padding:12px 16px;font-size:14px;color:#94a3b8;border-bottom:1px solid #334155\">Files Scanned</td><td style=\"padding:12px 16px;font-size:14px;color:#e2e8f0;font-weight:600;border-bottom:1px solid #334155\">${H_FILES_SCANNED}</td></tr>
+            <tr style=\"background:#0f172a\"><td style=\"padding:12px 16px;font-size:14px;color:#94a3b8;border-bottom:1px solid #334155\">Duration</td><td style=\"padding:12px 16px;font-size:14px;color:#e2e8f0;font-weight:600;border-bottom:1px solid #334155\">${H_DURATION}</td></tr>
+            <tr style=\"background:#0f172a\"><td style=\"padding:12px 16px;font-size:14px;color:#94a3b8\">Completed</td><td style=\"padding:12px 16px;font-size:14px;color:#e2e8f0;font-weight:600\">${H_DATE_STR}</td></tr>
         </table>
-        <h3 style=\"font-size:16px;color:#f59e0b;margin:0 0 12px 0\">Error Details</h3>
-        <pre style=\"background:#1e293b;color:#e2e8f0;padding:16px;border-radius:6px;font-size:13px;overflow-x:auto;margin:0 0 16px 0\">${ERROR_DETAILS}</pre>
-        <p style=\"font-size:14px;color:#64748b;line-height:1.6;margin:0\">Check the full log at: <code style=\"background:#f1f5f9;padding:2px 6px;border-radius:3px;font-size:13px\">${LOG_FILE}</code></p>"
+        <!-- Error severity bar -->
+        <table style=\"width:100%;border-collapse:collapse;margin-bottom:20px\"><tr>
+            <td style=\"background:#f59e0b;height:4px;border-radius:4px\"></td>
+        </tr></table>
+        <h3 style=\"font-size:15px;color:#f59e0b;margin:0 0 12px 0;letter-spacing:1px;text-transform:uppercase\">Error Details</h3>
+        <pre style=\"background:#0f172a;color:#e2e8f0;padding:16px;border-radius:8px;font-size:12px;overflow-x:auto;margin:0 0 16px 0;border:1px solid #334155;font-family:'JetBrains Mono','Cascadia Code','Courier New',monospace;line-height:1.5\">${ERROR_DETAILS}</pre>
+        <p style=\"font-size:14px;color:#64748b;line-height:1.6;margin:0\">Check the full log at: <code style=\"background:#0f172a;color:#94a3b8;padding:3px 8px;border-radius:4px;font-size:12px;border:1px solid #334155\">${H_LOG_FILE}</code></p>"
         ;;
 esac
 
@@ -199,32 +225,47 @@ MIME-Version: 1.0
 <!DOCTYPE html>
 <html>
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head>
-<body style="margin:0;padding:0;background:#f8fafc;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif">
-<table style="max-width:600px;margin:0 auto;background:#ffffff;border-collapse:collapse;width:100%">
-    <!-- Header -->
-    <tr><td style="background:#1a1a2e;padding:24px 32px;text-align:center">
-        <h1 style="margin:0;font-size:20px;letter-spacing:2px;color:#00d4ff;font-weight:700">BAZZITE SECURITY</h1>
+<body style="margin:0;padding:0;background:#0f172a;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif">
+<table style="max-width:640px;margin:0 auto;background:#1e293b;border-collapse:collapse;width:100%;border-radius:12px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.3)">
+    <!-- Header with shield logo -->
+    <tr><td style="background:linear-gradient(135deg,#0f172a 0%,#1e293b 100%);padding:32px 32px 20px 32px;text-align:center">
+        <!-- Shield SVG inline -->
+        <div style="margin:0 auto 16px auto;width:48px;height:48px">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48"><path d="M24 4L6 12v12c0 11.1 7.7 21.5 18 24 10.3-2.5 18-12.9 18-24V12L24 4z" fill="none" stroke="#00d4ff" stroke-width="2.5"/><path d="M24 4L6 12v12c0 11.1 7.7 21.5 18 24 10.3-2.5 18-12.9 18-24V12L24 4z" fill="#00d4ff" opacity="0.1"/><path d="M20 24l4 4 8-8" fill="none" stroke="#00d4ff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <h1 style="margin:0;font-size:22px;letter-spacing:3px;color:#00d4ff;font-weight:700">BAZZITE SECURITY</h1>
+        <p style="margin:6px 0 0 0;font-size:12px;color:#64748b;letter-spacing:1px">AUTOMATED THREAT MONITORING</p>
     </td></tr>
-    <!-- Status Banner -->
-    <tr><td style="background:${BANNER_COLOR};padding:16px 32px;text-align:center">
-        <span style="font-size:22px;color:#ffffff;font-weight:700">${BANNER_ICON} ${BANNER_TEXT}</span>
+    <!-- Status Banner with gradient -->
+    <tr><td style="background:${BANNER_COLOR};padding:18px 32px;text-align:center;border-top:2px solid rgba(255,255,255,0.1);border-bottom:2px solid rgba(0,0,0,0.2)">
+        <span style="font-size:24px;color:#ffffff;font-weight:700;text-shadow:0 2px 4px rgba(0,0,0,0.2)">${BANNER_ICON} ${BANNER_TEXT}</span>
     </td></tr>
     <!-- Body -->
-    <tr><td style="padding:32px;background:#f8fafc">
+    <tr><td style="padding:32px;background:#1e293b">
         ${BODY_CONTENT}
     </td></tr>
 $(if [[ -n "$HEALTH_SUMMARY" ]]; then cat <<HEALTHEOF
     <!-- Health Summary -->
-    <tr><td style="padding:16px 32px;background:#f1f5f9;border-top:1px solid #e2e8f0">
-        <pre style="margin:0;font-family:'Cascadia Code','Courier New',monospace;font-size:12px;color:#475569;white-space:pre-wrap">${HEALTH_SUMMARY}</pre>
+    <tr><td style="padding:0 32px">
+        <table style="width:100%;border-collapse:collapse;margin-bottom:24px;border-radius:8px;overflow:hidden">
+            <tr><td style="background:#0f172a;padding:12px 16px;border-bottom:1px solid #334155">
+                <span style="font-size:13px;font-weight:700;color:#94a3b8;letter-spacing:1px;text-transform:uppercase">System Health Snapshot</span>
+            </td></tr>
+            <tr><td style="background:#0f172a;padding:16px">
+                <pre style="margin:0;font-family:'Cascadia Code','JetBrains Mono','Courier New',monospace;font-size:12px;color:#94a3b8;white-space:pre-wrap;line-height:1.5">${HEALTH_SUMMARY}</pre>
+            </td></tr>
+        </table>
     </td></tr>
 HEALTHEOF
 fi)
     <!-- Footer -->
-    <tr><td style="padding:20px 32px;text-align:center;border-top:1px solid #e2e8f0">
-        <p style="margin:0;font-size:12px;color:#94a3b8">Bazzite Security &middot; Acer Predator G3-571</p>
+    <tr><td style="padding:24px 32px;text-align:center;border-top:1px solid #334155;background:#0f172a">
+        <p style="margin:0 0 4px 0;font-size:11px;color:#475569">Bazzite Security &middot; Acer Predator G3-571 &middot; $(date +%Y)</p>
+        <p style="margin:0;font-size:10px;color:#334155">ClamAV + AI Threat Intelligence &middot; Automated Report</p>
     </td></tr>
 </table>
+<!-- Email spacer -->
+<div style="height:32px"></div>
 </body>
 </html>
 EMAILEOF

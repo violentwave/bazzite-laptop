@@ -8,7 +8,7 @@ set -euo pipefail
 QUARANTINE_DIR="/home/lch/security/quarantine"
 LOG_DIR="/var/log/clamav-scans"
 HEALTHCHECK_LOG="/home/lch/security/.healthcheck.log"
-STATUS_TMP="/home/lch/security/.status.tmp.$$"
+STATUS_TMP="$(mktemp /home/lch/security/.status.tmp.XXXXXX)"
 LCH_UID="$(id -u lch)"
 INTERACTIVE=false
 [ -t 1 ] && INTERACTIVE=true

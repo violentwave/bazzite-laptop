@@ -515,66 +515,72 @@ class SecurityTray:
     def _on_run_quick(self, _widget):
         try:
             subprocess.Popen(
-                ["konsole", "--hold", "-e", "sudo", SCAN_SCRIPT, "quick"])
+                ["konsole", "-e", "bash", "-c",
+                 f"sudo {SCAN_SCRIPT} quick; echo 'Press Enter to close'; read"])
         except Exception as e:
             print(f"[tray] Action failed: {e}", file=sys.stderr)
 
     def _on_run_deep(self, _widget):
         try:
             subprocess.Popen(
-                ["konsole", "--hold", "-e", "sudo", SCAN_SCRIPT, "deep"])
+                ["konsole", "-e", "bash", "-c",
+                 f"sudo {SCAN_SCRIPT} deep; echo 'Press Enter to close'; read"])
         except Exception as e:
             print(f"[tray] Action failed: {e}", file=sys.stderr)
 
     def _on_run_test(self, _widget):
         try:
             subprocess.Popen(
-                ["konsole", "--hold", "-e", "sudo", SCAN_SCRIPT, "test"])
+                ["konsole", "-e", "bash", "-c",
+                 f"sudo {SCAN_SCRIPT} test; echo 'Press Enter to close'; read"])
         except Exception as e:
             print(f"[tray] Action failed: {e}", file=sys.stderr)
 
     def _on_run_suite(self, _widget):
         try:
             subprocess.Popen(
-                ["konsole", "--hold", "-e", "sudo",
-                 "/usr/local/bin/bazzite-security-test.sh"])
+                ["konsole", "-e", "bash", "-c",
+                 "sudo /usr/local/bin/bazzite-security-test.sh; echo 'Press Enter to close'; read"])
         except Exception as e:
             print(f"[tray] Action failed: {e}", file=sys.stderr)
 
     def _on_run_health_snapshot(self, _widget):
         try:
             subprocess.Popen(
-                ["konsole", "--hold", "-e", "sudo", HEALTH_SNAPSHOT_SCRIPT])
+                ["konsole", "-e", "bash", "-c",
+                 f"sudo {HEALTH_SNAPSHOT_SCRIPT}; echo 'Press Enter to close'; read"])
         except Exception as e:
             print(f"[tray] Action failed: {e}", file=sys.stderr)
 
     def _on_view_health_logs(self, _widget):
         try:
             subprocess.Popen(
-                ["konsole", "--hold", "-e", "less", HEALTH_LOG])
+                ["konsole", "-e", "bash", "-c",
+                 f"less {HEALTH_LOG}; echo 'Press Enter to close'; read"])
         except Exception as e:
             print(f"[tray] Action failed: {e}", file=sys.stderr)
 
     def _on_run_healthcheck(self, _widget):
         try:
             subprocess.Popen(
-                ["konsole", "--hold", "-e", "sudo", HEALTHCHECK_SCRIPT])
+                ["konsole", "-e", "bash", "-c",
+                 f"sudo {HEALTHCHECK_SCRIPT}; echo 'Press Enter to close'; read"])
         except Exception as e:
             print(f"[tray] Action failed: {e}", file=sys.stderr)
 
     def _on_view_quarantine(self, _widget):
         try:
             subprocess.Popen(
-                ["konsole", "--hold", "-e", "sudo",
-                 "/usr/local/bin/quarantine-release.sh", "--list"])
+                ["konsole", "-e", "bash", "-c",
+                 "sudo /usr/local/bin/quarantine-release.sh --list; echo 'Press Enter to close'; read"])
         except Exception as e:
             print(f"[tray] Action failed: {e}", file=sys.stderr)
 
     def _on_release_quarantine(self, _widget):
         try:
             subprocess.Popen(
-                ["konsole", "-e", "sudo",
-                 "/usr/local/bin/quarantine-release.sh", "--interactive"])
+                ["konsole", "-e", "bash", "-c",
+                 "sudo /usr/local/bin/quarantine-release.sh --interactive; echo 'Press Enter to close'; read"])
         except Exception as e:
             print(f"[tray] Action failed: {e}", file=sys.stderr)
 
