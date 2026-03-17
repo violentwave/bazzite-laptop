@@ -493,4 +493,10 @@ if __name__ == "__main__":
         sys.exit(1)
 
     tray = SecurityTrayQt()
+
+    # --show-dashboard flag: auto-open dashboard on launch
+    if "--show-dashboard" in sys.argv:
+        from PySide6.QtCore import QTimer as _QT
+        _QT.singleShot(500, tray._toggle_dashboard)
+
     sys.exit(app.exec())

@@ -7,3 +7,4 @@ Exec=konsole -e bash -c "sudo /usr/local/bin/system-health-snapshot.sh; echo; ec
 Terminal=false
 Categories=Security;System;X-Bazzite-Security;
 Keywords=health;smart;gpu;temperature;disk;monitoring;
+NoDisplay=true

@@ -14,23 +14,15 @@
             </And>
         </Include>
         <Layout>
-            <!-- Dashboard -->
+            <!-- Main entry point -->
             <Filename>security-tray-start.desktop</Filename>
             <Separator/>
-            <!-- Scanning -->
-            <Filename>security-quick-scan.desktop</Filename>
-            <Filename>security-deep-scan.desktop</Filename>
-            <Separator/>
-            <!-- Health & Monitoring -->
-            <Filename>security-health-snapshot.desktop</Filename>
-            <Filename>security-healthcheck.desktop</Filename>
-            <Separator/>
-            <!-- Logs -->
+            <!-- Quick access (logs only — scans are in the dashboard) -->
             <Filename>security-scan-logs.desktop</Filename>
             <Filename>security-health-logs.desktop</Filename>
             <Filename>security-quarantine.desktop</Filename>
             <Separator/>
-            <!-- System -->
+            <!-- System tools -->
             <Filename>security-firewall.desktop</Filename>
             <Filename>security-usb-devices.desktop</Filename>
             <Filename>security-update-email-password.desktop</Filename>

@@ -8,3 +8,4 @@ Exec=konsole -e bash -c "sudo /usr/local/bin/clamav-scan.sh quick; echo; echo Pr
 Icon=/home/lch/security/icons/hicolor/scalable/status/bazzite-sec-green.svg
 Categories=Security;System;X-Bazzite-Security;
 Terminal=false
+NoDisplay=true

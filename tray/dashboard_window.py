@@ -12,6 +12,7 @@ from pathlib import Path
 from PySide6.QtCore import Qt, QSettings
 from PySide6.QtGui import QPixmap
 from PySide6.QtWidgets import (
+    QGridLayout,
     QGroupBox,
     QHBoxLayout,
     QLabel,
@@ -25,12 +26,14 @@ from PySide6.QtWidgets import (
 try:
     from tray.state_machine import (
         LOG_DIR, QUARANTINE_DIR, SCAN_SCRIPT, HEALTH_SNAPSHOT_SCRIPT,
+        HEALTHCHECK_SCRIPT, TEST_SUITE_SCRIPT,
         HEALTH_LOG, STATE_CONFIGS, STATE_HEALTHY_IDLE,
         format_relative_time, format_health_age, icon_path,
     )
 except ImportError:
     from state_machine import (
         LOG_DIR, QUARANTINE_DIR, SCAN_SCRIPT, HEALTH_SNAPSHOT_SCRIPT,
+        HEALTHCHECK_SCRIPT, TEST_SUITE_SCRIPT,
         HEALTH_LOG, STATE_CONFIGS, STATE_HEALTHY_IDLE,
         format_relative_time, format_health_age, icon_path,
     )
@@ -111,6 +114,12 @@ def _run_scan(args: list[str]) -> None:
         cmd = " ".join(args)
         subprocess.Popen(["konsole", "-e", "bash", "-c",
             f"sudo {cmd}; echo; echo 'Press Enter to close'; read"])
+
+
+def _btn(label: str, slot) -> QPushButton:
+    b = QPushButton(label)
+    b.clicked.connect(slot)
+    return b
 
 
 def _parse_health_log() -> dict[str, str]:
@@ -244,19 +253,22 @@ class DashboardWindow(QMainWindow):
             sched_layout.addWidget(lbl)
         layout.addWidget(sched_box)
 
-        action_box = QGroupBox("Actions")
-        action_layout = QHBoxLayout(action_box)
-        action_layout.setSpacing(8)
-        btn_quick = QPushButton("Run Quick Scan")
-        btn_quick.clicked.connect(lambda: _run_scan([SCAN_SCRIPT, "quick"]))
-        action_layout.addWidget(btn_quick)
-        btn_deep = QPushButton("Run Deep Scan")
-        btn_deep.clicked.connect(lambda: _run_scan([SCAN_SCRIPT, "deep"]))
-        action_layout.addWidget(btn_deep)
-        btn_logs = QPushButton("View Logs")
-        btn_logs.clicked.connect(lambda: subprocess.Popen(["dolphin", str(LOG_DIR)]))
-        action_layout.addWidget(btn_logs)
-        layout.addWidget(action_box)
+        scan_group = QGroupBox("ClamAV Scans")
+        sg = QGridLayout(scan_group)
+        sg.setSpacing(6)
+        sg.addWidget(_btn("Run Quick Scan", lambda: _run_scan([SCAN_SCRIPT, "quick"])), 0, 0)
+        sg.addWidget(_btn("Run Deep Scan", lambda: _run_scan([SCAN_SCRIPT, "deep"])), 0, 1)
+        sg.addWidget(_btn("View Logs", lambda: subprocess.Popen(["dolphin", str(LOG_DIR)])), 1, 0, 1, 2)
+        layout.addWidget(scan_group)
+
+        tools_group = QGroupBox("Tests && Tools")
+        tg = QGridLayout(tools_group)
+        tg.setSpacing(6)
+        tg.addWidget(_btn("Run Test Scan", lambda: _run_scan([SCAN_SCRIPT, "test"])), 0, 0)
+        tg.addWidget(_btn("Run Test Suite", lambda: _run_scan([TEST_SUITE_SCRIPT])), 0, 1)
+        tg.addWidget(_btn("View Quarantine",
+            lambda: subprocess.Popen(["dolphin", str(QUARANTINE_DIR)])), 1, 0, 1, 2)
+        layout.addWidget(tools_group)
         layout.addStretch()
         return root, refs
 
@@ -293,17 +305,20 @@ class DashboardWindow(QMainWindow):
         refs["hw_labels"] = {}
         layout.addWidget(detail_box)
 
-        action_box = QGroupBox("Actions")
-        action_layout = QHBoxLayout(action_box)
-        btn_snapshot = QPushButton("Run Health Snapshot")
-        btn_snapshot.clicked.connect(lambda: _run_scan([HEALTH_SNAPSHOT_SCRIPT]))
-        action_layout.addWidget(btn_snapshot)
-        btn_logs = QPushButton("View Health Logs")
-        btn_logs.clicked.connect(
-            lambda: subprocess.Popen(["dolphin", str(HEALTH_LOG.parent)])
-        )
-        action_layout.addWidget(btn_logs)
-        layout.addWidget(action_box)
+        health_checks_group = QGroupBox("Health Checks")
+        hg = QGridLayout(health_checks_group)
+        hg.setSpacing(6)
+        hg.addWidget(_btn("Run Health Snapshot", lambda: _run_scan([HEALTH_SNAPSHOT_SCRIPT])), 0, 0)
+        hg.addWidget(_btn("Run Health Check", lambda: _run_scan([HEALTHCHECK_SCRIPT])), 0, 1)
+        hg.addWidget(_btn("Run Self-Test",
+            lambda: _run_scan([HEALTH_SNAPSHOT_SCRIPT, "--selftest"])), 1, 0, 1, 2)
+        layout.addWidget(health_checks_group)
+
+        logs_group = QGroupBox("Logs")
+        ll = QHBoxLayout(logs_group)
+        ll.addWidget(_btn("View Health Logs",
+            lambda: subprocess.Popen(["dolphin", str(HEALTH_LOG.parent)])))
+        layout.addWidget(logs_group)
         layout.addStretch()
         return root, refs
 
@@ -342,8 +357,8 @@ class DashboardWindow(QMainWindow):
         layout.addWidget(info_box)
 
         link = QLabel(
-            '<a href="https://github.com/lch/bazzite-laptop">'
-            "github.com/lch/bazzite-laptop</a>"
+            '<a href="https://github.com/violentwave/bazzite-laptop">'
+            "github.com/violentwave/bazzite-laptop</a>"
         )
         link.setTextFormat(Qt.TextFormat.RichText)
         link.setOpenExternalLinks(True)

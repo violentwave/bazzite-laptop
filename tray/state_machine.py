@@ -89,6 +89,7 @@ def icon_path(icon_name: str) -> Path:
 SCAN_SCRIPT = "/usr/local/bin/clamav-scan.sh"
 HEALTHCHECK_SCRIPT = "/usr/local/bin/clamav-healthcheck.sh"
 HEALTH_SNAPSHOT_SCRIPT = "/usr/local/bin/system-health-snapshot.sh"
+TEST_SUITE_SCRIPT = "/usr/local/bin/bazzite-security-test.sh"
 HEALTH_LOG = Path("/var/log/system-health/health-latest.log")
 QUARANTINE_DIR = Path.home() / "security" / "quarantine"
 LOG_DIR = Path("/var/log/clamav-scans")

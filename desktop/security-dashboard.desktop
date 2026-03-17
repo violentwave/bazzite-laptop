@@ -1,9 +1,9 @@
 [Desktop Entry]
 Type=Application
 Name=Bazzite Security
-Comment=Security Dashboard & System Monitor
+Comment=Security Dashboard and System Monitor
 Icon=/home/lch/security/icons/hicolor/scalable/status/bazzite-sec-green.svg
-Exec=bash -c 'pgrep -f security_tray_qt.py >/dev/null || /usr/local/bin/start-security-tray-qt.sh &'
+Exec=/usr/local/bin/start-security-tray-qt.sh --show-dashboard
 Terminal=false
 Categories=Security;System;X-Bazzite-Security;
 StartupNotify=false
