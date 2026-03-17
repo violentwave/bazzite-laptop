@@ -41,10 +41,10 @@ except ImportError:
         format_relative_time, icon_path,
     )
 
-# Lock file: XDG_RUNTIME_DIR (tmpfs, always writable from real session)
-LOCK_FILE = Path(
-    os.environ.get("XDG_RUNTIME_DIR", f"/run/user/{os.getuid()}")
-) / "bazzite-security-tray.lock"
+# Lock + PID files: XDG_RUNTIME_DIR (tmpfs, always writable)
+_RUNTIME = Path(os.environ.get("XDG_RUNTIME_DIR", f"/run/user/{os.getuid()}"))
+LOCK_FILE = _RUNTIME / "bazzite-security-tray.lock"
+PID_FILE = _RUNTIME / "bazzite-security-tray.pid"
 POLL_INTERVAL_MS = 3000
 SCAN_COMPLETE_TIMEOUT_MS = 30_000
 
@@ -472,31 +472,29 @@ class SecurityTrayQt:
 
 def acquire_lock() -> object:
     """Prevent multiple tray instances via exclusive file lock."""
-    # Read existing PID before truncating (for SIGUSR1 signaling)
-    existing_pid = None
-    try:
-        existing_pid = int(Path(LOCK_FILE).read_text().strip())
-    except Exception:
-        pass
+    # Check if another instance is running via PID file
+    if "--show-dashboard" in sys.argv:
+        try:
+            pid = int(PID_FILE.read_text().strip())
+            os.kill(pid, 0)  # Check if process exists
+            os.kill(pid, signal.SIGUSR1)  # Signal it
+            print(f"[tray] Signalled PID {pid} to show dashboard")
+            sys.exit(0)
+        except (FileNotFoundError, ValueError, ProcessLookupError):
+            pass  # No running instance — continue to start
+        except Exception as exc:
+            print(f"[tray] Signal error: {exc}", file=sys.stderr)
+
     lock_fd = open(LOCK_FILE, "w")  # noqa: SIM115
     try:
         fcntl.flock(lock_fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
-        lock_fd.write(str(os.getpid()))
-        lock_fd.flush()
-        return lock_fd
     except BlockingIOError:
         lock_fd.close()
-        if "--show-dashboard" in sys.argv and existing_pid:
-            try:
-                os.kill(existing_pid, signal.SIGUSR1)
-                print(f"[tray] Signalled PID {existing_pid} to show dashboard")
-            except ProcessLookupError:
-                print("[tray] Stale lock — restart tray manually", file=sys.stderr)
-            except Exception as exc:
-                print(f"[tray] Could not signal: {exc}", file=sys.stderr)
-        else:
-            print("[tray] Another instance is already running", file=sys.stderr)
+        print("[tray] Another instance is already running", file=sys.stderr)
         sys.exit(0)
+    # Write PID to separate file (never truncated by lock open)
+    PID_FILE.write_text(str(os.getpid()))
+    return lock_fd
 
 
 if __name__ == "__main__":
