@@ -1,4 +1,4 @@
-<!-- Security submenu for KDE application menu -->
+<!-- Bazzite Security submenu for KDE application menu -->
 <!-- Deploy to: ~/.config/menus/applications-merged/security.menu -->
 <!DOCTYPE Menu PUBLIC "-//freedesktop//DTD Menu 1.0//EN"
     "http://www.freedesktop.org/standards/menu-spec/menu-1.0.dtd">
@@ -8,7 +8,10 @@
         <Name>Security</Name>
         <Directory>security-directory.desktop</Directory>
         <Include>
-            <Category>Security</Category>
+            <And>
+                <Category>Security</Category>
+                <Category>X-Bazzite-Security</Category>
+            </And>
         </Include>
         <Layout>
             <!-- Dashboard -->
@@ -17,21 +20,20 @@
             <!-- Scanning -->
             <Filename>security-quick-scan.desktop</Filename>
             <Filename>security-deep-scan.desktop</Filename>
+            <Separator/>
+            <!-- Health & Monitoring -->
+            <Filename>security-health-snapshot.desktop</Filename>
             <Filename>security-healthcheck.desktop</Filename>
             <Separator/>
-            <!-- Logs & Monitoring -->
-            <Filename>security-health-snapshot.desktop</Filename>
+            <!-- Logs -->
             <Filename>security-scan-logs.desktop</Filename>
             <Filename>security-health-logs.desktop</Filename>
             <Filename>security-quarantine.desktop</Filename>
             <Separator/>
-            <!-- System Tools -->
+            <!-- System -->
             <Filename>security-firewall.desktop</Filename>
             <Filename>security-usb-devices.desktop</Filename>
             <Filename>security-update-email-password.desktop</Filename>
-            <Separator/>
-            <!-- Other Security apps (Bitwarden, KWallet, etc.) -->
-            <Merge type="all"/>
         </Layout>
     </Menu>
 </Menu>

@@ -6,5 +6,5 @@ Name=Deep Scan
 Comment=Full scan of home, tmp, and var
 Exec=konsole -e bash -c "sudo /usr/local/bin/clamav-scan.sh deep; echo; echo Press Enter to close; read"
 Icon=/home/lch/security/icons/hicolor/scalable/status/bazzite-sec-green.svg
-Categories=Security;System;
+Categories=Security;System;X-Bazzite-Security;
 Terminal=false

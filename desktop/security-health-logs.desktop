@@ -5,5 +5,5 @@ Comment=Open system health log directory
 Icon=folder-documents
 Exec=konsole -e less /var/log/system-health/health-latest.log
 Terminal=false
-Categories=Security;System;
+Categories=Security;System;X-Bazzite-Security;
 Keywords=health;logs;smart;monitoring;

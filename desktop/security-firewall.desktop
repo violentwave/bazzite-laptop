@@ -6,5 +6,5 @@ Name=Firewall
 Comment=Check firewall rules and logging
 Exec=konsole -e bash -c "sudo firewall-cmd --list-all; echo '---'; sudo firewall-cmd --get-log-denied; echo '---'; echo 'Press Enter to close'; read"
 Icon=preferences-security-firewall
-Categories=Security;System;
+Categories=Security;System;X-Bazzite-Security;
 Terminal=false

@@ -6,5 +6,5 @@ Name=View Scan Logs
 Comment=Open ClamAV scan log directory
 Exec=dolphin /home/lch/security/logs
 Icon=folder-documents
-Categories=Security;System;
+Categories=Security;System;X-Bazzite-Security;
 Terminal=false

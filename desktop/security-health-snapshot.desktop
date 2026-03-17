@@ -5,5 +5,5 @@ Comment=Run SMART, GPU, thermal, and storage health check
 Icon=/home/lch/security/icons/hicolor/scalable/status/bazzite-sec-blue.svg
 Exec=konsole -e bash -c "sudo /usr/local/bin/system-health-snapshot.sh; echo; echo Press Enter to close; read"
 Terminal=false
-Categories=Security;System;
+Categories=Security;System;X-Bazzite-Security;
 Keywords=health;smart;gpu;temperature;disk;monitoring;

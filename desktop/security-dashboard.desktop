@@ -1,9 +1,7 @@
-# Bazzite Security Dashboard — opens the dashboard (starts tray if not running)
-# Deploy to: ~/.local/share/applications/security-tray-start.desktop
 [Desktop Entry]
 Type=Application
-Name=Security Dashboard
-Comment=Open the Bazzite Security Dashboard
+Name=Bazzite Security
+Comment=Security Dashboard & System Monitor
 Icon=/home/lch/security/icons/hicolor/scalable/status/bazzite-sec-green.svg
 Exec=bash -c 'pgrep -f security_tray_qt.py >/dev/null || /usr/local/bin/start-security-tray-qt.sh &'
 Terminal=false
