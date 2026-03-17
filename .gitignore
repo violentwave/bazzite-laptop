@@ -40,6 +40,7 @@ plans/
 # Claude Flow / Swarm runtime state
 .claude-flow/
 .swarm/
+.guidance/
 
 # Node.js (claude-flow dependencies)
 node_modules/

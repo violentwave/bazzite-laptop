@@ -172,5 +172,6 @@
     "coderabbit.autoReviewMode": "auto",
     "robotcode.disableExtension": false,
     "robotcode.run.openOutputAfterRun": "log",
-    "robotcode.debug.outputMessages": true
+    "robotcode.debug.outputMessages": true,
+    "vscode-edge-devtools.showWorkers": true
 }

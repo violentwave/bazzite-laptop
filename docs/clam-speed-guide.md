@@ -59,41 +59,15 @@ sudo setsebool -P antivirus_can_scan_system 1
 
 clamd consumes approximately **1.0–1.3GB of resident memory** with current official signatures (~8.7 million signatures). With `ConcurrentDatabaseReload yes` (the default), this spikes to **~2.2GB during signature reloads** as clamd hot-swaps the old and new databases. Setting `ConcurrentDatabaseReload no` caps peak usage at ~1.1GB but blocks scanning for 30–60 seconds during reloads.
 
-On a 16GB gaming laptop with ZRAM at vm.swappiness=180, dedicating ~7% of physical RAM to a permanently running clamd is feasible but wasteful during gaming sessions. The smarter approach: **start clamd only when scanning, then stop it**. clamd does not support true systemd socket activation, but a wrapper script with `--ping` and `--wait` (introduced in ClamAV 0.103.0) handles this cleanly.
+On a 16GB gaming laptop with ZRAM at vm.swappiness=180, dedicating ~7% of physical RAM to a permanently running clamd is feasible but wasteful during gaming sessions. The smarter approach is to **start clamd only when scanning, then stop it**. This is the exact model used by this project's security system.
 
-Create the scan script at `/usr/local/bin/clamav-scan.sh`:
+A wrapper script, managed by systemd, handles the full on-demand lifecycle:
+1.  `systemctl start clamd@scan` is called.
+2.  The script waits for the daemon to load signatures using `clamdscan --ping --wait`.
+3.  `clamdscan --fdpass --multiscan` runs the parallel scan.
+4.  `systemctl stop clamd@scan` is called to free the ~1.1GB of RAM.
 
-```bash
-#!/bin/bash
-SCAN_TARGETS="/home/lch /tmp"
-LOG_FILE="/var/log/clamav/scheduled-scan.log"
-QUARANTINE_DIR="/home/lch/.quarantine"
-
-mkdir -p "$QUARANTINE_DIR"
-
-# Start clamd (takes 20-60 seconds to load signatures)
-systemctl start clamd@scan
-
-# Wait up to 120 seconds for clamd to be ready (ping every 2 seconds)
-clamdscan --ping 60:2 --wait
-if [ $? -eq 21 ]; then
-    echo "$(date): clamd failed to start within timeout" >> "$LOG_FILE"
-    systemctl stop clamd@scan
-    exit 2
-fi
-
-# Run the scan with parallel threads and fd-passing
-clamdscan --fdpass --multiscan --infected \
-    --move="$QUARANTINE_DIR" \
-    --log="$LOG_FILE" \
-    $SCAN_TARGETS
-SCAN_EXIT=$?
-
-# Stop clamd to reclaim ~1.1GB RAM
-systemctl stop clamd@scan
-
-exit $SCAN_EXIT
-```
+This project's `clamav-scan.sh` script builds on this pattern, adding features like HTML email alerts, desktop notifications, a system tray status icon, and detailed logging. The simple script below is replaced by a full-featured implementation.
 
 The corresponding systemd service and timer:
 
@@ -129,7 +103,7 @@ Enable with `sudo systemctl enable --now clamav-scan.timer`. The daemon starts, 
 clamdscan accepts many of the same flags as clamscan but silently ignores several important ones. The critical difference: **`--exclude-dir` is ignored by clamdscan**. Exclusions must be configured server-side in `/etc/clamd.d/scan.conf` using `ExcludePath` with POSIX extended regex:
 
 ```ini
-ExcludePath ^/proc/
+ExcludePath ^/proc/ # Note: POSIX ERE, not glob patterns
 ExcludePath ^/sys/
 ExcludePath ^/dev/
 ExcludePath ^/run/
@@ -155,4 +129,4 @@ For the on-demand approach, this interaction is mostly irrelevant — clamd load
 
 ## Conclusion
 
-The path from 75-minute clamscan runs to sub-10-minute scans requires exactly three changes: install the `clamd` package, configure `/etc/clamd.d/scan.conf` with the socket and thread settings, and switch your scan command to `clamdscan --fdpass --multiscan`. The on-demand systemd approach — starting clamd before scans and stopping it afterward — is the right architecture for a gaming laptop, avoiding the permanent **~1.1GB memory cost** while still capturing the full speed benefit of daemon-mode scanning. The `--ping` and `--wait` flags make this pattern reliable and production-ready. Skip clamonacc entirely; scheduled scans of `/home` and `/tmp` provide strong coverage for a desktop system with an immutable root filesystem.
+The path from 75-minute clamscan runs to sub-15-minute scans requires exactly three changes: install the `clamd` package, configure `/etc/clamd.d/scan.conf` with the socket and thread settings, and switch your scan command to `clamdscan --fdpass --multiscan`. The on-demand systemd approach — starting clamd before scans and stopping it afterward — is the right architecture for a gaming laptop, avoiding the permanent **~1.1GB memory cost** while still capturing the full speed benefit of daemon-mode scanning. The `--ping` and `--wait` flags make this pattern reliable and production-ready. Skip clamonacc entirely; scheduled scans of `/home` and `/tmp` provide strong coverage for a desktop system with an immutable root filesystem.

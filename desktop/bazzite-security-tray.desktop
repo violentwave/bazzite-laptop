@@ -2,7 +2,7 @@
 Type=Application
 Name=Bazzite Security Monitor
 Comment=System tray security status monitor
-Icon=bazzite-sec-green
+Icon=/home/lch/security/icons/hicolor/scalable/status/bazzite-sec-green.svg
 Exec=/usr/local/bin/start-security-tray.sh
 Terminal=false
 Categories=Security;System;

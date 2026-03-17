@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=Bazzite Security Tray (Qt6)
+Comment=System tray security monitor
+Exec=/usr/local/bin/start-security-tray-qt.sh
+Icon=/home/lch/security/icons/hicolor/scalable/status/bazzite-sec-green.svg
+Terminal=false
+Categories=System;Security;
+X-GNOME-Autostart-enabled=true
+StartupNotify=false

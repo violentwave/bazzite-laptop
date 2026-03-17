@@ -213,6 +213,139 @@ case "$STATUS" in
         ;;
 esac
 
+# --- Healthcheck: override BODY_CONTENT with health-focused template ---
+# Argument mapping when scan_type=healthcheck:
+#   $3 (THREAT_COUNT)   = total issue count (warnings + critical)
+#   $4 (FILES_SCANNED)  = health status string: OK | WARNING | CRITICAL
+#   $5 (DURATION)       = snapshot duration
+#   $6 (LOG_FILE)       = health log path
+#   $7 (HEALTH_SUMMARY) = compact text block from --append mode (optional)
+#
+# Caller sets STATUS to: clean (OK), threats (WARNING/CRITICAL), error (script error)
+# Delta trends are read from /var/log/system-health/health-deltas.dat if present.
+if [[ "$SCAN_TYPE" == "healthcheck" ]]; then
+    HEALTH_STATUS_LABEL=$(html_escape "$FILES_SCANNED")  # e.g. OK / WARNING / CRITICAL
+    HEALTH_ISSUE_COUNT=$(html_escape "$THREAT_COUNT")    # total issue count
+
+    # Determine status row colour
+    case "$FILES_SCANNED" in
+        OK)       HEALTH_ROW_COLOR="#22c55e" ;;
+        WARNING)  HEALTH_ROW_COLOR="#f59e0b" ;;
+        CRITICAL) HEALTH_ROW_COLOR="#ef4444" ;;
+        *)        HEALTH_ROW_COLOR="#94a3b8" ;;
+    esac
+
+    # Parse key metrics from the health log file (best-effort, empty on failure)
+    HEALTH_GPU_TEMP="" HEALTH_CPU_TEMP="" HEALTH_SDA_HEALTH="" HEALTH_SDA_TEMP=""
+    HEALTH_SDA_WEAR="" HEALTH_SDA_REALLOC="" HEALTH_SDB_HEALTH="" HEALTH_SDB_SPARE=""
+    HEALTH_SDB_USED="" HEALTH_SELINUX="" HEALTH_FIREWALL="" HEALTH_FIREWALL_ZONE=""
+    if [[ -f "$LOG_FILE" ]]; then
+        _log_text=$(cat "$LOG_FILE" 2>/dev/null || true)
+        HEALTH_GPU_TEMP=$(echo "$_log_text" | grep -i "Temperature:" | grep -i "GPU\|gpu\|Temperature:.*°C" | head -1 | grep -oP '[0-9]+(?=°C)' | head -1 || true)
+        # GPU temp from nvidia section
+        HEALTH_GPU_TEMP=$(echo "$_log_text" | awk '/GPU: NVIDIA/{f=1} f && /Temperature:/{match($0,/([0-9]+)°C/,a); print a[1]; exit}' || true)
+        HEALTH_CPU_TEMP=$(echo "$_log_text" | awk '/CPU.*Thermals/{f=1} f && /Package temp:/{match($0,/([0-9.]+)°C/,a); print a[1]; exit}' || true)
+        HEALTH_SDA_HEALTH=$(echo "$_log_text" | awk '/Internal SSD/{f=1} f && /Overall health:/{sub(/.*Overall health: /,""); print; exit}' || true)
+        HEALTH_SDA_TEMP=$(echo "$_log_text" | awk '/Internal SSD/{f=1} f && /Temperature:/{match($0,/([0-9]+)°C/,a); print a[1]; exit}' || true)
+        HEALTH_SDA_WEAR=$(echo "$_log_text" | awk '/Internal SSD/{f=1} f && /Wear leveling:/{match($0,/([0-9]+) avg/,a); print a[1]; exit}' || true)
+        HEALTH_SDA_REALLOC=$(echo "$_log_text" | awk '/Internal SSD/{f=1} f && /Reallocated:/{match($0,/([0-9]+) sectors/,a); print a[1]; exit}' || true)
+        HEALTH_SDB_HEALTH=$(echo "$_log_text" | awk '/External NVMe/{f=1} f && /Overall health:/{sub(/.*Overall health: /,""); print; exit}' || true)
+        HEALTH_SDB_SPARE=$(echo "$_log_text" | awk '/External NVMe/{f=1} f && /Available spare:/{match($0,/([0-9]+)%/,a); print a[1]; exit}' || true)
+        HEALTH_SDB_USED=$(echo "$_log_text" | awk '/External NVMe/{f=1} f && /Percentage used:/{match($0,/([0-9]+)%/,a); print a[1]; exit}' || true)
+        HEALTH_SELINUX=$(echo "$_log_text" | grep "SELinux:" | head -1 | sed 's/.*SELinux: //' | xargs || true)
+        HEALTH_FIREWALL=$(echo "$_log_text" | grep "Firewall zone:" | head -1 | sed 's/.*Firewall zone: //' | xargs || true)
+    fi
+
+    # HTML-escape parsed values
+    HEALTH_GPU_TEMP=$(html_escape "${HEALTH_GPU_TEMP:-?}")
+    HEALTH_CPU_TEMP=$(html_escape "${HEALTH_CPU_TEMP:-?}")
+    HEALTH_SDA_HEALTH=$(html_escape "${HEALTH_SDA_HEALTH:-?}")
+    HEALTH_SDA_TEMP=$(html_escape "${HEALTH_SDA_TEMP:-?}")
+    HEALTH_SDA_WEAR=$(html_escape "${HEALTH_SDA_WEAR:-?}")
+    HEALTH_SDA_REALLOC=$(html_escape "${HEALTH_SDA_REALLOC:-?}")
+    HEALTH_SDB_HEALTH=$(html_escape "${HEALTH_SDB_HEALTH:-?}")
+    HEALTH_SDB_SPARE=$(html_escape "${HEALTH_SDB_SPARE:-?}")
+    HEALTH_SDB_USED=$(html_escape "${HEALTH_SDB_USED:-?}")
+    HEALTH_SELINUX=$(html_escape "${HEALTH_SELINUX:-?}")
+    HEALTH_FIREWALL=$(html_escape "${HEALTH_FIREWALL:-?}")
+
+    # Delta trends block (read from health-deltas.dat if present)
+    DELTA_ROWS=""
+    DELTA_FILE="/var/log/system-health/health-deltas.dat"
+    if [[ -f "$DELTA_FILE" ]]; then
+        while IFS='=' read -r dkey dval; do
+            [[ -z "$dkey" || "$dkey" =~ ^# ]] && continue
+            dkey_esc=$(html_escape "$dkey")
+            dval_esc=$(html_escape "$dval")
+            DELTA_ROWS+="<tr style=\"border-bottom:1px solid #1e293b\"><td style=\"padding:8px 12px;font-size:12px;color:#94a3b8;font-family:'JetBrains Mono','Courier New',monospace\">${dkey_esc}</td><td style=\"padding:8px 12px;font-size:12px;color:#e2e8f0;font-weight:600\">${dval_esc}</td></tr>"
+        done < "$DELTA_FILE" 2>/dev/null || true
+    fi
+
+    DELTA_SECTION=""
+    if [[ -n "$DELTA_ROWS" ]]; then
+        DELTA_SECTION="
+        <h3 style=\"font-size:15px;color:#7eb8da;margin:24px 0 12px 0;letter-spacing:1px;text-transform:uppercase\">Delta Trends</h3>
+        <table style=\"width:100%;border-collapse:collapse;margin-bottom:24px;border:1px solid #334155;border-radius:8px;overflow:hidden\">
+            <tr style=\"background:#0f172a\">
+                <th style=\"padding:10px 12px;font-size:11px;color:#00d4ff;text-align:left;text-transform:uppercase;letter-spacing:1px\">Key</th>
+                <th style=\"padding:10px 12px;font-size:11px;color:#00d4ff;text-align:left;text-transform:uppercase;letter-spacing:1px\">Last Value</th>
+            </tr>
+            ${DELTA_ROWS}
+        </table>"
+    fi
+
+    BODY_CONTENT="
+    <p style=\"font-size:15px;color:#e2e8f0;line-height:1.6;margin:0 0 20px 0\">Daily hardware &amp; performance health snapshot completed.</p>
+    <table style=\"width:100%;border-collapse:collapse;margin-bottom:24px;border-radius:8px;overflow:hidden\">
+        <tr style=\"background:#0f172a\"><td style=\"padding:12px 16px;font-size:14px;color:#94a3b8;width:40%;border-bottom:1px solid #334155\">Overall Status</td><td style=\"padding:12px 16px;font-size:14px;color:${HEALTH_ROW_COLOR};font-weight:700;border-bottom:1px solid #334155\">${HEALTH_STATUS_LABEL}</td></tr>
+        <tr style=\"background:#0f172a\"><td style=\"padding:12px 16px;font-size:14px;color:#94a3b8;border-bottom:1px solid #334155\">Issues Detected</td><td style=\"padding:12px 16px;font-size:14px;color:#e2e8f0;font-weight:600;border-bottom:1px solid #334155\">${HEALTH_ISSUE_COUNT}</td></tr>
+        <tr style=\"background:#0f172a\"><td style=\"padding:12px 16px;font-size:14px;color:#94a3b8;border-bottom:1px solid #334155\">Duration</td><td style=\"padding:12px 16px;font-size:14px;color:#e2e8f0;font-weight:600;border-bottom:1px solid #334155\">${H_DURATION}</td></tr>
+        <tr style=\"background:#0f172a\"><td style=\"padding:12px 16px;font-size:14px;color:#94a3b8\">Completed</td><td style=\"padding:12px 16px;font-size:14px;color:#e2e8f0;font-weight:600\">${H_DATE_STR}</td></tr>
+    </table>
+    <!-- Status bar -->
+    <table style=\"width:100%;border-collapse:collapse;margin-bottom:24px\"><tr>
+        <td style=\"background:${HEALTH_ROW_COLOR};height:4px;border-radius:4px\"></td>
+    </tr></table>
+
+    <h3 style=\"font-size:15px;color:#7eb8da;margin:0 0 12px 0;letter-spacing:1px;text-transform:uppercase\">Drive Health</h3>
+    <table style=\"width:100%;border-collapse:collapse;margin-bottom:24px;border:1px solid #334155;border-radius:8px;overflow:hidden\">
+        <tr style=\"background:#0f172a\">
+            <th style=\"padding:10px 12px;font-size:11px;color:#00d4ff;text-align:left;text-transform:uppercase;letter-spacing:1px\">Drive</th>
+            <th style=\"padding:10px 12px;font-size:11px;color:#00d4ff;text-align:left;text-transform:uppercase;letter-spacing:1px\">Health</th>
+            <th style=\"padding:10px 12px;font-size:11px;color:#00d4ff;text-align:left;text-transform:uppercase;letter-spacing:1px\">Temp</th>
+            <th style=\"padding:10px 12px;font-size:11px;color:#00d4ff;text-align:left;text-transform:uppercase;letter-spacing:1px\">Key Metrics</th>
+        </tr>
+        <tr style=\"border-bottom:1px solid #334155;background:#1e293b\">
+            <td style=\"padding:10px 12px;font-size:13px;color:#e2e8f0\">sda (SK hynix 256G)</td>
+            <td style=\"padding:10px 12px;font-size:13px;color:#22c55e;font-weight:600\">${HEALTH_SDA_HEALTH}</td>
+            <td style=\"padding:10px 12px;font-size:13px;color:#e2e8f0\">${HEALTH_SDA_TEMP}°C</td>
+            <td style=\"padding:10px 12px;font-size:13px;color:#94a3b8\">Wear: ${HEALTH_SDA_WEAR} | Realloc: ${HEALTH_SDA_REALLOC}</td>
+        </tr>
+        <tr style=\"background:#1e293b\">
+            <td style=\"padding:10px 12px;font-size:13px;color:#e2e8f0\">sdb (WD SN580E 2TB)</td>
+            <td style=\"padding:10px 12px;font-size:13px;color:#22c55e;font-weight:600\">${HEALTH_SDB_HEALTH}</td>
+            <td style=\"padding:10px 12px;font-size:13px;color:#e2e8f0\">N/A</td>
+            <td style=\"padding:10px 12px;font-size:13px;color:#94a3b8\">Spare: ${HEALTH_SDB_SPARE}% | Used: ${HEALTH_SDB_USED}%</td>
+        </tr>
+    </table>
+
+    <h3 style=\"font-size:15px;color:#7eb8da;margin:0 0 12px 0;letter-spacing:1px;text-transform:uppercase\">Thermals</h3>
+    <table style=\"width:100%;border-collapse:collapse;margin-bottom:24px;border-radius:8px;overflow:hidden\">
+        <tr style=\"background:#0f172a\"><td style=\"padding:12px 16px;font-size:14px;color:#94a3b8;width:50%;border-bottom:1px solid #334155\">GPU (GTX 1060)</td><td style=\"padding:12px 16px;font-size:14px;color:#e2e8f0;font-weight:600;border-bottom:1px solid #334155\">${HEALTH_GPU_TEMP}°C</td></tr>
+        <tr style=\"background:#0f172a\"><td style=\"padding:12px 16px;font-size:14px;color:#94a3b8\">CPU Package (i7-7700HQ)</td><td style=\"padding:12px 16px;font-size:14px;color:#e2e8f0;font-weight:600\">${HEALTH_CPU_TEMP}°C</td></tr>
+    </table>
+
+    <h3 style=\"font-size:15px;color:#7eb8da;margin:0 0 12px 0;letter-spacing:1px;text-transform:uppercase\">Security Services</h3>
+    <table style=\"width:100%;border-collapse:collapse;margin-bottom:24px;border-radius:8px;overflow:hidden\">
+        <tr style=\"background:#0f172a\"><td style=\"padding:12px 16px;font-size:14px;color:#94a3b8;width:50%;border-bottom:1px solid #334155\">SELinux</td><td style=\"padding:12px 16px;font-size:14px;color:#e2e8f0;font-weight:600;border-bottom:1px solid #334155\">${HEALTH_SELINUX}</td></tr>
+        <tr style=\"background:#0f172a\"><td style=\"padding:12px 16px;font-size:14px;color:#94a3b8\">Firewall Zone</td><td style=\"padding:12px 16px;font-size:14px;color:#e2e8f0;font-weight:600\">${HEALTH_FIREWALL}</td></tr>
+    </table>
+
+    ${DELTA_SECTION}
+
+    <p style=\"font-size:14px;color:#64748b;line-height:1.6;margin:0\">Full log: <code style=\"background:#0f172a;color:#94a3b8;padding:3px 8px;border-radius:4px;font-size:12px;border:1px solid #334155\">${H_LOG_FILE}</code></p>"
+fi
+
 # --- Compose and send HTML email ---
 {
     cat << EMAILEOF

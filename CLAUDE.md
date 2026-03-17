@@ -11,25 +11,27 @@
 - NEVER lower vm.swappiness — 180 is correct for ZRAM.
 
 ## Repo Layout
-- scripts/ — all shell scripts (clamav, backup, setup utilities, AI wrappers)
+- scripts/ — all shell scripts (clamav, backup, setup utilities, AI wrappers, start-security-tray-qt.sh)
 - systemd/ — timer and service unit files
-- desktop/ — .desktop files and security.menu
+- desktop/ — .desktop files, security.menu, security-tray-qt-autostart.desktop
 - configs/ — system config files (udev rules, sysctl, gamemode, litellm, rate-limits, etc.)
-- tray/ — security tray app (Python) + 7 SVG icons (9-state machine)
+- tray/ — PySide6/Qt6 security tray + dashboard (__init__.py, state_machine.py, security_tray_qt.py, dashboard_window.py); 9-state machine; Security/Health/About tabs; KDE notifications; health log parser; pkexec for privileged actions
 - ai/ — AI enhancement layer (Python modules: threat intel, RAG, code quality, gaming)
-- tests/ — Python unit tests for the AI layer
+- tests/ — Python unit tests (374 tests: AI layer + tray state machine)
 - .vscode/ — VS Code workspace settings and extension recommendations
-- docs/ — all documentation and guides
+- docs/ — all documentation and guides (incl. RuFlo v3.5 reference manuals, superpowers/specs/ design specs)
 
 ## Key Paths
 - Steam library: /run/media/lch/SteamLibrary
 - MangoHud config: ~/.config/MangoHud/MangoHud.conf
 - DNS config: /etc/systemd/resolved.conf.d/dns-over-tls.conf
 - WiFi script: /usr/local/bin/public-wifi-mode
-- Tray launcher: /usr/local/bin/start-security-tray.sh
+- Tray launcher (Qt6): /usr/local/bin/start-security-tray-qt.sh
+- Tray launcher (GTK3, legacy): /usr/local/bin/start-security-tray.sh
 - Integration tests: /usr/local/bin/integration-test.sh
 - Claude Code settings: ~/.claude/settings.json
 - Backup scripts: /mnt/backup/ (on USB flash drive sdc3)
+- RuFlo reference: docs/RuFlo_v3.5_Reference_Manual.pdf + .docx
 
 ## Desktop Files
 - All custom icons use absolute SVG paths (KDE doesn't resolve custom icon theme names)
@@ -146,6 +148,41 @@ a persistent daemon — everything is on-demand (scan triggers, timers, user act
 
 ---
 
+## RuFlo Natural Language Integration (MANDATORY)
+
+RuFlo is the master orchestration layer. The user speaks naturally; Claude Code
+auto-invokes the matching RuFlo capability. NEVER require the user to type
+exact commands — infer intent and invoke automatically.
+
+### Intent → Action Mapping
+| User Intent | RuFlo Action |
+|---|---|
+| build/create/implement | `hooks route` → spawn coder agents |
+| review/check/audit | dispatch reviewer/security-architect |
+| test/verify | tester agent + pytest |
+| fix/debug | systematic-debugging skill |
+| design/plan/architect | brainstorming → writing-plans skills |
+| learn/remember | `memory store` + `intelligence pattern-store` |
+| search/find | `memory search` (HNSW semantic) |
+| optimize | perf-analyzer agent |
+| secure/protect | security-architect + AIDefence |
+| deploy/release | release-manager agent |
+| coordinate/parallel | swarm init → spawn agents |
+
+### Always Active
+- Daemon running, MCP server active
+- Trajectory tracking on multi-step tasks
+- Pattern storage after completions
+- Model routing (haiku/sonnet/opus per complexity)
+- Memory search before re-reading docs
+
+### Master Reference
+- GitHub: github.com/ruvnet/ruflo (v3.5.15)
+- Local: `docs/RuFlo_v3.5_Reference_Manual.pdf`
+- Memory: `reference_ruflo_master_guide.md` (auto-loaded)
+
+---
+
 ## Claude Code Permissions (VS Code)
 
 ### Sandbox
@@ -210,6 +247,93 @@ Launch from `~/projects/bazzite-laptop/` — NEVER from $HOME.
   }
 }
 ```
+
+---
+
+## RuFlo v3.5 Integration (ALWAYS ACTIVE)
+
+### Mandatory for Every Session
+RuFlo (Claude Flow) v3.5.15 is the orchestration backbone. Reference manual at
+`docs/RuFlo_v3.5_Reference_Manual.pdf`. ALL operations MUST use RuFlo tools.
+
+### Session Lifecycle (ALWAYS run these)
+```bash
+# Session start (auto-runs via hooks)
+claude-flow daemon start
+claude-flow hooks session-start
+claude-flow hooks pretrain --depth medium
+
+# Session end
+claude-flow hooks session-end
+```
+
+### 3-Tier Model Routing (ALWAYS apply)
+| Tier | When | Model | Cost |
+|------|------|-------|------|
+| 1 | Simple transforms, edits | Agent Booster / Haiku | <1ms / $0 |
+| 2 | Bug fixes, routine code | Sonnet | ~500ms / $0.0002 |
+| 3 | Architecture, security, complex | Opus | 2-5s / $0.015 |
+
+### Agent Training (ALWAYS do)
+- `hooks intelligence trajectory-start` before multi-step work
+- `hooks intelligence trajectory-step` after each significant action
+- `hooks intelligence trajectory-end` when task completes
+- `hooks intelligence pattern-store` for reusable learnings
+- `hooks pretrain` at session start for codebase analysis
+
+### Memory System (ALWAYS use)
+- `memory store` — save patterns, decisions, constraints with HNSW embeddings
+- `memory search` — semantic search before re-reading docs (saves tokens)
+- Store patterns after successful completions for future agent reuse
+- Namespaces: `patterns`, `project`, `reference`, `default`
+
+### Swarm Orchestration (for multi-file/multi-step work)
+- `swarm init --topology hierarchical --max-agents 6-8`
+- Spawn agents via Claude Code Task tool (not CLI alone)
+- ALL agents in ONE message for parallel execution
+- Use `raft` consensus, `specialized` strategy
+- Anti-drift: swarm init + agent spawn in SAME message
+
+### Hooks (use for quality gates)
+- `hooks route` — route tasks to optimal agent type
+- `hooks post-task` — record success/failure for learning
+- `hooks metrics` — check performance stats
+- `hooks intelligence pattern-search` — find similar past solutions
+
+### Skills (invoke via /skill-name)
+- `/superpowers:brainstorming` — BEFORE any feature design
+- `/superpowers:verification-before-completion` — BEFORE claiming done
+- `/superpowers:writing-plans` — for multi-step implementation plans
+- `/superpowers:test-driven-development` — for new features
+- `/superpowers:systematic-debugging` — for bug investigation
+
+### Security (run after security-related changes)
+```bash
+claude-flow security scan --depth full
+claude-flow hooks intelligence pattern-search --query "security vulnerability"
+```
+
+### Available MCP Tools (213+)
+All `mcp__claude-flow__*` tools are available. Key categories:
+- `memory_*` — store, search, retrieve, delete, stats
+- `hooks_intelligence_*` — trajectory tracking, pattern storage, learning
+- `hooks_route` — semantic task routing
+- `swarm_*` — init, status, health, shutdown
+- `agent_*` — spawn, list, status, health, terminate
+- `task_*` — create, assign, complete, cancel
+- `session_*` — save, restore, list
+- `neural_*` — train, predict, patterns, optimize
+- `performance_*` — benchmark, bottleneck, metrics
+
+### Token Optimization Rules
+1. Use `memory search` before re-reading large docs
+2. Route simple tasks to Haiku (Tier 2 low)
+3. Batch ALL operations in single messages
+4. Store successful patterns for agent reuse
+5. Run background agents for independent work
+6. Use hierarchical topology to limit drift
+
+---
 
 ### Two-Phase Workflow (still applies for system-level changes)
 - **Phase A**: Claude Code creates/edits files in the repo + runs approved tools
