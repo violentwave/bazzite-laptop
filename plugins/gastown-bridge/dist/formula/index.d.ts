@@ -1,0 +1,14 @@
+/**
+ * Gas Town Formula Module Exports
+ *
+ * Provides formula execution with WASM acceleration:
+ * - FormulaExecutor: Hybrid WASM/CLI executor
+ * - Molecule generation from cooked formulas
+ * - Step dependency resolution
+ * - Progress tracking and cancellation
+ *
+ * @module v3/plugins/gastown-bridge/formula
+ */
+export { FormulaExecutor, createFormulaExecutor, type IWasmLoader, type ExecuteOptions, type StepContext, type StepResult, type Molecule, type ExecutionProgress, type ExecutorEvents, type ExecutorLogger, } from './executor.js';
+export { default } from './executor.js';
+//# sourceMappingURL=index.d.ts.map

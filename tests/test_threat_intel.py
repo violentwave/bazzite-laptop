@@ -285,28 +285,34 @@ class TestMalwareBazaarLookup:
 
 
 class TestCascadingLogic:
-    @patch("ai.threat_intel.lookup._lookup_malwarebazaar")
-    @patch("ai.threat_intel.lookup._lookup_otx")
+    """Tests for the cascade order: MalwareBazaar → OTX → VT (cheapest first)."""
+
     @patch("ai.threat_intel.lookup._lookup_virustotal")
-    def test_vt_hit_stops(self, mock_vt, mock_otx, mock_mb, mock_limiter, sample_report, tmp_path):
+    @patch("ai.threat_intel.lookup._lookup_otx")
+    @patch("ai.threat_intel.lookup._lookup_malwarebazaar")
+    def test_mb_hit_stops(self, mock_mb, mock_otx, mock_vt, mock_limiter, tmp_path):
+        """MalwareBazaar hit (first in cascade) should skip OTX and VT."""
         from ai.threat_intel.lookup import lookup_hash
 
-        mock_vt.return_value = sample_report
+        mock_mb.return_value = ThreatReport(
+            hash="a" * 64, source="malwarebazaar", family="Emotet", risk_level="high"
+        )
 
         with patch("ai.threat_intel.lookup.ENRICHED_HASHES", tmp_path / "enriched.jsonl"):
             result = lookup_hash("a" * 64, rate_limiter=mock_limiter)
 
-        assert result.source == "virustotal"
+        assert result.source == "malwarebazaar"
         mock_otx.assert_not_called()
-        mock_mb.assert_not_called()
+        mock_vt.assert_not_called()
 
-    @patch("ai.threat_intel.lookup._lookup_malwarebazaar")
-    @patch("ai.threat_intel.lookup._lookup_otx")
     @patch("ai.threat_intel.lookup._lookup_virustotal")
-    def test_vt_miss_otx_hit(self, mock_vt, mock_otx, mock_mb, mock_limiter, tmp_path):
+    @patch("ai.threat_intel.lookup._lookup_otx")
+    @patch("ai.threat_intel.lookup._lookup_malwarebazaar")
+    def test_mb_miss_otx_hit(self, mock_mb, mock_otx, mock_vt, mock_limiter, tmp_path):
+        """MalwareBazaar miss should fall through to OTX; OTX hit skips VT."""
         from ai.threat_intel.lookup import lookup_hash
 
-        mock_vt.return_value = None
+        mock_mb.return_value = None
         mock_otx.return_value = ThreatReport(
             hash="a" * 64, source="otx", family="Emotet", risk_level="medium"
         )
@@ -315,12 +321,28 @@ class TestCascadingLogic:
             result = lookup_hash("a" * 64, rate_limiter=mock_limiter)
 
         assert result.source == "otx"
-        mock_mb.assert_not_called()
+        mock_vt.assert_not_called()
 
-    @patch("ai.threat_intel.lookup._lookup_malwarebazaar", return_value=None)
-    @patch("ai.threat_intel.lookup._lookup_otx", return_value=None)
+    @patch("ai.threat_intel.lookup._lookup_virustotal")
+    @patch("ai.threat_intel.lookup._lookup_otx")
+    @patch("ai.threat_intel.lookup._lookup_malwarebazaar")
+    def test_mb_otx_miss_vt_hit(self, mock_mb, mock_otx, mock_vt, mock_limiter, sample_report, tmp_path):
+        """MB and OTX miss should fall through to VT (last resort)."""
+        from ai.threat_intel.lookup import lookup_hash
+
+        mock_mb.return_value = None
+        mock_otx.return_value = None
+        mock_vt.return_value = sample_report
+
+        with patch("ai.threat_intel.lookup.ENRICHED_HASHES", tmp_path / "enriched.jsonl"):
+            result = lookup_hash("a" * 64, rate_limiter=mock_limiter)
+
+        assert result.source == "virustotal"
+
     @patch("ai.threat_intel.lookup._lookup_virustotal", return_value=None)
-    def test_all_miss(self, _vt, _otx, _mb, mock_limiter, tmp_path):
+    @patch("ai.threat_intel.lookup._lookup_otx", return_value=None)
+    @patch("ai.threat_intel.lookup._lookup_malwarebazaar", return_value=None)
+    def test_all_miss(self, _mb, _otx, _vt, mock_limiter, tmp_path):
         from ai.threat_intel.lookup import lookup_hash
 
         with patch("ai.threat_intel.lookup.ENRICHED_HASHES", tmp_path / "enriched.jsonl"):
@@ -329,14 +351,14 @@ class TestCascadingLogic:
         assert result.source == "none"
         assert result.has_data is False
 
-    @patch("ai.threat_intel.lookup._lookup_malwarebazaar")
-    @patch("ai.threat_intel.lookup._lookup_otx")
     @patch("ai.threat_intel.lookup._lookup_virustotal")
-    def test_vt_rate_limited_skips_to_otx(self, mock_vt, mock_otx, mock_mb, mock_limiter, tmp_path):
+    @patch("ai.threat_intel.lookup._lookup_otx")
+    @patch("ai.threat_intel.lookup._lookup_malwarebazaar")
+    def test_mb_rate_limited_skips_to_otx(self, mock_mb, mock_otx, mock_vt, mock_limiter, tmp_path):
+        """MalwareBazaar rate limited (returns None) should fall through to OTX."""
         from ai.threat_intel.lookup import lookup_hash
 
-        # VT returns None (rate limited internally), OTX returns data
-        mock_vt.return_value = None
+        mock_mb.return_value = None
         mock_otx.return_value = ThreatReport(
             hash="a" * 64, source="otx", family="TestFamily", risk_level="low"
         )

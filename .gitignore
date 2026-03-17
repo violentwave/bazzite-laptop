@@ -6,6 +6,7 @@ __pycache__/
 # Editor/IDE
 *.swp
 *.swo
+*.kate-swp
 *~
 *.orig
 .idea
@@ -74,5 +75,12 @@ health-deltas.dat
 .ruff_cache/
 .mypy_cache/
 .pytest_cache/
+pytest-of-*/
 keys.env
 *.env.local
+vectors.db
+
+# Scaffolding dirs (unused)
+/config/
+/src/
+/examples/

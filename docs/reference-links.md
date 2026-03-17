@@ -27,6 +27,10 @@ Claude Code GitHub: https://github.com/anthropics/claude-code
 Claude Code sandboxing blog: https://www.anthropic.com/engineering/claude-code-sandboxing
 USBGuard documentation: https://usbguard.github.io/
 USBGuard man page: https://wiki.archlinux.org/title/USBGuard
+PySide6/Qt6: https://doc.qt.io/qtforpython-6/
+LiteLLM: https://docs.litellm.ai/
+Moonshine STT: https://github.com/moonshine-ai/moonshine
+Kokoro TTS: https://github.com/thewh1teagle/kokoro-onnx
 msmtp documentation: https://marlam.de/msmtp/
 Gmail app passwords: https://myaccount.google.com/apppasswords
 Bazzite backup/restore: See backup-official-guide.md in this project

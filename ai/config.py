@@ -34,22 +34,76 @@ MANGOHUD_CONFIG = Path.home() / ".config" / "MangoHud" / "MangoHud.conf"
 MANGOHUD_LOG_DIR = Path.home() / ".local" / "share" / "MangoHud"
 STEAM_LIBRARY_DEFAULT = Path("/run/media/lch/SteamLibrary")
 
+# ── Key Scopes ──
+
+KEY_SCOPES: dict[str, set[str]] = {
+    "llm": {
+        "GROQ_API_KEY",
+        "ZAI_API_KEY",
+        "GEMINI_API_KEY",
+        "OPENROUTER_API_KEY",
+        "MISTRAL_API_KEY",
+        "CEREBRAS_API_KEY",
+        "CLOUDFLARE_API_KEY",
+    },
+    "threat_intel": {
+        "VT_API_KEY",
+        "OTX_API_KEY",
+        "ABUSEIPDB_KEY",
+    },
+}
+
 # ── Key Loading ──
 
 _keys_loaded = False
 
 
-def load_keys() -> bool:
-    """Load API keys from keys.env into environment. Returns True if file was found."""
+def load_keys(scope: str | None = None) -> bool:
+    """Load API keys from keys.env into environment. Returns True if file was found.
+
+    Args:
+        scope: Optional scope to filter which keys are loaded.
+            None (default): load ALL keys (backward compatible).
+            "llm": only load LLM provider keys.
+            "threat_intel": only load threat intel keys.
+
+    Raises:
+        ValueError: If scope is not None and not a recognized scope name.
+    """
     global _keys_loaded  # noqa: PLW0603
-    if _keys_loaded:
-        return True
-    if KEYS_ENV.exists():
-        load_dotenv(KEYS_ENV)
-        _keys_loaded = True
-        return True
-    logging.getLogger(APP_NAME).warning("keys.env not found at %s", KEYS_ENV)
-    return False
+
+    if scope is not None and scope not in KEY_SCOPES:
+        raise ValueError(f"Unknown scope '{scope}'. Valid scopes: {sorted(KEY_SCOPES.keys())}")
+
+    # Unscoped load uses the cached flag for backward compatibility
+    if scope is None:
+        if _keys_loaded:
+            return True
+        if KEYS_ENV.exists():
+            load_dotenv(KEYS_ENV)
+            _keys_loaded = True
+            return True
+        logging.getLogger(APP_NAME).warning("keys.env not found at %s", KEYS_ENV)
+        return False
+
+    # Scoped load: parse the file and only set allowed keys
+    if not KEYS_ENV.exists():
+        logging.getLogger(APP_NAME).warning("keys.env not found at %s", KEYS_ENV)
+        return False
+
+    allowed_keys = KEY_SCOPES[scope]
+    # Read the env file and selectively load only scoped keys
+    with open(KEYS_ENV, encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if not line or line.startswith("#") or "=" not in line:
+                continue
+            key, _, value = line.partition("=")
+            key = key.strip()
+            value = value.strip()
+            if key in allowed_keys:
+                os.environ[key] = value
+    return True
 
 
 def get_key(name: str) -> str | None:

@@ -11,8 +11,8 @@ from ai.rate_limiter import RateLimiter
 # Minimal definitions for testing
 MOCK_DEFINITIONS = {
     "llm_providers": {
-        "groq": {"rpm": 3, "rpd": 10},
-        "cloudflare": {"rpm": None, "rpd": None},
+        "groq": {"rpm": 3, "rph": 8, "rpd": 10},
+        "cloudflare": {"rpm": None, "rph": None, "rpd": None},
     },
     "threat_intel": {
         "virustotal": {"rpm": 4, "rpd": 500},
@@ -94,6 +94,65 @@ class TestRpmEnforcement:
         limiter.state_path.write_text(json.dumps(state))
 
         assert limiter.can_call("groq") is True
+
+
+class TestRphEnforcement:
+    def test_blocks_after_hourly_limit(self, limiter):
+        # groq has rph=8; record 8 calls, resetting minute counter to avoid rpm block
+        for i in range(8):
+            limiter.record_call("groq")
+            if (i + 1) % 3 == 0:
+                state = json.loads(limiter.state_path.read_text())
+                state["groq"]["calls_this_minute"] = 0
+                limiter.state_path.write_text(json.dumps(state))
+        assert limiter.can_call("groq") is False
+
+    def test_hourly_window_reset(self, limiter):
+        # Record calls up to hourly limit
+        for i in range(8):
+            limiter.record_call("groq")
+            if (i + 1) % 3 == 0:
+                state = json.loads(limiter.state_path.read_text())
+                state["groq"]["calls_this_minute"] = 0
+                limiter.state_path.write_text(json.dumps(state))
+        assert limiter.can_call("groq") is False
+
+        # Fake the hour_start to >3600s ago
+        state = json.loads(limiter.state_path.read_text())
+        old_time = datetime.now() - timedelta(seconds=3601)
+        state["groq"]["hour_start"] = old_time.isoformat()
+        # Also reset minute to avoid rpm block
+        state["groq"]["calls_this_minute"] = 0
+        limiter.state_path.write_text(json.dumps(state))
+
+        assert limiter.can_call("groq") is True
+
+    def test_wait_time_positive_when_rph_blocked(self, limiter):
+        for i in range(8):
+            limiter.record_call("groq")
+            if (i + 1) % 3 == 0:
+                state = json.loads(limiter.state_path.read_text())
+                state["groq"]["calls_this_minute"] = 0
+                limiter.state_path.write_text(json.dumps(state))
+        wait = limiter.wait_time("groq")
+        assert 0.0 < wait <= 3600.0
+
+    def test_null_rph_unconstrained(self, limiter):
+        # cloudflare has rph=null
+        for _ in range(100):
+            limiter.record_call("cloudflare")
+        assert limiter.can_call("cloudflare") is True
+
+    def test_backward_compat_no_hourly_fields(self, limiter):
+        """Old state files without hourly fields should not break."""
+        limiter.record_call("virustotal")
+        # Remove hourly fields to simulate old state
+        state = json.loads(limiter.state_path.read_text())
+        state["virustotal"].pop("calls_this_hour", None)
+        state["virustotal"].pop("hour_start", None)
+        limiter.state_path.write_text(json.dumps(state))
+        # Should still work
+        assert limiter.can_call("virustotal") is True
 
 
 class TestRpdEnforcement:

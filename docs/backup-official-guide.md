@@ -47,7 +47,7 @@ Everything needed to fully restore the system from a fresh Bazzite install:
 ### Scripts
 | Backup Name | Original Location |
 |-------------|-------------------|
-| `scripts/` | `/usr/local/bin/` — clamav-scan.sh, clamav-alert.sh, clamav-healthcheck.sh, quarantine-release.sh, bazzite-security-test.sh, public-wifi-mode, system-health-snapshot.sh, system-health-test.sh, start-security-tray.sh, integration-test.sh |
+| `scripts/` | `/usr/local/bin/` — clamav-scan.sh, clamav-alert.sh, clamav-healthcheck.sh, quarantine-release.sh, bazzite-security-test.sh, public-wifi-mode, system-health-snapshot.sh, system-health-test.sh, start-security-tray.sh, start-security-tray-qt.sh, integration-test.sh |
 
 ### User Configs
 | Backup Name | Original Location |
@@ -58,6 +58,7 @@ Everything needed to fully restore the system from a fresh Bazzite install:
 | `kde-security-menu/` | KDE Security menu shortcuts |
 | `security/` | `~/security/` (quarantine, configs, LUKS backup, READMEs) |
 | `security-tray/` | `~/security/bazzite-security-tray.py` + `icons/` |
+| PySide6 tray | `tray/security_tray_qt.py`, `tray/dashboard_window.py`, `tray/state_machine.py` |
 | `autostart/` | `~/.config/autostart/bazzite-security-tray.desktop` |
 | `dot-status` | `~/security/.status` (tray status file) |
 

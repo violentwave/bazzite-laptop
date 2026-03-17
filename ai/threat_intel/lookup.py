@@ -1,8 +1,8 @@
 """Core threat intelligence lookup engine.
 
-Implements cascading hash lookups across VirusTotal, OTX AlienVault, and
-MalwareBazaar. Designed for testability: all provider functions accept an
-injectable rate_limiter parameter.
+Implements cascading hash lookups across MalwareBazaar, OTX AlienVault, and
+VirusTotal (cheapest-first order). Designed for testability: all provider
+functions accept an injectable rate_limiter parameter.
 
 Usage:
     from ai.threat_intel.lookup import lookup_hash, lookup_hashes
@@ -335,10 +335,12 @@ def lookup_hash(
     if rate_limiter is None:
         rate_limiter = RateLimiter()
 
-    providers = [_lookup_virustotal, _lookup_otx, _lookup_malwarebazaar]
+    # Cascade order: cheapest/most-generous first, most-limited last.
+    # MalwareBazaar (free, no limit) → OTX (10k/hr) → VT (500/day)
+    providers = [_lookup_malwarebazaar, _lookup_otx, _lookup_virustotal]
 
     if full:
-        # Full mode: call all providers, prefer VT data, merge tags
+        # Full mode: call all providers, prefer first with data, merge tags
         results: list[ThreatReport | None] = []
         with _lookup_timeout(30) as timed_out:
             for fn in providers:

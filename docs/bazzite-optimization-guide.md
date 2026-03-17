@@ -192,7 +192,8 @@ Layered packages: `clamav`, `clamav-freshclam`, `clamd`, `msmtp`
 - **Signal handling**: Scan script traps INT/TERM — stops clamd, resets tray status to idle on interrupt
 
 ### Notification System ✅
-- **System tray app**: ~/security/bazzite-security-tray.py (Python + GObject + AppIndicator3)
+- **System tray app (legacy)**: ~/security/bazzite-security-tray.py (Python + GObject + AppIndicator3)
+- **Current tray (SP2)**: tray/security_tray_qt.py (PySide6/Qt6) — replaced GTK3 version
 - **Custom icons**: 7 SVG shield icons at ~/security/icons/hicolor/scalable/status/ with freedesktop index.theme (viewBox 48x48)
   - Shape-differentiated badges for colorblind accessibility: filled circle (healthy), hollow ring (scanning), checkmark (complete), triangle (warning), X mark (error/threats), EKG pulse (health warning), outline-only (blink frame)
 - **9-state icon machine**:
@@ -309,7 +310,8 @@ Test per-game (do NOT use PRIME offload vars — those crash games):
 - `PROTON_ENABLE_WAYLAND=1` — native Wayland rendering in Proton 10+
 - `PROTON_USE_NTSYNC=1` — improved synchronization primitives
 
-### 3. AI/Coding Setup (Deferred)
+### 3. AI/Coding Setup ~~(Deferred)~~ COMPLETE
+> **Note (2026-03-17):** SP1-SP3 (AI/Coding Setup) are now complete. See CLAUDE.md for details.
 **Ollama with CUDA** — GTX 1060 6GB VRAM can run:
 - ✅ 7B parameter models (Llama 3.2, Mistral 7B, Qwen2.5-Coder 7B)
 - ⚠️ 13B models will be slow (heavy CPU offloading)

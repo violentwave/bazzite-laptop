@@ -1,0 +1,1 @@
+{"version":3,"file":"index.d.ts","sourceRoot":"","sources":["../../src/bridges/index.ts"],"names":[],"mappings":"AAAA;;;;GAIG;AAEH,OAAO,EACL,YAAY,EACZ,kBAAkB,GACnB,MAAM,oBAAoB,CAAC;AAC5B,YAAY,EAAE,gBAAgB,EAAE,MAAM,oBAAoB,CAAC;AAE3D,OAAO,EACL,SAAS,EACT,eAAe,GAChB,MAAM,iBAAiB,CAAC;AACzB,YAAY,EACV,GAAG,EACH,OAAO,EACP,OAAO,EACP,qBAAqB,EACrB,kBAAkB,GACnB,MAAM,iBAAiB,CAAC"}

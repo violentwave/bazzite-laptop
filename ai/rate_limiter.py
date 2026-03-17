@@ -68,23 +68,33 @@ class RateLimiter:
         except (FileNotFoundError, json.JSONDecodeError, PermissionError, OSError):
             return {}
 
-    def _write_state(self, state: dict) -> None:
+    def _write_state(self, state: dict, _lock_f=None) -> None:
         """Atomic write: lock shared file, write tmp, rename over state file.
 
         Uses a dedicated .lock file for coordination (not the tmp file),
         ensuring concurrent writers serialize properly.
+
+        Args:
+            state: The state dict to persist.
+            _lock_f: Optional pre-acquired lock file handle.  When provided
+                the caller already holds LOCK_EX on the .lock file, so this
+                method skips re-acquiring it (avoids same-process deadlock
+                between different file descriptions).
         """
         self.state_path.parent.mkdir(parents=True, exist_ok=True)
         lock_path = self.state_path.with_suffix(".lock")
         fd = None
         tmp_path = None
+        own_lock = _lock_f is None
+
         try:
             fd, tmp_name = tempfile.mkstemp(
                 dir=self.state_path.parent, prefix=".state-", suffix=".tmp"
             )
             tmp_path = Path(tmp_name)
-            with open(lock_path, "w") as lock_f:
-                fcntl.flock(lock_f.fileno(), fcntl.LOCK_EX)
+
+            def _do_write(lock_fh):
+                nonlocal fd, tmp_path
                 with os.fdopen(fd, "w") as f:
                     fd = None  # os.fdopen takes ownership
                     json.dump(state, f, indent=2)
@@ -92,6 +102,13 @@ class RateLimiter:
                     os.fsync(f.fileno())
                 os.rename(tmp_path, self.state_path)
                 tmp_path = None  # rename succeeded, nothing to clean up
+
+            if own_lock:
+                with open(lock_path, "w") as lock_fh:
+                    fcntl.flock(lock_fh.fileno(), fcntl.LOCK_EX)
+                    _do_write(lock_fh)
+            else:
+                _do_write(_lock_f)
         except (PermissionError, OSError) as e:
             logger.warning("Failed to write rate limiter state: %s", e)
         finally:
@@ -106,14 +123,22 @@ class RateLimiter:
     def _get_provider_state(self, state: dict, provider: str) -> dict:
         """Get a provider's state entry, resetting stale windows."""
         now = time.time()
+        now_iso = datetime.fromtimestamp(now).isoformat()
         today = date.today().isoformat()
 
         entry = state.get(provider, {
             "calls_this_minute": 0,
-            "minute_start": datetime.fromtimestamp(now).isoformat(),
+            "minute_start": now_iso,
+            "calls_this_hour": 0,
+            "hour_start": now_iso,
             "calls_today": 0,
             "day_date": today,
         })
+
+        # Ensure hourly fields exist (backward compat with old state files)
+        if "calls_this_hour" not in entry:
+            entry["calls_this_hour"] = 0
+            entry["hour_start"] = now_iso
 
         # Reset minute window if >60s elapsed
         try:
@@ -123,7 +148,17 @@ class RateLimiter:
 
         if now - minute_start > 60:
             entry["calls_this_minute"] = 0
-            entry["minute_start"] = datetime.fromtimestamp(now).isoformat()
+            entry["minute_start"] = now_iso
+
+        # Reset hourly window if >3600s elapsed
+        try:
+            hour_start = datetime.fromisoformat(entry["hour_start"]).timestamp()
+        except (ValueError, KeyError):
+            hour_start = 0.0
+
+        if now - hour_start > 3600:
+            entry["calls_this_hour"] = 0
+            entry["hour_start"] = now_iso
 
         # Reset daily window on new calendar day
         if entry.get("day_date") != today:
@@ -147,6 +182,10 @@ class RateLimiter:
         if rpm is not None and entry["calls_this_minute"] >= rpm:
             return False
 
+        rph = limits.get("rph")
+        if rph is not None and entry["calls_this_hour"] >= rph:
+            return False
+
         rpd = limits.get("rpd")
         if rpd is not None and entry["calls_today"] >= rpd:
             return False
@@ -168,9 +207,11 @@ class RateLimiter:
                 state = self._read_state()
                 entry = self._get_provider_state(state, provider)
                 entry["calls_this_minute"] += 1
+                entry["calls_this_hour"] += 1
                 entry["calls_today"] += 1
                 state[provider] = entry
-                self._write_state(state)
+                # Pass pre-acquired lock fd to avoid re-entrant deadlock
+                self._write_state(state, _lock_f=lock_f)
         except (PermissionError, OSError) as e:
             logger.warning("Failed to record call: %s", e)
 
@@ -191,6 +232,16 @@ class RateLimiter:
             # Seconds until next midnight
             seconds_left = 86400 - (now - midnight).total_seconds()
             return max(seconds_left, 0.0)
+
+        # Check hourly limit
+        rph = limits.get("rph")
+        if rph is not None and entry["calls_this_hour"] >= rph:
+            try:
+                hour_start = datetime.fromisoformat(entry["hour_start"]).timestamp()
+            except (ValueError, KeyError):
+                return 0.0
+            elapsed = time.time() - hour_start
+            return max(3600.0 - elapsed, 0.0)
 
         # Check minute limit
         rpm = limits.get("rpm")
