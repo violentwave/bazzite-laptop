@@ -479,7 +479,16 @@ def acquire_lock() -> object:
         lock_fd.flush()
         return lock_fd  # keep reference alive so lock persists
     except BlockingIOError:
-        print("[tray] Another instance is already running", file=sys.stderr)
+        # Another instance is running — if --show-dashboard, signal it
+        if "--show-dashboard" in sys.argv:
+            try:
+                pid = int(Path(LOCK_FILE).read_text().strip())
+                os.kill(pid, signal.SIGUSR1)
+                print(f"[tray] Signalled PID {pid} to show dashboard")
+            except Exception as exc:
+                print(f"[tray] Could not signal: {exc}", file=sys.stderr)
+        else:
+            print("[tray] Another instance is already running", file=sys.stderr)
         sys.exit(0)
 
 
@@ -496,6 +505,12 @@ if __name__ == "__main__":
         sys.exit(1)
 
     tray = SecurityTrayQt()
+
+    # SIGUSR1 handler: another invocation with --show-dashboard signals us
+    def _sigusr1_handler(_sig, _frame):
+        from PySide6.QtCore import QTimer as _QT
+        _QT.singleShot(0, tray._toggle_dashboard)
+    signal.signal(signal.SIGUSR1, _sigusr1_handler)
 
     # --show-dashboard flag: auto-open dashboard on launch
     if "--show-dashboard" in sys.argv:

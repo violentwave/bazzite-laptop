@@ -166,16 +166,17 @@ def _card() -> QFrame:
     return f
 
 
-def _heading(text: str, color: str = _T2) -> QLabel:
+def _heading(text: str, color: str = "#74b9ff") -> QLabel:
     lbl = QLabel(text)
-    lbl.setStyleSheet(f"color:{color};font-size:11px;font-weight:700;{_SS_TRANS}")
+    lbl.setStyleSheet(f"color:{color};font-size:12px;font-weight:700;"
+                      f"text-transform:uppercase;letter-spacing:1px;{_SS_TRANS}")
     return lbl
 
 
 def _vlbl(text: str = "--") -> QLabel:
     lbl = QLabel(text)
     lbl.setWordWrap(True)
-    lbl.setStyleSheet(f"color:{_T1};font-size:12px;{_SS_TRANS}")
+    lbl.setStyleSheet(f"color:#ffffff;font-size:13px;{_SS_TRANS}")
     return lbl
 
 
@@ -363,10 +364,8 @@ class DashboardWindow(QMainWindow):
         for label, value in [("Version", "2.0.0"), ("System", _os_release_value("PRETTY_NAME")),
                               ("Kernel", platform.release()), ("Python", sys.version.split()[0]),
                               ("PySide6", pv)]:
-            rl = QLabel(f'<span style="color:{_T2};">{label}:</span>  '
-                        f'<span style="color:{_T1};">{value}</span>')
-            rl.setTextFormat(Qt.TextFormat.RichText)
-            rl.setStyleSheet(_SS_TRANS)
+            rl = QLabel(f"{label}: {value}")
+            rl.setStyleSheet(f"color:#ffffff;font-size:13px;{_SS_TRANS}")
             il.addWidget(rl)
         lay.addWidget(ic)
         link = QLabel(f'<a style="color:{_INFO};" href="https://github.com/violentwave/'
