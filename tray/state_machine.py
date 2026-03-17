@@ -191,14 +191,17 @@ def format_health_age(timestamp_str: str) -> str:
     """Format health check timestamp as age string."""
     if not timestamp_str:
         return "unknown"
-    try:
-        dt = datetime.strptime(timestamp_str, "%Y-%m-%d %I:%M %p")
-        delta = datetime.now() - dt
-        hours = int(delta.total_seconds() / 3600)
-        if hours < 1:
-            return "just now"
-        if hours < 24:
-            return f"{hours}h ago"
-        return f"{hours // 24}d ago"
-    except Exception:
-        return timestamp_str
+    # Try multiple timestamp formats
+    for fmt in ("%Y-%m-%d %I:%M %p", "%Y-%m-%d %H:%M:%S", "%Y-%m-%d %H:%M"):
+        try:
+            dt = datetime.strptime(timestamp_str, fmt)
+            delta = datetime.now() - dt
+            hours = int(delta.total_seconds() / 3600)
+            if hours < 1:
+                return "just now"
+            if hours < 24:
+                return f"{hours}h ago"
+            return f"{hours // 24}d ago"
+        except ValueError:
+            continue
+    return timestamp_str

@@ -25,7 +25,7 @@ _FALLBACK_CHAINS: dict[str, list[str]] = {
     "fast": ["reason"],
     "batch": ["reason"],
     "code": ["reason"],
-    "embed": ["reason"],
+    "embed": [],  # No meaningful fallback for embedding tasks
     "reason": [],
 }
 

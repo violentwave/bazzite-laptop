@@ -28,8 +28,7 @@ try:
     from tray.state_machine import (
         BLANK_ICON, LOG_DIR, SCAN_SCRIPT,
         HEALTHCHECK_SCRIPT, HEALTH_SNAPSHOT_SCRIPT, HEALTH_LOG,
-        STATE_CONFIGS, STATE_HEALTHY_IDLE, STATE_SCAN_COMPLETE,
-        STATE_UNKNOWN,
+        STATE_CONFIGS, STATE_SCAN_COMPLETE, STATE_UNKNOWN,
         determine_state, format_header, format_health_age,
         format_relative_time, icon_path,
     )
@@ -37,8 +36,7 @@ except ImportError:
     from state_machine import (
         BLANK_ICON, LOG_DIR, SCAN_SCRIPT,
         HEALTHCHECK_SCRIPT, HEALTH_SNAPSHOT_SCRIPT, HEALTH_LOG,
-        STATE_CONFIGS, STATE_HEALTHY_IDLE, STATE_SCAN_COMPLETE,
-        STATE_UNKNOWN,
+        STATE_CONFIGS, STATE_SCAN_COMPLETE, STATE_UNKNOWN,
         determine_state, format_header, format_health_age,
         format_relative_time, icon_path,
     )
@@ -110,8 +108,23 @@ class SecurityTrayQt:
     def __init__(self) -> None:
         self._current_state: str = STATE_UNKNOWN
         self._last_status_raw: bytes | None = None
-        self._last_completion_timestamp: str | None = None
         self._status: dict = {}
+
+        # Initialize completion timestamp from current .status
+        # to prevent spurious "Scan Complete" notification on startup
+        try:
+            from tray.state_machine import read_status as _rs
+        except ImportError:
+            from state_machine import read_status as _rs
+        _init_data = _rs()
+        if _init_data:
+            self._last_completion_timestamp: str | None = (
+                _init_data.get("last_scan_time")
+                or _init_data.get("timestamp")
+                or None
+            )
+        else:
+            self._last_completion_timestamp: str | None = None
         self._blink_visible: bool = True
         self._dashboard = None
 
@@ -173,7 +186,7 @@ class SecurityTrayQt:
             # (refreshes relative timestamps and scan progress)
             if (self._dashboard is not None
                     and self._dashboard.isVisible()
-                    and self._status):
+                    and self._status is not None):
                 try:
                     self._dashboard.update_status(
                         self._status, self._current_state
@@ -252,7 +265,12 @@ class SecurityTrayQt:
         self._tray.setIcon(_qicon(icon_name))
 
     def _transition_to_idle(self) -> None:
-        self._set_state(STATE_HEALTHY_IDLE)
+        # Re-derive state from current data rather than assuming healthy
+        new_state, new_ts = determine_state(
+            self._status or None, self._last_completion_timestamp
+        )
+        self._last_completion_timestamp = new_ts
+        self._set_state(new_state)
         self._build_menu()
 
     def _build_menu(self) -> None:

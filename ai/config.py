@@ -15,8 +15,8 @@ VERSION = "0.1.0"
 
 # ── Path Constants ──
 
-PROJECT_ROOT = Path.home() / "projects" / "bazzite-laptop"
-AI_DIR = PROJECT_ROOT / "ai"
+PROJECT_ROOT = Path(__file__).parent.parent.resolve()
+AI_DIR = Path(__file__).parent.resolve()
 VENV_DIR = PROJECT_ROOT / ".venv"
 CONFIGS_DIR = PROJECT_ROOT / "configs"
 KEYS_ENV = Path.home() / ".config" / "bazzite-ai" / "keys.env"

@@ -12,6 +12,7 @@ requests>=2.31.0
 # Utilities
 rich>=13.0.0
 tenacity>=8.2.0
+pyyaml>=6.0
 
 # RAG pipeline (Phase 2)
 pyarrow>=14.0.0

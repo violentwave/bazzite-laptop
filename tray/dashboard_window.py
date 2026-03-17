@@ -471,8 +471,12 @@ class DashboardWindow(QMainWindow):
                 layout.addWidget(lbl)
                 existing[metric_key] = lbl
 
-        for key, lbl in existing.items():
-            lbl.setVisible(key in metrics)
+        # Remove labels for metrics no longer present (prevent leak)
+        for key in list(existing.keys()):
+            if key not in metrics:
+                lbl = existing.pop(key)
+                layout.removeWidget(lbl)
+                lbl.deleteLater()
 
     def closeEvent(self, event) -> None:  # noqa: N802
         self._settings.setValue("geometry", self.saveGeometry())
