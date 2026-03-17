@@ -8,7 +8,8 @@ set -euo pipefail
 QUARANTINE_DIR="/home/lch/security/quarantine"
 LOG_DIR="/var/log/clamav-scans"
 HEALTHCHECK_LOG="/home/lch/security/.healthcheck.log"
-STATUS_TMP="$(mktemp /home/lch/security/.status.tmp.XXXXXX)"
+# Create temp file in root-owned dir to prevent symlink attacks
+STATUS_TMP="$(mktemp /var/log/clamav-scans/.status.tmp.XXXXXX)"
 LCH_UID="$(id -u lch)"
 INTERACTIVE=false
 [ -t 1 ] && INTERACTIVE=true

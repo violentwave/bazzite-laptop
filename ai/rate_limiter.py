@@ -154,13 +154,25 @@ class RateLimiter:
         return True
 
     def record_call(self, provider: str) -> None:
-        """Record that an API call was made to this provider."""
-        state = self._read_state()
-        entry = self._get_provider_state(state, provider)
-        entry["calls_this_minute"] += 1
-        entry["calls_today"] += 1
-        state[provider] = entry
-        self._write_state(state)
+        """Record that an API call was made to this provider.
+
+        Uses a file lock to prevent lost-update race conditions
+        when multiple scripts call record_call concurrently.
+        """
+        lock_path = self.state_path.with_suffix(".lock")
+        self.state_path.parent.mkdir(parents=True, exist_ok=True)
+        try:
+            with open(lock_path, "a") as lock_f:
+                fcntl.flock(lock_f.fileno(), fcntl.LOCK_EX)
+                # Read-modify-write under single lock
+                state = self._read_state()
+                entry = self._get_provider_state(state, provider)
+                entry["calls_this_minute"] += 1
+                entry["calls_today"] += 1
+                state[provider] = entry
+                self._write_state(state)
+        except (PermissionError, OSError) as e:
+            logger.warning("Failed to record call: %s", e)
 
     def wait_time(self, provider: str) -> float:
         """Seconds to wait before the next allowed call. 0.0 if can call now."""

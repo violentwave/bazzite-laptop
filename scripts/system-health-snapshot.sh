@@ -21,7 +21,7 @@
 #   2 — Critical issues detected
 #   3 — Script error
 
-set -uo pipefail
+set -euo pipefail
 
 # --- Cleanup temp files on exit ---
 trap 'rm -f "${DISK_WARNS_TMP:-}" "${DELTA_TMP:-}" 2>/dev/null' EXIT
@@ -41,14 +41,26 @@ readonly TIMESTAMP
 readonly LOG_FILE="${LOG_DIR}/health-${TIMESTAMP}.log"
 readonly LATEST_LINK="${LOG_DIR}/health-latest.log"
 
-# Source device UUIDs from central config
+# Source device UUIDs from central config (with ownership validation)
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 UUID_CONF="${SCRIPT_DIR}/../configs/device-uuids.conf"
+_safe_source() {
+    local conf="$1"
+    local owner perms
+    owner=$(stat -c '%U' "$conf" 2>/dev/null) || return 1
+    perms=$(stat -c '%a' "$conf" 2>/dev/null) || return 1
+    # Only source if owned by root or lch, and not world-writable
+    if [[ "$owner" == "root" || "$owner" == "lch" ]] && [[ ! "${perms: -1}" =~ [2367] ]]; then
+        # shellcheck source=../configs/device-uuids.conf
+        source "$conf"
+    else
+        echo "Warning: $conf has insecure ownership ($owner) or permissions ($perms) — skipping" >&2
+    fi
+}
 if [[ -f "$UUID_CONF" ]]; then
-    # shellcheck source=../configs/device-uuids.conf
-    source "$UUID_CONF"
+    _safe_source "$UUID_CONF"
 elif [[ -f "/etc/bazzite-security/device-uuids.conf" ]]; then
-    source "/etc/bazzite-security/device-uuids.conf"
+    _safe_source "/etc/bazzite-security/device-uuids.conf"
 fi
 
 # Dynamic device lookup — avoids hardcoded /dev/sdX that changes with device ordering

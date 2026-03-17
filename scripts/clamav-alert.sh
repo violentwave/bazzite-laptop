@@ -20,6 +20,16 @@ DURATION="${5:?Missing duration}"
 LOG_FILE="${6:?Missing log_file}"
 HEALTH_SUMMARY="${7:-}"
 
+# Validate numeric arguments to prevent email header injection
+if ! [[ "$THREAT_COUNT" =~ ^[0-9]+$ ]]; then
+    echo "Error: THREAT_COUNT must be numeric, got: '$THREAT_COUNT'" >&2
+    exit 1
+fi
+if ! [[ "$FILES_SCANNED" =~ ^[0-9]+$ ]]; then
+    echo "Error: FILES_SCANNED must be numeric, got: '$FILES_SCANNED'" >&2
+    exit 1
+fi
+
 # HTML-escape helper — prevents broken email rendering from special characters
 html_escape() {
     local text="$1"
