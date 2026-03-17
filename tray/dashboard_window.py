@@ -56,7 +56,7 @@ _QSS = (
 
 # -- Helpers -----------------------------------------------------------------
 _TIMER_CACHE: dict[str, tuple[str, float]] = {}
-_SS_TRANS = "background:transparent;border:none"
+_SS_TRANS = "background:transparent;border:none;color:#ffffff"
 
 
 def _os_release_value(key: str) -> str:
