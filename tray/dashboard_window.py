@@ -56,7 +56,7 @@ _QSS = (
 
 # -- Helpers -----------------------------------------------------------------
 _TIMER_CACHE: dict[str, tuple[str, float]] = {}
-_SS_TRANS = "background:transparent;border:none;color:#ffffff"
+_SS_LBL = "color:#ffffff;background:transparent;border:none"
 
 
 def _os_release_value(key: str) -> str:
@@ -161,10 +161,10 @@ def _parse_health_log() -> dict[str, dict[str, str]]:
 def _card() -> QFrame:
     f = QFrame()
     f.setFrameShape(QFrame.Shape.StyledPanel)
+    f.setProperty("cardFrame", True)
     f.setStyleSheet(
-        f"QFrame{{background:{_CARD};border:1px solid {_BD};"
+        f"QFrame[cardFrame=true]{{background:{_CARD};border:1px solid {_BD};"
         f"border-radius:8px;padding:12px}}"
-        f"QLabel{{color:#ffffff;background:transparent;border:none}}"
     )
     return f
 
@@ -172,14 +172,14 @@ def _card() -> QFrame:
 def _heading(text: str, color: str = "#74b9ff") -> QLabel:
     lbl = QLabel(text)
     lbl.setStyleSheet(f"color:{color};font-size:12px;font-weight:700;"
-                      f"text-transform:uppercase;letter-spacing:1px;{_SS_TRANS}")
+                      f"text-transform:uppercase;letter-spacing:1px;{_SS_LBL}")
     return lbl
 
 
 def _vlbl(text: str = "--") -> QLabel:
     lbl = QLabel(text)
     lbl.setWordWrap(True)
-    lbl.setStyleSheet(f"color:#ffffff;font-size:13px;{_SS_TRANS}")
+    lbl.setStyleSheet(f"color:#ffffff;font-size:13px;{_SS_LBL}")
     return lbl
 
 
@@ -218,13 +218,13 @@ class DashboardWindow(QMainWindow):
         shield = QLabel()
         shield.setFixedSize(48, 48)
         shield.setScaledContents(True)
-        shield.setStyleSheet(_SS_TRANS)
+        shield.setStyleSheet(_SS_LBL)
         refs["shield"] = shield
         bl.addWidget(shield)
         sl = QLabel("Initialising...")
         sl.setTextFormat(Qt.TextFormat.RichText)
         sl.setWordWrap(True)
-        sl.setStyleSheet(f"font-size:16px;font-weight:700;{_SS_TRANS}")
+        sl.setStyleSheet(f"font-size:16px;font-weight:700;{_SS_LBL}")
         refs["state_label"] = sl
         bl.addWidget(sl, stretch=1)
         lay.addWidget(banner)
@@ -286,12 +286,12 @@ class DashboardWindow(QMainWindow):
         hi = QLabel()
         hi.setFixedSize(48, 48)
         hi.setScaledContents(True)
-        hi.setStyleSheet(_SS_TRANS)
+        hi.setStyleSheet(_SS_LBL)
         refs["health_icon"] = hi
         ht = QLabel("Checking health...")
         ht.setTextFormat(Qt.TextFormat.RichText)
         ht.setWordWrap(True)
-        ht.setStyleSheet(f"font-size:16px;font-weight:700;{_SS_TRANS}")
+        ht.setStyleSheet(f"font-size:16px;font-weight:700;{_SS_LBL}")
         refs["health_banner_text"] = ht
         bl.addWidget(hi)
         bl.addWidget(ht, stretch=1)
@@ -316,7 +316,7 @@ class DashboardWindow(QMainWindow):
         lay.addLayout(grid)
         ph = _vlbl("No health data yet -- run a snapshot.")
         ph.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        ph.setStyleSheet(f"color:{_T2};font-style:italic;font-size:12px;{_SS_TRANS}")
+        ph.setStyleSheet(f"color:{_T2};font-style:italic;font-size:12px;{_SS_LBL}")
         refs["hw_placeholder"] = ph
         lay.addWidget(ph)
         # Actions
@@ -344,7 +344,7 @@ class DashboardWindow(QMainWindow):
         shield = QLabel()
         shield.setFixedSize(64, 64)
         shield.setScaledContents(True)
-        shield.setStyleSheet(_SS_TRANS)
+        shield.setStyleSheet(_SS_LBL)
         svg = icon_path("bazzite-sec-green")
         if svg.exists():
             shield.setPixmap(QPixmap(str(svg)))
@@ -353,7 +353,7 @@ class DashboardWindow(QMainWindow):
                               ("Enterprise security monitoring for Bazzite Linux", 12, _T2)]:
             l = QLabel(txt)
             l.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            l.setStyleSheet(f"font-size:{sz}px;font-weight:700;color:{clr};{_SS_TRANS}")
+            l.setStyleSheet(f"font-size:{sz}px;font-weight:700;color:{clr};{_SS_LBL}")
             lay.addWidget(l)
         lay.addSpacing(10)
         try:
@@ -368,7 +368,7 @@ class DashboardWindow(QMainWindow):
                               ("Kernel", platform.release()), ("Python", sys.version.split()[0]),
                               ("PySide6", pv)]:
             rl = QLabel(f"{label}: {value}")
-            rl.setStyleSheet(f"color:#ffffff;font-size:13px;{_SS_TRANS}")
+            rl.setStyleSheet(f"color:#ffffff;font-size:13px;{_SS_LBL}")
             il.addWidget(rl)
         lay.addWidget(ic)
         link = QLabel(f'<a style="color:{_INFO};" href="https://github.com/violentwave/'
@@ -376,7 +376,7 @@ class DashboardWindow(QMainWindow):
         link.setTextFormat(Qt.TextFormat.RichText)
         link.setOpenExternalLinks(True)
         link.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        link.setStyleSheet(_SS_TRANS)
+        link.setStyleSheet(_SS_LBL)
         lay.addWidget(link)
         lay.addStretch()
         return root
