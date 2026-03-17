@@ -1,11 +1,11 @@
-# Bazzite Security Tray — KDE menu shortcut to start/restart the tray icon
+# Bazzite Security Dashboard — opens the dashboard (starts tray if not running)
 # Deploy to: ~/.local/share/applications/security-tray-start.desktop
 [Desktop Entry]
 Type=Application
-Name=Start Security Monitor
-Comment=Start or restart the security tray monitor
-Icon=/home/lch/security/icons/hicolor/scalable/status/bazzite-sec-teal.svg
-Exec=/usr/local/bin/start-security-tray.sh
+Name=Security Dashboard
+Comment=Open the Bazzite Security Dashboard
+Icon=/home/lch/security/icons/hicolor/scalable/status/bazzite-sec-green.svg
+Exec=bash -c 'pgrep -f security_tray_qt.py >/dev/null || /usr/local/bin/start-security-tray-qt.sh &'
 Terminal=false
 Categories=Security;System;
 StartupNotify=false

@@ -11,26 +11,26 @@
             <Category>Security</Category>
         </Include>
         <Layout>
+            <!-- Dashboard -->
+            <Filename>security-tray-start.desktop</Filename>
+            <Separator/>
             <!-- Scanning -->
             <Filename>security-quick-scan.desktop</Filename>
             <Filename>security-deep-scan.desktop</Filename>
+            <Filename>security-healthcheck.desktop</Filename>
             <Separator/>
-            <!-- Monitoring -->
+            <!-- Logs & Monitoring -->
             <Filename>security-health-snapshot.desktop</Filename>
             <Filename>security-scan-logs.desktop</Filename>
             <Filename>security-health-logs.desktop</Filename>
             <Filename>security-quarantine.desktop</Filename>
             <Separator/>
-            <!-- Tools -->
-            <Filename>security-tray-start.desktop</Filename>
-            <Filename>security-healthcheck.desktop</Filename>
-            <Filename>security-usb-devices.desktop</Filename>
-            <Separator/>
-            <!-- Configuration -->
+            <!-- System Tools -->
             <Filename>security-firewall.desktop</Filename>
+            <Filename>security-usb-devices.desktop</Filename>
             <Filename>security-update-email-password.desktop</Filename>
             <Separator/>
-            <!-- Catch-all for system Security-category apps (Bitwarden, KWallet, etc.) -->
+            <!-- Other Security apps (Bitwarden, KWallet, etc.) -->
             <Merge type="all"/>
         </Layout>
     </Menu>
