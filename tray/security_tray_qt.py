@@ -41,7 +41,10 @@ except ImportError:
         format_relative_time, icon_path,
     )
 
-LOCK_FILE = Path.home() / "security" / ".tray.lock"
+# Lock file: XDG_RUNTIME_DIR (tmpfs, always writable from real session)
+LOCK_FILE = Path(
+    os.environ.get("XDG_RUNTIME_DIR", f"/run/user/{os.getuid()}")
+) / "bazzite-security-tray.lock"
 POLL_INTERVAL_MS = 3000
 SCAN_COMPLETE_TIMEOUT_MS = 30_000
 
