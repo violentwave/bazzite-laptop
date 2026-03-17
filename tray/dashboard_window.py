@@ -35,18 +35,19 @@ STATE_COLORS: dict[str, str] = {
 }
 
 _QSS = (
-    f"QMainWindow,QWidget{{background:{_BG};color:{_T1};"
-    f"font-family:'Noto Sans','Segoe UI',sans-serif}}"
+    f"*{{color:#ffffff;font-family:'Noto Sans','Segoe UI',sans-serif}}"
+    f"QMainWindow,QWidget{{background:{_BG}}}"
+    f"QLabel{{color:#ffffff;background:transparent;border:none}}"
     f"QTabWidget::pane{{border:1px solid {_BD};border-radius:4px;"
     f"background:{_BG};top:-1px}}"
     f"QTabBar::tab{{background:{_CARD};color:{_T2};padding:8px 20px;"
     f"border:1px solid {_BD};border-bottom:none;"
     f"border-top-left-radius:6px;border-top-right-radius:6px;"
     f"margin-right:2px;font-weight:600}}"
-    f"QTabBar::tab:selected{{background:{_ACCENT};color:{_T1};"
+    f"QTabBar::tab:selected{{background:{_ACCENT};color:#ffffff;"
     f"border-color:{_INFO}}}"
     f"QTabBar::tab:hover:!selected{{background:{_ACCENT}}}"
-    f"QPushButton{{background:{_ACCENT};color:{_T1};border:1px solid {_BD};"
+    f"QPushButton{{background:{_ACCENT};color:#ffffff;border:1px solid {_BD};"
     f"border-radius:6px;padding:7px 16px;font-weight:600;font-size:12px}}"
     f"QPushButton:hover{{background:{_INFO};color:#0a0a1a;border-color:{_INFO}}}"
     f"QPushButton:pressed{{background:#5a9fd4}}"
