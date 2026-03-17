@@ -161,8 +161,11 @@ def _parse_health_log() -> dict[str, dict[str, str]]:
 def _card() -> QFrame:
     f = QFrame()
     f.setFrameShape(QFrame.Shape.StyledPanel)
-    f.setStyleSheet(f"QFrame{{background:{_CARD};border:1px solid {_BD};"
-                    f"border-radius:8px;padding:10px}}")
+    f.setStyleSheet(
+        f"QFrame{{background:{_CARD};border:1px solid {_BD};"
+        f"border-radius:8px;padding:12px}}"
+        f"QLabel{{color:#ffffff;background:transparent;border:none}}"
+    )
     return f
 
 
