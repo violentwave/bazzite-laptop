@@ -39,7 +39,8 @@ tools:
   security.last_scan:
     description: "Last 20 lines of latest ClamAV scan log"
     source: file_tail
-    path: "/var/log/clamav/scan-latest.log"
+    path: "/var/log/clamav-scans"
+    pattern: "scan-*.log"
     lines: 20
     args: null
 

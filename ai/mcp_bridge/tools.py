@@ -115,9 +115,16 @@ def _redact_paths(text: str) -> str:
     return _HOME_PATTERN.sub("[HOME]", text)
 
 
-def _read_file_tail(path: str, lines: int) -> str:
-    """Read last N lines from a file."""
+def _read_file_tail(path: str, lines: int, pattern: str | None = None) -> str:
+    """Read last N lines from a file or latest file in a directory."""
     p = Path(path)
+    if p.is_dir() and pattern:
+        # Find the most recent file matching the pattern
+        import glob as globmod
+        files = sorted(globmod.glob(str(p / pattern)), key=lambda f: Path(f).stat().st_mtime)
+        if not files:
+            raise FileNotFoundError(f"No files matching {pattern} in {path}")
+        p = Path(files[-1])
     all_lines = p.read_text().splitlines()
     return "\n".join(all_lines[-lines:])
 
@@ -185,7 +192,7 @@ async def execute_tool(tool_name: str, args: dict) -> str:
     # File tail tools
     if tool_def.get("source") == "file_tail":
         try:
-            text = _read_file_tail(tool_def["path"], tool_def.get("lines", 20))
+            text = _read_file_tail(tool_def["path"], tool_def.get("lines", 20), tool_def.get("pattern"))
             return _truncate(_redact_paths(text))
         except FileNotFoundError:
             return "No data yet -- run a snapshot first"
