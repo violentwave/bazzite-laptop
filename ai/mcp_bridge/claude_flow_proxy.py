@@ -51,9 +51,48 @@ class StdioMCPProxy:
                 cwd=os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
             )
             logger.info("claude-flow MCP subprocess started (PID %d)", self._process.pid)
+            # MCP protocol requires initialize handshake before any other requests
+            await self._initialize()
         except FileNotFoundError:
             logger.error("claude-flow not found at %s", CLAUDE_FLOW_BIN)
             raise
+
+    async def _initialize(self) -> None:
+        """Send the MCP initialize handshake."""
+        init_request = {
+            "jsonrpc": "2.0",
+            "id": 0,
+            "method": "initialize",
+            "params": {
+                "protocolVersion": "2024-11-05",
+                "capabilities": {},
+                "clientInfo": {"name": "bazzite-mcp-proxy", "version": "1.0"},
+            },
+        }
+        line = json.dumps(init_request) + "\n"
+        self._process.stdin.write(line.encode())
+        self._process.stdin.flush()
+
+        # Read response (may be preceded by log lines on stderr, which we devnull)
+        loop = asyncio.get_event_loop()
+        for _ in range(10):  # Try up to 10 lines to find the JSON response
+            response_line = await loop.run_in_executor(None, self._process.stdout.readline)
+            if not response_line:
+                logger.warning("claude-flow closed stdout during initialize")
+                return
+            decoded = response_line.decode().strip()
+            if decoded.startswith("{"):
+                try:
+                    resp = json.loads(decoded)
+                    logger.info("MCP initialized: protocol=%s", resp.get("result", {}).get("protocolVersion", "unknown"))
+                    # Send initialized notification
+                    notif = json.dumps({"jsonrpc": "2.0", "method": "notifications/initialized"}) + "\n"
+                    self._process.stdin.write(notif.encode())
+                    self._process.stdin.flush()
+                    return
+                except json.JSONDecodeError:
+                    continue
+        logger.warning("MCP initialize handshake did not receive JSON response")
 
     async def send_request(self, method: str, params: dict | None = None) -> dict:
         """Send a JSON-RPC request to the stdio subprocess and return the response."""
