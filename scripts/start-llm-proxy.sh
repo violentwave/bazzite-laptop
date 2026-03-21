@@ -1,7 +1,7 @@
 #!/bin/bash
 # Start the LLM router proxy for Newelle integration.
 # Exposes ai/router.py as an OpenAI-compatible API on localhost.
-# Provider chain: Gemini → Groq → z.ai → Mistral → OpenRouter → g4f
+# Provider chain: Gemini → Groq → Mistral → OpenRouter → z.ai → Cerebras
 set -euo pipefail
 
 cd "$(dirname "$0")/.."

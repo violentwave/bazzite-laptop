@@ -1,7 +1,7 @@
 """Lightweight OpenAI-compatible proxy for the LiteLLM router.
 
 Exposes /v1/chat/completions on localhost so Newelle can use our full
-provider fallback chain (Gemini → Groq → Mistral → OpenRouter → g4f).
+provider fallback chain (Gemini → Groq → Mistral → OpenRouter → z.ai → Cerebras).
 
 This runs as a SEPARATE process from the MCP bridge (which must never
 import ai.router to avoid key scope widening). Start it with:
@@ -14,7 +14,6 @@ Or via the launch script:
 """
 
 import argparse
-import asyncio
 import json
 import logging
 import os

@@ -1,6 +1,6 @@
 #!/bin/bash
 # Start the MCP bridge server for Newelle integration.
-# Manages g4f subprocess lifecycle automatically.
+# Exposes 22 tools on localhost via FastMCP streamable-http.
 set -euo pipefail
 
 cd "$(dirname "$0")/.."

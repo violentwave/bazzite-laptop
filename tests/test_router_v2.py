@@ -1,7 +1,6 @@
 """Unit tests for ai/router.py V2 features.
 
-Tests health-weighted selection, g4f fallback, stream recovery,
-and provider exhaustion.
+Tests health-weighted selection, stream recovery, and provider exhaustion.
 """
 
 from types import SimpleNamespace
@@ -75,7 +74,6 @@ class TestHealthWeightedSelection:
         # Patch internals
         with (
             patch("ai.router._load_config", return_value=mock_config),
-            patch("ai.router._g4f_available", return_value=False),
             patch("ai.router._get_rate_limiter") as mock_rl,
         ):
             limiter = MagicMock()
@@ -107,7 +105,6 @@ class TestHealthWeightedSelection:
 
         with (
             patch("ai.router._load_config", return_value=mock_config),
-            patch("ai.router._g4f_available", return_value=False),
             patch("ai.router._get_rate_limiter") as mock_rl,
         ):
             limiter = MagicMock()
@@ -132,39 +129,6 @@ class TestHealthWeightedSelection:
             assert "groq" not in call_order, "Disabled provider should be skipped"
 
 
-# ── G4F Fallback ──
-
-
-class TestG4FFallback:
-    def test_g4f_appended_as_last_fallback(self, mock_config):
-        """When g4f is available, it is appended to the provider order as last resort."""
-
-        with (
-            patch("ai.router._load_config", return_value=mock_config),
-            patch("ai.router._g4f_available", return_value=True),
-            patch("ai.router._get_rate_limiter") as mock_rl,
-        ):
-            limiter = MagicMock()
-            limiter.can_call.return_value = True
-            mock_rl.return_value = limiter
-
-            call_order = []
-
-            def fake_try_provider(provider_name, task_type, prompt, **kwargs):
-                call_order.append(provider_name)
-                if provider_name == "g4f":
-                    return _make_completion_response("g4f-response", "g4f/auto")
-                raise RuntimeError("fail")
-
-            with patch("ai.router._try_provider", side_effect=fake_try_provider):
-                from ai.router import route_query
-                result = route_query("fast", "hi")
-
-            assert result == "g4f-response"
-            assert call_order[-1] == "g4f", "g4f should be the last provider tried"
-            assert len(call_order) > 1, "g4f should not be the only provider tried"
-
-
 # ── Stream Recovery ──
 
 
@@ -187,7 +151,6 @@ class TestStreamRecovery:
         with (
             patch("ai.router._load_config", return_value=mock_config),
             patch("ai.router._get_provider_order", return_value=["groq", "cerebras"]),
-            patch("ai.router._g4f_available", return_value=False),
             patch("ai.router._check_rate_limits"),
             patch("ai.router._stream_provider", side_effect=fake_stream_provider),
         ):
@@ -215,7 +178,6 @@ class TestStreamRecovery:
         with (
             patch("ai.router._load_config", return_value=mock_config),
             patch("ai.router._get_provider_order", return_value=["groq"]),
-            patch("ai.router._g4f_available", return_value=False),
             patch("ai.router._check_rate_limits"),
             patch("ai.router._stream_provider", side_effect=fake_stream_provider),
         ):
@@ -233,10 +195,9 @@ class TestStreamRecovery:
 
 class TestAllProvidersExhausted:
     def test_raises_runtime_error(self, mock_config):
-        """RuntimeError when every provider (including g4f) fails."""
+        """RuntimeError when every provider fails."""
         with (
             patch("ai.router._load_config", return_value=mock_config),
-            patch("ai.router._g4f_available", return_value=False),
             patch("ai.router._get_rate_limiter") as mock_rl,
         ):
             limiter = MagicMock()

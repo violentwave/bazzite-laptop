@@ -23,6 +23,7 @@ except ImportError:
         format_relative_time, format_health_age, icon_path,
     )
 
+
 # -- Theme -------------------------------------------------------------------
 _BG, _CARD, _ACCENT = "#1a1a2e", "#16213e", "#0f3460"
 _OK, _WARN, _ERR, _INFO = "#00b894", "#fdcb6e", "#e17055", "#74b9ff"

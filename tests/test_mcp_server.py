@@ -95,7 +95,7 @@ class TestToolRegistration:
 
             app = create_app()
             # 21 allowlisted tools + 1 health tool registered via mcp.tool()
-            assert len(app._tool_manager._tools) >= 21
+            assert len(app._tool_manager._tools) >= 22
 
 
 # ---------------------------------------------------------------------------
@@ -138,27 +138,12 @@ class TestHealthEndpoint:
 
     @pytest.mark.asyncio
     async def test_health_returns_ok(self):
-        with (
-            patch("ai.mcp_bridge.server.load_keys", return_value=True),
-            patch("ai.mcp_bridge.server._get_g4f_status", return_value="stopped"),
-        ):
+        with patch("ai.mcp_bridge.server.load_keys", return_value=True):
             from ai.mcp_bridge.server import health_check
 
             result = await health_check()
             assert result["status"] == "ok"
-            assert result["tools"] == 21
-            assert result["g4f"] == "stopped"
-
-    @pytest.mark.asyncio
-    async def test_health_g4f_running(self):
-        with (
-            patch("ai.mcp_bridge.server.load_keys", return_value=True),
-            patch("ai.mcp_bridge.server._get_g4f_status", return_value="running"),
-        ):
-            from ai.mcp_bridge.server import health_check
-
-            result = await health_check()
-            assert result["g4f"] == "running"
+            assert result["tools"] == 22
 
 
 # ---------------------------------------------------------------------------

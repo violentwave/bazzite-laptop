@@ -138,6 +138,12 @@ tools:
     module: "ai.log_intel"
     args: null
 
+  system.llm_models:
+    description: "List available LLM modes and their provider chains (reads live config)"
+    source: python
+    module: "ai.log_intel"
+    args: null
+
   security.run_scan:
     description: "Trigger a ClamAV quick scan (runs in background via systemd)"
     source: python

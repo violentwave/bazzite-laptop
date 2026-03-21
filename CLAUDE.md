@@ -17,18 +17,17 @@
 - configs/ — system config files (udev, sysctl, gamemode, litellm, rate-limits, mcp-bridge-allowlist.yaml)
 - tray/ — PySide6/Qt6 security tray + dashboard (9-state machine, Security/Health/About tabs)
 - ai/ — AI enhancement layer (threat intel, RAG, code quality, gaming, mcp_bridge/, health.py, llm_proxy.py)
-- tests/ — Python unit tests (483 tests)
+- tests/ — Python unit tests (510 tests)
 - docs/ — documentation and guides
-- plugins/ — 15 claude-flow plugins (`file:` refs in package.json)
+- plugins/ — 2 claude-flow plugins: code-intelligence, test-intelligence
 
 ## Key Paths
 - Steam library: /run/media/lch/SteamLibrary
 - Tray launcher: /usr/local/bin/start-security-tray-qt.sh
 - Claude Code settings: ~/.claude/settings.json
-- MCP bridge: ai/mcp_bridge/server.py (FastMCP on 127.0.0.1:8766, 14 tools)
+- MCP bridge: ai/mcp_bridge/server.py (FastMCP on 127.0.0.1:8766, 22 tools)
 - LLM proxy: ai/llm_proxy.py (OpenAI-compatible on 127.0.0.1:8767)
 - Provider health tracking: ai/health.py
-- g4f manager: ai/g4f_manager.py (DISABLED — privacy risk, not started)
 - MCP allowlist: configs/mcp-bridge-allowlist.yaml
 - Newelle (AI UI): Flatpak GTK4 assistant (replaces Jarvis)
 
@@ -37,9 +36,19 @@
 - Terminal entries: `konsole -e bash -c '...; echo "Press Enter to close"; read'`
 - Never use `konsole --hold` (no visible prompt to close)
 
-## Systemd Hardening
-All ClamAV and health services include: NoNewPrivileges, ProtectSystem=strict,
-ProtectHome=read-only, PrivateTmp=yes, ReadWritePaths whitelist.
+## Systemd Services
+
+**User services (auto-start on login):**
+- `bazzite-llm-proxy.service` — OpenAI-compatible LLM router proxy on :8767
+- `bazzite-mcp-bridge.service` — FastMCP bridge for Newelle on :8766
+
+**System services (deployed via `bash scripts/deploy-services.sh`):**
+- `system-health.timer` / `system-health.service` — daily 8AM health snapshot
+
+All services include: NoNewPrivileges, ProtectSystem=strict, PrivateTmp=yes, ReadWritePaths whitelist.
+
+## Claude-Flow / RuFlo
+Claude-flow (`npx claude-flow`) is available for manual dev swarm sessions but does not auto-start. Only 2 plugins are installed: code-intelligence and test-intelligence.
 
 ## AI Layer Rules (NEVER violate)
 1. **NEVER run local LLM generation models.** Only `nomic-embed-text` (~300MB VRAM) via Ollama.

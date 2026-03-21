@@ -1,13 +1,11 @@
 """LiteLLM wrapper for provider-agnostic LLM routing (V2).
 
 Routes queries through litellm.Router with health-weighted provider selection,
-auto-demotion, g4f fallback, and stream recovery. No proxy daemon -- Router
-runs in-process.
+auto-demotion, and stream recovery. No proxy daemon -- Router runs in-process.
 
 V2 changes from V1:
 - Health-weighted provider selection (replaces simple-shuffle)
 - litellm.Router num_retries=0 -- our code handles retries
-- g4f fallback injection (runtime, not YAML)
 - Stream recovery with 2KB buffer commit threshold
 - route_query(), route_query_stream(), reset_router() backward compat preserved
 
@@ -47,16 +45,6 @@ _config: dict | None = None
 _router = None
 _rate_limiter: RateLimiter | None = None
 _health_tracker: HealthTracker = HealthTracker()
-
-# g4f fallback configuration
-_G4F_MODEL_ENTRY = {
-    "model_name": "__g4f__",
-    "litellm_params": {
-        "model": "openai/auto",
-        "api_key": "dummy",
-        "api_base": None,  # set at runtime from G4F_PORT
-    },
-}
 
 
 def _load_config() -> dict:
@@ -140,21 +128,8 @@ def _get_provider_order(config: dict, task_type: str) -> list[str]:
     return [h.name for h in healthy]
 
 
-def _g4f_available() -> bool:
-    """Check if g4f manager is importable and can potentially run.
-
-    DISABLED: g4f routes through unknown third-party intermediaries with no
-    privacy guarantees. All prompts/system data would be exposed. Since we have
-    7 paid free-tier providers with generous limits, g4f is unnecessary risk.
-    """
-    return False
-
-
 def _try_provider(provider_name: str, task_type: str, prompt: str, **kwargs) -> object:
     """Try a single provider for a completion. Returns the response or raises."""
-    if provider_name == "g4f":
-        return _try_g4f(task_type, prompt, **kwargs)
-
     router = _get_router()
 
     start = time.time()
@@ -174,42 +149,6 @@ def _try_provider(provider_name: str, task_type: str, prompt: str, **kwargs) -> 
         latency_ms = (time.time() - start) * 1000
         _health_tracker.record_failure(provider_name, "call failed")
         raise
-
-
-def _try_g4f(task_type: str, prompt: str, **kwargs) -> object:
-    """Try g4f fallback provider."""
-
-    from ai.g4f_manager import get_manager  # noqa: PLC0415
-
-    mgr = get_manager()
-    if not mgr.ensure_running():
-        raise RuntimeError("g4f is not available")
-
-    mgr.record_request()
-    port = mgr._port
-
-    import httpx  # noqa: PLC0415
-
-    resp = httpx.post(
-        f"http://127.0.0.1:{port}/v1/chat/completions",
-        json={
-            "model": "auto",
-            "messages": [{"role": "user", "content": prompt}],
-        },
-        timeout=30.0,
-    )
-    resp.raise_for_status()
-    data = resp.json()
-
-    # Return a simple object matching litellm response shape
-    from types import SimpleNamespace  # noqa: PLC0415
-
-    choice = SimpleNamespace(
-        message=SimpleNamespace(content=data["choices"][0]["message"]["content"]),
-        delta=SimpleNamespace(content=None),
-    )
-    result = SimpleNamespace(choices=[choice], model="g4f/auto")
-    return result
 
 
 def _try_embed(task_type: str, prompt: str, **kwargs) -> str:
@@ -244,10 +183,6 @@ def _check_rate_limits(config: dict, task_type: str) -> None:
         provider = _extract_provider(params.get("model", ""))
         if limiter.can_call(provider):
             return
-
-    # Check if g4f could save us (g4f has no rate limit in our config)
-    if _g4f_available():
-        return
 
     raise RuntimeError(f"All providers rate-limited for task_type '{task_type}'")
 
@@ -314,10 +249,6 @@ def route_query(task_type: str, prompt: str, **kwargs: object) -> str:
     # Health-weighted provider ordering
     providers = _get_provider_order(config, task_type)
 
-    # Append g4f as last fallback
-    if _g4f_available():
-        providers.append("g4f")
-
     if not providers:
         raise RuntimeError(f"No available providers for task_type '{task_type}'")
 
@@ -366,8 +297,6 @@ async def route_query_stream(
     _check_rate_limits(config, task_type)
 
     providers = _get_provider_order(config, task_type)
-    if _g4f_available():
-        providers.append("g4f")
 
     if not providers:
         raise RuntimeError(f"No available providers for task_type '{task_type}'")

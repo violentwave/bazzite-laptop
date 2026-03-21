@@ -16,24 +16,13 @@ DEFAULT_BIND = "127.0.0.1"
 DEFAULT_PORT = int(__import__("os").environ.get("MCP_BRIDGE_PORT", "8766"))
 
 # Number of tools in the allowlist (excludes health endpoint itself)
-_TOOL_COUNT = 21
+_TOOL_COUNT = 22
 
 
 def _assert_localhost(bind: str) -> None:
     """Refuse to start on non-localhost addresses."""
     if bind not in ("127.0.0.1", "localhost", "::1"):
         raise RuntimeError(f"MCP bridge must bind to localhost only, got '{bind}'")
-
-
-def _get_g4f_status() -> str:
-    """Check g4f subprocess status without importing the router."""
-    try:
-        from ai.g4f_manager import get_manager  # noqa: PLC0415
-
-        mgr = get_manager()
-        return "running" if mgr.is_running else "stopped"
-    except Exception:
-        return "unavailable"
 
 
 def _load_tool_defs() -> dict:
@@ -49,7 +38,6 @@ async def health_check() -> dict:
     return {
         "status": "ok",
         "tools": _TOOL_COUNT,
-        "g4f": _get_g4f_status(),
     }
 
 

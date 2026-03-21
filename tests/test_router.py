@@ -127,7 +127,6 @@ class TestRouterInit:
     def test_empty_config_raises(self, patch_keys, patch_limiter):
         with (
             patch("ai.router._load_config", return_value={}),
-            patch("ai.router._g4f_available", return_value=False),
         ):
             with pytest.raises(RuntimeError, match="No available providers"):
                 route_query("fast", "hello")
@@ -135,7 +134,6 @@ class TestRouterInit:
     def test_empty_model_list_raises(self, patch_keys, patch_limiter):
         with (
             patch("ai.router._load_config", return_value={"model_list": []}),
-            patch("ai.router._g4f_available", return_value=False),
         ):
             with pytest.raises(RuntimeError, match="No available providers"):
                 route_query("fast", "hello")
@@ -226,7 +224,6 @@ class TestRateLimiting:
         limiter.can_call.return_value = False
         with (
             patch("ai.router._get_rate_limiter", return_value=limiter),
-            patch("ai.router._g4f_available", return_value=False),
         ):
             with pytest.raises(RuntimeError, match="All providers rate-limited"):
                 route_query("fast", "hello")

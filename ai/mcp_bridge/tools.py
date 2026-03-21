@@ -116,15 +116,29 @@ def _redact_paths(text: str) -> str:
 
 
 def _read_file_tail(path: str, lines: int, pattern: str | None = None) -> str:
-    """Read last N lines from a file or latest file in a directory."""
+    """Read last N lines from a file or latest file in a directory.
+
+    Skips empty files and symlinks to empty files (e.g. after logrotate).
+    """
     p = Path(path)
     if p.is_dir() and pattern:
-        # Find the most recent file matching the pattern
         import glob as globmod
-        files = sorted(globmod.glob(str(p / pattern)), key=lambda f: Path(f).stat().st_mtime)
-        if not files:
-            raise FileNotFoundError(f"No files matching {pattern} in {path}")
-        p = Path(files[-1])
+        # Sort by mtime descending, pick first non-empty file
+        candidates = sorted(
+            globmod.glob(str(p / pattern)),
+            key=lambda f: Path(f).stat().st_mtime,
+            reverse=True,
+        )
+        p = None
+        for c in candidates:
+            cp = Path(c)
+            # Skip symlinks (health-latest.log) and empty files (rotated)
+            if cp.is_symlink() or cp.stat().st_size == 0:
+                continue
+            p = cp
+            break
+        if p is None:
+            raise FileNotFoundError(f"No non-empty files matching {pattern} in {path}")
     all_lines = p.read_text().splitlines()
     return "\n".join(all_lines[-lines:])
 
@@ -276,6 +290,25 @@ async def _execute_python_tool(tool_name: str, tool_def: dict, args: dict) -> st
             from ai.log_intel.queries import pipeline_stats  # noqa: PLC0415
 
             return json.dumps(pipeline_stats(), indent=2, default=str)
+
+        elif tool_name == "system.llm_models":
+            import yaml as _yaml  # noqa: PLC0415
+
+            cfg_path = Path(__file__).parent.parent.parent / "configs" / "litellm-config.yaml"
+            with open(cfg_path) as f:
+                cfg = _yaml.safe_load(f) or {}
+            models: dict[str, list[str]] = {}
+            for entry in cfg.get("model_list", []):
+                mode = entry.get("model_name", "unknown")
+                provider = entry.get("litellm_params", {}).get("model", "?")
+                models.setdefault(mode, []).append(provider)
+            result = {
+                "modes": {k: {"providers": v, "count": len(v)} for k, v in models.items()},
+                "how_to_switch": "In Newelle: Settings → API → Model field. "
+                                 "Change from 'fast' to any mode name listed above.",
+                "proxy_url": "http://127.0.0.1:8767/v1/",
+            }
+            return json.dumps(result, indent=2)
 
         elif tool_name == "security.run_scan":
             scan_type = args.get("scan_type", "quick")

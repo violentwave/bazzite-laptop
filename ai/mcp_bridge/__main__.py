@@ -45,12 +45,6 @@ def main() -> None:
     # SIGTERM handler for graceful shutdown
     def _sigterm_handler(signum, frame):
         logger.info("SIGTERM received -- shutting down")
-        try:
-            from ai.g4f_manager import get_manager  # noqa: PLC0415
-
-            get_manager().stop()
-        except Exception:  # noqa: BLE001
-            logger.debug("g4f manager stop failed during SIGTERM", exc_info=True)
         sys.exit(0)
 
     signal.signal(signal.SIGTERM, _sigterm_handler)

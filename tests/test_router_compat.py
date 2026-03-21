@@ -83,7 +83,6 @@ class TestBackwardCompat:
             patch("ai.router._load_config", return_value=mock_config),
             patch("ai.router._check_rate_limits"),
             patch("ai.router._get_provider_order", return_value=["groq"]),
-            patch("ai.router._g4f_available", return_value=False),
             patch("ai.router._try_provider", side_effect=fake_try_provider),
         ):
             result = route_query("fast", "Say hello")
@@ -114,7 +113,6 @@ class TestBackwardCompat:
         with (
             patch("ai.router._load_config", return_value=mock_config),
             patch("ai.router._get_rate_limiter", return_value=limiter),
-            patch("ai.router._g4f_available", return_value=False),
         ):
             with pytest.raises(RuntimeError, match="All providers rate-limited"):
                 route_query("fast", "hello")
