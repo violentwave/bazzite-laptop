@@ -101,7 +101,9 @@ show_key_line() {
     else
         local preview="${value:0:6}...${value: -4}"
         local prefix="${KEY_PREFIXES[$key_name]:-}"
-        if [[ -n "$prefix" && "${value:0:${#prefix}}" != "$prefix" ]]; then
+        local prefix_len="${#prefix}"
+        local value_prefix="${value:0:$prefix_len}"
+        if [[ -n "$prefix" && "$value_prefix" != "$prefix" ]]; then
             printf "  ${YELLOW}⚠${NC} %-25s ${YELLOW}%s${NC} ${RED}(expected prefix: %s)${NC}\n" "$key_name" "$preview" "$prefix"
         else
             printf "  ${GREEN}✓${NC} %-25s ${GREEN}%s${NC}\n" "$key_name" "$preview"

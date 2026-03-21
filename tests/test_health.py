@@ -1,7 +1,6 @@
 """Unit tests for ai/health.py — provider health tracking."""
 
 import time
-from unittest.mock import patch
 
 import pytest
 
@@ -16,15 +15,15 @@ class TestProviderHealth:
         assert h.score == 0.5
 
     def test_perfect_score(self):
-        h = ProviderHealth(name="groq", success_count=100, failure_count=0, total_latency_ms=100 * 500)
+        h = ProviderHealth(name="groq", success_count=100, failure_count=0, total_latency_ms=100 * 500)  # noqa: E501
         assert h.score == pytest.approx(0.985, abs=0.001)
 
     def test_all_failures_score_near_zero(self):
-        h = ProviderHealth(name="groq", success_count=0, failure_count=10, total_latency_ms=10 * 9000)
+        h = ProviderHealth(name="groq", success_count=0, failure_count=10, total_latency_ms=10 * 9000)  # noqa: E501
         assert h.score == pytest.approx(0.03, abs=0.001)
 
     def test_high_latency_penalizes_score(self):
-        h = ProviderHealth(name="groq", success_count=10, failure_count=0, total_latency_ms=10 * 15000)
+        h = ProviderHealth(name="groq", success_count=10, failure_count=0, total_latency_ms=10 * 15000)  # noqa: E501
         assert h.score == pytest.approx(0.7, abs=0.001)
 
     def test_is_disabled_when_disabled_until_in_future(self):

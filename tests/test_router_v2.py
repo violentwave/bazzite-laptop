@@ -4,9 +4,8 @@ Tests health-weighted selection, g4f fallback, stream recovery,
 and provider exhaustion.
 """
 
-import asyncio
 from types import SimpleNamespace
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -116,7 +115,6 @@ class TestHealthWeightedSelection:
             mock_rl.return_value = limiter
 
             # Disable groq by recording many failures
-            import time
             for _ in range(5):
                 router._health_tracker.record_failure("groq", "timeout")
             # groq should now be disabled
@@ -129,7 +127,7 @@ class TestHealthWeightedSelection:
 
             with patch("ai.router._try_provider", side_effect=fake_try_provider):
                 from ai.router import route_query
-                result = route_query("fast", "hi")
+                route_query("fast", "hi")
 
             assert "groq" not in call_order, "Disabled provider should be skipped"
 
@@ -140,7 +138,6 @@ class TestHealthWeightedSelection:
 class TestG4FFallback:
     def test_g4f_appended_as_last_fallback(self, mock_config):
         """When g4f is available, it is appended to the provider order as last resort."""
-        from ai import router
 
         with (
             patch("ai.router._load_config", return_value=mock_config),
@@ -207,7 +204,7 @@ class TestStreamRecovery:
     @pytest.mark.asyncio
     async def test_stream_commits_after_2kb(self, mock_config):
         """After 2KB of buffered data, stream commits and yields live."""
-        from ai.router import route_query_stream, _STREAM_COMMIT_THRESHOLD
+        from ai.router import _STREAM_COMMIT_THRESHOLD, route_query_stream
 
         large_chunk = "x" * (_STREAM_COMMIT_THRESHOLD + 100)
 

@@ -7,10 +7,9 @@ No mocking needed — all functions are pure data transformations.
 from datetime import datetime
 from pathlib import Path
 
-import pytest
-
 from tray.state_machine import (
     ALL_STATES,
+    MENU_HEADERS,
     STATE_CONFIGS,
     STATE_HEALTH_WARNING,
     STATE_HEALTHY_IDLE,
@@ -21,14 +20,12 @@ from tray.state_machine import (
     STATE_THREATS_FOUND,
     STATE_UNKNOWN,
     STATE_WARNING,
-    MENU_HEADERS,
     determine_state,
     format_header,
     format_health_age,
     format_relative_time,
     icon_path,
 )
-
 
 # ── StateConfig Validation Tests ──
 
@@ -443,7 +440,7 @@ class TestIconPath:
 
     def test_all_configured_icons_can_generate_paths(self):
         """All icons in STATE_CONFIGS can generate valid paths."""
-        for state, config in STATE_CONFIGS.items():
+        for _state, config in STATE_CONFIGS.items():
             path = icon_path(config.icon)
             assert isinstance(path, Path)
             assert str(path).endswith(".svg")

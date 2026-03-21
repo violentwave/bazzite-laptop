@@ -5,8 +5,6 @@ concurrency limits, and bridge-level rate limiting.
 """
 
 import asyncio
-import re
-from unittest.mock import patch
 
 import pytest
 
@@ -18,7 +16,7 @@ class TestInputValidation:
         from ai.mcp_bridge.tools import _validate_args
 
         tool_def = {
-            "args": {"hash": {"type": "string", "pattern": "^[a-fA-F0-9]{32,64}$", "required": True}}
+            "args": {"hash": {"type": "string", "pattern": "^[a-fA-F0-9]{32,64}$", "required": True}}  # noqa: E501
         }
         _validate_args(tool_def, {"hash": "a" * 64})  # Should not raise
 
@@ -26,7 +24,7 @@ class TestInputValidation:
         from ai.mcp_bridge.tools import _validate_args
 
         tool_def = {
-            "args": {"hash": {"type": "string", "pattern": "^[a-fA-F0-9]{32,64}$", "required": True}}
+            "args": {"hash": {"type": "string", "pattern": "^[a-fA-F0-9]{32,64}$", "required": True}}  # noqa: E501
         }
         _validate_args(tool_def, {"hash": "A" * 32})  # MD5-length also valid
 
@@ -34,7 +32,7 @@ class TestInputValidation:
         from ai.mcp_bridge.tools import _validate_args
 
         tool_def = {
-            "args": {"hash": {"type": "string", "pattern": "^[a-fA-F0-9]{32,64}$", "required": True}}
+            "args": {"hash": {"type": "string", "pattern": "^[a-fA-F0-9]{32,64}$", "required": True}}  # noqa: E501
         }
         with pytest.raises(ValueError, match="does not match"):
             _validate_args(tool_def, {"hash": "abc"})
@@ -43,7 +41,7 @@ class TestInputValidation:
         from ai.mcp_bridge.tools import _validate_args
 
         tool_def = {
-            "args": {"hash": {"type": "string", "pattern": "^[a-fA-F0-9]{32,64}$", "required": True}}
+            "args": {"hash": {"type": "string", "pattern": "^[a-fA-F0-9]{32,64}$", "required": True}}  # noqa: E501
         }
         with pytest.raises(ValueError, match="does not match"):
             _validate_args(tool_def, {"hash": "'; DROP TABLE hashes; --"})
@@ -52,7 +50,7 @@ class TestInputValidation:
         from ai.mcp_bridge.tools import _validate_args
 
         tool_def = {
-            "args": {"hash": {"type": "string", "pattern": "^[a-fA-F0-9]{32,64}$", "required": True}}
+            "args": {"hash": {"type": "string", "pattern": "^[a-fA-F0-9]{32,64}$", "required": True}}  # noqa: E501
         }
         with pytest.raises(ValueError, match="does not match"):
             _validate_args(tool_def, {"hash": "z" * 64})
@@ -86,7 +84,7 @@ class TestInputValidation:
         from ai.mcp_bridge.tools import _validate_args
 
         tool_def = {
-            "args": {"hash": {"type": "string", "pattern": "^[a-fA-F0-9]{32,64}$", "required": True}}
+            "args": {"hash": {"type": "string", "pattern": "^[a-fA-F0-9]{32,64}$", "required": True}}  # noqa: E501
         }
         with pytest.raises(ValueError, match="required"):
             _validate_args(tool_def, {})
@@ -146,7 +144,7 @@ class TestKeyScoping:
         if not server_path.exists():
             pytest.skip("server.py not yet created (Task 7)")
         source = server_path.read_text()
-        assert 'load_keys(scope="threat_intel")' in source or "load_keys(scope='threat_intel')" in source, (
+        assert 'load_keys(scope="threat_intel")' in source or "load_keys(scope='threat_intel')" in source, (  # noqa: E501
             "server.py must use scoped key loading: load_keys(scope='threat_intel')"
         )
 
@@ -245,6 +243,7 @@ class TestBridgeRateLimiting:
     def test_check_bridge_rate_raises_on_global_overflow(self):
         """_check_bridge_rate should raise when global limit is exceeded."""
         import time
+
         from ai.mcp_bridge import tools
 
         now = time.time()
@@ -260,6 +259,7 @@ class TestBridgeRateLimiting:
     def test_check_bridge_rate_raises_on_per_tool_overflow(self):
         """_check_bridge_rate should raise when per-tool limit is exceeded."""
         import time
+
         from ai.mcp_bridge import tools
 
         tool_name = "security.threat_lookup"

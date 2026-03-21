@@ -1,5 +1,11 @@
+# WIP — DO NOT ENABLE
+# This service uses a plain JSON-RPC HTTP endpoint, but Newelle requires the
+# MCP streamable-http protocol. The proxy must be updated before this can be
+# deployed. See ai/mcp_bridge/claude_flow_proxy.py for implementation details.
+# deploy-services.sh intentionally skips this service until it is ready.
+
 [Unit]
-Description=Claude-Flow MCP stdio-to-HTTP Proxy for Newelle
+Description=Claude-Flow MCP stdio-to-HTTP Proxy for Newelle (WIP — disabled)
 After=network.target claude-flow.service
 
 [Service]

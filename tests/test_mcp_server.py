@@ -1,13 +1,11 @@
 """Unit tests for ai/mcp_bridge/server.py — FastMCP server setup."""
 
 import importlib
-import os
 import sys
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
-
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -40,7 +38,7 @@ def _make_fastmcp_mock():
                 return fn
             return decorator
 
-        def run(self, transport: str = "streamable-http", host: str = "127.0.0.1", port: int = 8766):
+        def run(self, transport: str = "streamable-http", host: str = "127.0.0.1", port: int = 8766):  # noqa: E501
             pass  # No-op in tests
 
     fake_module = MagicMock()
@@ -117,7 +115,7 @@ class TestBindAssertion:
         from ai.mcp_bridge.server import _assert_localhost
 
         with pytest.raises(RuntimeError, match="localhost only"):
-            _assert_localhost("0.0.0.0")
+            _assert_localhost("0.0.0.0")  # noqa: S104
 
     def test_accepts_localhost(self):
         from ai.mcp_bridge.server import _assert_localhost

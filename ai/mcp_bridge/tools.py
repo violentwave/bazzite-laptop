@@ -128,7 +128,9 @@ def _read_status_file() -> dict:
 
 
 # Status key whitelist
-_STATUS_ALLOWED_KEYS = {"state", "scan_type", "last_scan_time", "result", "health_status", "health_issues"}
+_STATUS_ALLOWED_KEYS = {
+    "state", "scan_type", "last_scan_time", "result", "health_status", "health_issues"
+}
 
 
 async def _run_subprocess(command: list[str]) -> str:
@@ -147,7 +149,7 @@ async def _run_subprocess(command: list[str]) -> str:
             return _truncate(stdout.decode("utf-8", errors="replace"))
         except FileNotFoundError:
             return "[Command not found]"
-        except asyncio.TimeoutError:
+        except TimeoutError:
             try:
                 proc.kill()
             except ProcessLookupError:
@@ -206,8 +208,6 @@ async def execute_tool(tool_name: str, args: dict) -> str:
 
 async def _execute_python_tool(tool_name: str, tool_def: dict, args: dict) -> str:
     """Execute a Python-module-backed tool."""
-    module_name = tool_def["module"]
-    function_name = tool_def.get("function")
 
     try:
         if tool_name == "security.threat_lookup":
@@ -215,7 +215,10 @@ async def _execute_python_tool(tool_name: str, tool_def: dict, args: dict) -> st
 
             result = lookup_hash(args["hash"])
             # Sanitize: strip raw_data, return only safe fields
-            safe_fields = {"hash", "source", "family", "risk_level", "detection_ratio", "description", "tags"}
+            safe_fields = {
+                "hash", "source", "family", "risk_level",
+                "detection_ratio", "description", "tags",
+            }
             if isinstance(result, dict):
                 filtered = {k: v for k, v in result.items() if k in safe_fields}
                 return json.dumps(filtered, indent=2)

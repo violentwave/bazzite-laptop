@@ -49,8 +49,8 @@ def main() -> None:
             from ai.g4f_manager import get_manager  # noqa: PLC0415
 
             get_manager().stop()
-        except Exception:
-            pass
+        except Exception:  # noqa: BLE001
+            logger.debug("g4f manager stop failed during SIGTERM", exc_info=True)
         sys.exit(0)
 
     signal.signal(signal.SIGTERM, _sigterm_handler)

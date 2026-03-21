@@ -18,7 +18,6 @@ import json
 import logging
 import os
 import subprocess
-import sys
 
 logger = logging.getLogger("ai.mcp_bridge.claude_flow_proxy")
 
@@ -84,9 +83,13 @@ class StdioMCPProxy:
             if decoded.startswith("{"):
                 try:
                     resp = json.loads(decoded)
-                    logger.info("MCP initialized: protocol=%s", resp.get("result", {}).get("protocolVersion", "unknown"))
+                    proto = resp.get("result", {}).get("protocolVersion", "unknown")
+                    logger.info("MCP initialized: protocol=%s", proto)
                     # Send initialized notification
-                    notif = json.dumps({"jsonrpc": "2.0", "method": "notifications/initialized"}) + "\n"
+                    notif = (
+                        json.dumps({"jsonrpc": "2.0", "method": "notifications/initialized"})
+                        + "\n"
+                    )
                     self._process.stdin.write(notif.encode())
                     self._process.stdin.flush()
                     return

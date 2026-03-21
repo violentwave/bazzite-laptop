@@ -178,7 +178,6 @@ def _try_provider(provider_name: str, task_type: str, prompt: str, **kwargs) -> 
 
 def _try_g4f(task_type: str, prompt: str, **kwargs) -> object:
     """Try g4f fallback provider."""
-    import os  # noqa: PLC0415
 
     from ai.g4f_manager import get_manager  # noqa: PLC0415
 
@@ -333,7 +332,8 @@ def route_query(task_type: str, prompt: str, **kwargs: object) -> str:
             continue
 
     raise RuntimeError(
-        f"LLM call failed for task_type '{task_type}': all providers exhausted. Last error: {last_error}"
+        f"LLM call failed for task_type '{task_type}': "
+        f"all providers exhausted. Last error: {last_error}"
     ) from last_error
 
 

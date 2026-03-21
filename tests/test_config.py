@@ -212,7 +212,6 @@ class TestScopedKeyLoading:
                 load_keys(scope="llm")
                 # A subsequent no-scope load should still work (not short-circuit)
                 # We verify by checking that _keys_loaded behavior is correct
-                import ai.config as cfg
                 # Scoped load should not have set _keys_loaded
                 # (the fixture resets it via the conftest or we check behavior)
                 assert os.environ.get("GROQ_API_KEY") == "groq123"

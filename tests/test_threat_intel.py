@@ -326,7 +326,7 @@ class TestCascadingLogic:
     @patch("ai.threat_intel.lookup._lookup_virustotal")
     @patch("ai.threat_intel.lookup._lookup_otx")
     @patch("ai.threat_intel.lookup._lookup_malwarebazaar")
-    def test_mb_otx_miss_vt_hit(self, mock_mb, mock_otx, mock_vt, mock_limiter, sample_report, tmp_path):
+    def test_mb_otx_miss_vt_hit(self, mock_mb, mock_otx, mock_vt, mock_limiter, sample_report, tmp_path):  # noqa: E501
         """MB and OTX miss should fall through to VT (last resort)."""
         from ai.threat_intel.lookup import lookup_hash
 

@@ -1,6 +1,5 @@
 """Unit tests for ai/mcp_bridge/tools.py — tool implementations."""
 
-import asyncio
 import json
 from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -36,7 +35,7 @@ class TestSubprocessTools:
     @patch("ai.mcp_bridge.tools.asyncio.create_subprocess_exec")
     async def test_disk_usage(self, mock_exec):
         proc = AsyncMock()
-        proc.communicate.return_value = (b"Filesystem  Size  Used  Avail  Use%\n/dev/sda1  100G  42G  58G  42%", b"")
+        proc.communicate.return_value = (b"Filesystem  Size  Used  Avail  Use%\n/dev/sda1  100G  42G  58G  42%", b"")  # noqa: E501
         proc.returncode = 0
         mock_exec.return_value = proc
 
@@ -80,7 +79,7 @@ class TestSubprocessTools:
     @patch("ai.mcp_bridge.tools.asyncio.create_subprocess_exec")
     async def test_command_timeout(self, mock_exec):
         proc = AsyncMock()
-        proc.communicate.side_effect = asyncio.TimeoutError()
+        proc.communicate.side_effect = TimeoutError()
         proc.kill = MagicMock()
         mock_exec.return_value = proc
 
