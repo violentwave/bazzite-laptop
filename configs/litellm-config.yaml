@@ -3,7 +3,11 @@
 # Keys are loaded at runtime from ~/.config/bazzite-ai/keys.env via python-dotenv.
 
 model_list:
-  # ── INTERACTIVE (speed-first) ──
+  # ── INTERACTIVE (speed-first, Gemini preferred for tool calling) ──
+  - model_name: "fast"
+    litellm_params:
+      model: gemini/gemini-2.0-flash
+      api_key: os.environ/GEMINI_API_KEY
   - model_name: "fast"
     litellm_params:
       model: groq/llama-3.3-70b-versatile
