@@ -80,10 +80,16 @@ tools:
     source: python
     module: "ai.rag.query"
     args:
-      question:
+      query:
         type: string
         max_length: 500
         required: true
+
+  knowledge.ingest_docs:
+    description: "Re-ingest reference documentation into RAG vector database"
+    source: python
+    module: "ai.rag.ingest_docs"
+    args: null
 
   gaming.profiles:
     description: "List configured game profiles"

@@ -248,13 +248,18 @@ async def _execute_python_tool(tool_name: str, tool_def: dict, args: dict) -> st
             return _truncate(str(result))
 
         elif tool_name == "knowledge.rag_query":
-            from ai.rag.query import query as rag_query  # noqa: PLC0415
+            from ai.rag.query import rag_query  # noqa: PLC0415
 
-            result = rag_query(args["question"], use_llm=False)
-            # Sanitize: return only answer, strip context_chunks and sources
-            if isinstance(result, dict):
-                return result.get("answer", str(result))
-            return _truncate(str(result))
+            question = args.get("query") or args.get("question", "")
+            result = rag_query(question, use_llm=False)
+            return _truncate(result.answer)
+
+        elif tool_name == "knowledge.ingest_docs":
+            from ai.rag.ingest_docs import ingest_directory  # noqa: PLC0415
+
+            docs_dir = Path(__file__).parent.parent.parent / "docs"
+            result = ingest_directory(docs_dir)
+            return json.dumps(result, indent=2)
 
         elif tool_name == "gaming.profiles":
             from ai.gaming.scopebuddy import list_profiles  # noqa: PLC0415

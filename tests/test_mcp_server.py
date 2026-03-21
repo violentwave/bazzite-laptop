@@ -143,7 +143,7 @@ class TestHealthEndpoint:
 
             result = await health_check()
             assert result["status"] == "ok"
-            assert result["tools"] == 22
+            assert result["tools"] == 23
 
 
 # ---------------------------------------------------------------------------

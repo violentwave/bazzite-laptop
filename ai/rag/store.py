@@ -45,9 +45,19 @@ def _get_schemas() -> dict:
         pa.field("vector", pa.list_(pa.float32(), EMBEDDING_DIM)),
     ])
 
+    docs_schema = pa.schema([
+        pa.field("id", pa.utf8()),
+        pa.field("source_file", pa.utf8()),
+        pa.field("section_title", pa.utf8()),
+        pa.field("doc_type", pa.utf8()),
+        pa.field("content", pa.utf8()),
+        pa.field("vector", pa.list_(pa.float32(), EMBEDDING_DIM)),
+    ])
+
     return {
         "security_logs": security_log_schema,
         "threat_intel": threat_intel_schema,
+        "docs": docs_schema,
     }
 
 # ── Store ──
@@ -105,6 +115,27 @@ class VectorStore:
             logger.exception("Failed to add %d log chunks", len(chunks))
             return 0
 
+    def add_doc_chunks(self, chunks: list[dict]) -> int:
+        """Add embedded doc chunks to docs table. Returns count added."""
+        if not chunks:
+            return 0
+        try:
+            for chunk in chunks:
+                chunk.setdefault("id", str(uuid4()))
+                vec = chunk.get("vector", [])
+                if len(vec) != EMBEDDING_DIM:
+                    raise ValueError(
+                        f"Vector dimension {len(vec)} != expected {EMBEDDING_DIM}. "
+                        "Embedding model mismatch — check embedder provider."
+                    )
+            schemas = _get_schemas()
+            table = self._ensure_table("docs", schemas["docs"])
+            table.add(chunks)
+            return len(chunks)
+        except Exception:
+            logger.exception("Failed to add %d doc chunks", len(chunks))
+            return 0
+
     def add_threat_reports(self, reports: list[dict]) -> int:
         """Add embedded threat reports to threat_intel table. Returns count added."""
         if not reports:
@@ -124,6 +155,11 @@ class VectorStore:
         """Search security_logs by vector similarity. Returns list of result dicts."""
         schemas = _get_schemas()
         return self._search("security_logs", schemas["security_logs"], query_vector, limit)
+
+    def search_docs(self, query_vector: list[float], limit: int = 5) -> list[dict]:
+        """Search docs by vector similarity. Returns list of result dicts."""
+        schemas = _get_schemas()
+        return self._search("docs", schemas["docs"], query_vector, limit)
 
     def search_threats(self, query_vector: list[float], limit: int = 5) -> list[dict]:
         """Search threat_intel by vector similarity. Returns list of result dicts."""

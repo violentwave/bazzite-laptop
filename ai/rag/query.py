@@ -77,13 +77,14 @@ def rag_query(
     logger.info("Embedding query: %s", question[:80])
     query_vector = embed_single(question, input_type="search_query")
 
-    # Step 2: search both tables
+    # Step 2: search all tables
     store = get_store()
     log_results = _safe_search(store, "search_logs", query_vector, limit)
     threat_results = _safe_search(store, "search_threats", query_vector, limit)
+    doc_results = _safe_search(store, "search_docs", query_vector, limit)
 
     # Step 3: merge and rank by _distance (ascending = most similar)
-    all_chunks = log_results + threat_results
+    all_chunks = log_results + threat_results + doc_results
     all_chunks.sort(key=lambda c: c.get("_distance", float("inf")))
 
     # Collect unique sources

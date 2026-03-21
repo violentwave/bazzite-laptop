@@ -49,10 +49,10 @@ def _embed_ollama(texts: list[str]) -> list[list[float]] | None:
     """
     try:
         response = ollama.embed(model=OLLAMA_MODEL, input=texts)
-        vectors: list[list[float]] = response["embeddings"]
+        vectors: list[list[float]] = response.embeddings
         return vectors
-    except (ConnectionError, OSError, Exception) as e:  # noqa: BLE001
-        logger.debug("Ollama embedding unavailable (%s), will try fallback", type(e).__name__)
+    except (ConnectionError, OSError, Exception) as exc:  # noqa: BLE001
+        logger.error("Ollama embedding failed: %s", exc)
         return None
 
 
@@ -102,6 +102,7 @@ def embed_texts(
     texts: list[str],
     rate_limiter: RateLimiter | None = None,
     input_type: str = "search_document",
+    provider: str | None = None,
 ) -> list[list[float]]:
     """Embed a list of texts, trying Ollama first, then Cohere fallback.
 
@@ -110,6 +111,8 @@ def embed_texts(
         rate_limiter: Optional rate limiter for Cohere calls.
         input_type: ``"search_document"`` for indexing,
             ``"search_query"`` for queries.
+        provider: Force a specific provider (``"ollama"`` or ``"cohere"``).
+            If None, tries Ollama first then Cohere.
 
     Returns:
         List of 768-dim float vectors, one per input text.
@@ -120,12 +123,26 @@ def embed_texts(
     if not texts:
         return []
 
+    # If provider is forced, skip the other
+    if provider == "cohere":
+        vectors = _embed_cohere(texts, rate_limiter=rate_limiter, input_type=input_type)
+        if vectors is not None:
+            logger.info("Embedded %d text(s) via Cohere (%s)", len(texts), COHERE_MODEL)
+            _validate_dimensions(vectors)
+            return vectors
+        raise RuntimeError("Cohere embedding failed")
+
     # Primary: Ollama (local)
     vectors = _embed_ollama(texts)
     if vectors is not None:
         logger.info("Embedded %d text(s) via Ollama (%s)", len(texts), OLLAMA_MODEL)
         _validate_dimensions(vectors)
         return vectors
+
+    if provider == "ollama":
+        raise RuntimeError(
+            f"Ollama embedding failed — is '{OLLAMA_MODEL}' pulled and the server running?"
+        )
 
     # Fallback: Cohere (cloud)
     vectors = _embed_cohere(texts, rate_limiter=rate_limiter, input_type=input_type)
@@ -138,6 +155,37 @@ def embed_texts(
         "All embedding providers unavailable. "
         "Ensure Ollama is running with the "
         f"'{OLLAMA_MODEL}' model pulled, or set COHERE_API_KEY."
+    )
+
+
+def select_provider() -> str:
+    """Test which embedding provider is available and return its name.
+
+    Call once at the start of a batch ingestion to ensure all vectors
+    use the same model (and thus the same dimension).
+
+    Returns:
+        ``"ollama"`` or ``"cohere"``.
+
+    Raises:
+        RuntimeError: If no provider is available.
+    """
+    if is_ollama_available():
+        # Verify with a real embed call
+        test = _embed_ollama(["dimension test"])
+        if test is not None:
+            logger.info("Selected embedding provider: Ollama (%s, %d-dim)",
+                        OLLAMA_MODEL, len(test[0]))
+            return "ollama"
+
+    load_keys()
+    if get_key("COHERE_API_KEY"):
+        logger.info("Selected embedding provider: Cohere (%s)", COHERE_MODEL)
+        return "cohere"
+
+    raise RuntimeError(
+        "No embedding provider available. "
+        f"Start Ollama with '{OLLAMA_MODEL}' or set COHERE_API_KEY."
     )
 
 

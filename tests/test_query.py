@@ -231,6 +231,7 @@ class TestRagQuery:
         store_instance = MagicMock()
         store_instance.search_logs.return_value = _mock_log_results()
         store_instance.search_threats.return_value = _mock_threat_results()
+        store_instance.search_docs.return_value = []
         mock_store.return_value = store_instance
         mock_route.return_value = "The scan found an Eicar test signature."
 
@@ -253,6 +254,7 @@ class TestRagQuery:
         store_instance = MagicMock()
         store_instance.search_logs.return_value = _mock_log_results()
         store_instance.search_threats.return_value = []
+        store_instance.search_docs.return_value = []
         mock_store.return_value = store_instance
 
         result = rag_query("GPU temps?", use_llm=False)
@@ -272,6 +274,7 @@ class TestRagQuery:
         store_instance = MagicMock()
         store_instance.search_logs.return_value = _mock_log_results()
         store_instance.search_threats.return_value = []
+        store_instance.search_docs.return_value = []
         mock_store.return_value = store_instance
         mock_route.return_value = "[SCAFFOLD] Would route 'fast' query to LiteLLM."
 
@@ -289,6 +292,7 @@ class TestRagQuery:
         store_instance = MagicMock()
         store_instance.search_logs.return_value = []
         store_instance.search_threats.return_value = []
+        store_instance.search_docs.return_value = []
         mock_store.return_value = store_instance
 
         result = rag_query("nonexistent topic", use_llm=True)
@@ -308,6 +312,7 @@ class TestRagQuery:
         store_instance = MagicMock()
         store_instance.search_logs.return_value = _mock_log_results()
         store_instance.search_threats.return_value = []
+        store_instance.search_docs.return_value = []
         mock_store.return_value = store_instance
         mock_route.side_effect = RuntimeError("All providers exhausted")
 
@@ -329,6 +334,7 @@ class TestRagQuery:
         store_instance.search_threats.return_value = [
             {"source": "vt", "text": "close", "_distance": 0.1},
         ]
+        store_instance.search_docs.return_value = []
         mock_store.return_value = store_instance
 
         result = rag_query("test", use_llm=False)
@@ -348,6 +354,7 @@ class TestRagQuery:
             {"source_file": "same.log", "text": "b", "_distance": 0.2},
         ]
         store_instance.search_threats.return_value = []
+        store_instance.search_docs.return_value = []
         mock_store.return_value = store_instance
 
         result = rag_query("test", use_llm=False)
@@ -365,6 +372,7 @@ class TestRagQuery:
         store_instance.search_threats.return_value = [
             {"hash": "deadbeef1234", "text": "threat", "_distance": 0.3},
         ]
+        store_instance.search_docs.return_value = []
         mock_store.return_value = store_instance
 
         result = rag_query("test", use_llm=False)
@@ -381,6 +389,7 @@ class TestRagQuery:
         store_instance = MagicMock()
         store_instance.search_logs.side_effect = Exception("DB error")
         store_instance.search_threats.return_value = _mock_threat_results()
+        store_instance.search_docs.return_value = []
         mock_store.return_value = store_instance
 
         result = rag_query("test", use_llm=False)

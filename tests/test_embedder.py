@@ -70,14 +70,18 @@ class TestIsOllamaAvailable:
 class TestEmbedOllama:
     @patch("ai.rag.embedder.ollama")
     def test_successful_embedding(self, mock_ollama):
-        mock_ollama.embed.return_value = {"embeddings": [ZERO_VEC]}
+        resp = MagicMock()
+        resp.embeddings = [ZERO_VEC]
+        mock_ollama.embed.return_value = resp
         result = _embed_ollama(["hello"])
         assert result == [ZERO_VEC]
         mock_ollama.embed.assert_called_once_with(model=OLLAMA_MODEL, input=["hello"])
 
     @patch("ai.rag.embedder.ollama")
     def test_multiple_texts(self, mock_ollama):
-        mock_ollama.embed.return_value = {"embeddings": [ZERO_VEC, ZERO_VEC]}
+        resp = MagicMock()
+        resp.embeddings = [ZERO_VEC, ZERO_VEC]
+        mock_ollama.embed.return_value = resp
         result = _embed_ollama(["a", "b"])
         assert len(result) == 2
 

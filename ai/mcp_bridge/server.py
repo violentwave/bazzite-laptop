@@ -16,7 +16,7 @@ DEFAULT_BIND = "127.0.0.1"
 DEFAULT_PORT = int(__import__("os").environ.get("MCP_BRIDGE_PORT", "8766"))
 
 # Number of tools in the allowlist (excludes health endpoint itself)
-_TOOL_COUNT = 22
+_TOOL_COUNT = 23
 
 
 def _assert_localhost(bind: str) -> None:
