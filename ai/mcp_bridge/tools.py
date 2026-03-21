@@ -8,6 +8,7 @@ import asyncio
 import json
 import logging
 import re
+import time
 from pathlib import Path
 
 import yaml
@@ -22,12 +23,73 @@ _SUBPROCESS_TIMEOUT_S = 30
 # Concurrency limit for subprocess tool calls
 _subprocess_semaphore = asyncio.Semaphore(4)
 
+# Bridge-level rate limiting (independent of provider limits)
+_BRIDGE_RATE_GLOBAL = 10  # max 10 req/s global
+_BRIDGE_RATE_PER_TOOL = 2  # max 2 req/s per tool
+
+_global_call_times: list[float] = []
+_per_tool_call_times: dict[str, list[float]] = {}
+
 # Path redaction pattern
 _HOME_PATTERN = re.compile(r"/home/lch")
 
 # Allowlist loaded once at module import
 _ALLOWLIST_PATH = CONFIGS_DIR / "mcp-bridge-allowlist.yaml"
 _allowlist: dict | None = None
+
+
+def _check_bridge_rate(tool_name: str) -> None:
+    """Check bridge-level rate limits. Raises ValueError if exceeded."""
+    now = time.time()
+    window = 1.0  # 1 second window
+
+    # Global rate check
+    _global_call_times[:] = [t for t in _global_call_times if now - t < window]
+    if len(_global_call_times) >= _BRIDGE_RATE_GLOBAL:
+        raise ValueError("[Bridge rate limited, slow down]")
+    _global_call_times.append(now)
+
+    # Per-tool rate check
+    if tool_name not in _per_tool_call_times:
+        _per_tool_call_times[tool_name] = []
+    times = _per_tool_call_times[tool_name]
+    times[:] = [t for t in times if now - t < window]
+    if len(times) >= _BRIDGE_RATE_PER_TOOL:
+        raise ValueError("[Bridge rate limited, slow down]")
+    times.append(now)
+
+
+def _validate_args(tool_def: dict, args: dict) -> None:
+    """Validate tool arguments against the allowlist definition.
+
+    Raises:
+        ValueError: If validation fails.
+    """
+    arg_defs = tool_def.get("args")
+    if arg_defs is None:
+        return  # No args expected
+
+    for arg_name, constraints in arg_defs.items():
+        is_required = constraints.get("required", False)
+        value = args.get(arg_name)
+
+        if value is None:
+            if is_required:
+                raise ValueError(f"Argument '{arg_name}' is required")
+            continue
+
+        if not isinstance(value, str):
+            raise ValueError(f"Argument '{arg_name}' must be a string")
+
+        # Pattern validation (regex)
+        pattern = constraints.get("pattern")
+        if pattern and not re.match(pattern, value):
+            raise ValueError(f"Argument '{arg_name}' does not match pattern '{pattern}'")
+
+        # Length validation
+        max_length = constraints.get("max_length")
+        if max_length and len(value) > max_length:
+            raise ValueError(f"Argument '{arg_name}' exceeds max length {max_length}")
 
 
 def _load_allowlist() -> dict:
@@ -111,6 +173,8 @@ async def execute_tool(tool_name: str, args: dict) -> str:
         raise ValueError(f"Unknown tool: '{tool_name}'")
 
     tool_def = allowlist[tool_name]
+    _check_bridge_rate(tool_name)
+    _validate_args(tool_def, args)
 
     # Subprocess-based tools
     if "command" in tool_def:
