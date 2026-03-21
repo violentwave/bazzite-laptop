@@ -1,0 +1,103 @@
+# MCP Bridge Tool Allowlist
+# Static tool definitions for the MCP bridge server.
+# Unknown tool names are rejected at startup. No dynamic registration.
+#
+# Security model: all tools are read-only, no mutations.
+# Arguments validated by regex/length/membership before execution.
+
+tools:
+  system.disk_usage:
+    description: "Disk usage summary"
+    command: ["df", "-h"]
+    args: null
+
+  system.cpu_temps:
+    description: "CPU and sensor temperatures (JSON)"
+    command: ["sensors", "-j"]
+    args: null
+
+  system.gpu_status:
+    description: "NVIDIA GPU temperature, memory, power"
+    command: ["nvidia-smi", "--query-gpu=temperature.gpu,memory.used,memory.total,power.draw,power.limit", "--format=csv,noheader,nounits"]
+    args: null
+
+  system.memory_usage:
+    description: "System memory usage"
+    command: ["free", "-h"]
+    args: null
+
+  system.uptime:
+    description: "System uptime"
+    command: ["uptime"]
+    args: null
+
+  system.service_status:
+    description: "Status of security-related systemd services"
+    command: ["systemctl", "is-active", "clamav-freshclam", "system-health.timer"]
+    args: null
+
+  security.last_scan:
+    description: "Last 20 lines of latest ClamAV scan log"
+    source: file_tail
+    path: "/var/log/clamav/scan-latest.log"
+    lines: 20
+    args: null
+
+  security.health_snapshot:
+    description: "Last 30 lines of latest health snapshot"
+    source: file_tail
+    path: "/var/log/system-health/health-latest.log"
+    lines: 30
+    args: null
+
+  security.status:
+    description: "Current security/health status (filtered JSON)"
+    source: json_file
+    path_key: STATUS_FILE
+    allowed_keys:
+      - state
+      - scan_type
+      - last_scan_time
+      - result
+      - health_status
+      - health_issues
+    args: null
+
+  security.threat_lookup:
+    description: "Look up a file hash in threat intel sources"
+    source: python
+    module: "ai.threat_intel.lookup"
+    args:
+      hash:
+        type: string
+        pattern: "^[a-fA-F0-9]{32,64}$"
+        required: true
+
+  knowledge.rag_query:
+    description: "Query the security knowledge base (embedding-only, no LLM)"
+    source: python
+    module: "ai.rag.query"
+    args:
+      question:
+        type: string
+        max_length: 500
+        required: true
+
+  gaming.profiles:
+    description: "List configured game profiles"
+    source: python
+    module: "ai.gaming.scopebuddy"
+    function: "list_profiles"
+    args: null
+
+  gaming.mangohud_preset:
+    description: "Get MangoHud preset for a specific game"
+    source: python
+    module: "ai.gaming.scopebuddy"
+    function: "get_preset"
+    args:
+      game:
+        type: string
+        max_length: 100
+        membership: steam_library
+        required: true
