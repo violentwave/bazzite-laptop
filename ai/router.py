@@ -141,13 +141,13 @@ def _get_provider_order(config: dict, task_type: str) -> list[str]:
 
 
 def _g4f_available() -> bool:
-    """Check if g4f manager is importable and can potentially run."""
-    try:
-        from ai.g4f_manager import get_manager  # noqa: PLC0415, F401
+    """Check if g4f manager is importable and can potentially run.
 
-        return True
-    except ImportError:
-        return False
+    DISABLED: g4f routes through unknown third-party intermediaries with no
+    privacy guarantees. All prompts/system data would be exposed. Since we have
+    7 paid free-tier providers with generous limits, g4f is unnecessary risk.
+    """
+    return False
 
 
 def _try_provider(provider_name: str, task_type: str, prompt: str, **kwargs) -> object:
