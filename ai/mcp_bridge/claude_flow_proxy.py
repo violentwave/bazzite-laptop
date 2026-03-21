@@ -39,7 +39,9 @@ class StdioMCPProxy:
 
     async def start(self) -> None:
         """Start the claude-flow MCP subprocess."""
-        cmd = [CLAUDE_FLOW_BIN, "mcp", "start", "--stdio"]
+        # claude-flow auto-detects MCP mode when stdin is piped (not a TTY)
+        # Using "mcp start" explicitly ensures MCP mode even with piped stdin
+        cmd = [CLAUDE_FLOW_BIN, "mcp", "start"]
         try:
             self._process = subprocess.Popen(
                 cmd,
