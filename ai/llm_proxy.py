@@ -163,7 +163,7 @@ def main():
 
     logging.basicConfig(level=logging.INFO)
     logger.info("LLM proxy starting on %s:%d", args.bind, args.port)
-    logger.info("Provider chain: Gemini → Groq → Mistral → OpenRouter → g4f")
+    logger.info("Provider chain: Gemini → Groq → Mistral → OpenRouter → z.ai → Cerebras")
 
     app = create_app()
     uvicorn.run(app, host=args.bind, port=args.port)
