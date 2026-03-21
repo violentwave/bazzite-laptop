@@ -22,7 +22,7 @@ logger = logging.getLogger(APP_NAME)
 # ── Constants ──
 
 EMBEDDING_DIM = 768
-OLLAMA_MODEL = "nomic-embed-text-v2-moe"
+OLLAMA_MODEL = "nomic-embed-text"
 COHERE_MODEL = "embed-english-v3.0"
 OLLAMA_BASE_URL = "http://localhost:11434"
 

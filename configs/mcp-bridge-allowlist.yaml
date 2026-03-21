@@ -33,7 +33,7 @@ tools:
 
   system.service_status:
     description: "Status of security-related systemd services"
-    command: ["systemctl", "is-active", "clamav-freshclam", "system-health.timer"]
+    command: ["systemctl", "show", "--property=Id,ActiveState", "clamav-freshclam", "system-health.timer", "bazzite-mcp-bridge.service", "bazzite-llm-proxy.service"]
     args: null
 
   security.last_scan:
@@ -47,7 +47,8 @@ tools:
   security.health_snapshot:
     description: "Last 30 lines of latest health snapshot"
     source: file_tail
-    path: "/var/log/system-health/health-latest.log"
+    path: "/var/log/system-health"
+    pattern: "health-*.log"
     lines: 30
     args: null
 
@@ -102,3 +103,59 @@ tools:
         max_length: 100
         membership: steam_library
         required: true
+
+  logs.health_trend:
+    description: "Last 7 health snapshots with delta trends (temps, disk, RAM)"
+    source: python
+    module: "ai.log_intel"
+    args: null
+
+  logs.scan_history:
+    description: "Last 10 ClamAV scan results with threat details"
+    source: python
+    module: "ai.log_intel"
+    args: null
+
+  logs.anomalies:
+    description: "Unacknowledged system anomalies (threats, temp spikes, disk issues)"
+    source: python
+    module: "ai.log_intel"
+    args: null
+
+  logs.search:
+    description: "Semantic search across all system logs"
+    source: python
+    module: "ai.log_intel"
+    args:
+      query:
+        type: string
+        max_length: 500
+        required: true
+
+  logs.stats:
+    description: "Log pipeline statistics (record counts, last ingestion, DB size)"
+    source: python
+    module: "ai.log_intel"
+    args: null
+
+  security.run_scan:
+    description: "Trigger a ClamAV quick scan (runs in background via systemd)"
+    source: python
+    module: "ai.log_intel"
+    args:
+      scan_type:
+        type: string
+        pattern: "^(quick|deep)$"
+        required: false
+
+  security.run_health:
+    description: "Trigger a system health snapshot (runs in background via systemd)"
+    source: python
+    module: "ai.log_intel"
+    args: null
+
+  security.run_ingest:
+    description: "Trigger log ingestion to update the intelligence database"
+    source: python
+    module: "ai.log_intel"
+    args: null

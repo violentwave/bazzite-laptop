@@ -192,7 +192,9 @@ async def execute_tool(tool_name: str, args: dict) -> str:
     # File tail tools
     if tool_def.get("source") == "file_tail":
         try:
-            text = _read_file_tail(tool_def["path"], tool_def.get("lines", 20), tool_def.get("pattern"))
+            text = _read_file_tail(
+                tool_def["path"], tool_def.get("lines", 20), tool_def.get("pattern"),
+            )
             return _truncate(_redact_paths(text))
         except FileNotFoundError:
             return "No data yet -- run a snapshot first"
@@ -249,6 +251,62 @@ async def _execute_python_tool(tool_name: str, tool_def: dict, args: dict) -> st
             from ai.gaming.scopebuddy import get_preset  # noqa: PLC0415
 
             return json.dumps(get_preset(args["game"]), indent=2)
+
+        elif tool_name == "logs.health_trend":
+            from ai.log_intel.queries import health_trend  # noqa: PLC0415
+
+            return json.dumps(health_trend(), indent=2, default=str)
+
+        elif tool_name == "logs.scan_history":
+            from ai.log_intel.queries import scan_history  # noqa: PLC0415
+
+            return json.dumps(scan_history(), indent=2, default=str)
+
+        elif tool_name == "logs.anomalies":
+            from ai.log_intel.queries import get_anomalies  # noqa: PLC0415
+
+            return json.dumps(get_anomalies(), indent=2, default=str)
+
+        elif tool_name == "logs.search":
+            from ai.log_intel.queries import search_logs  # noqa: PLC0415
+
+            return json.dumps(search_logs(args["query"]), indent=2, default=str)
+
+        elif tool_name == "logs.stats":
+            from ai.log_intel.queries import pipeline_stats  # noqa: PLC0415
+
+            return json.dumps(pipeline_stats(), indent=2, default=str)
+
+        elif tool_name == "security.run_scan":
+            scan_type = args.get("scan_type", "quick")
+            service = f"clamav-{scan_type}.service"
+            result = await _run_subprocess(["systemctl", "start", service])
+            return json.dumps({
+                "triggered": True,
+                "service": service,
+                "message": f"ClamAV {scan_type} scan started. "
+                           "Results will appear in logs.scan_history once complete.",
+            })
+
+        elif tool_name == "security.run_health":
+            await _run_subprocess(["systemctl", "start", "system-health.service"])
+            return json.dumps({
+                "triggered": True,
+                "service": "system-health.service",
+                "message": "Health snapshot started. "
+                           "Results will appear in logs.health_trend once complete.",
+            })
+
+        elif tool_name == "security.run_ingest":
+            proc = await asyncio.create_subprocess_exec(
+                str(Path(__file__).parent.parent.parent / ".venv" / "bin" / "python"),
+                "-m", "ai.log_intel", "--all",
+                cwd=str(Path(__file__).parent.parent.parent),
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+            )
+            stdout, _ = await asyncio.wait_for(proc.communicate(), timeout=60)
+            return _truncate(stdout.decode("utf-8", errors="replace"))
 
         else:
             return f"[Tool '{tool_name}' not implemented]"

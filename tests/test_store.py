@@ -13,10 +13,10 @@ import pytest
 # Pre-populate sys.modules with mocks BEFORE importing store,
 # so the lazy `import lancedb` and `import pyarrow` inside store.py
 # get our mocks instead of the real (segfaulting) native extensions.
-_mock_lancedb = MagicMock()
-_mock_pyarrow = MagicMock()
-sys.modules.setdefault("lancedb", _mock_lancedb)
-sys.modules.setdefault("pyarrow", _mock_pyarrow)
+# Use setdefault return value so we share the same mock if another test file
+# already installed one (e.g. test_log_intel.py), avoiding cross-file interference.
+_mock_lancedb = sys.modules.setdefault("lancedb", MagicMock())
+_mock_pyarrow = sys.modules.setdefault("pyarrow", MagicMock())
 
 from ai.rag.store import VectorStore, get_store  # noqa: E402
 

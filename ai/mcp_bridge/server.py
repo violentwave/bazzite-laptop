@@ -1,7 +1,7 @@
 """FastMCP server for the Newelle MCP bridge.
 
-Exposes 13 read-only tools on localhost. NEVER bind to 0.0.0.0.
-NEVER import ai.router (it loads all keys unscoped).
+Exposes 21 tools + 1 health endpoint on localhost.
+NEVER bind to 0.0.0.0. NEVER import ai.router (it loads all keys unscoped).
 """
 
 import logging
@@ -15,8 +15,8 @@ logger = logging.getLogger("ai.mcp_bridge")
 DEFAULT_BIND = "127.0.0.1"
 DEFAULT_PORT = int(__import__("os").environ.get("MCP_BRIDGE_PORT", "8766"))
 
-# Number of tools in the allowlist (used by health endpoint)
-_TOOL_COUNT = 13
+# Number of tools in the allowlist (excludes health endpoint itself)
+_TOOL_COUNT = 21
 
 
 def _assert_localhost(bind: str) -> None:
@@ -94,6 +94,14 @@ def create_app():
             @mcp.tool(name=tool_name, description=description)
             async def _handler_game(game: str, _tn=tool_name):
                 return await execute_tool(_tn, {"game": game})
+        elif "query" in arg_defs:
+            @mcp.tool(name=tool_name, description=description)
+            async def _handler_query(query: str, _tn=tool_name):
+                return await execute_tool(_tn, {"query": query})
+        elif "scan_type" in arg_defs:
+            @mcp.tool(name=tool_name, description=description)
+            async def _handler_scan(scan_type: str = "quick", _tn=tool_name):
+                return await execute_tool(_tn, {"scan_type": scan_type})
 
     # Built-in health tool
     @mcp.tool(name="health", description="Bridge health check")

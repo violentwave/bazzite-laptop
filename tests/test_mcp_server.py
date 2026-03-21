@@ -85,7 +85,7 @@ class TestToolRegistration:
     def setup_method(self):
         _reload_server()
 
-    def test_all_13_tools_registered(self):
+    def test_all_21_tools_registered(self):
         fake_fastmcp = _make_fastmcp_mock()
         with (
             patch.dict(sys.modules, {"fastmcp": fake_fastmcp}),
@@ -94,8 +94,8 @@ class TestToolRegistration:
             from ai.mcp_bridge.server import create_app
 
             app = create_app()
-            # 13 allowlisted tools + 1 health tool registered via mcp.tool()
-            assert len(app._tool_manager._tools) >= 13
+            # 21 allowlisted tools + 1 health tool registered via mcp.tool()
+            assert len(app._tool_manager._tools) >= 21
 
 
 # ---------------------------------------------------------------------------
@@ -146,7 +146,7 @@ class TestHealthEndpoint:
 
             result = await health_check()
             assert result["status"] == "ok"
-            assert result["tools"] == 13
+            assert result["tools"] == 21
             assert result["g4f"] == "stopped"
 
     @pytest.mark.asyncio

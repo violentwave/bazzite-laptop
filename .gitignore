@@ -42,6 +42,7 @@ plans/
 .claude-flow/
 .swarm/
 .guidance/
+agentdb.db
 
 # Node.js (claude-flow dependencies)
 node_modules/
