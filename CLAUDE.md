@@ -11,13 +11,13 @@
 - NEVER lower vm.swappiness — 180 is correct for ZRAM.
 
 ## Repo Layout
-- scripts/ — shell scripts (clamav, backup, setup, AI wrappers, start-security-tray-qt.sh)
+- scripts/ — shell scripts (clamav, backup, setup, AI wrappers, start-security-tray-qt.sh, manage-keys.sh, deploy-services.sh)
 - systemd/ — timer and service unit files
 - desktop/ — .desktop files, security.menu, autostart
-- configs/ — system config files (udev, sysctl, gamemode, litellm, rate-limits)
+- configs/ — system config files (udev, sysctl, gamemode, litellm, rate-limits, mcp-bridge-allowlist.yaml)
 - tray/ — PySide6/Qt6 security tray + dashboard (9-state machine, Security/Health/About tabs)
-- ai/ — AI enhancement layer (threat intel, RAG, code quality, gaming)
-- tests/ — Python unit tests (389 tests)
+- ai/ — AI enhancement layer (threat intel, RAG, code quality, gaming, mcp_bridge/, health.py, llm_proxy.py)
+- tests/ — Python unit tests (483 tests)
 - docs/ — documentation and guides
 - plugins/ — 15 claude-flow plugins (`file:` refs in package.json)
 
@@ -25,6 +25,12 @@
 - Steam library: /run/media/lch/SteamLibrary
 - Tray launcher: /usr/local/bin/start-security-tray-qt.sh
 - Claude Code settings: ~/.claude/settings.json
+- MCP bridge: ai/mcp_bridge/server.py (FastMCP on 127.0.0.1:8766, 14 tools)
+- LLM proxy: ai/llm_proxy.py (OpenAI-compatible on 127.0.0.1:8767)
+- Provider health tracking: ai/health.py
+- g4f manager: ai/g4f_manager.py (DISABLED — privacy risk, not started)
+- MCP allowlist: configs/mcp-bridge-allowlist.yaml
+- Newelle (AI UI): Flatpak GTK4 assistant (replaces Jarvis)
 
 ## Desktop Files
 - All custom icons use absolute SVG paths (KDE doesn't resolve custom icon theme names)
@@ -39,7 +45,7 @@ ProtectHome=read-only, PrivateTmp=yes, ReadWritePaths whitelist.
 1. **NEVER run local LLM generation models.** Only `nomic-embed-text` (~300MB VRAM) via Ollama.
 2. **NEVER store API keys in code, scripts, or git.** Keys: `~/.config/bazzite-ai/keys.env` (chmod 600).
 3. **NEVER install Python packages globally.** Use `uv` + project venv at `.venv/`.
-4. **NEVER run AI as persistent daemons.** On-demand only. Exception: g4f subprocess (5-min idle timeout, sandboxed).
+4. **NEVER run AI as persistent daemons.** On-demand only. Exceptions: bazzite-mcp-bridge (FastMCP server), bazzite-llm-proxy (OpenAI-compat proxy). Both are user-managed systemd services.
 5. **NEVER call cloud APIs without `ai/rate_limiter.py`.**
 6. **NEVER hardcode API providers.** All LLM calls go through `ai/router.py` (LiteLLM).
 7. **All shell wrappers in `scripts/`, all Python logic in `ai/`.**
