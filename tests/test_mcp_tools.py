@@ -16,21 +16,22 @@ def allowlist():
 
 
 class TestAllowlistIntegrity:
-    def test_has_23_tools(self, allowlist):
-        assert len(allowlist["tools"]) == 23
+    def test_has_27_tools(self, allowlist):
+        assert len(allowlist["tools"]) == 27
 
     def test_all_expected_tools_present(self, allowlist):
         expected = {
             "system.disk_usage", "system.cpu_temps", "system.gpu_status",
             "system.memory_usage", "system.uptime", "system.service_status",
-            "system.llm_models",
+            "system.llm_models", "system.mcp_manifest",
             "security.last_scan", "security.health_snapshot", "security.status",
             "security.threat_lookup",
-            "knowledge.rag_query", "knowledge.ingest_docs",
+            "knowledge.rag_query", "knowledge.rag_qa", "knowledge.ingest_docs",
             "gaming.profiles", "gaming.mangohud_preset",
             "logs.health_trend", "logs.scan_history", "logs.anomalies",
             "logs.search", "logs.stats",
             "security.run_scan", "security.run_health", "security.run_ingest",
+            "code.search", "code.rag_query",
         }
         assert set(allowlist["tools"].keys()) == expected
 

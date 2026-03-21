@@ -13,11 +13,9 @@ from pathlib import Path
 from uuid import uuid4
 
 from ai.config import APP_NAME, VECTOR_DB_DIR
+from ai.rag.constants import CODE_TABLE, EMBEDDING_DIM
 
 logger = logging.getLogger(APP_NAME)
-
-# Embedding dimension for nomic-embed-text-v2-moe
-EMBEDDING_DIM = 768
 
 
 def _get_schemas() -> dict:
@@ -54,10 +52,23 @@ def _get_schemas() -> dict:
         pa.field("vector", pa.list_(pa.float32(), EMBEDDING_DIM)),
     ])
 
+    code_files_schema = pa.schema([
+        pa.field("id", pa.utf8()),
+        pa.field("relative_path", pa.utf8()),
+        pa.field("repo_root", pa.utf8()),
+        pa.field("language", pa.utf8()),
+        pa.field("symbol_name", pa.utf8()),
+        pa.field("line_start", pa.int32()),
+        pa.field("line_end", pa.int32()),
+        pa.field("content", pa.utf8()),
+        pa.field("vector", pa.list_(pa.float32(), EMBEDDING_DIM)),
+    ])
+
     return {
         "security_logs": security_log_schema,
         "threat_intel": threat_intel_schema,
         "docs": docs_schema,
+        CODE_TABLE: code_files_schema,
     }
 
 # ── Store ──
@@ -135,6 +146,32 @@ class VectorStore:
         except Exception:
             logger.exception("Failed to add %d doc chunks", len(chunks))
             return 0
+
+    def add_code_chunks(self, chunks: list[dict]) -> int:
+        """Add embedded code chunks to code_files table. Returns count added."""
+        if not chunks:
+            return 0
+        try:
+            for chunk in chunks:
+                chunk.setdefault("id", str(uuid4()))
+                vec = chunk.get("vector", [])
+                if len(vec) != EMBEDDING_DIM:
+                    raise ValueError(
+                        f"Vector dimension {len(vec)} != expected {EMBEDDING_DIM}. "
+                        "Embedding model mismatch — check embedder provider."
+                    )
+            schemas = _get_schemas()
+            table = self._ensure_table(CODE_TABLE, schemas[CODE_TABLE])
+            table.add(chunks)
+            return len(chunks)
+        except Exception:
+            logger.exception("Failed to add %d code chunks", len(chunks))
+            return 0
+
+    def search_code(self, query_vector: list[float], limit: int = 5) -> list[dict]:
+        """Search code_files by vector similarity. Returns list of result dicts."""
+        schemas = _get_schemas()
+        return self._search(CODE_TABLE, schemas[CODE_TABLE], query_vector, limit)
 
     def add_threat_reports(self, reports: list[dict]) -> int:
         """Add embedded threat reports to threat_intel table. Returns count added."""

@@ -12,7 +12,7 @@ two localhost services that together give it tool access and LLM inference.
 ```
 Newelle (Flatpak)
   │
-  ├── MCP tools  ──►  bazzite-mcp-bridge   127.0.0.1:8766  (FastMCP / SSE)
+  ├── MCP tools  ──►  bazzite-mcp-bridge   127.0.0.1:8766  (FastMCP streamable-http)
   │                   ai/mcp_bridge/server.py
   │
   └── LLM chat   ──►  bazzite-llm-proxy    127.0.0.1:8767  (OpenAI-compatible)
@@ -44,7 +44,7 @@ and dispatches each call.
 3. For each tool, FastMCP registers an explicit-argument handler function
    (FastMCP 3.x does not support `**kwargs`). The handler shape is determined
    by the tool's arg names: `hash`, `question`, `query`, `game`, `scan_type`.
-4. FastMCP starts an SSE server on `127.0.0.1:8766`.
+4. FastMCP starts a streamable-http server on `127.0.0.1:8766`.
 
 ### Allowlist and validation
 

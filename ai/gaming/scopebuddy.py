@@ -10,17 +10,21 @@ Usage:
     profile = suggest_launch_options("Counter-Strike 2")
 """
 
+from __future__ import annotations
+
 import json
 import logging
 import os
 import re
 import tempfile
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from ai.config import APP_NAME
 from ai.gaming.models import GameProfile, HardwareSnapshot
-from ai.rate_limiter import RateLimiter
-from ai.router import route_query
+
+if TYPE_CHECKING:
+    from ai.rate_limiter import RateLimiter
 
 logger = logging.getLogger(APP_NAME)
 
@@ -265,6 +269,43 @@ def _save_profiles(profiles: dict[str, GameProfile]) -> None:
         raise
 
 
+def list_profiles() -> dict:
+    """Return all saved game profiles as a serializable dict.
+
+    Returns:
+        Dict mapping game name to profile dict, or a message if none configured.
+    """
+    profiles = _load_profiles()
+    if not profiles:
+        return {"message": "Gaming profiles not yet configured"}
+    return {k: v.to_dict() for k, v in profiles.items()}
+
+
+def get_preset(game: str) -> dict:
+    """Get MangoHud preset settings for a game based on its profile.
+
+    Args:
+        game: Game name to look up.
+
+    Returns:
+        Dict with preset name and settings, or a helpful message if not configured.
+    """
+    profile = get_profile(game)
+    if profile is None:
+        return {
+            "message": f"No profile configured for '{game}'",
+            "available_presets": list(MANGOHUD_PRESETS.keys()),
+        }
+    preset_name = profile.mangohud_preset or "default"
+    if preset_name not in MANGOHUD_PRESETS:
+        preset_name = "default"
+    return {
+        "game": game,
+        "preset": preset_name,
+        "settings": MANGOHUD_PRESETS[preset_name],
+    }
+
+
 def get_profile(game_name: str) -> GameProfile | None:
     """Get a game profile by name (case-insensitive).
 
@@ -351,6 +392,8 @@ def suggest_launch_options(
     )
 
     try:
+        from ai.router import route_query  # noqa: PLC0415
+
         response = route_query("fast", prompt)
     except (RuntimeError, ValueError) as e:
         logger.warning("LLM query failed for %s: %s", game_name, e)

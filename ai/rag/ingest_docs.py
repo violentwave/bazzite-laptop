@@ -20,6 +20,7 @@ from pathlib import Path
 from uuid import uuid4
 
 from ai.config import APP_NAME, VECTOR_DB_DIR, setup_logging
+from ai.rag.constants import MAX_BYTES_PER_DOC, MAX_DOCS_PER_RUN, MAX_TOTAL_BYTES
 
 logger = logging.getLogger(APP_NAME)
 
@@ -98,7 +99,8 @@ def _split_oversized(content: str, section_title: str, base: dict) -> list[dict]
 
     for para in paragraphs:
         para_words = len(para.split())
-        if (current_words + para_words > MAX_CHUNK_WORDS or len("\n\n".join(current_parts)) > 4000) and current_parts:
+        joined_len = len("\n\n".join(current_parts))
+        if (current_words + para_words > MAX_CHUNK_WORDS or joined_len > 4000) and current_parts:
             part_num = len(sub_chunks) + 1
             sub_chunks.append({
                 **base,
@@ -175,7 +177,8 @@ def ingest_files(paths: list[Path], force: bool = False) -> dict:
         force: If True, re-ingest even if file hash hasn't changed.
 
     Returns:
-        Dict with keys: files_processed, files_skipped, chunks_created.
+        Dict with keys: processed, skipped_unchanged, skipped_size,
+        skipped_deferred, total_chunks.
     """
     from ai.rag.embedder import embed_texts, select_provider  # noqa: PLC0415
     from ai.rag.store import get_store  # noqa: PLC0415
@@ -187,21 +190,54 @@ def ingest_files(paths: list[Path], force: bool = False) -> dict:
     provider = select_provider()
 
     files_processed = 0
-    files_skipped = 0
+    skipped_unchanged = 0
+    skipped_size = 0
+    skipped_deferred = 0
+    total_bytes = 0
     chunks_created = 0
     all_chunks: list[dict] = []
 
     for path in paths:
         path = Path(path).resolve()
-        if not path.exists() or not path.suffix == ".md":
+        if not path.exists() or path.suffix != ".md":
             logger.warning("Skipping %s (not found or not .md)", path)
+            continue
+
+        # Check file size before hashing to avoid reading large files
+        file_size = path.stat().st_size
+        if file_size > MAX_BYTES_PER_DOC:
+            logger.warning(
+                "Skipping %s (%.1f KB > %d KB limit)",
+                path.name, file_size / 1024, MAX_BYTES_PER_DOC // 1024,
+            )
+            skipped_size += 1
             continue
 
         file_hash = _file_hash(path)
         state_key = str(path)
 
         if not force and state.get(state_key) == file_hash:
-            files_skipped += 1
+            skipped_unchanged += 1
+            continue
+
+        # Enforce doc count cap
+        if files_processed >= MAX_DOCS_PER_RUN:
+            if skipped_deferred == 0:
+                logger.info(
+                    "Reached max docs per run (%d), deferring remaining files",
+                    MAX_DOCS_PER_RUN,
+                )
+            skipped_deferred += 1
+            continue
+
+        # Enforce total bytes cap
+        if total_bytes + file_size > MAX_TOTAL_BYTES:
+            if skipped_deferred == 0:
+                logger.info(
+                    "Reached max total bytes (%d MB), deferring remaining files",
+                    MAX_TOTAL_BYTES // 1_000_000,
+                )
+            skipped_deferred += 1
             continue
 
         logger.info("Processing: %s", path.name)
@@ -215,11 +251,18 @@ def ingest_files(paths: list[Path], force: bool = False) -> dict:
         all_chunks.extend(chunks)
         state[state_key] = file_hash
         files_processed += 1
+        total_bytes += file_size
+
+    if skipped_deferred:
+        logger.info(
+            "Reached max docs per run (%d), %d files deferred",
+            MAX_DOCS_PER_RUN, skipped_deferred,
+        )
 
     # Embed all chunks in batches
     if all_chunks:
         texts = [c["content"] for c in all_chunks]
-        # Embed in batches of 20 to avoid overwhelming Ollama
+        # Embed in batches of 1 to avoid overwhelming Ollama
         batch_size = 1
         all_vectors: list[list[float]] = []
         for i in range(0, len(texts), batch_size):
@@ -237,9 +280,11 @@ def ingest_files(paths: list[Path], force: bool = False) -> dict:
         _save_state(state)
 
     return {
-        "files_processed": files_processed,
-        "files_skipped": files_skipped,
-        "chunks_created": chunks_created,
+        "processed": files_processed,
+        "skipped_unchanged": skipped_unchanged,
+        "skipped_size": skipped_size,
+        "skipped_deferred": skipped_deferred,
+        "total_chunks": chunks_created,
     }
 
 
@@ -292,11 +337,16 @@ def main() -> None:
 
     result = ingest_files(paths, force=args.force)
 
-    print(  # noqa: T201
-        f"Done: {result['files_processed']} processed, "
-        f"{result['files_skipped']} skipped (unchanged), "
-        f"{result['chunks_created']} chunks embedded"
-    )
+    parts = [
+        f"{result['processed']} processed",
+        f"{result['skipped_unchanged']} skipped (unchanged)",
+        f"{result['total_chunks']} chunks embedded",
+    ]
+    if result["skipped_size"]:
+        parts.append(f"{result['skipped_size']} skipped (too large)")
+    if result["skipped_deferred"]:
+        parts.append(f"{result['skipped_deferred']} deferred (cap hit)")
+    print(f"Done: {', '.join(parts)}")  # noqa: T201
 
 
 if __name__ == "__main__":

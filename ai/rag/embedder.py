@@ -15,13 +15,10 @@ import httpx
 import ollama
 
 from ai.config import APP_NAME, get_key, load_keys
+from ai.rag.constants import EMBEDDING_DIM
 from ai.rate_limiter import RateLimiter
 
 logger = logging.getLogger(APP_NAME)
-
-# ── Constants ──
-
-EMBEDDING_DIM = 768
 OLLAMA_MODEL = "nomic-embed-text"
 COHERE_MODEL = "embed-english-v3.0"
 OLLAMA_BASE_URL = "http://localhost:11434"

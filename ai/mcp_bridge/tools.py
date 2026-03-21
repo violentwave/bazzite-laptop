@@ -13,7 +13,7 @@ from pathlib import Path
 
 import yaml
 
-from ai.config import CONFIGS_DIR, STATUS_FILE
+from ai.config import CONFIGS_DIR, PROJECT_ROOT, STATUS_FILE
 
 logger = logging.getLogger("ai.mcp_bridge")
 
@@ -199,6 +199,23 @@ async def execute_tool(tool_name: str, args: dict) -> str:
     _check_bridge_rate(tool_name)
     _validate_args(tool_def, args)
 
+    # system.service_status: split into system and user scope calls
+    if tool_name == "system.service_status":
+        system_out = await _run_subprocess([
+            "systemctl", "show", "-p", "Id,ActiveState",
+            "clamav-freshclam.service", "system-health.timer",
+        ])
+        user_out = await _run_subprocess([
+            "systemctl", "--user", "show", "-p", "Id,ActiveState",
+            "bazzite-mcp-bridge.service", "bazzite-llm-proxy.service",
+        ])
+        parts = []
+        if system_out.strip():
+            parts.append("[system]\n" + system_out.strip())
+        if user_out.strip():
+            parts.append("[user]\n" + user_out.strip())
+        return "\n\n".join(parts)
+
     # Subprocess-based tools
     if "command" in tool_def:
         return await _run_subprocess(tool_def["command"])
@@ -253,6 +270,19 @@ async def _execute_python_tool(tool_name: str, tool_def: dict, args: dict) -> st
             question = args.get("query") or args.get("question", "")
             result = rag_query(question, use_llm=False)
             return _truncate(result.answer)
+
+        elif tool_name == "knowledge.rag_qa":
+            from ai.rag.query import rag_query  # noqa: PLC0415
+
+            question = args.get("question", "")
+            result = rag_query(question, use_llm=True)
+            if result.answer:
+                return _truncate(_redact_paths(result.answer))
+            # Fallback to raw context chunks if LLM answer is empty
+            fallback = "\n\n".join(
+                c.get("text", c.get("content", "")) for c in result.context_chunks
+            )
+            return _truncate(_redact_paths(fallback))
 
         elif tool_name == "knowledge.ingest_docs":
             from ai.rag.ingest_docs import ingest_directory  # noqa: PLC0415
@@ -334,6 +364,43 @@ async def _execute_python_tool(tool_name: str, tool_def: dict, args: dict) -> st
                 "message": "Health snapshot started. "
                            "Results will appear in logs.health_trend once complete.",
             })
+
+        elif tool_name == "code.search":
+            query = args.get("query", "")
+            repo_root = str(PROJECT_ROOT)
+            output = await _run_subprocess([
+                "rg", "--no-heading", "--line-number",
+                "--max-count", "20", "--glob", "*.py",
+                query, repo_root,
+            ])
+            if output == "[Command not found]":
+                # rg not available — fall back to grep (-F: fixed string, not regex)
+                output = await _run_subprocess([
+                    "grep", "-rn", "-F", "--include=*.py", query, repo_root,
+                ])
+            return _truncate(_redact_paths(output))
+
+        elif tool_name == "code.rag_query":
+            from ai.rag.code_query import code_rag_query  # noqa: PLC0415
+
+            question = args.get("question", "")
+            result = code_rag_query(question, use_llm=False)
+            return _truncate(_redact_paths(json.dumps(result, indent=2)))
+
+        elif tool_name == "system.mcp_manifest":
+            allowlist = _load_allowlist()
+            tools_list = []
+            for name, defn in allowlist.items():
+                source = "subprocess" if "command" in defn else defn.get("source", "unknown")
+                arg_defs = defn.get("args") or {}
+                tools_list.append({
+                    "name": name,
+                    "description": defn.get("description", ""),
+                    "source": source,
+                    "args": list(arg_defs.keys()),
+                })
+            manifest = {"tool_count": len(tools_list), "tools": tools_list}
+            return _truncate(json.dumps(manifest, indent=2))
 
         elif tool_name == "security.run_ingest":
             proc = await asyncio.create_subprocess_exec(

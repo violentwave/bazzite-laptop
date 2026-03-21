@@ -2,8 +2,14 @@
 # Used by ai/router.py to route LLM calls to the best available provider.
 # Keys are loaded at runtime from ~/.config/bazzite-ai/keys.env via python-dotenv.
 #
-# Provider priority (per task type): Gemini → Groq → Mistral → OpenRouter → z.ai → Cerebras
-# Router V2 health-weighted selection may reorder based on success rate + latency.
+# Provider chains (health-weighted at runtime):
+#   fast:   Gemini → Groq → Mistral → OpenRouter → z.ai → Cerebras
+#   reason: Gemini → Groq → Mistral → OpenRouter(Claude) → z.ai
+#   batch:  Gemini → Groq → Mistral → OpenRouter → Cerebras
+#   code:   Gemini → Groq → Mistral(Codestral) → OpenRouter(Claude) → z.ai
+#   embed:  Ollama(nomic-embed-text) → Mistral
+# Note: router.py handles health-weighted ordering; LiteLLM's
+# routing_strategy is not used for provider selection.
 # g4f is DISABLED — privacy risk, all providers below have free tiers.
 
 model_list:
@@ -127,6 +133,12 @@ router_settings:
   num_retries: 0
   timeout: 30
   allowed_fails: 1
+  timeouts:
+    fast: 30
+    code: 30
+    reason: 60
+    batch: 60
+    embed: 30
 
 # Health tracking (Router V2)
 health_settings:

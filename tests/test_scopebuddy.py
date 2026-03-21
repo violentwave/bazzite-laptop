@@ -295,7 +295,7 @@ class TestGameProfiles:
 class TestSuggestLaunchOptions:
     """Tests for suggest_launch_options."""
 
-    @patch("ai.gaming.scopebuddy.route_query")
+    @patch("ai.router.route_query")
     def test_llm_suggestion(self, mock_route):
         """LLM response is used as launch options."""
         mock_route.return_value = "gamemoderun mangohud %command%"
@@ -316,7 +316,7 @@ class TestSuggestLaunchOptions:
         assert profile.launch_options == "gamemoderun mangohud %command%"
         limiter.can_call.assert_called_once_with("litellm")
 
-    @patch("ai.gaming.scopebuddy.route_query")
+    @patch("ai.router.route_query")
     def test_prime_offload_filtered(self, mock_route):
         """Response containing banned PRIME vars gets those lines filtered out."""
         mock_route.return_value = (
@@ -332,7 +332,7 @@ class TestSuggestLaunchOptions:
         assert "__GLX_VENDOR_LIBRARY_NAME" not in profile.launch_options
         assert "gamemoderun mangohud %command%" in profile.launch_options
 
-    @patch("ai.gaming.scopebuddy.route_query")
+    @patch("ai.router.route_query")
     def test_scaffold_response_returns_default(self, mock_route):
         """[SCAFFOLD] response falls back to safe default."""
         mock_route.return_value = "[SCAFFOLD] Would route 'fast' query to LiteLLM."
@@ -341,7 +341,7 @@ class TestSuggestLaunchOptions:
 
         assert profile.launch_options == "gamemoderun mangohud %command%"
 
-    @patch("ai.gaming.scopebuddy.route_query")
+    @patch("ai.router.route_query")
     def test_router_exception_returns_default(self, mock_route):
         """RuntimeError from router returns safe default."""
         mock_route.side_effect = RuntimeError("provider down")
@@ -350,7 +350,7 @@ class TestSuggestLaunchOptions:
 
         assert profile.launch_options == "gamemoderun mangohud %command%"
 
-    @patch("ai.gaming.scopebuddy.route_query")
+    @patch("ai.router.route_query")
     def test_all_banned_lines_yields_default(self, mock_route):
         """If every line is banned, fall back to safe default."""
         mock_route.return_value = (
@@ -362,7 +362,7 @@ class TestSuggestLaunchOptions:
 
         assert profile.launch_options == "gamemoderun mangohud %command%"
 
-    @patch("ai.gaming.scopebuddy.route_query")
+    @patch("ai.router.route_query")
     def test_hardware_context_included(self, mock_route):
         """Hardware snapshot is included in the prompt."""
         mock_route.return_value = "gamemoderun %command%"
@@ -383,7 +383,7 @@ class TestSuggestLaunchOptions:
         assert "i7-7700HQ" in prompt
         assert "535.183" in prompt
 
-    @patch("ai.gaming.scopebuddy.route_query")
+    @patch("ai.router.route_query")
     def test_rate_limiter_records_call(self, mock_route):
         """Successful LLM call records usage with rate limiter."""
         mock_route.return_value = "gamemoderun %command%"

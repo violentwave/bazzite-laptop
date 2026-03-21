@@ -85,6 +85,17 @@ tools:
         max_length: 500
         required: true
 
+  knowledge.rag_qa:
+    description: "Answer a question using the security knowledge base with LLM synthesis"
+    source: python
+    module: "ai.rag.query"
+    args:
+      question:
+        type: string
+        max_length: 500
+        pattern: "^[\\w\\s.,?!:;'\"()-]+$"
+        required: true
+
   knowledge.ingest_docs:
     description: "Re-ingest reference documentation into RAG vector database"
     source: python
@@ -170,4 +181,32 @@ tools:
     description: "Trigger log ingestion to update the intelligence database"
     source: python
     module: "ai.log_intel"
+    args: null
+
+  code.search:
+    description: "Search Python code in the repo by pattern (ripgrep/grep)"
+    source: python
+    module: "ai.mcp_bridge.tools"
+    args:
+      query:
+        type: string
+        max_length: 128
+        pattern: "^[\\w\\s.,?!:;'\"(){}\\[\\]@#$%^&*+=<>/|-]+$"
+        required: true
+
+  code.rag_query:
+    description: "Semantic search over indexed Python code (embedding-based)"
+    source: python
+    module: "ai.rag.code_query"
+    args:
+      question:
+        type: string
+        max_length: 500
+        pattern: "^[\\w\\s.,?!:;'\"()-]+$"
+        required: true
+
+  system.mcp_manifest:
+    description: "List all available MCP tools with descriptions and arguments"
+    source: python
+    module: "ai.mcp_bridge.tools"
     args: null

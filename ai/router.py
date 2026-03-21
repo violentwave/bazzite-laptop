@@ -41,6 +41,11 @@ _FALLBACK_CHAINS: dict[str, list[str]] = {
 # Stream recovery: buffer up to this many bytes before committing to a provider
 _STREAM_COMMIT_THRESHOLD = 2048  # 2KB
 
+# Per-task-type timeouts (seconds). reason/batch get more time for deep analysis.
+_DEFAULT_TIMEOUTS: dict[str, int] = {
+    "fast": 30, "code": 30, "reason": 60, "batch": 60, "embed": 30,
+}
+
 _config: dict | None = None
 _router = None
 _rate_limiter: RateLimiter | None = None
@@ -72,6 +77,14 @@ def _get_rate_limiter() -> RateLimiter:
     if _rate_limiter is None:
         _rate_limiter = RateLimiter()
     return _rate_limiter
+
+
+def _get_timeout(task_type: str) -> int:
+    """Return the configured timeout for a task type, falling back to defaults."""
+    config = _load_config()
+    router_settings = config.get("router_settings", {})
+    timeouts = router_settings.get("timeouts", {})
+    return timeouts.get(task_type, _DEFAULT_TIMEOUTS.get(task_type, 30))
 
 
 def _get_router():
@@ -119,9 +132,14 @@ def _get_provider_order(config: dict, task_type: str) -> list[str]:
     for m in models:
         params = m.get("litellm_params", {})
         provider = _extract_provider(params.get("model", ""))
-        if provider and provider not in seen and limiter.can_call(provider):
-            seen.add(provider)
+        if not provider or provider in seen:
+            continue
+        seen.add(provider)
+        if limiter.can_call(provider):
             providers.append(provider)
+        else:
+            wait = limiter.wait_time(provider)
+            logger.debug("Skipping %s (rate-limited, available in %.1fs)", provider, wait)
 
     # Sort by health score (descending), excluding disabled
     healthy = _health_tracker.get_sorted(providers)
@@ -132,6 +150,7 @@ def _try_provider(provider_name: str, task_type: str, prompt: str, **kwargs) -> 
     """Try a single provider for a completion. Returns the response or raises."""
     router = _get_router()
 
+    kwargs.setdefault("timeout", _get_timeout(task_type))
     start = time.time()
     try:
         response = router.completion(
@@ -178,13 +197,24 @@ def _check_rate_limits(config: dict, task_type: str) -> None:
     if not models:
         return
 
+    wait_times: list[float] = []
     for model_entry in models:
         params = model_entry.get("litellm_params", {})
         provider = _extract_provider(params.get("model", ""))
+        if not provider:
+            continue
         if limiter.can_call(provider):
             return
+        wait_times.append(limiter.wait_time(provider))
 
-    raise RuntimeError(f"All providers rate-limited for task_type '{task_type}'")
+    try:
+        min_wait = min(wait_times) if wait_times else 0.0
+        wait_msg = f" (shortest wait: {min_wait:.1f}s)" if min_wait > 0 else ""
+    except TypeError:
+        wait_msg = ""
+    raise RuntimeError(
+        f"All providers rate-limited for task_type '{task_type}'{wait_msg}"
+    )
 
 
 async def _stream_provider(
@@ -197,6 +227,7 @@ async def _stream_provider(
     router = _get_router()
     limiter = _get_rate_limiter()
 
+    kwargs.setdefault("timeout", _get_timeout(task_type))
     start = time.time()
     try:
         response = router.completion(

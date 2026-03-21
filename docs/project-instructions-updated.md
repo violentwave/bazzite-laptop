@@ -32,7 +32,7 @@ All AI subsystems are implemented and working. 510 tests passing, ruff/bandit cl
 
 **Newelle-centric architecture**: Everything routes through Newelle (Flatpak GTK4 AI assistant) as the single AI interface. Two user systemd services auto-start on login:
 - `bazzite-llm-proxy.service` — OpenAI-compatible LLM router on :8767
-- `bazzite-mcp-bridge.service` — FastMCP bridge with 22 tools on :8766
+- `bazzite-mcp-bridge.service` — FastMCP bridge with 23 tools on :8766
 
 **Claude-flow/RuFlo** is available for manual dev swarm sessions (`npx claude-flow`) but does NOT auto-start. Only 2 plugins installed: code-intelligence, test-intelligence.
 
@@ -253,6 +253,7 @@ Claude-flow (`npx claude-flow`) is available for manual dev sessions but does no
 | `security.run_health` | python: systemctl start system-health | none |
 | `security.run_ingest` | python: ai.log_intel --all | none |
 | `knowledge.rag_query` | python: ai.rag.query (no LLM) | question (max 500 chars) |
+| `knowledge.ingest_docs` | python: ai.rag.ingest_docs | none |
 | `gaming.profiles` | python: ai.gaming.scopebuddy | none |
 | `gaming.mangohud_preset` | python: ai.gaming.scopebuddy | game |
 | `logs.health_trend` | python: ai.log_intel.queries | none |

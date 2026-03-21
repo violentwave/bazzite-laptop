@@ -17,7 +17,7 @@
     ┌─────▼──────┐        ┌──────▼──────────────┐
     │ LLM Proxy  │        │  MCP Bridge         │
     │ :8767      │        │  :8766 (FastMCP)    │
-    │ Starlette  │        │  22 tools           │
+    │ Starlette  │        │  23 tools           │
     └─────┬──────┘        └──────┬──────────────┘
           │                      │
     ┌─────▼──────┐        ┌──────▼──────────────┐
@@ -96,7 +96,7 @@ All bind to **127.0.0.1 only** — enforced at startup, never 0.0.0.0.
 | `health.py` | 98 | Provider health scoring, auto-demotion (3 failures → 5min cooldown) | Working |
 | `llm_proxy.py` | 172 | OpenAI-compatible proxy on :8767 for Newelle | Working |
 | `rate_limiter.py` | 256 | Cross-script rate limiting with file locking + atomic writes | Working |
-| `mcp_bridge/server.py` | 111 | FastMCP server on :8766, 22 allowlisted tools | Working |
+| `mcp_bridge/server.py` | 111 | FastMCP server on :8766, 23 allowlisted tools | Working |
 | `mcp_bridge/tools.py` | 351 | Tool implementations (subprocess, file_tail, python) | Working |
 | `mcp_bridge/__main__.py` | 63 | Entry point, SIGTERM handler, key guard | Working |
 
@@ -143,7 +143,7 @@ Claude-flow (`npx claude-flow`) is available for manual dev sessions but does no
 | File | Purpose |
 |------|---------|
 | `litellm-config.yaml` | 23 LLM models across 5 task types (fast/reason/batch/code/embed) |
-| `mcp-bridge-allowlist.yaml` | 22 MCP tool definitions with arg validation |
+| `mcp-bridge-allowlist.yaml` | 23 MCP tool definitions with arg validation |
 | `ai-rate-limits.json` | Per-provider rate limits (rpm/rpd/tokens) |
 | `keys.env.enc` | sops-encrypted API keys (IN git) |
 | `logrotate-system-health` | 90-day log rotation |
@@ -171,7 +171,7 @@ Installed via `file:` refs in `package.json`: code-intelligence (semantic search
 
 ---
 
-## MCP Bridge Tools (22 total)
+## MCP Bridge Tools (23 total)
 
 | Tool | Source | Args |
 |------|--------|------|
@@ -190,6 +190,7 @@ Installed via `file:` refs in `package.json`: code-intelligence (semantic search
 | `security.run_health` | python: systemctl start system-health | none |
 | `security.run_ingest` | python: ai.log_intel --all | none |
 | `knowledge.rag_query` | python: ai.rag.query (no LLM) | question (max 500 chars) |
+| `knowledge.ingest_docs` | python: ai.rag.ingest_docs | none |
 | `gaming.profiles` | python: ai.gaming.scopebuddy | none |
 | `gaming.mangohud_preset` | python: ai.gaming.scopebuddy | game |
 | `logs.health_trend` | python: ai.log_intel.queries | none |
