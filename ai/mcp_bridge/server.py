@@ -76,16 +76,24 @@ def create_app():
         description = tool_def.get("description", tool_name)
         arg_defs = tool_def.get("args")
 
+        # FastMCP 3.x does not support **kwargs in tool functions.
+        # Build explicit-arg handlers for tools that accept arguments.
         if arg_defs is None:
-            # No-argument tool — capture tool_name in default arg to avoid closure issue
             @mcp.tool(name=tool_name, description=description)
             async def _handler(_tn=tool_name):
                 return await execute_tool(_tn, {})
-        else:
-            # Tool with arguments
+        elif "hash" in arg_defs:
             @mcp.tool(name=tool_name, description=description)
-            async def _handler_with_args(_tn=tool_name, **kwargs):
-                return await execute_tool(_tn, kwargs)
+            async def _handler_hash(hash: str, _tn=tool_name):
+                return await execute_tool(_tn, {"hash": hash})
+        elif "question" in arg_defs:
+            @mcp.tool(name=tool_name, description=description)
+            async def _handler_question(question: str, _tn=tool_name):
+                return await execute_tool(_tn, {"question": question})
+        elif "game" in arg_defs:
+            @mcp.tool(name=tool_name, description=description)
+            async def _handler_game(game: str, _tn=tool_name):
+                return await execute_tool(_tn, {"game": game})
 
     # Built-in health tool
     @mcp.tool(name="health", description="Bridge health check")

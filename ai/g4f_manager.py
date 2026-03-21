@@ -73,8 +73,9 @@ class G4FManager:
 
     def _build_command(self) -> list[str]:
         """Build the g4f launch command with sandboxing."""
+        # g4f CLI expects --bind as host:port format
         base_cmd = [sys.executable, "-m", "g4f", "api",
-                     "--port", str(self._port), "--bind", "127.0.0.1"]
+                     "--bind", f"127.0.0.1:{self._port}"]
         if shutil.which("systemd-run"):
             return [
                 "systemd-run", "--user", "--scope",
