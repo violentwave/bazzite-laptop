@@ -22,6 +22,10 @@ cohere>=5.0.0
 # Dashboard (SP2)
 PySide6>=6.7.0
 
+# MCP Bridge + g4f
+g4f[slim]>=7.0.0
+fastmcp>=1.0.0
+
 # Dev/test
 ruff>=0.8.0
 bandit>=1.7.0
