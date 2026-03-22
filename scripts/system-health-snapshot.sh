@@ -399,8 +399,11 @@ if command -v smartctl &>/dev/null && [[ -b "$DEV_SDA" ]]; then
             warn "Last SMART self-test was aborted (use --selftest to re-run)"
         fi
     fi
+elif ! command -v smartctl &>/dev/null; then
+    SMART_STATUS="not_installed"
+    info "smartctl not installed — skipping SMART check"
 else
-    warn "smartctl not available or ${DEV_SDA} not found"
+    warn "${DEV_SDA:-DEV_SDA} not found"
 fi
 
 # ═════════════════════════════════════════════════════════════
@@ -737,7 +740,7 @@ if [[ "$QUIET" == false ]]; then
 fi
 
 # Symlink latest
-ln -sf "$LOG_FILE" "$LATEST_LINK"
+ln -sf "$(basename "$LOG_FILE")" "$LATEST_LINK"
 
 # ═════════════════════════════════════════════════════════════
 # Update tray status (~/security/.status)
