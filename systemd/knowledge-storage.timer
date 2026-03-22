@@ -1,0 +1,11 @@
+[Unit]
+Description=Run Bazzite knowledge storage health check daily at 9:15 AM
+Requires=knowledge-storage.service
+
+[Timer]
+OnCalendar=*-*-* 09:15:00
+AccuracySec=1min
+Persistent=true
+
+[Install]
+WantedBy=timers.target

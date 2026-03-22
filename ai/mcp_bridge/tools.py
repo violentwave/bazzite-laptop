@@ -414,6 +414,18 @@ async def _execute_python_tool(tool_name: str, tool_def: dict, args: dict) -> st
             result = run_tuning()
             return json.dumps(result, indent=2)
 
+        elif tool_name == "agents.knowledge_storage":
+            from ai.agents.knowledge_storage import run_storage_check  # noqa: PLC0415
+
+            result = run_storage_check()
+            return json.dumps(result, indent=2)
+
+        elif tool_name == "agents.code_quality":
+            from ai.agents.code_quality_agent import run_code_check  # noqa: PLC0415
+
+            result = run_code_check()
+            return json.dumps(result, indent=2)
+
         elif tool_name == "security.run_ingest":
             proc = await asyncio.create_subprocess_exec(
                 str(Path(__file__).parent.parent.parent / ".venv" / "bin" / "python"),

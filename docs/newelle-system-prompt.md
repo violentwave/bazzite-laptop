@@ -78,6 +78,8 @@ Full routing table:
 | List all available MCP tools / introspection   | system.mcp_manifest           |
 | Run full automated security audit              | agents.security_audit         |
 | Run performance analysis (temps, disk, gaming) | agents.performance_tuning     |
+| Check vector DB / RAG / Ollama health          | agents.knowledge_storage      |
+| Check code quality, lint, git repo health      | agents.code_quality           |
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 HEALTH CHECK PROTOCOL — when user asks for a system health check

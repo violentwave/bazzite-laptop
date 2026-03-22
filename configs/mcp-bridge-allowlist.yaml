@@ -224,3 +224,17 @@ tools:
     module: "ai.agents.performance_tuning"
     function: "run_tuning"
     args: null
+
+  agents.knowledge_storage:
+    description: "Check vector DB health, ingestion freshness, disk usage, Ollama status"
+    source: python
+    module: "ai.agents.knowledge_storage"
+    function: "run_storage_check"
+    args: null
+
+  agents.code_quality:
+    description: "Run ruff + bandit + git status, report code quality and repo health"
+    source: python
+    module: "ai.agents.code_quality_agent"
+    function: "run_code_check"
+    args: null
