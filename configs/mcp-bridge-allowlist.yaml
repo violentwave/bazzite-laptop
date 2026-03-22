@@ -217,3 +217,10 @@ tools:
     module: "ai.agents.security_audit"
     function: "run_audit"
     args: null
+
+  agents.performance_tuning:
+    description: "Run performance analysis: temps, memory, disk, gaming profiles + recommendations"
+    source: python
+    module: "ai.agents.performance_tuning"
+    function: "run_tuning"
+    args: null

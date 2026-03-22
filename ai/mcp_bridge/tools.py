@@ -408,6 +408,12 @@ async def _execute_python_tool(tool_name: str, tool_def: dict, args: dict) -> st
             result = run_audit()
             return json.dumps(result, indent=2)
 
+        elif tool_name == "agents.performance_tuning":
+            from ai.agents.performance_tuning import run_tuning  # noqa: PLC0415
+
+            result = run_tuning()
+            return json.dumps(result, indent=2)
+
         elif tool_name == "security.run_ingest":
             proc = await asyncio.create_subprocess_exec(
                 str(Path(__file__).parent.parent.parent / ".venv" / "bin" / "python"),

@@ -1,0 +1,11 @@
+[Unit]
+Description=Bazzite Performance Tuning Timer (daily 08:15)
+Documentation=file:///home/lch/projects/bazzite-laptop/docs/ai-operational-playbook.md
+
+[Timer]
+# Fire 15 minutes after system-health.timer (08:00), before security-audit (08:30)
+OnCalendar=*-*-* 08:15:00
+Persistent=true
+
+[Install]
+WantedBy=timers.target

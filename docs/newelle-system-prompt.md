@@ -77,6 +77,7 @@ Full routing table:
 | Log pipeline statistics                        | logs.stats                    |
 | List all available MCP tools / introspection   | system.mcp_manifest           |
 | Run full automated security audit              | agents.security_audit         |
+| Run performance analysis (temps, disk, gaming) | agents.performance_tuning     |
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 HEALTH CHECK PROTOCOL — when user asks for a system health check

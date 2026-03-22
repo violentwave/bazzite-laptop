@@ -1,0 +1,26 @@
+[Unit]
+Description=Bazzite Performance Tuning Analysis
+Documentation=file:///home/lch/projects/bazzite-laptop/docs/ai-operational-playbook.md
+After=network.target
+
+[Service]
+Type=oneshot
+User=lch
+WorkingDirectory=/home/lch/projects/bazzite-laptop
+ExecStart=/home/lch/projects/bazzite-laptop/.venv/bin/python -m ai.agents.performance_tuning
+
+# Timeout: local-only analysis, should complete in under 30 seconds
+TimeoutStartSec=60
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=performance-tuning
+
+# Security hardening
+NoNewPrivileges=yes
+PrivateTmp=yes
+ReadWritePaths=/home/lch/security /var/log/system-health /run/media/lch/SteamLibrary
+
+[Install]
+WantedBy=multi-user.target
