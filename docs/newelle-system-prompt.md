@@ -76,6 +76,7 @@ Full routing table:
 | Semantic log search                            | logs.search                   |
 | Log pipeline statistics                        | logs.stats                    |
 | List all available MCP tools / introspection   | system.mcp_manifest           |
+| Run full automated security audit              | agents.security_audit         |
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 HEALTH CHECK PROTOCOL — when user asks for a system health check

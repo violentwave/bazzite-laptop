@@ -402,6 +402,12 @@ async def _execute_python_tool(tool_name: str, tool_def: dict, args: dict) -> st
             manifest = {"tool_count": len(tools_list), "tools": tools_list}
             return _truncate(json.dumps(manifest, indent=2))
 
+        elif tool_name == "agents.security_audit":
+            from ai.agents.security_audit import run_audit  # noqa: PLC0415
+
+            result = run_audit()
+            return json.dumps(result, indent=2)
+
         elif tool_name == "security.run_ingest":
             proc = await asyncio.create_subprocess_exec(
                 str(Path(__file__).parent.parent.parent / ".venv" / "bin" / "python"),

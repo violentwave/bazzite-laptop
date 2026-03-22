@@ -1,0 +1,26 @@
+[Unit]
+Description=Bazzite Security Audit
+Documentation=file:///home/lch/projects/bazzite-laptop/docs/ai-operational-playbook.md
+After=network.target bazzite-mcp-bridge.service
+
+[Service]
+Type=oneshot
+User=lch
+WorkingDirectory=/home/lch/projects/bazzite-laptop
+ExecStart=/home/lch/projects/bazzite-laptop/.venv/bin/python -m ai.agents.security_audit
+
+# Timeout: ingestion + RAG query should finish in under 2 minutes
+TimeoutStartSec=120
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=security-audit
+
+# Security hardening
+NoNewPrivileges=yes
+PrivateTmp=yes
+ReadWritePaths=/home/lch/security /var/log/system-health /var/log/clamav-scans
+
+[Install]
+WantedBy=multi-user.target

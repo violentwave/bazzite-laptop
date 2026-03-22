@@ -210,3 +210,10 @@ tools:
     source: python
     module: "ai.mcp_bridge.tools"
     args: null
+
+  agents.security_audit:
+    description: "Run automated security audit: scan + health + ingest + RAG summary"
+    source: python
+    module: "ai.agents.security_audit"
+    function: "run_audit"
+    args: null

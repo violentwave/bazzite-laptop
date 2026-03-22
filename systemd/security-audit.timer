@@ -1,0 +1,11 @@
+[Unit]
+Description=Bazzite Security Audit Timer (daily 08:30)
+Documentation=file:///home/lch/projects/bazzite-laptop/docs/ai-operational-playbook.md
+
+[Timer]
+# Fire 30 minutes after system-health.timer (08:00), giving health snapshot time to finish
+OnCalendar=*-*-* 08:30:00
+Persistent=true
+
+[Install]
+WantedBy=timers.target
