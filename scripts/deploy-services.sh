@@ -124,7 +124,61 @@ sudo systemctl enable --now thermal-protection.service 2>/dev/null || \
 echo "  Enabled thermal-protection.service"
 
 # ══════════════════════════════════════════════════════════════════
-# 4. Status checks
+# 4. Agent timers (security-audit, performance-tuning, knowledge-storage)
+# ══════════════════════════════════════════════════════════════════
+echo ""
+echo "=== Deploying Agent Timers ==="
+
+# security-audit
+for unit in security-audit.service security-audit.timer; do
+    if [[ -f "$SRC/$unit" ]]; then
+        sudo install -m 644 "$SRC/$unit" "/etc/systemd/system/$unit"
+        sudo restorecon -v "/etc/systemd/system/$unit"
+        echo "  Installed $unit to /etc/systemd/system/"
+    fi
+done
+
+if [[ -f "$SRC/security-audit.timer" ]]; then
+    sudo systemctl daemon-reload
+    sudo systemctl enable --now security-audit.timer 2>/dev/null || \
+        echo "  WARNING: security-audit.timer enable/start failed"
+    echo "  Enabled security-audit.timer"
+fi
+
+# performance-tuning
+for unit in performance-tuning.service performance-tuning.timer; do
+    if [[ -f "$SRC/$unit" ]]; then
+        sudo install -m 644 "$SRC/$unit" "/etc/systemd/system/$unit"
+        sudo restorecon -v "/etc/systemd/system/$unit"
+        echo "  Installed $unit to /etc/systemd/system/"
+    fi
+done
+
+if [[ -f "$SRC/performance-tuning.timer" ]]; then
+    sudo systemctl daemon-reload
+    sudo systemctl enable --now performance-tuning.timer 2>/dev/null || \
+        echo "  WARNING: performance-tuning.timer enable/start failed"
+    echo "  Enabled performance-tuning.timer"
+fi
+
+# knowledge-storage
+for unit in knowledge-storage.service knowledge-storage.timer; do
+    if [[ -f "$SRC/$unit" ]]; then
+        sudo install -m 644 "$SRC/$unit" "/etc/systemd/system/$unit"
+        sudo restorecon -v "/etc/systemd/system/$unit"
+        echo "  Installed $unit to /etc/systemd/system/"
+    fi
+done
+
+if [[ -f "$SRC/knowledge-storage.timer" ]]; then
+    sudo systemctl daemon-reload
+    sudo systemctl enable --now knowledge-storage.timer 2>/dev/null || \
+        echo "  WARNING: knowledge-storage.timer enable/start failed"
+    echo "  Enabled knowledge-storage.timer"
+fi
+
+# ══════════════════════════════════════════════════════════════════
+# 5. Status checks
 # ══════════════════════════════════════════════════════════════════
 sleep 3
 
@@ -144,9 +198,15 @@ printf "  %-35s %s\n" "system-health.timer" "$timer_enabled"
 sudo systemctl list-timers system-health.timer --no-pager 2>/dev/null | grep -q system-health \
     && sudo systemctl list-timers system-health.timer --no-pager 2>/dev/null | grep system-health \
     || echo "  (timer not scheduled — run: sudo systemctl start system-health.timer)"
+printf "  %-35s %s\n" "security-audit.timer" \
+    "$(sudo systemctl is-enabled security-audit.timer 2>/dev/null || echo 'not installed')"
+printf "  %-35s %s\n" "performance-tuning.timer" \
+    "$(sudo systemctl is-enabled performance-tuning.timer 2>/dev/null || echo 'not installed')"
+printf "  %-35s %s\n" "knowledge-storage.timer" \
+    "$(sudo systemctl is-enabled knowledge-storage.timer 2>/dev/null || echo 'not installed')"
 
 # ══════════════════════════════════════════════════════════════════
-# 5. Health checks (port listening + HTTP where available)
+# 6. Health checks (port listening + HTTP where available)
 # ══════════════════════════════════════════════════════════════════
 echo ""
 echo "=== Health Checks ==="
@@ -159,4 +219,4 @@ ss -tln | grep -q ':8766 ' \
     || echo "  MCP bridge (8766): not responding"
 
 echo ""
-echo "Done. User services auto-start on login. Health timer runs daily at 8 AM."
+echo "Done. User services auto-start on login. Timers: health 8:00, security-audit 8:30, performance-tuning 8:15, knowledge-storage 9:15."
