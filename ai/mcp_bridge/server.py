@@ -1,6 +1,6 @@
 """FastMCP server for the Newelle MCP bridge.
 
-Exposes 31 tools + 1 health endpoint on localhost.
+Exposes 41 tools + 1 health endpoint on localhost.
 NEVER bind to 0.0.0.0. NEVER import ai.router (it loads all keys unscoped).
 """
 
@@ -103,9 +103,16 @@ def create_app():
             async def _handler_file_path(file_path: str, _tn=tool_name):
                 return await execute_tool(_tn, {"file_path": file_path})
 
-    # Built-in health tool
+        # Built-in health tool (MCP protocol)
     @mcp.tool(name="health", description="Bridge health check")
     async def _health():
         return await health_check()
 
+    # Plain HTTP health endpoint (for curl/monitoring)
+    @mcp.custom_route("/health", methods=["GET"])
+    async def _http_health(request):
+        from starlette.responses import JSONResponse
+        return JSONResponse({"status": "ok", "tools": _TOOL_COUNT, "service": "bazzite-mcp-bridge"})
+
     return mcp
+

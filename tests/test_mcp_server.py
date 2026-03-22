@@ -38,6 +38,12 @@ def _make_fastmcp_mock():
                 return fn
             return decorator
 
+        def custom_route(self, path: str, methods: list | None = None):
+            """Decorator that records a custom HTTP route (no-op in tests)."""
+            def decorator(fn):
+                return fn
+            return decorator
+
         def run(self, transport: str = "streamable-http", host: str = "127.0.0.1", port: int = 8766):  # noqa: E501
             pass  # No-op in tests
 
@@ -85,7 +91,7 @@ class TestToolRegistration:
     def setup_method(self):
         _reload_server()
 
-    def test_all_32_tools_registered(self):
+    def test_all_allowlisted_tools_registered(self):
         fake_fastmcp = _make_fastmcp_mock()
         with (
             patch.dict(sys.modules, {"fastmcp": fake_fastmcp}),
