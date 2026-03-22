@@ -18,14 +18,56 @@ import json
 import logging
 import time
 from collections.abc import AsyncGenerator
+from pathlib import Path
 
+import litellm
 import yaml
+from litellm.caching.caching import Cache
 
 from ai.config import APP_NAME, LITELLM_CONFIG, load_keys
 from ai.health import HealthTracker
 from ai.rate_limiter import RateLimiter
 
 logger = logging.getLogger(APP_NAME)
+
+# Disk-based exact-match cache (5-min TTL — prevents stale system data)
+_CACHE_DIR = Path.home() / "security" / "llm-cache"
+try:
+    _CACHE_DIR.mkdir(parents=True, exist_ok=True)
+except OSError:
+    # Fall back to TMPDIR in restricted environments (e.g. test sandboxes)
+    import tempfile  # noqa: PLC0415
+    _CACHE_DIR = Path(tempfile.gettempdir()) / "bazzite-llm-cache"
+    _CACHE_DIR.mkdir(parents=True, exist_ok=True)
+def _init_litellm_cache(cache_dir: Path) -> "Cache | None":
+    """Initialize LiteLLM disk cache, returning None on failure."""
+    try:
+        return Cache(
+            type="disk",
+            disk_cache_dir=str(cache_dir),
+            default_in_memory_ttl=300,
+        )
+    except Exception as exc:
+        logger.debug("LLM disk cache unavailable at %s: %s", cache_dir, exc)
+        return None
+
+
+# Try preferred location first; if read-only (e.g. created by systemd as root),
+# fall back to the project temp dir, then disable caching as a last resort.
+litellm.cache = _init_litellm_cache(_CACHE_DIR)
+if litellm.cache is None:
+    import tempfile as _tempfile  # noqa: PLC0415
+
+    _FALLBACK_CACHE_DIR = Path(_tempfile.gettempdir()) / "bazzite-llm-cache"
+    try:
+        _FALLBACK_CACHE_DIR.mkdir(parents=True, exist_ok=True)
+    except OSError:
+        pass
+    litellm.cache = _init_litellm_cache(_FALLBACK_CACHE_DIR)
+    if litellm.cache is not None:
+        _CACHE_DIR = _FALLBACK_CACHE_DIR
+    else:
+        logger.warning("LLM disk cache unavailable — running without cache")
 
 VALID_TASK_TYPES = ("fast", "reason", "batch", "code", "embed")
 
@@ -50,6 +92,37 @@ _config: dict | None = None
 _router = None
 _rate_limiter: RateLimiter | None = None
 _health_tracker: HealthTracker = HealthTracker()
+
+# Thread-safe usage counters (not embed — no token usage there)
+_usage_counters: dict[str, dict[str, int]] = {
+    tt: {"prompt_tokens": 0, "completion_tokens": 0, "requests": 0}
+    for tt in ("fast", "reason", "batch", "code")
+}
+
+
+def _increment_usage(task_type: str, response: object) -> None:
+    """Increment per-task-type token counters from a successful response."""
+    if task_type not in _usage_counters:
+        return
+    counters = _usage_counters[task_type]
+    counters["requests"] += 1
+    usage = getattr(response, "usage", None)
+    if usage is not None:
+        counters["prompt_tokens"] += getattr(usage, "prompt_tokens", 0) or 0
+        counters["completion_tokens"] += getattr(usage, "completion_tokens", 0) or 0
+
+
+def get_usage_stats() -> dict[str, dict[str, int]]:
+    """Return a copy of token usage counters per task type."""
+    return {tt: dict(counters) for tt, counters in _usage_counters.items()}
+
+
+def reset_usage_stats() -> None:
+    """Zero all usage counters. Used for test isolation."""
+    for counters in _usage_counters.values():
+        counters["prompt_tokens"] = 0
+        counters["completion_tokens"] = 0
+        counters["requests"] = 0
 
 
 def _load_config() -> dict:
@@ -287,6 +360,7 @@ def route_query(task_type: str, prompt: str, **kwargs: object) -> str:
     for provider in providers:
         try:
             response = _try_provider(provider, task_type, prompt, **kwargs)
+            _increment_usage(task_type, response)
             return response.choices[0].message.content
         except Exception as e:
             last_error = e
@@ -394,6 +468,14 @@ def _record_usage(response, config: dict, task_type: str, limiter: RateLimiter) 
             return
     if provider:
         limiter.record_call(provider)
+
+
+def get_health_snapshot() -> dict[str, dict]:
+    """Return health snapshot for all known providers."""
+    return {
+        name: {"score": round(h.score, 4), "auth_broken": h.auth_broken}
+        for name, h in _health_tracker._providers.items()
+    }
 
 
 def reset_router() -> None:

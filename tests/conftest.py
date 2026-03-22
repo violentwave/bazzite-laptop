@@ -1,6 +1,21 @@
 """Shared test fixtures for the Bazzite AI test suite."""
 
+import os
+
 import pytest
+
+# Must be set before PySide6 is imported anywhere in the test session.
+os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
+
+
+@pytest.fixture(scope="session")
+def qapp():
+    """Session-scoped headless QApplication for widget tests."""
+    PySide6 = pytest.importorskip("PySide6")  # noqa: F841
+    from PySide6.QtWidgets import QApplication
+
+    app = QApplication.instance() or QApplication([])
+    yield app
 
 
 @pytest.fixture()

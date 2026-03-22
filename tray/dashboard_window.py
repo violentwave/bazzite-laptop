@@ -15,13 +15,15 @@ try:
         HEALTH_LOG, STATE_CONFIGS, STATE_HEALTHY_IDLE,
         format_relative_time, format_health_age, icon_path,
     )
+    from tray.keys_tab import load_key_status, LLM_GROUP, THREAT_GROUP
 except ImportError:
-    from state_machine import (
+    from state_machine import (  # type: ignore[no-redef]
         LOG_DIR, QUARANTINE_DIR, SCAN_SCRIPT, HEALTH_SNAPSHOT_SCRIPT,
         HEALTHCHECK_SCRIPT, TEST_SUITE_SCRIPT,
         HEALTH_LOG, STATE_CONFIGS, STATE_HEALTHY_IDLE,
         format_relative_time, format_health_age, icon_path,
     )
+    from keys_tab import load_key_status, LLM_GROUP, THREAT_GROUP  # type: ignore[no-redef]
 
 
 # -- Theme -------------------------------------------------------------------
@@ -202,8 +204,10 @@ class DashboardWindow(QMainWindow):
         tabs = QTabWidget()
         self._security_tab, self._sec_refs = self._build_security()
         self._health_tab, self._health_refs = self._build_health()
+        self._keys_tab, self._keys_refs = self._build_keys()
         tabs.addTab(self._security_tab, "  Security  ")
         tabs.addTab(self._health_tab, "  Health  ")
+        tabs.addTab(self._keys_tab, "  Keys  ")
         tabs.addTab(self._build_about(), "  About  ")
         self.setCentralWidget(tabs)
         self.statusBar().showMessage("  Waiting for status update...")
@@ -388,6 +392,7 @@ class DashboardWindow(QMainWindow):
     def update_status(self, data: dict, state: str) -> None:
         self._update_security(data, state)
         self._update_health(data)
+        self._update_keys()
         from datetime import datetime
         self.statusBar().showMessage(
             f"  Live  |  Last update: {datetime.now().strftime('%I:%M:%S %p').lstrip('0')}")
@@ -498,6 +503,94 @@ class DashboardWindow(QMainWindow):
                 lbl = _vlbl(d)
                 slb.addWidget(lbl)
                 sl[mk] = lbl
+
+    def _build_keys(self) -> tuple[QWidget, dict]:
+        root, lay, refs = QWidget(), None, {}
+        lay = QVBoxLayout(root)
+        lay.setContentsMargins(14, 14, 14, 14)
+        lay.setSpacing(12)
+        # Summary banner + refresh button
+        sc = _card()
+        sl = QHBoxLayout(sc)
+        sl.setSpacing(10)
+        sm = _vlbl("Checking keys...")
+        sm.setStyleSheet(f"font-size:15px;font-weight:700;{_SS_LBL}")
+        refs["summary"] = sm
+        sl.addWidget(sm, stretch=1)
+        rb = QPushButton("↻  Refresh")
+        rb.setFixedWidth(110)
+        rb.clicked.connect(self._refresh_keys)
+        sl.addWidget(rb)
+        lay.addWidget(sc)
+        # Two side-by-side key-group cards — wrapped in a QWidget for show/hide
+        row_w = QWidget()
+        row = QHBoxLayout(row_w)
+        row.setContentsMargins(0, 0, 0, 0)
+        row.setSpacing(10)
+        for group, title in [(LLM_GROUP, "LLM PROVIDERS"), (THREAT_GROUP, "THREAT INTEL")]:
+            gc = _card()
+            gl = QVBoxLayout(gc)
+            gl.setSpacing(3)
+            gl.addWidget(_heading(title))
+            for k in group:
+                lbl = _vlbl(f"⚠️  {k}")
+                lbl.setTextFormat(Qt.TextFormat.RichText)
+                refs[f"key_{k}"] = lbl
+                gl.addWidget(lbl)
+            gl.addStretch()
+            row.addWidget(gc)
+        refs["key_cards_row"] = row_w
+        lay.addWidget(row_w)
+        # Placeholder shown when key-status.json is absent
+        ph = _vlbl("No key data yet — press Refresh to run a check.")
+        ph.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        ph.setStyleSheet(f"color:{_T2};font-style:italic;font-size:12px;{_SS_LBL}")
+        ph.setVisible(False)
+        refs["placeholder"] = ph
+        lay.addWidget(ph)
+        lay.addStretch()
+        return root, refs
+
+    def _update_keys(self) -> None:
+        refs = self._keys_refs
+        data = load_key_status()
+        if data is None:
+            refs["placeholder"].setVisible(True)
+            refs["key_cards_row"].setVisible(False)
+            refs["summary"].setText("Run key status check")
+            return
+        refs["placeholder"].setVisible(False)
+        refs["key_cards_row"].setVisible(True)
+        keys = data.get("keys", {})
+        known = LLM_GROUP + THREAT_GROUP
+        total = len(known)
+        set_count = sum(1 for k in known if keys.get(k) == "set")
+        refs["summary"].setText(f"{set_count}/{total} keys configured")
+        for k in known:
+            ref_key = f"key_{k}"
+            if ref_key not in refs:
+                continue
+            status = keys.get(k, "missing")
+            if status == "set":
+                text = f'<span style="color:{_OK};">✅</span>  {k}'
+            else:
+                text = f'<span style="color:{_WARN};">⚠️</span>  {k}'
+            refs[ref_key].setText(text)
+            refs[ref_key].setTextFormat(Qt.TextFormat.RichText)
+
+    def _refresh_keys(self) -> None:
+        try:
+            r = subprocess.run(
+                [sys.executable, "-m", "ai.key_manager", "status"],
+                capture_output=True, timeout=10,
+            )
+            if r.returncode not in (0, 1):  # key_manager exits 1 when keys missing (normal)
+                self._keys_refs["summary"].setText("Key check failed — see terminal")
+                return
+        except Exception:
+            self._keys_refs["summary"].setText("Key check failed — see terminal")
+            return
+        self._update_keys()
 
     def closeEvent(self, event) -> None:  # noqa: N802
         self._settings.setValue("geometry", self.saveGeometry())

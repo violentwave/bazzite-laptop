@@ -27,6 +27,7 @@ SECURITY_DIR = Path.home() / "security"
 VECTOR_DB_DIR = SECURITY_DIR / "vector-db"
 STATUS_FILE = SECURITY_DIR / ".status"
 ENRICHED_HASHES = SECURITY_DIR / "quarantine-hashes-enriched.jsonl"
+CVE_REPORTS_DIR = SECURITY_DIR / "cve-reports"
 
 # Gaming optimization (Phase 4)
 GAME_PROFILES = Path.home() / ".config" / "bazzite-ai" / "game-profiles.json"

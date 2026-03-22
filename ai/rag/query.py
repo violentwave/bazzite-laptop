@@ -87,6 +87,10 @@ def rag_query(
     all_chunks = log_results + threat_results + doc_results
     all_chunks.sort(key=lambda c: c.get("_distance", float("inf")))
 
+    # Step 3.5: Cohere rerank (only when LLM synthesis is requested)
+    if use_llm and all_chunks:
+        all_chunks = _cohere_rerank(question, all_chunks, rate_limiter)
+
     # Collect unique sources
     sources = _extract_sources(all_chunks)
 
@@ -143,6 +147,45 @@ def rag_query(
             sources=sources,
             model_used="context-only",
         )
+
+
+def _cohere_rerank(
+    question: str,
+    chunks: list[dict],
+    rate_limiter: RateLimiter,
+    top_n: int = 5,
+) -> list[dict]:
+    """Reorder chunks by Cohere rerank relevance score.
+
+    Only runs when COHERE_API_KEY is set and rate limits allow.
+    Falls back to original order on any error.
+    """
+    import os  # noqa: PLC0415
+
+    api_key = os.environ.get("COHERE_API_KEY")
+    if not api_key:
+        return chunks
+
+    if not rate_limiter.can_call("cohere_rerank"):
+        logger.warning("Cohere rerank rate limit reached, using original order")
+        return chunks
+
+    try:
+        import cohere  # noqa: PLC0415
+
+        co = cohere.ClientV2(api_key)
+        documents = [c.get("text", c.get("content", "")) for c in chunks]
+        response = co.rerank(
+            model="rerank-english-v3.0",
+            query=question,
+            documents=documents,
+            top_n=min(top_n, len(chunks)),
+        )
+        rate_limiter.record_call("cohere_rerank")
+        return [chunks[r.index] for r in response.results]
+    except Exception as e:
+        logger.warning("Cohere rerank failed: %s — using original order", e)
+        return chunks
 
 
 def _safe_search(

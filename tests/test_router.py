@@ -8,9 +8,12 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from ai.router import (
+    _CACHE_DIR,
     VALID_TASK_TYPES,
     _extract_provider,
+    get_usage_stats,
     reset_router,
+    reset_usage_stats,
     route_query,
 )
 
@@ -271,6 +274,78 @@ class TestReset:
         assert router._config is None
         assert router._router is None
         assert router._rate_limiter is None
+
+
+# ── Usage Tracking Tests ──
+
+
+class TestUsageTracking:
+    def setup_method(self):
+        reset_usage_stats()
+
+    def test_get_usage_stats_structure(self):
+        stats = get_usage_stats()
+        for tt in ("fast", "reason", "batch", "code"):
+            assert tt in stats
+            assert stats[tt].keys() == {"prompt_tokens", "completion_tokens", "requests"}
+
+    def test_counters_increment_after_route_query(
+        self, patch_get_router, patch_config, patch_limiter
+    ):
+        resp = _make_completion_response("hello")
+        resp.usage = MagicMock(prompt_tokens=10, completion_tokens=5)
+        patch_get_router.completion.return_value = resp
+        route_query("fast", "test")
+        stats = get_usage_stats()
+        assert stats["fast"]["requests"] == 1
+        assert stats["fast"]["prompt_tokens"] == 10
+        assert stats["fast"]["completion_tokens"] == 5
+
+    def test_reset_usage_stats_zeros_everything(
+        self, patch_get_router, patch_config, patch_limiter
+    ):
+        resp = _make_completion_response("hi")
+        resp.usage = MagicMock(prompt_tokens=20, completion_tokens=8)
+        patch_get_router.completion.return_value = resp
+        route_query("fast", "test")
+        reset_usage_stats()
+        stats = get_usage_stats()
+        for tt in ("fast", "reason", "batch", "code"):
+            assert stats[tt]["requests"] == 0
+            assert stats[tt]["prompt_tokens"] == 0
+            assert stats[tt]["completion_tokens"] == 0
+
+
+# ── Disk Cache Tests ──
+
+
+class TestDiskCache:
+    def test_litellm_cache_is_cache_instance(self):
+        import litellm
+        from litellm.caching.caching import Cache
+
+        assert litellm.cache is not None
+        assert isinstance(litellm.cache, Cache)
+        assert litellm.cache.type == "disk"
+
+    def test_cache_dir_path(self):
+        # Preferred location; falls back to TMPDIR in restricted environments
+        assert "llm-cache" in str(_CACHE_DIR)
+        assert _CACHE_DIR.is_absolute()
+
+    def test_repeated_identical_calls_return_same_result(
+        self, patch_get_router, patch_config, patch_limiter
+    ):
+        """Same prompt called twice: both succeed and return the same text.
+
+        Note: with a real litellm.Router the second call would hit the cache
+        (provider called once). With a mocked Router the mock is called each
+        time because LiteLLM's cache check runs inside router.completion().
+        """
+        patch_get_router.completion.return_value = _make_completion_response("GPU: 72°C")
+        r1 = route_query("fast", "What is the GPU temperature?")
+        r2 = route_query("fast", "What is the GPU temperature?")
+        assert r1 == r2 == "GPU: 72°C"
 
 
 # ── Helpers ──

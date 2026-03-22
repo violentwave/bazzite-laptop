@@ -177,6 +177,40 @@ if [[ -f "$SRC/knowledge-storage.timer" ]]; then
     echo "  Enabled knowledge-storage.timer"
 fi
 
+# cve-scanner
+for unit in cve-scanner.service cve-scanner.timer; do
+    if [[ -f "$SRC/$unit" ]]; then
+        sudo install -m 644 "$SRC/$unit" "/etc/systemd/system/$unit"
+        sudo restorecon -v "/etc/systemd/system/$unit"
+        echo "  Installed $unit to /etc/systemd/system/"
+    fi
+done
+
+if [[ -f "$SRC/cve-scanner.timer" ]]; then
+    sudo systemctl daemon-reload
+    sudo systemctl enable cve-scanner.timer 2>/dev/null || \
+        echo "  WARNING: cve-scanner.timer enable failed"
+    sudo systemctl start cve-scanner.timer || echo "  WARNING: cve-scanner.timer start failed"
+    echo "  Enabled cve-scanner.timer"
+fi
+
+# log-archive
+for unit in log-archive.service log-archive.timer; do
+    if [[ -f "$SRC/$unit" ]]; then
+        sudo install -m 644 "$SRC/$unit" "/etc/systemd/system/$unit"
+        sudo restorecon -v "/etc/systemd/system/$unit"
+        echo "  Installed $unit to /etc/systemd/system/"
+    fi
+done
+
+if [[ -f "$SRC/log-archive.timer" ]]; then
+    sudo systemctl daemon-reload
+    sudo systemctl enable log-archive.timer 2>/dev/null || \
+        echo "  WARNING: log-archive.timer enable failed"
+    sudo systemctl start log-archive.timer || echo "  WARNING: log-archive.timer start failed"
+    echo "  Enabled log-archive.timer"
+fi
+
 # ══════════════════════════════════════════════════════════════════
 # 5. Status checks
 # ══════════════════════════════════════════════════════════════════
@@ -204,6 +238,10 @@ printf "  %-35s %s\n" "performance-tuning.timer" \
     "$(sudo systemctl is-enabled performance-tuning.timer 2>/dev/null || echo 'not installed')"
 printf "  %-35s %s\n" "knowledge-storage.timer" \
     "$(sudo systemctl is-enabled knowledge-storage.timer 2>/dev/null || echo 'not installed')"
+printf "  %-35s %s\n" "cve-scanner.timer" \
+    "$(sudo systemctl is-enabled cve-scanner.timer 2>/dev/null || echo 'not installed')"
+printf "  %-35s %s\n" "log-archive.timer" \
+    "$(sudo systemctl is-enabled log-archive.timer 2>/dev/null || echo 'not installed')"
 
 # ══════════════════════════════════════════════════════════════════
 # 6. Health checks (port listening + HTTP where available)
@@ -219,4 +257,4 @@ ss -tln | grep -q ':8766 ' \
     || echo "  MCP bridge (8766): not responding"
 
 echo ""
-echo "Done. User services auto-start on login. Timers: health 8:00, security-audit 8:30, performance-tuning 8:15, knowledge-storage 9:15."
+echo "Done. User services auto-start on login. Timers: health 8:00, security-audit 8:30, performance-tuning 8:15, knowledge-storage 9:15, cve-scanner Sat 00:00, log-archive Sun 01:00."

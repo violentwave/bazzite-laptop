@@ -110,6 +110,23 @@ class TestHealthTracker:
         names = [h.name for h in tracker.get_sorted(["fast-provider", "slow-provider"])]
         assert names[0] == "fast-provider"
 
+    def test_auth_broken_set_on_401(self, tracker):
+        tracker.record_failure("gemini", error="HTTP 401 Unauthorized")
+        assert tracker.get("gemini").auth_broken is True
+
+    def test_auth_broken_set_on_403(self, tracker):
+        tracker.record_failure("gemini", error="HTTP 403 Forbidden")
+        assert tracker.get("gemini").auth_broken is True
+
+    def test_auth_broken_not_set_on_generic_error(self, tracker):
+        tracker.record_failure("gemini", error="timeout")
+        assert tracker.get("gemini").auth_broken is False
+
+    def test_auth_broken_cleared_on_success(self, tracker):
+        tracker.record_failure("gemini", error="401 Unauthorized")
+        tracker.record_success("gemini", latency_ms=100.0)
+        assert tracker.get("gemini").auth_broken is False
+
     def test_get_sorted_excludes_disabled(self, tracker):
         for _ in range(3):
             tracker.record_failure("dead-provider", error="err")

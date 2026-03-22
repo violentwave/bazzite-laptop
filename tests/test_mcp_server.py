@@ -85,7 +85,7 @@ class TestToolRegistration:
     def setup_method(self):
         _reload_server()
 
-    def test_all_31_tools_registered(self):
+    def test_all_32_tools_registered(self):
         fake_fastmcp = _make_fastmcp_mock()
         with (
             patch.dict(sys.modules, {"fastmcp": fake_fastmcp}),
@@ -94,8 +94,8 @@ class TestToolRegistration:
             from ai.mcp_bridge.server import create_app
 
             app = create_app()
-            # 31 allowlisted tools + 1 health tool registered via mcp.tool()
-            assert len(app._tool_manager._tools) == 32
+            # 41 allowlisted tools + 1 health tool registered via mcp.tool()
+            assert len(app._tool_manager._tools) == 42
 
 
 # ---------------------------------------------------------------------------
@@ -143,7 +143,7 @@ class TestHealthEndpoint:
 
             result = await health_check()
             assert result["status"] == "ok"
-            assert result["tools"] == 31
+            assert result["tools"] == 41
 
 
 # ---------------------------------------------------------------------------

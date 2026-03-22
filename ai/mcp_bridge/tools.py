@@ -17,7 +17,8 @@ from ai.config import CONFIGS_DIR, PROJECT_ROOT, STATUS_FILE
 
 logger = logging.getLogger("ai.mcp_bridge")
 
-_MAX_OUTPUT_BYTES = 4096
+_TOOL_OUTPUT_LIMITS: dict[str, int] = {"system.mcp_manifest": 8192}
+_DEFAULT_OUTPUT_LIMIT = 4096
 _SUBPROCESS_TIMEOUT_S = 30
 
 # Concurrency limit for subprocess tool calls
@@ -103,11 +104,11 @@ def _load_allowlist() -> dict:
     return _allowlist
 
 
-def _truncate(text: str) -> str:
-    """Truncate output to 4KB max, appending truncation marker if cut."""
-    if len(text) <= _MAX_OUTPUT_BYTES:
+def _truncate(text: str, limit: int = _DEFAULT_OUTPUT_LIMIT) -> str:
+    """Truncate output to limit bytes, appending truncation marker if cut."""
+    if len(text) <= limit:
         return text
-    return text[:_MAX_OUTPUT_BYTES] + "...[truncated]"
+    return text[:limit] + "...[truncated]"
 
 
 def _redact_paths(text: str) -> str:
@@ -233,6 +234,9 @@ async def execute_tool(tool_name: str, args: dict) -> str:
     # Status file tool
     if tool_def.get("source") == "json_file":
         try:
+            if "path" in tool_def:
+                data = json.loads(Path(tool_def["path"]).expanduser().read_text())
+                return _truncate(json.dumps(data, indent=2))
             data = _read_status_file()
             filtered = {k: v for k, v in data.items() if k in _STATUS_ALLOWED_KEYS}
             return json.dumps(filtered, indent=2)
@@ -263,6 +267,30 @@ async def _execute_python_tool(tool_name: str, tool_def: dict, args: dict) -> st
                 filtered = {k: v for k, v in result.items() if k in safe_fields}
                 return json.dumps(filtered, indent=2)
             return _truncate(str(result))
+
+        elif tool_name == "security.ip_lookup":
+            from ai.threat_intel.ip_lookup import lookup_ip  # noqa: PLC0415
+
+            result = lookup_ip(args["ip"])
+            safe_fields = {
+                "ip", "source", "abuse_score", "greynoise_classification",
+                "recommendation", "ports", "vulns", "description",
+            }
+            data = json.loads(result.to_json())
+            filtered = {k: v for k, v in data.items() if k in safe_fields}
+            return json.dumps(filtered, indent=2)
+
+        elif tool_name == "security.url_lookup":
+            from ai.threat_intel.ioc_lookup import lookup_url  # noqa: PLC0415
+
+            result = lookup_url(args["url"])
+            safe_fields = {
+                "ioc", "source", "threat_type", "malware_family",
+                "risk_level", "tags", "description", "circl_hits",
+            }
+            data = json.loads(result.to_json())
+            filtered = {k: v for k, v in data.items() if k in safe_fields}
+            return json.dumps(filtered, indent=2)
 
         elif tool_name == "knowledge.rag_query":
             from ai.rag.query import rag_query  # noqa: PLC0415
@@ -389,18 +417,13 @@ async def _execute_python_tool(tool_name: str, tool_def: dict, args: dict) -> st
 
         elif tool_name == "system.mcp_manifest":
             allowlist = _load_allowlist()
-            tools_list = []
-            for name, defn in allowlist.items():
-                source = "subprocess" if "command" in defn else defn.get("source", "unknown")
-                arg_defs = defn.get("args") or {}
-                tools_list.append({
-                    "name": name,
-                    "description": defn.get("description", ""),
-                    "source": source,
-                    "args": list(arg_defs.keys()),
-                })
-            manifest = {"tool_count": len(tools_list), "tools": tools_list}
-            return _truncate(json.dumps(manifest, indent=2))
+            tools_info = {
+                name: defn.get("description", "")[:60]
+                for name, defn in allowlist.items()
+            }
+            manifest = {"tool_count": len(tools_info), "tools": tools_info}
+            limit = _TOOL_OUTPUT_LIMITS.get("system.mcp_manifest", _DEFAULT_OUTPUT_LIMIT)
+            return _truncate(json.dumps(manifest), limit)
 
         elif tool_name == "agents.security_audit":
             from ai.agents.security_audit import run_audit  # noqa: PLC0415
@@ -425,6 +448,41 @@ async def _execute_python_tool(tool_name: str, tool_def: dict, args: dict) -> st
 
             result = run_code_check()
             return json.dumps(result, indent=2)
+
+        elif tool_name == "security.sandbox_submit":
+            from ai.threat_intel.sandbox import submit_file  # noqa: PLC0415
+
+            result = submit_file(args["file_path"])
+            safe_fields = {
+                "file_path", "sha256", "status", "verdict",
+                "threat_score", "threat_level", "job_id", "description",
+            }
+            data = json.loads(result.to_json())
+            filtered = {k: v for k, v in data.items() if k in safe_fields}
+            return json.dumps(filtered, indent=2)
+
+        elif tool_name == "security.cve_check":
+            from ai.threat_intel.cve_scanner import scan_cves  # noqa: PLC0415
+
+            result = scan_cves()
+            return json.dumps(result, indent=2)
+
+        elif tool_name == "security.threat_summary":
+            from ai.threat_intel.summary import build_summary  # noqa: PLC0415
+
+            result = build_summary()
+            safe_fields = {
+                "generated_at", "date", "overall_status", "missing_sources",
+                "audit", "perf", "storage", "code", "cve",
+            }
+            filtered = {k: v for k, v in result.items() if k in safe_fields}
+            return json.dumps(filtered, indent=2)
+
+        elif tool_name == "system.pkg_intel":
+            from ai.system.pkg_intel import mcp_handler  # noqa: PLC0415
+
+            result = mcp_handler()
+            return _truncate(json.dumps(result, indent=2))
 
         elif tool_name == "security.run_ingest":
             proc = await asyncio.create_subprocess_exec(

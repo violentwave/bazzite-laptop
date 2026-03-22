@@ -13,7 +13,6 @@ from ai.rag.ingest_code import (
     ingest_files,
 )
 
-
 # ── Helpers ──
 
 def _write_py(tmp_path: Path, name: str, content: str) -> Path:

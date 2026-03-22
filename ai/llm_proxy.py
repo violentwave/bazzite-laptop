@@ -17,12 +17,54 @@ import argparse
 import json
 import logging
 import os
+import threading
 import time
 from collections.abc import AsyncGenerator
+from datetime import UTC, datetime
+from pathlib import Path
 
 logger = logging.getLogger("ai.llm_proxy")
 
 DEFAULT_PORT = int(os.environ.get("LLM_PROXY_PORT", "8767"))
+_LLM_STATUS_FILE = Path.home() / "security" / "llm-status.json"
+_STATUS_WRITE_INTERVAL_S = 300  # 5 minutes
+
+
+def _write_llm_status() -> None:
+    """Write LLM routing status to ~/security/llm-status.json atomically."""
+    import yaml  # noqa: PLC0415
+
+    from ai.config import LITELLM_CONFIG  # noqa: PLC0415
+    from ai.router import get_health_snapshot, get_usage_stats  # noqa: PLC0415
+
+    try:
+        with open(LITELLM_CONFIG) as f:
+            cfg = yaml.safe_load(f) or {}
+        models: dict[str, str] = {}
+        for entry in cfg.get("model_list", []):
+            name = entry.get("model_name", "")
+            if name and name not in models:
+                models[name] = entry.get("litellm_params", {}).get("model", "?")
+
+        status = {
+            "updated_at": datetime.now(UTC).isoformat(),
+            "providers": get_health_snapshot(),
+            "usage": get_usage_stats(),
+            "models": {k: models.get(k, "?") for k in ("fast", "reason", "batch", "code")},
+        }
+        tmp = _LLM_STATUS_FILE.with_suffix(".tmp")
+        tmp.write_text(json.dumps(status, indent=2))
+        tmp.rename(_LLM_STATUS_FILE)
+    except Exception as e:
+        logger.warning("Failed to write LLM status: %s", e)
+
+
+def _schedule_status_writer() -> None:
+    """Write status immediately, then reschedule every 5 minutes."""
+    _write_llm_status()
+    t = threading.Timer(_STATUS_WRITE_INTERVAL_S, _schedule_status_writer)
+    t.daemon = True
+    t.start()
 
 
 def _assert_localhost(bind: str) -> None:
@@ -97,6 +139,31 @@ def create_app():
         }
         task_type = task_map.get(model, "fast")
 
+        # Opt-in conversation memory: inject past context before routing
+        user_message = next(
+            (m.get("content", "") for m in reversed(messages) if m.get("role") == "user"),
+            "",
+        )
+        if user_message and os.environ.get("ENABLE_CONVERSATION_MEMORY", "").lower() == "true":
+            try:
+                from ai.rag.memory import retrieve_relevant_context  # noqa: PLC0415
+
+                contexts = retrieve_relevant_context(user_message)
+                if contexts:
+                    context_text = (
+                        "Relevant context from past conversations:\n" + "\n".join(contexts)
+                    )
+                    messages = list(messages)
+                    if messages and messages[0].get("role") == "system":
+                        messages[0] = {
+                            **messages[0],
+                            "content": context_text + "\n\n" + messages[0]["content"],
+                        }
+                    else:
+                        messages.insert(0, {"role": "system", "content": context_text})
+            except Exception as _mem_exc:  # noqa: BLE001
+                logger.debug("Memory retrieval skipped: %s", _mem_exc)
+
         if stream:
             return StreamingResponse(
                 _stream_response(task_type, messages),
@@ -110,6 +177,16 @@ def create_app():
 
             prompt = messages[-1]["content"] if messages else ""
             result = route_query(task_type, prompt)
+
+            # Store interaction in conversation memory after successful response
+            if user_message and os.environ.get("ENABLE_CONVERSATION_MEMORY", "").lower() == "true":
+                try:
+                    from ai.rag.memory import store_interaction  # noqa: PLC0415
+
+                    store_interaction(user_message, result[:200], task_type)
+                except Exception as _mem_exc:  # noqa: BLE001
+                    logger.debug("Memory storage skipped: %s", _mem_exc)
+
             return JSONResponse({
                 "id": f"chatcmpl-{int(time.time())}",
                 "object": "chat.completion",
@@ -161,6 +238,7 @@ def main():
     _assert_localhost(args.bind)
 
     logging.basicConfig(level=logging.INFO)
+    _schedule_status_writer()
     logger.info("LLM proxy starting on %s:%d", args.bind, args.port)
     logger.info("Provider chain: Gemini → Groq → Mistral → OpenRouter → z.ai → Cerebras")
 

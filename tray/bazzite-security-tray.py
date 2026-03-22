@@ -572,7 +572,7 @@ class SecurityTray:
         try:
             subprocess.Popen(
                 ["konsole", "-e", "bash", "-c",
-                 "sudo /usr/local/bin/quarantine-release.sh --list; echo 'Press Enter to close'; read"])
+                 "sudo /usr/local/bin/quarantine-release.sh --list; echo 'Press Enter to close'; read"])  # noqa: E501
         except Exception as e:
             print(f"[tray] Action failed: {e}", file=sys.stderr)
 
@@ -580,7 +580,7 @@ class SecurityTray:
         try:
             subprocess.Popen(
                 ["konsole", "-e", "bash", "-c",
-                 "sudo /usr/local/bin/quarantine-release.sh --interactive; echo 'Press Enter to close'; read"])
+                 "sudo /usr/local/bin/quarantine-release.sh --interactive; echo 'Press Enter to close'; read"])  # noqa: E501
         except Exception as e:
             print(f"[tray] Action failed: {e}", file=sys.stderr)
 

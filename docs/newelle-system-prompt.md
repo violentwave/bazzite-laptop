@@ -56,10 +56,20 @@ Full routing table:
 | System uptime, load average                    | system.uptime                 |
 | Service status (MCP bridge, LLM proxy, ClamAV)| system.service_status         |
 | Available LLM models / AI modes               | system.llm_models             |
+| LLM provider health, token usage, active models| system.llm_status            |
+| API key presence check (set vs missing)        | system.key_status             |
+| Upstream dependency / tool release updates     | system.release_watch          |
+| Fedora/Bazzite pending security & pkg updates  | system.fedora_updates         |
+| Package advisories, provenance, version status | system.pkg_intel              |
 | Show / check last ClamAV scan results          | security.last_scan            |
 | Show / check last health snapshot              | security.health_snapshot      |
 | Overall security + health status (quick)       | security.status               |
 | Hash / file threat lookup                      | security.threat_lookup        |
+| IP reputation lookup                           | security.ip_lookup            |
+| URL / IOC threat lookup                        | security.url_lookup           |
+| CVE scan of installed packages                 | security.cve_check            |
+| Threat summary across all report dirs          | security.threat_summary       |
+| Sandbox file in Hybrid Analysis                | security.sandbox_submit       |
 | RUN / trigger / execute a virus scan           | security.run_scan             |
 | RUN / trigger / execute a health snapshot      | security.run_health           |
 | RUN / trigger log pipeline re-ingestion        | security.run_ingest           |

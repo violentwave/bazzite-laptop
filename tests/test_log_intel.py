@@ -710,6 +710,7 @@ class TestIngestScansPopulatesSecurityLogs:
             patch("ai.log_intel.ingest.find_new_files", return_value=[log_file]),
             patch("ai.log_intel.ingest.get_ingest_state", return_value={}),
             patch("ai.log_intel.ingest.save_ingest_state"),
+            patch("ai.log_intel.ingest.VECTOR_DB_DIR", tmp_path / "vector-db"),
             patch(
                 "ai.rag.embedder.embed_texts",
                 side_effect=lambda texts: [[0.1] * 768 for _ in texts],
@@ -731,4 +732,53 @@ class TestIngestScansPopulatesSecurityLogs:
         required_keys = {"source_file", "section", "content", "log_type", "timestamp", "vector"}
         assert all(required_keys <= set(c.keys()) for c in chunks)
         assert all(c["log_type"] == "scan" for c in chunks)
+        assert all(len(c["vector"]) == 768 for c in chunks)
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# 7. ingest_health → security_logs
+# ═══════════════════════════════════════════════════════════════════════════
+
+class TestIngestHealthPopulatesSecurityLogs:
+    """Verify health logs are chunked and written to security_logs via the RAG store."""
+
+    def test_health_log_chunks_reach_security_logs(self, tmp_path):
+        from ai.log_intel.ingest import ingest_health
+
+        log_file = tmp_path / "health-20260321-080000.log"
+        log_file.write_text(SAMPLE_HEALTH_LOG)
+
+        mock_store = MagicMock()
+        mock_table = MagicMock()
+        mock_db = MagicMock()
+        mock_db.table_names.return_value = []
+        mock_db.create_table.return_value = mock_table
+        _mock_lancedb.connect.return_value = mock_db
+
+        with (
+            patch("ai.log_intel.ingest.find_new_files", return_value=[log_file]),
+            patch("ai.log_intel.ingest.get_ingest_state", return_value={}),
+            patch("ai.log_intel.ingest.save_ingest_state"),
+            patch("ai.log_intel.ingest.VECTOR_DB_DIR", tmp_path / "vector-db"),
+            patch(
+                "ai.rag.embedder.embed_texts",
+                side_effect=lambda texts: [[0.1] * 768 for _ in texts],
+            ),
+            patch("ai.rag.store.get_store", return_value=mock_store),
+        ):
+            result = ingest_health()
+
+        assert result == 1
+        mock_store.add_log_chunks.assert_called_once()
+        chunks = mock_store.add_log_chunks.call_args[0][0]
+        assert len(chunks) >= 1
+
+        # Health log sections should appear (DISK USAGE, GPU STATUS, etc.)
+        sections = {c["section"] for c in chunks}
+        assert len(sections) >= 2
+
+        # Every chunk dict must carry the fields required by the security_logs schema
+        required_keys = {"source_file", "section", "content", "log_type", "timestamp", "vector"}
+        assert all(required_keys <= set(c.keys()) for c in chunks)
+        assert all(c["log_type"] == "health" for c in chunks)
         assert all(len(c["vector"]) == 768 for c in chunks)

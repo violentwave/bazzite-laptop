@@ -530,7 +530,9 @@ def _ensure_table(db, name: str, schema):
 
 def ingest_health() -> int:
     """Ingest new health snapshot logs.  Returns count of records added."""
+    from ai.rag.chunker import chunk_health_log  # noqa: PLC0415
     from ai.rag.embedder import embed_texts  # noqa: PLC0415
+    from ai.rag.store import get_store  # noqa: PLC0415
 
     state = get_ingest_state()
     last_file = state.get("last_health_file")
@@ -545,12 +547,15 @@ def ingest_health() -> int:
     table = _ensure_table(db, "health_records", schemas["health_records"])
 
     records = []
+    log_chunks_raw = []
     last_processed = last_file
     for path in new_files:
         try:
-            parsed = parse_health_log(path)
+            text = path.read_text(encoding="utf-8", errors="replace")
+            parsed = parse_health_log(text, source_file=str(path))
             if parsed is not None:
                 records.append(parsed)
+                log_chunks_raw.extend(chunk_health_log(text, str(path)))
             last_processed = path.name
         except Exception:
             logger.exception("Failed to parse health log: %s", path)
@@ -571,6 +576,29 @@ def ingest_health() -> int:
         rec["vector"] = _normalize_vector(vec)
 
     table.add(records)
+
+    # Populate security_logs with raw chunked content for RAG queries
+    if log_chunks_raw:
+        chunk_texts = [c.content for c in log_chunks_raw]
+        try:
+            chunk_vectors = embed_texts(chunk_texts)
+            chunk_dicts = [
+                {
+                    "source_file": c.source_file,
+                    "section": c.section,
+                    "content": c.content,
+                    "log_type": c.log_type,
+                    "timestamp": c.timestamp,
+                    "vector": _normalize_vector(v),
+                }
+                for c, v in zip(log_chunks_raw, chunk_vectors, strict=False)
+            ]
+            get_store().add_log_chunks(chunk_dicts)
+            logger.debug("Added %d health log chunks to security_logs", len(chunk_dicts))
+        except RuntimeError:
+            logger.error("Embedding providers unavailable, skipping security_logs population")
+        except Exception:
+            logger.exception("Failed to populate security_logs from health logs")
 
     state["last_health_file"] = last_processed
     state["last_health_ingest"] = datetime.now(tz=UTC).isoformat()
@@ -655,7 +683,7 @@ def ingest_scans() -> int:
                     "timestamp": c.timestamp,
                     "vector": _normalize_vector(v),
                 }
-                for c, v in zip(log_chunks_raw, chunk_vectors)
+                for c, v in zip(log_chunks_raw, chunk_vectors, strict=False)
             ]
             get_store().add_log_chunks(chunk_dicts)
             logger.debug("Added %d log chunks to security_logs", len(chunk_dicts))

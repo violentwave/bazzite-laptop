@@ -27,6 +27,7 @@ class ProviderHealth:
     last_error: str | None = None
     last_error_time: float | None = None
     disabled_until: float | None = None
+    auth_broken: bool = False
     _demotion_count: int = field(default=0, repr=False)
 
     @property
@@ -66,6 +67,7 @@ class HealthTracker:
         h.success_count += 1
         h.total_latency_ms += latency_ms
         h.consecutive_failures = 0
+        h.auth_broken = False
 
     def record_failure(self, name: str, error: str) -> None:
         """Record a failed API call. Auto-demotes after threshold."""
@@ -74,6 +76,9 @@ class HealthTracker:
         h.consecutive_failures += 1
         h.last_error = error
         h.last_error_time = time.time()
+
+        if "401" in error or "403" in error:
+            h.auth_broken = True
 
         if h.consecutive_failures >= _FAILURE_THRESHOLD:
             cooldown = min(

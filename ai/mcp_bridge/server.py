@@ -16,7 +16,7 @@ DEFAULT_BIND = "127.0.0.1"
 DEFAULT_PORT = int(__import__("os").environ.get("MCP_BRIDGE_PORT", "8766"))
 
 # Number of tools in the allowlist (excludes health endpoint itself)
-_TOOL_COUNT = 31
+_TOOL_COUNT = 41
 
 
 def _assert_localhost(bind: str) -> None:
@@ -90,6 +90,18 @@ def create_app():
             @mcp.tool(name=tool_name, description=description)
             async def _handler_scan(scan_type: str = "quick", _tn=tool_name):
                 return await execute_tool(_tn, {"scan_type": scan_type})
+        elif "ip" in arg_defs:
+            @mcp.tool(name=tool_name, description=description)
+            async def _handler_ip(ip: str, _tn=tool_name):
+                return await execute_tool(_tn, {"ip": ip})
+        elif "url" in arg_defs:
+            @mcp.tool(name=tool_name, description=description)
+            async def _handler_url(url: str, _tn=tool_name):
+                return await execute_tool(_tn, {"url": url})
+        elif "file_path" in arg_defs:
+            @mcp.tool(name=tool_name, description=description)
+            async def _handler_file_path(file_path: str, _tn=tool_name):
+                return await execute_tool(_tn, {"file_path": file_path})
 
     # Built-in health tool
     @mcp.tool(name="health", description="Bridge health check")

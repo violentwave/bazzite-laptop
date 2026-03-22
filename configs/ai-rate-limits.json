@@ -6,6 +6,7 @@
     "mistral": {"rpm": 2, "rpd": null, "tokens_per_month": 1000000000},
     "openrouter": {"rpm": 20, "rpd": 50},
     "cohere": {"rpm": 20, "rpd": null, "calls_per_month": 1000},
+    "cohere_rerank": {"rpm": 10, "rpd": 100},
     "github_models": {"rpm": 15, "rpd": null},
     "nvidia_nim": {"rpm": 40, "rpd": null},
     "cloudflare": {"rpm": null, "rpd": null, "neurons_per_day": 10000},
@@ -19,8 +20,13 @@
     "abuseipdb": {"rpm": 60, "rpd": 1000},
     "otx": {"rpm": 166, "rpd": null, "rph": 10000},
     "nvd": {"rpm": null, "rpd": null, "requests_per_30s": 50},
-    "greynoise": {"rpm": null, "rpd": null, "per_week": 50},
-    "hybrid_analysis": {"rpm": 5, "rpd": null, "rph": 200},
+    "nvd_cve": {"rpm": 30, "rpd": 5000},
+    "osv": {"rpm": 30, "rpd": 10000},
+    "github_releases": {"rpm": 15, "rpd": 500},
+    "bodhi": {"rpm": 10, "rpd": 500},
+    "deps_dev": {"rpm": 30, "rpd": 5000}
+    "greynoise": {"rpm": 5, "rpd": 7},
+    "hybrid_analysis": {"rpm": 5, "rpd": 200},
     "malwarebazaar": {"rpm": null, "rpd": null},
     "urlhaus": {"rpm": null, "rpd": null},
     "threatfox": {"rpm": null, "rpd": null}

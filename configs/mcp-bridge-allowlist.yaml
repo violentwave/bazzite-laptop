@@ -75,6 +75,27 @@ tools:
         pattern: "^[a-fA-F0-9]{32,64}$"
         required: true
 
+  security.ip_lookup:
+    description: "IP reputation lookup (AbuseIPDB + GreyNoise + Shodan)"
+    source: python
+    module: "ai.threat_intel.ip_lookup"
+    args:
+      ip:
+        type: string
+        pattern: "^[0-9a-fA-F.:]+$"
+        max_length: 45
+        required: true
+
+  security.url_lookup:
+    description: "URL/IOC threat lookup (URLhaus + ThreatFox + CIRCL)"
+    source: python
+    module: "ai.threat_intel.ioc_lookup"
+    args:
+      url:
+        type: string
+        max_length: 2048
+        required: true
+
   knowledge.rag_query:
     description: "Query the security knowledge base (embedding-only, no LLM)"
     source: python
@@ -177,6 +198,30 @@ tools:
     module: "ai.log_intel"
     args: null
 
+  security.sandbox_submit:
+    description: "Submit a quarantine file to Hybrid Analysis sandbox"
+    source: python
+    module: "ai.threat_intel.sandbox"
+    args:
+      file_path:
+        type: string
+        pattern: "^quarantine/"
+        max_length: 256
+        required: true
+
+  security.cve_check:
+    description: "Scan installed packages for CVEs (NVD / OSV / CISA KEV)"
+    source: python
+    module: "ai.threat_intel.cve_scanner"
+    rate_limit: {per_tool: 1}
+    args: null
+
+  security.threat_summary:
+    description: "Compile threat summary from all agent/scan report directories"
+    source: python
+    module: "ai.threat_intel.summary"
+    args: null
+
   security.run_ingest:
     description: "Trigger log ingestion to update the intelligence database"
     source: python
@@ -211,6 +256,12 @@ tools:
     module: "ai.mcp_bridge.tools"
     args: null
 
+  system.llm_status:
+    description: "LLM routing status: provider health, token usage, active models"
+    source: json_file
+    path: "~/security/llm-status.json"
+    args: null
+
   agents.security_audit:
     description: "Run automated security audit: scan + health + ingest + RAG summary"
     source: python
@@ -237,4 +288,29 @@ tools:
     source: python
     module: "ai.agents.code_quality_agent"
     function: "run_code_check"
+    args: null
+
+  system.key_status:
+    description: "API key presence check — which keys are set vs missing (never shows values)"
+    source: json_file
+    path: "~/security/key-status.json"
+    args: null
+
+  system.release_watch:
+    description: "Check upstream releases for watched dependencies and tools"
+    source: json_file
+    path: "~/security/release-watch.json"
+    args: null
+
+  system.fedora_updates:
+    description: "Fedora/Bazzite pending security and package updates"
+    source: json_file
+    path: "~/security/fedora-updates.json"
+    args: null
+
+  system.pkg_intel:
+    description: "Package intelligence via deps.dev — advisories, provenance, version status"
+    source: python
+    module: ai.system.pkg_intel
+    function: mcp_handler
     args: null

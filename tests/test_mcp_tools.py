@@ -16,20 +16,23 @@ def allowlist():
 
 
 class TestAllowlistIntegrity:
-    def test_has_31_tools(self, allowlist):
-        assert len(allowlist["tools"]) == 31
+    def test_has_41_tools(self, allowlist):
+        assert len(allowlist["tools"]) == 41
 
     def test_all_expected_tools_present(self, allowlist):
         expected = {
             "system.disk_usage", "system.cpu_temps", "system.gpu_status",
             "system.memory_usage", "system.uptime", "system.service_status",
-            "system.llm_models", "system.mcp_manifest",
+            "system.llm_models", "system.mcp_manifest", "system.llm_status",
+            "system.key_status", "system.release_watch", "system.fedora_updates",
+            "system.pkg_intel",
             "security.last_scan", "security.health_snapshot", "security.status",
-            "security.threat_lookup",
+            "security.threat_lookup", "security.ip_lookup", "security.url_lookup",
             "knowledge.rag_query", "knowledge.rag_qa", "knowledge.ingest_docs",
             "gaming.profiles", "gaming.mangohud_preset",
             "logs.health_trend", "logs.scan_history", "logs.anomalies",
             "logs.search", "logs.stats",
+            "security.cve_check", "security.sandbox_submit", "security.threat_summary",
             "security.run_scan", "security.run_health", "security.run_ingest",
             "code.search", "code.rag_query",
             "agents.security_audit", "agents.performance_tuning",
@@ -147,3 +150,58 @@ class TestConcurrencySemaphore:
         from ai.mcp_bridge.tools import _subprocess_semaphore
 
         assert _subprocess_semaphore._value == 4
+
+
+class TestMcpManifest:
+    def setup_method(self):
+        import ai.mcp_bridge.tools as t
+        t._global_call_times.clear()
+        t._per_tool_call_times.clear()
+
+    @pytest.mark.asyncio
+    async def test_llm_status_reads_json_file(self, tmp_path):
+        status_data = {
+            "updated_at": "2026-03-22T00:00:00+00:00",
+            "providers": {"gemini": {"score": 0.9, "auth_broken": False}},
+            "usage": {"fast": {"prompt_tokens": 10, "completion_tokens": 5, "requests": 1}},
+            "models": {"fast": "gemini/gemini-2.0-flash"},
+        }
+        status_file = tmp_path / "llm-status.json"
+        status_file.write_text(json.dumps(status_data))
+
+        with patch("ai.mcp_bridge.tools._load_allowlist", return_value={
+            "system.llm_status": {
+                "source": "json_file",
+                "path": str(status_file),
+                "args": None,
+            }
+        }):
+            from ai.mcp_bridge.tools import execute_tool
+
+            result = await execute_tool("system.llm_status", {})
+            data = json.loads(result)
+            assert "providers" in data
+            assert "usage" in data
+            assert "models" in data
+
+    @pytest.mark.asyncio
+    async def test_manifest_valid_json_with_tool_count(self, allowlist):
+        from ai.mcp_bridge.tools import execute_tool
+
+        result = await execute_tool("system.mcp_manifest", {})
+        data = json.loads(result)
+        assert data["tool_count"] == len(allowlist["tools"])
+        assert set(data["tools"].keys()) == set(allowlist["tools"].keys())
+
+    @pytest.mark.asyncio
+    async def test_manifest_output_under_4096_bytes(self):
+        from ai.mcp_bridge.tools import execute_tool
+
+        result = await execute_tool("system.mcp_manifest", {})
+        assert len(result.encode()) < 4096
+
+    def test_tool_output_limits(self):
+        from ai.mcp_bridge.tools import _DEFAULT_OUTPUT_LIMIT, _TOOL_OUTPUT_LIMITS
+
+        assert _DEFAULT_OUTPUT_LIMIT == 4096
+        assert _TOOL_OUTPUT_LIMITS.get("system.mcp_manifest") == 8192
