@@ -13,6 +13,7 @@
         "shd101wyy.markdown-preview-enhanced",
         "alefragnani.project-manager",
         "ms-python.python",
+        "ms-python.debugpy",
         "charliermarsh.ruff",
         "esbenp.prettier-vscode",
         "jock.svg",

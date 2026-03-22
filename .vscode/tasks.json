@@ -1,0 +1,75 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Run Tests",
+            "type": "shell",
+            "command": "source .venv/bin/activate && python -m pytest tests/ -v",
+            "group": {"kind": "test", "isDefault": true},
+            "presentation": {"reveal": "always", "panel": "shared"}
+        },
+        {
+            "label": "Ruff Lint",
+            "type": "shell",
+            "command": "source .venv/bin/activate && ruff check ai/ tests/",
+            "group": "build",
+            "presentation": {"reveal": "always", "panel": "shared"}
+        },
+        {
+            "label": "Bandit Security",
+            "type": "shell",
+            "command": "source .venv/bin/activate && bandit -r ai/ -c pyproject.toml",
+            "group": "build",
+            "presentation": {"reveal": "always", "panel": "shared"}
+        },
+        {
+            "label": "Deploy Services",
+            "type": "shell",
+            "command": "bash scripts/deploy-services.sh",
+            "presentation": {"reveal": "always", "panel": "shared"}
+        },
+        {
+            "label": "Verify Services",
+            "type": "shell",
+            "command": "systemctl --user status bazzite-mcp-bridge.service bazzite-llm-proxy.service",
+            "presentation": {"reveal": "always", "panel": "shared"}
+        },
+        {
+            "label": "Ingest Logs",
+            "type": "shell",
+            "command": "source .venv/bin/activate && python -m ai.log_intel --all",
+            "presentation": {"reveal": "always", "panel": "shared"}
+        },
+        {
+            "label": "Ingest Docs",
+            "type": "shell",
+            "command": "source .venv/bin/activate && python -m ai.rag.ingest_docs",
+            "presentation": {"reveal": "always", "panel": "shared"}
+        },
+        {
+            "label": "Claude Flow: Start Daemon",
+            "type": "shell",
+            "command": "npx claude-flow daemon start",
+            "isBackground": true,
+            "problemMatcher": {
+                "pattern": {
+                    "regexp": "^\\[ERROR\\]\\s+(.*)$",
+                    "message": 1
+                },
+                "background": {
+                    "activeOnStart": true,
+                    "beginsPattern": "^\\[OK\\] Daemon start",
+                    "endsPattern": "^\\[INFO\\] Stop with"
+                }
+            },
+            "presentation": {
+                "reveal": "silent",
+                "panel": "dedicated",
+                "showReuseMessage": false
+            },
+            "runOptions": {
+                "runOn": "folderOpen"
+            }
+        }
+    ]
+}
