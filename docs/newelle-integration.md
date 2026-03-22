@@ -1,6 +1,6 @@
 # Newelle Integration: How Everything Connects
 
-System: Acer Predator G3-571 | Bazzite 43 | Last updated: 2026-03-21
+System: Acer Predator G3-571 | Bazzite 43 | Last updated: 2026-03-22
 
 Newelle is the GTK4 AI chat/voice UI (installed as a Flatpak). It connects to
 two localhost services that together give it tool access and LLM inference.
@@ -31,7 +31,7 @@ only to 127.0.0.1. They never touch 0.0.0.0 and they never share a process.
 
 ### What it does
 
-Exposes **23 tools + 1 health endpoint** to Newelle via the Model Context
+Exposes **33 tools + 1 health endpoint** to Newelle via the Model Context
 Protocol. Newelle can call any tool by name; the bridge validates, rate-limits,
 and dispatches each call.
 
@@ -71,7 +71,7 @@ tools. Three security gates run on every call:
 All output is truncated to 4 KB. Paths containing `/home/lch` are redacted
 to `[HOME]` before returning.
 
-### The 23 tools
+### The 33 tools
 
 | Tool | Type | What it returns |
 |------|------|----------------|
@@ -82,6 +82,9 @@ to `[HOME]` before returning.
 | `system.uptime` | command | `uptime` |
 | `system.service_status` | command | `systemctl show` for 4 services |
 | `system.llm_models` | python | Available LLM modes from litellm-config.yaml |
+| `system.mcp_manifest` | python | List all tools with descriptions and args |
+| `system.llm_status` | json_file | Provider health, token usage, active models |
+| `system.key_status` | json_file | API key presence (set/missing, never values) |
 | `security.last_scan` | file_tail | Last 20 lines of latest ClamAV scan log |
 | `security.health_snapshot` | file_tail | Last 30 lines of latest health log |
 | `security.status` | json_file | Filtered `.status` JSON (6 keys) |
@@ -89,7 +92,8 @@ to `[HOME]` before returning.
 | `security.run_scan` | python | Triggers `clamav-quick.service` via systemctl |
 | `security.run_health` | python | Triggers `system-health.service` via systemctl |
 | `security.run_ingest` | python | Runs `python -m ai.log_intel --all` |
-| `knowledge.rag_query` | python | Queries LanceDB, returns answer text |
+| `knowledge.rag_query` | python | Queries LanceDB, returns context chunks |
+| `knowledge.rag_qa` | python | LLM-synthesised answer from knowledge base |
 | `knowledge.ingest_docs` | python | Re-embeds docs/ into LanceDB |
 | `gaming.profiles` | python | Lists game profiles from scopebuddy |
 | `gaming.mangohud_preset` | python | Returns MangoHud preset for a game |
@@ -98,8 +102,14 @@ to `[HOME]` before returning.
 | `logs.anomalies` | python | Unacknowledged anomalies |
 | `logs.search` | python | Semantic search across system logs |
 | `logs.stats` | python | Log pipeline statistics |
+| `code.search` | python | Pattern search across Python code (ripgrep) |
+| `code.rag_query` | python | Semantic search over indexed Python code |
+| `agents.security_audit` | python | Automated audit: scan + health + ingest + RAG |
+| `agents.performance_tuning` | python | Temps, memory, disk, gaming profile analysis |
+| `agents.knowledge_storage` | python | Vector DB health, ingestion freshness, disk |
+| `agents.code_quality` | python | ruff + bandit + git status report |
 
-`health` (built-in) returns `{"status": "ok", "tools": 23}`.
+`health` (built-in) returns `{"status": "ok", "tools": 33}`.
 
 ---
 
@@ -208,26 +218,31 @@ State file location: `~/security/vector-db/.doc-ingest-state.json`
 ai/
   mcp_bridge/
     server.py       FastMCP app, tool registration, localhost guard
-    tools.py        execute_tool(), all 23 dispatch handlers
-  llm_proxy.py      Starlette app, /v1/chat/completions, model mapping
+    tools.py        execute_tool(), all 33 dispatch handlers
+  llm_proxy.py      Starlette app, /v1/chat/completions, model mapping, opt-in memory
   router.py         LiteLLM wrapper, health-weighted provider selection
   health.py         Provider health tracking, auto-demotion on failure
   rate_limiter.py   Cross-script rate limit coordinator
   config.py         Paths, APP_NAME, key loading
+  key_manager.py    API key presence checker, writes ~/security/key-status.json
   rag/
     embedder.py     embed_texts(), select_provider(), Ollama + Cohere
     store.py        VectorStore, LanceDB tables, add/search methods
     query.py        rag_query(), QueryResult dataclass
     ingest_docs.py  chunk_markdown(), ingest_files(), --force dedup logic
+    memory.py       Opt-in conversation memory (ENABLE_CONVERSATION_MEMORY=true)
 
 configs/
-  mcp-bridge-allowlist.yaml   All 23 tool definitions + validation rules
+  mcp-bridge-allowlist.yaml   All 33 tool definitions + validation rules
   litellm-config.yaml         LiteLLM provider routing config
   ai-rate-limits.json         Per-provider rate limits
+  r2-config.yaml              Cloudflare R2 log archive settings
 
 systemd/
   bazzite-mcp-bridge.service  User service: MCP bridge on :8766
   bazzite-llm-proxy.service   User service: LLM proxy on :8767
+  log-archive.timer           Weekly Sunday 01:00 — upload old logs to R2
+  log-archive.service         Oneshot: scripts/archive-logs-r2.py
 ```
 
 ---

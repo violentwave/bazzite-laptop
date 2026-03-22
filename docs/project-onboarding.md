@@ -17,7 +17,7 @@
     ┌─────▼──────┐        ┌──────▼──────────────┐
     │ LLM Proxy  │        │  MCP Bridge         │
     │ :8767      │        │  :8766 (FastMCP)    │
-    │ Starlette  │        │  23 tools           │
+    │ Starlette  │        │  33 tools           │
     └─────┬──────┘        └──────┬──────────────┘
           │                      │
     ┌─────▼──────┐        ┌──────▼──────────────┐
@@ -87,34 +87,36 @@ All bind to **127.0.0.1 only** — enforced at startup, never 0.0.0.0.
 
 ## Component Inventory
 
-### AI Core (`ai/` — 1877 LOC)
+### AI Core (`ai/`)
 
-| File | LOC | Purpose | Status |
-|------|-----|---------|--------|
-| `config.py` | 125 | Paths, constants, scoped key loading | Working |
-| `router.py` | 445 | LiteLLM V2 router, health-weighted provider selection | Working |
-| `health.py` | 98 | Provider health scoring, auto-demotion (3 failures → 5min cooldown) | Working |
-| `llm_proxy.py` | 172 | OpenAI-compatible proxy on :8767 for Newelle | Working |
-| `rate_limiter.py` | 256 | Cross-script rate limiting with file locking + atomic writes | Working |
-| `mcp_bridge/server.py` | 111 | FastMCP server on :8766, 23 allowlisted tools | Working |
-| `mcp_bridge/tools.py` | 351 | Tool implementations (subprocess, file_tail, python) | Working |
-| `mcp_bridge/__main__.py` | 63 | Entry point, SIGTERM handler, key guard | Working |
+| File | Purpose | Status |
+|------|---------|--------|
+| `config.py` | Paths, constants, scoped key loading | Working |
+| `router.py` | LiteLLM V2 router, health-weighted provider selection | Working |
+| `health.py` | Provider health scoring, auto-demotion (3 failures → 5min cooldown) | Working |
+| `llm_proxy.py` | OpenAI-compatible proxy on :8767 for Newelle, opt-in conversation memory | Working |
+| `rate_limiter.py` | Cross-script rate limiting with file locking + atomic writes | Working |
+| `key_manager.py` | API key presence checker, writes `~/security/key-status.json` | Working |
+| `mcp_bridge/server.py` | FastMCP server on :8766, 33 allowlisted tools | Working |
+| `mcp_bridge/tools.py` | Tool implementations (subprocess, file_tail, python) | Working |
+| `mcp_bridge/__main__.py` | Entry point, SIGTERM handler, key guard | Working |
 
-### AI Subsystems (~5157 LOC total)
+### AI Subsystems
 
-| Module | LOC | Purpose | Status |
-|--------|-----|---------|--------|
-| `threat_intel/` | 657 | VT, OTX, MalwareBazaar hash enrichment | Working |
-| `rag/` | 923 | LanceDB vector search, Ollama embeddings | Working |
-| `log_intel/` | 1449 | Log ingestion pipeline, anomaly detection, semantic search | Working |
-| `gaming/` | 1500 | MangoHud analysis, ScopeBuddy game profiles | Working |
-| `code_quality/` | 628 | Linter orchestration (ruff, bandit) + AI fixes | Working |
+| Module | Purpose | Status |
+|--------|---------|--------|
+| `threat_intel/` | VT, OTX, MalwareBazaar hash enrichment | Working |
+| `rag/` | LanceDB vector search, Ollama embeddings, opt-in conversation memory | Working |
+| `log_intel/` | Log ingestion pipeline, anomaly detection, semantic search | Working |
+| `gaming/` | MangoHud analysis, ScopeBuddy game profiles | Working |
+| `code_quality/` | Linter orchestration (ruff, bandit) + AI fixes | Working |
+| `agents/` | security_audit, performance_tuning, knowledge_storage, code_quality agents | Working |
 
 ### Tray App (`tray/` — 1855 LOC)
 PySide6/Qt6 system tray + dashboard. 3 tabs: Security, Health, About. 9-state FSM.
 
-### Tests (`tests/` — 510 tests)
-All passing. Covers: MCP server/tools, router V2, health tracking, rate limiter, threat intel, RAG, log intel, gaming, code quality.
+### Tests (`tests/` — 733 tests)
+All passing. Covers: MCP server/tools, router V2, health tracking, rate limiter, threat intel, RAG, log intel, gaming, code quality, key manager, conversation memory, dashboard/tray.
 
 ### Scripts (`scripts/` — 29 shell scripts)
 Key scripts: `deploy-services.sh`, `clamav-scan.sh`, `system-health-snapshot.sh`, `start-mcp-bridge.sh`, `start-llm-proxy.sh`, `manage-keys.sh`
@@ -135,6 +137,7 @@ Key scripts: `deploy-services.sh`, `clamav-scan.sh`, `system-health-snapshot.sh`
 | `system-health.timer` | `system-health.service` | Daily 8AM |
 | `clamav-quick.timer` | `clamav-quick.service` | Hourly |
 | `clamav-deep.timer` | `clamav-deep.service` | Weekly |
+| `log-archive.timer` | `log-archive.service` | Weekly Sunday 01:00 — upload logs to R2 |
 
 Claude-flow (`npx claude-flow`) is available for manual dev sessions but does not auto-start.
 
@@ -143,10 +146,11 @@ Claude-flow (`npx claude-flow`) is available for manual dev sessions but does no
 | File | Purpose |
 |------|---------|
 | `litellm-config.yaml` | 23 LLM models across 5 task types (fast/reason/batch/code/embed) |
-| `mcp-bridge-allowlist.yaml` | 23 MCP tool definitions with arg validation |
+| `mcp-bridge-allowlist.yaml` | 33 MCP tool definitions with arg validation |
 | `ai-rate-limits.json` | Per-provider rate limits (rpm/rpd/tokens) |
 | `keys.env.enc` | sops-encrypted API keys (IN git) |
 | `logrotate-system-health` | 90-day log rotation |
+| `r2-config.yaml` | Cloudflare R2 endpoint, bucket, dirs, retention settings |
 
 ### Plugins (2 RuFlo v3 plugins)
 Installed via `file:` refs in `package.json`: code-intelligence (semantic search, refactor impact), test-intelligence (predictive test selection, flaky detection).
@@ -171,7 +175,7 @@ Installed via `file:` refs in `package.json`: code-intelligence (semantic search
 
 ---
 
-## MCP Bridge Tools (23 total)
+## MCP Bridge Tools (33 total)
 
 | Tool | Source | Args |
 |------|--------|------|
@@ -182,6 +186,9 @@ Installed via `file:` refs in `package.json`: code-intelligence (semantic search
 | `system.uptime` | subprocess: `uptime` | none |
 | `system.service_status` | subprocess: `systemctl show` | none |
 | `system.llm_models` | python: read litellm-config.yaml | none |
+| `system.mcp_manifest` | python: list all tools | none |
+| `system.llm_status` | json_file: ~/security/llm-status.json | none |
+| `system.key_status` | json_file: ~/security/key-status.json | none |
 | `security.last_scan` | file_tail: /var/log/clamav-scans/ | none |
 | `security.health_snapshot` | file_tail: /var/log/system-health/ | none |
 | `security.status` | json_file: ~/security/.status | none |
@@ -189,7 +196,8 @@ Installed via `file:` refs in `package.json`: code-intelligence (semantic search
 | `security.run_scan` | python: systemctl start clamav-quick | scan_type (quick\|deep) |
 | `security.run_health` | python: systemctl start system-health | none |
 | `security.run_ingest` | python: ai.log_intel --all | none |
-| `knowledge.rag_query` | python: ai.rag.query (no LLM) | question (max 500 chars) |
+| `knowledge.rag_query` | python: ai.rag.query (context chunks) | query (max 500 chars) |
+| `knowledge.rag_qa` | python: ai.rag.query (LLM synthesis) | question (max 500 chars) |
 | `knowledge.ingest_docs` | python: ai.rag.ingest_docs | none |
 | `gaming.profiles` | python: ai.gaming.scopebuddy | none |
 | `gaming.mangohud_preset` | python: ai.gaming.scopebuddy | game |
@@ -198,6 +206,12 @@ Installed via `file:` refs in `package.json`: code-intelligence (semantic search
 | `logs.anomalies` | python: ai.log_intel.queries | none |
 | `logs.search` | python: ai.log_intel.queries | query (max 500 chars) |
 | `logs.stats` | python: ai.log_intel.queries | none |
+| `code.search` | python: ripgrep over repo | query (max 128 chars) |
+| `code.rag_query` | python: ai.rag.code_query | question (max 500 chars) |
+| `agents.security_audit` | python: ai.agents.security_audit | none |
+| `agents.performance_tuning` | python: ai.agents.performance_tuning | none |
+| `agents.knowledge_storage` | python: ai.agents.knowledge_storage | none |
+| `agents.code_quality` | python: ai.agents.code_quality_agent | none |
 | `health` | built-in | none |
 
 ---
@@ -210,7 +224,7 @@ Installed via `file:` refs in `package.json`: code-intelligence (semantic search
 
 **Connection**:
 - LLM: `http://127.0.0.1:8767/v1/` (OpenAI-compat, model="fast")
-- MCP: `http://127.0.0.1:8766/mcp` (Bazzite System Tools, 23 tools)
+- MCP: `http://127.0.0.1:8766/mcp` (Bazzite System Tools, 33 tools)
 
 **System prompt** instructs Newelle to:
 1. Call MCP tools FIRST for system queries, then explain
@@ -253,7 +267,7 @@ Installed via `file:` refs in `package.json`: code-intelligence (semantic search
 
 ```bash
 source .venv/bin/activate
-python -m pytest tests/ -v          # 510 tests
+python -m pytest tests/ -v          # 733 tests
 ruff check ai/ tests/               # Lint
 bandit -r ai/ -c pyproject.toml     # Security scan
 uv pip install -r requirements.txt  # Install deps
