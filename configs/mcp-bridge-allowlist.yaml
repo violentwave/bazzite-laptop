@@ -179,13 +179,13 @@ tools:
   system.llm_models:
     description: "List available LLM modes and their provider chains (reads live config)"
     source: python
-    module: "ai.log_intel"
+    module: "ai.mcp_bridge.tools"
     args: null
 
   security.run_scan:
     description: "Trigger a ClamAV quick scan (runs in background via systemd)"
     source: python
-    module: "ai.log_intel"
+    module: "ai.mcp_bridge.tools"
     args:
       scan_type:
         type: string
@@ -195,7 +195,7 @@ tools:
   security.run_health:
     description: "Trigger a system health snapshot (runs in background via systemd)"
     source: python
-    module: "ai.log_intel"
+    module: "ai.mcp_bridge.tools"
     args: null
 
   security.sandbox_submit:
@@ -225,7 +225,7 @@ tools:
   security.run_ingest:
     description: "Trigger log ingestion to update the intelligence database"
     source: python
-    module: "ai.log_intel"
+    module: "ai.mcp_bridge.tools"
     args: null
 
   code.search:
