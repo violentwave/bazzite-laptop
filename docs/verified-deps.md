@@ -36,6 +36,8 @@ These are the packages actively used by `ai/`, `tray/`, and `tests/`.
 | requests | 2.32.5 | `ai/threat_intel/` — threat intel API calls |
 | openai | 2.28.0 | litellm OpenAI-compatible provider support |
 | ollama | 0.6.1 | `ai/rag/` — local embedding calls |
+| boto3 | 1.38.0 | `scripts/archive-logs-r2.py` — Cloudflare R2 log archiving |
+| cohere | 5.15.0 | `ai/rag/embedder.py` — Cohere rerank for RAG QA |
 | pillow | 12.1.1 | Image processing utilities |
 
 ---
@@ -112,15 +114,22 @@ Keys stored in `~/.config/bazzite-ai/keys.env`.
 
 | Service | Env Var | Free Limits | Used by |
 |---------|---------|------------|--------|
-| VirusTotal | `VT_API_KEY` | 4 rpm, 500 rpd | `ai/threat_intel/` |
-| AbuseIPDB | `ABUSEIPDB_API_KEY` | 60 rpm, 1000 rpd | `ai/threat_intel/` |
-| AlienVault OTX | `OTX_API_KEY` | 166 rpm, 10 000/hr | `ai/threat_intel/` |
-| NVD (CVEs) | _(none)_ | 50 per 30s | `ai/threat_intel/` |
-| GreyNoise | `GREYNOISE_API_KEY` | 50/week | `ai/threat_intel/` |
-| Hybrid Analysis | `HYBRID_ANALYSIS_API_KEY` | 5 rpm, 200/hr | `ai/threat_intel/` |
-| MalwareBazaar | _(none)_ | No enforced limit | `ai/threat_intel/` |
-| URLhaus | _(none)_ | No enforced limit | `ai/threat_intel/` |
-| ThreatFox | _(none)_ | No enforced limit | `ai/threat_intel/` |
+| VirusTotal | `VT_API_KEY` | 4 rpm, 500 rpd | `ai/threat_intel/lookup.py` |
+| AbuseIPDB | `ABUSEIPDB_API_KEY` | 60 rpm, 1000 rpd | `ai/threat_intel/ip_lookup.py` |
+| AlienVault OTX | `OTX_API_KEY` | 166 rpm, 10 000/hr | `ai/threat_intel/lookup.py` |
+| GreyNoise | `GREYNOISE_API_KEY` | 5 rpm, 7 rpd | `ai/threat_intel/ip_lookup.py` |
+| Hybrid Analysis | `HYBRID_ANALYSIS_API_KEY` | 5 rpm, 200 rpd | `ai/threat_intel/sandbox.py` |
+| NVD (NIST) | `NVD_API_KEY` _(optional)_ | 50 per 30s (anon); higher with key | `ai/threat_intel/cve_scanner.py` |
+| OSV (Google) | _(none)_ | 30 rpm, 10 000 rpd | `ai/threat_intel/cve_scanner.py` |
+| CISA KEV | _(none)_ | No enforced limit (JSON feed) | `ai/threat_intel/cve_scanner.py` |
+| Shodan InternetDB | _(none)_ | No enforced limit | `ai/threat_intel/ip_lookup.py` |
+| MalwareBazaar | _(none)_ | No enforced limit | `ai/threat_intel/lookup.py` |
+| URLhaus | _(none)_ | No enforced limit | `ai/threat_intel/ioc_lookup.py` |
+| ThreatFox | _(none)_ | No enforced limit | `ai/threat_intel/ioc_lookup.py` |
+| CIRCL Hashlookup | _(none)_ | No enforced limit | `ai/threat_intel/ioc_lookup.py` |
+| GitHub Releases / GHSA | _(none)_ | 15 rpm, 500 rpd (anon) | `ai/system/release_watch.py` |
+| Fedora Bodhi | _(none)_ | 10 rpm, 500 rpd | `ai/system/fedora_updates.py` |
+| deps.dev | _(none)_ | 30 rpm, 5 000 rpd | `ai/system/pkg_intel.py` |
 
 ---
 

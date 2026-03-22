@@ -31,7 +31,7 @@ only to 127.0.0.1. They never touch 0.0.0.0 and they never share a process.
 
 ### What it does
 
-Exposes **33 tools + 1 health endpoint** to Newelle via the Model Context
+Exposes **41 tools + 1 health endpoint** to Newelle via the Model Context
 Protocol. Newelle can call any tool by name; the bridge validates, rate-limits,
 and dispatches each call.
 
@@ -108,8 +108,16 @@ to `[HOME]` before returning.
 | `agents.performance_tuning` | python | Temps, memory, disk, gaming profile analysis |
 | `agents.knowledge_storage` | python | Vector DB health, ingestion freshness, disk |
 | `agents.code_quality` | python | ruff + bandit + git status report |
+| `system.release_watch` | json_file | Upstream release updates for watched deps (GitHub Releases, GHSA) |
+| `system.fedora_updates` | json_file | Fedora/Bazzite pending security and package updates (Bodhi) |
+| `system.pkg_intel` | python | Package intelligence via deps.dev — advisories, provenance, version status |
+| `security.ip_lookup` | python | IP reputation (AbuseIPDB + GreyNoise + Shodan InternetDB) |
+| `security.url_lookup` | python | URL/IOC threat lookup (URLhaus + ThreatFox + CIRCL Hashlookup) |
+| `security.cve_check` | python | CVE scan of installed packages (NVD + OSV + CISA KEV overlay) |
+| `security.sandbox_submit` | python | Submit a quarantine file to Hybrid Analysis sandbox |
+| `security.threat_summary` | python | Compile threat summary from all agent/scan report directories |
 
-`health` (built-in) returns `{"status": "ok", "tools": 33}`.
+`health` (built-in) returns `{"status": "ok", "tools": 41}`.
 
 ---
 
@@ -186,6 +194,14 @@ Newelle  ──►  MCP bridge (tools.py)
 an LLM-generated response. This avoids calling cloud APIs from within the MCP
 bridge process.
 
+### Conversation memory (opt-in)
+
+`ai/rag/memory.py` provides a LanceDB-backed conversation memory table. It is
+**off by default** — enable via `ENABLE_CONVERSATION_MEMORY=true` in the
+environment before starting the LLM proxy. When enabled, each chat turn is
+embedded and stored; relevant past context is retrieved and prepended to new
+requests. Disable if Newelle's built-in semantic memory covers this need.
+
 ### Embedding providers
 
 | Provider | Endpoint | Model | Dimension | When used |
@@ -218,7 +234,7 @@ State file location: `~/security/vector-db/.doc-ingest-state.json`
 ai/
   mcp_bridge/
     server.py       FastMCP app, tool registration, localhost guard
-    tools.py        execute_tool(), all 33 dispatch handlers
+    tools.py        execute_tool(), all 41 dispatch handlers
   llm_proxy.py      Starlette app, /v1/chat/completions, model mapping, opt-in memory
   router.py         LiteLLM wrapper, health-weighted provider selection
   health.py         Provider health tracking, auto-demotion on failure
@@ -226,21 +242,37 @@ ai/
   config.py         Paths, APP_NAME, key loading
   key_manager.py    API key presence checker, writes ~/security/key-status.json
   rag/
-    embedder.py     embed_texts(), select_provider(), Ollama + Cohere
+    embedder.py     embed_texts(), select_provider(), Ollama + Cohere rerank
     store.py        VectorStore, LanceDB tables, add/search methods
     query.py        rag_query(), QueryResult dataclass
     ingest_docs.py  chunk_markdown(), ingest_files(), --force dedup logic
     memory.py       Opt-in conversation memory (ENABLE_CONVERSATION_MEMORY=true)
+  system/
+    release_watch.py  GitHub Releases + GHSA watcher, writes ~/security/release-watch.json
+    fedora_updates.py Fedora Bodhi polling, writes ~/security/fedora-updates.json
+    pkg_intel.py      deps.dev package advisories + provenance (mcp_handler)
+  threat_intel/
+    ip_lookup.py    IP reputation: AbuseIPDB + GreyNoise + Shodan InternetDB
+    ioc_lookup.py   URL/IOC lookup: URLhaus + ThreatFox + CIRCL Hashlookup
+    cve_scanner.py  CVE scanner: NVD + OSV + CISA KEV overlay
+    sandbox.py      Hybrid Analysis sandbox submission
+    summary.py      Compile threat summary from all report directories
 
 configs/
-  mcp-bridge-allowlist.yaml   All 33 tool definitions + validation rules
+  mcp-bridge-allowlist.yaml   All 41 tool definitions + validation rules
   litellm-config.yaml         LiteLLM provider routing config
-  ai-rate-limits.json         Per-provider rate limits
+  ai-rate-limits.json         Per-provider rate limits (threat intel + LLM)
   r2-config.yaml              Cloudflare R2 log archive settings
 
 systemd/
   bazzite-mcp-bridge.service  User service: MCP bridge on :8766
   bazzite-llm-proxy.service   User service: LLM proxy on :8767
+  cve-scanner.timer           Weekly CVE scan of installed packages
+  cve-scanner.service         Oneshot: python -m ai.threat_intel.cve_scanner
+  release-watch.timer         Daily release watch check
+  release-watch.service       Oneshot: python -m ai.system.release_watch
+  fedora-updates.timer        Daily Fedora Bodhi update check
+  fedora-updates.service      Oneshot: python -m ai.system.fedora_updates
   log-archive.timer           Weekly Sunday 01:00 — upload old logs to R2
   log-archive.service         Oneshot: scripts/archive-logs-r2.py
 ```

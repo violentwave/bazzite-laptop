@@ -24,7 +24,7 @@
     "osv": {"rpm": 30, "rpd": 10000},
     "github_releases": {"rpm": 15, "rpd": 500},
     "bodhi": {"rpm": 10, "rpd": 500},
-    "deps_dev": {"rpm": 30, "rpd": 5000}
+    "deps_dev": {"rpm": 30, "rpd": 5000},
     "greynoise": {"rpm": 5, "rpd": 7},
     "hybrid_analysis": {"rpm": 5, "rpd": 200},
     "malwarebazaar": {"rpm": null, "rpd": null},

@@ -22,7 +22,7 @@ The base security/gaming system is managed in a SEPARATE Claude.ai project calle
 - **Repo**: github.com:violentwave/bazzite-laptop.git (private, SSH key auth)
 - **Editor**: VS Code with Claude Code
 - **AI code lives in**: `~/projects/bazzite-laptop/ai/`
-- **Planning docs**: `~/projects/Setup/` (NOT in git — temporary workspace)
+- **Planning docs**: `docs/` within the repo (authoritative; Setup/ workspace no longer used)
 
 ---
 
