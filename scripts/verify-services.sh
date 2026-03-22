@@ -55,6 +55,22 @@ check_user_service "bazzite-mcp-bridge.service"
 
 echo ""
 echo "--- System services ---"
+# Thermal protection
+if systemctl is-active --quiet "thermal-protection.service" 2>/dev/null; then
+    pass "System service active: thermal-protection.service"
+else
+    fail "System service not active: thermal-protection.service  (run: sudo systemctl start thermal-protection.service)"
+fi
+if [[ -f /etc/bazzite/thermal-protection.conf ]]; then
+    pass "Config exists: /etc/bazzite/thermal-protection.conf"
+else
+    fail "Config missing: /etc/bazzite/thermal-protection.conf  (run: sudo install -m 644 configs/thermal-protection.conf /etc/bazzite/)"
+fi
+if [[ -d /var/log/bazzite ]]; then
+    pass "Log dir exists: /var/log/bazzite"
+else
+    fail "Log dir missing: /var/log/bazzite  (run: sudo mkdir -p /var/log/bazzite)"
+fi
 check_system_service_enabled "system-health.timer"
 if systemctl is-active --quiet "clamav-freshclam.service" 2>/dev/null; then
     pass "System service active: clamav-freshclam.service"

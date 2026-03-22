@@ -60,8 +60,9 @@ fi
 # Deploy system-health timer and service
 for unit in system-health.service system-health.timer; do
     if [[ -f "$SRC/$unit" ]]; then
-        sudo cp "$SRC/$unit" "/etc/systemd/system/$unit"
-        echo "  Copied $unit to /etc/systemd/system/"
+        sudo install -m 644 "$SRC/$unit" "/etc/systemd/system/$unit"
+        sudo restorecon -v "/etc/systemd/system/$unit"
+        echo "  Installed $unit to /etc/systemd/system/"
     fi
 done
 
@@ -70,8 +71,60 @@ sudo systemctl enable system-health.timer 2>/dev/null || true
 sudo systemctl start system-health.timer || echo "  WARNING: timer start failed"
 echo "  Enabled system-health.timer"
 
+# Deploy rag-embed timer and service
+for unit in rag-embed.service rag-embed.timer; do
+    if [[ -f "$SRC/$unit" ]]; then
+        sudo install -m 644 "$SRC/$unit" "/etc/systemd/system/$unit"
+        sudo chown root:root "/etc/systemd/system/$unit"
+        sudo restorecon -v "/etc/systemd/system/$unit"
+        echo "  Installed $unit to /etc/systemd/system/"
+    fi
+done
+
+if [[ -f "$SRC/rag-embed.timer" ]]; then
+    sudo systemctl daemon-reload
+    sudo systemctl enable rag-embed.timer 2>/dev/null || true
+    sudo systemctl start rag-embed.timer || echo "  WARNING: rag-embed timer start failed"
+    echo "  Enabled rag-embed.timer"
+fi
+
 # ══════════════════════════════════════════════════════════════════
-# 3. Status checks
+# 3. Thermal protection service (system, requires sudo)
+# ══════════════════════════════════════════════════════════════════
+echo ""
+echo "=== Deploying Thermal Protection Service ==="
+
+# Install Python script
+if [[ -f "$SCRIPTS/thermal-protection.py" ]]; then
+    sudo install -m 755 "$SCRIPTS/thermal-protection.py" /usr/local/bin/thermal-protection.py
+    echo "  Installed thermal-protection.py to /usr/local/bin/"
+fi
+
+# Create config directory and install config
+sudo mkdir -p /etc/bazzite
+REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+if [[ -f "$REPO_ROOT/configs/thermal-protection.conf" ]]; then
+    sudo install -m 644 "$REPO_ROOT/configs/thermal-protection.conf" /etc/bazzite/thermal-protection.conf
+    echo "  Installed thermal-protection.conf to /etc/bazzite/"
+fi
+
+# Install service unit with SELinux fix
+if [[ -f "$SRC/thermal-protection.service" ]]; then
+    sudo install -m 644 "$SRC/thermal-protection.service" /etc/systemd/system/thermal-protection.service
+    sudo restorecon -v /etc/systemd/system/thermal-protection.service
+    echo "  Installed thermal-protection.service"
+fi
+
+# Ensure log directory exists
+sudo mkdir -p /var/log/bazzite
+
+sudo systemctl daemon-reload
+sudo systemctl enable --now thermal-protection.service 2>/dev/null || \
+    echo "  WARNING: thermal-protection.service enable/start failed"
+echo "  Enabled thermal-protection.service"
+
+# ══════════════════════════════════════════════════════════════════
+# 4. Status checks
 # ══════════════════════════════════════════════════════════════════
 sleep 3
 
@@ -84,6 +137,8 @@ done
 
 echo ""
 echo "=== System Service Status ==="
+thermal_status=$(sudo systemctl is-active thermal-protection.service 2>/dev/null || echo "inactive")
+printf "  %-35s %s\n" "thermal-protection.service" "$thermal_status"
 timer_enabled=$(sudo systemctl is-enabled system-health.timer 2>/dev/null || echo "disabled")
 printf "  %-35s %s\n" "system-health.timer" "$timer_enabled"
 sudo systemctl list-timers system-health.timer --no-pager 2>/dev/null | grep -q system-health \
@@ -91,7 +146,7 @@ sudo systemctl list-timers system-health.timer --no-pager 2>/dev/null | grep -q 
     || echo "  (timer not scheduled — run: sudo systemctl start system-health.timer)"
 
 # ══════════════════════════════════════════════════════════════════
-# 4. Health checks (port listening + HTTP where available)
+# 5. Health checks (port listening + HTTP where available)
 # ══════════════════════════════════════════════════════════════════
 echo ""
 echo "=== Health Checks ==="

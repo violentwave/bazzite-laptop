@@ -1,0 +1,23 @@
+[Unit]
+Description=Bazzite Thermal Protection Service
+Documentation=file:///home/lch/projects/bazzite-laptop/docs/ai-operational-playbook.md
+After=multi-user.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python3 /usr/local/bin/thermal-protection.py
+Restart=on-failure
+RestartSec=30
+StartLimitBurst=3
+StartLimitIntervalSec=300
+
+# Logging directory
+ExecStartPre=/usr/bin/mkdir -p /var/log/bazzite
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=thermal-protection
+
+[Install]
+WantedBy=multi-user.target
