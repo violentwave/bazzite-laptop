@@ -212,6 +212,54 @@ if [[ -f "$SRC/log-archive.timer" ]]; then
 fi
 
 # ══════════════════════════════════════════════════════════════════
+# 4b. ClamAV timers
+# ══════════════════════════════════════════════════════════════════
+echo ""
+echo "=== Deploying ClamAV Timers ==="
+
+for timer_name in clamav-quick clamav-deep clamav-healthcheck; do
+    for unit in "$timer_name.service" "$timer_name.timer"; do
+        if [[ -f "$SRC/$unit" ]]; then
+            sudo install -m 644 "$SRC/$unit" "/etc/systemd/system/$unit"
+            sudo restorecon -v "/etc/systemd/system/$unit"
+            echo "  Installed $unit to /etc/systemd/system/"
+        fi
+    done
+
+    if [[ -f "$SRC/$timer_name.timer" ]]; then
+        sudo systemctl daemon-reload
+        sudo systemctl enable "$timer_name.timer" 2>/dev/null || \
+            echo "  WARNING: $timer_name.timer enable failed"
+        sudo systemctl start "$timer_name.timer" || echo "  WARNING: $timer_name.timer start failed"
+        echo "  Enabled $timer_name.timer"
+    fi
+done
+
+# ══════════════════════════════════════════════════════════════════
+# 4c. Release watch and Fedora updates timers
+# ══════════════════════════════════════════════════════════════════
+echo ""
+echo "=== Deploying Release Watch & Fedora Updates Timers ==="
+
+for timer_name in release-watch fedora-updates; do
+    for unit in "$timer_name.service" "$timer_name.timer"; do
+        if [[ -f "$SRC/$unit" ]]; then
+            sudo install -m 644 "$SRC/$unit" "/etc/systemd/system/$unit"
+            sudo restorecon -v "/etc/systemd/system/$unit"
+            echo "  Installed $unit to /etc/systemd/system/"
+        fi
+    done
+
+    if [[ -f "$SRC/$timer_name.timer" ]]; then
+        sudo systemctl daemon-reload
+        sudo systemctl enable "$timer_name.timer" 2>/dev/null || \
+            echo "  WARNING: $timer_name.timer enable failed"
+        sudo systemctl start "$timer_name.timer" || echo "  WARNING: $timer_name.timer start failed"
+        echo "  Enabled $timer_name.timer"
+    fi
+done
+
+# ══════════════════════════════════════════════════════════════════
 # 5. Status checks
 # ══════════════════════════════════════════════════════════════════
 sleep 3
@@ -242,6 +290,16 @@ printf "  %-35s %s\n" "cve-scanner.timer" \
     "$(sudo systemctl is-enabled cve-scanner.timer 2>/dev/null || echo 'not installed')"
 printf "  %-35s %s\n" "log-archive.timer" \
     "$(sudo systemctl is-enabled log-archive.timer 2>/dev/null || echo 'not installed')"
+printf "  %-35s %s\n" "clamav-quick.timer" \
+    "$(sudo systemctl is-enabled clamav-quick.timer 2>/dev/null || echo 'not installed')"
+printf "  %-35s %s\n" "clamav-deep.timer" \
+    "$(sudo systemctl is-enabled clamav-deep.timer 2>/dev/null || echo 'not installed')"
+printf "  %-35s %s\n" "clamav-healthcheck.timer" \
+    "$(sudo systemctl is-enabled clamav-healthcheck.timer 2>/dev/null || echo 'not installed')"
+printf "  %-35s %s\n" "release-watch.timer" \
+    "$(sudo systemctl is-enabled release-watch.timer 2>/dev/null || echo 'not installed')"
+printf "  %-35s %s\n" "fedora-updates.timer" \
+    "$(sudo systemctl is-enabled fedora-updates.timer 2>/dev/null || echo 'not installed')"
 
 # ══════════════════════════════════════════════════════════════════
 # 6. Health checks (port listening + HTTP where available)
@@ -257,4 +315,6 @@ ss -tln | grep -q ':8766 ' \
     || echo "  MCP bridge (8766): not responding"
 
 echo ""
-echo "Done. User services auto-start on login. Timers: health 8:00, security-audit 8:30, performance-tuning 8:15, knowledge-storage 9:15, cve-scanner Sat 00:00, log-archive Sun 01:00."
+echo "Done. User services auto-start on login. All 12 timers deployed."
+echo "  Daily: health 8:00, perf 8:15, audit 8:30, rag 9:00, knowledge 9:15, release 9:45, clamav-quick 12:00"
+echo "  Weekly: clamav-healthcheck Wed 14:00, clamav-deep Fri 23:00, cve-scanner Sat 00:00, log-archive Sun 01:00, fedora-updates Mon 03:00"
