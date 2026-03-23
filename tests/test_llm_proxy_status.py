@@ -33,8 +33,8 @@ def _run_writer(status_file: Path) -> None:
     with (
         patch("ai.llm_proxy._LLM_STATUS_FILE", status_file),
         patch("builtins.open", return_value=cfg_stream),
-        patch("ai.router.get_health_snapshot", return_value=_FAKE_HEALTH),
-        patch("ai.router.get_usage_stats", return_value=_FAKE_USAGE),
+        patch("ai.llm_proxy.get_health_snapshot", return_value=_FAKE_HEALTH),
+        patch("ai.llm_proxy.get_usage_stats", return_value=_FAKE_USAGE),
     ):
         import ai.llm_proxy as m
         m._write_llm_status()
@@ -49,7 +49,7 @@ class TestNonStreamingChatCompletions:
 
         from starlette.testclient import TestClient
 
-        with patch("ai.router.route_chat", return_value="mocked response") as mock_chat:
+        with patch("ai.llm_proxy.route_chat", return_value="mocked response") as mock_chat:
             from ai.llm_proxy import create_app
             client = TestClient(create_app())
             body = {"model": model, "messages": messages, "stream": stream}

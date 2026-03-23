@@ -393,7 +393,7 @@ echo -e "     ${DIM}sudo systemctl restart systemd-resolved${RESET}"
 echo ""
 
 echo -e "  ${BWHITE}9. Fix external SSD ownership:${RESET}"
-echo -e "     ${DIM}sudo chown lch:lch /run/media/lch/SteamLibrary/${RESET}"
+echo -e "     ${DIM}sudo chown lch:lch /var/mnt/ext-ssd/${RESET}"
 echo ""
 
 echo -e "  ${BWHITE}10. Reinstall Flatpaks:${RESET}"

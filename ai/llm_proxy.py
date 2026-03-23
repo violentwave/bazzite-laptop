@@ -25,6 +25,19 @@ from pathlib import Path
 
 logger = logging.getLogger("ai.llm_proxy")
 
+# Module-level aliases — populated lazily on first use.
+# Defined here so patch("ai.llm_proxy.route_chat") works in tests.
+try:
+    from ai.rag.memory import retrieve_relevant_context, store_interaction
+    from ai.router import get_health_snapshot, get_usage_stats, route_chat, route_query_stream
+except Exception:  # noqa: BLE001
+    route_chat = None  # type: ignore[assignment]
+    route_query_stream = None  # type: ignore[assignment]
+    get_health_snapshot = None  # type: ignore[assignment]
+    get_usage_stats = None  # type: ignore[assignment]
+    retrieve_relevant_context = None  # type: ignore[assignment]
+    store_interaction = None  # type: ignore[assignment]
+
 DEFAULT_PORT = int(os.environ.get("LLM_PROXY_PORT", "8767"))
 _LLM_STATUS_FILE = Path.home() / "security" / "llm-status.json"
 _STATUS_WRITE_INTERVAL_S = 300  # 5 minutes
@@ -35,7 +48,6 @@ def _write_llm_status() -> None:
     import yaml  # noqa: PLC0415
 
     from ai.config import LITELLM_CONFIG  # noqa: PLC0415
-    from ai.router import get_health_snapshot, get_usage_stats  # noqa: PLC0415
 
     try:
         with open(LITELLM_CONFIG) as f:
@@ -74,8 +86,6 @@ def _assert_localhost(bind: str) -> None:
 
 async def _stream_response(task_type: str, messages: list[dict]) -> AsyncGenerator[str, None]:
     """Stream from the router, yielding SSE-formatted chunks."""
-    from ai.router import route_query_stream  # noqa: PLC0415
-
     async for chunk in route_query_stream(task_type, messages):
         data = {
             "id": f"chatcmpl-{int(time.time())}",
@@ -146,8 +156,6 @@ def create_app():
         )
         if user_message and os.environ.get("ENABLE_CONVERSATION_MEMORY", "").lower() == "true":
             try:
-                from ai.rag.memory import retrieve_relevant_context  # noqa: PLC0415
-
                 contexts = retrieve_relevant_context(user_message)
                 if contexts:
                     context_text = (
@@ -173,15 +181,11 @@ def create_app():
 
         # Non-streaming — pass full messages to preserve multi-turn history
         try:
-            from ai.router import route_chat  # noqa: PLC0415
-
             result = route_chat(task_type, messages)
 
             # Store interaction in conversation memory after successful response
             if user_message and os.environ.get("ENABLE_CONVERSATION_MEMORY", "").lower() == "true":
                 try:
-                    from ai.rag.memory import store_interaction  # noqa: PLC0415
-
                     store_interaction(user_message, result[:200], task_type)
                 except Exception as _mem_exc:  # noqa: BLE001
                     logger.debug("Memory storage skipped: %s", _mem_exc)

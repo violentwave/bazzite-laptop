@@ -4,10 +4,8 @@ Tests thermal protection state machine, config loading, and hardware interaction
 All subprocess calls (nvidia-smi, sensors) are mocked.
 """
 
-import signal
-import sys
-from pathlib import Path
-from unittest.mock import MagicMock, mock_open, patch
+import subprocess
+from unittest.mock import mock_open, patch
 
 import pytest
 

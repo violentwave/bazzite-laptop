@@ -75,7 +75,7 @@ readonly DEV_SDA="$_DEV_SDA"
 readonly SDA_LABEL="Internal SSD (${DEV_SDA:-not found} — SK hynix 256GB SATA)"
 
 # External NVMe: resolve from mount point to parent disk device for SMART checks
-_SDB_PART=$(findmnt -no SOURCE "${NVME_MOUNT:-/run/media/lch/SteamLibrary}" 2>/dev/null) || true
+_SDB_PART=$(findmnt -no SOURCE "${NVME_MOUNT:-/var/mnt/ext-ssd}" 2>/dev/null) || true
 _DEV_SDB=""
 if [[ -n "$_SDB_PART" ]]; then
     _SDB_PARENT=$(lsblk -no pkname "$_SDB_PART" 2>/dev/null | head -1)
