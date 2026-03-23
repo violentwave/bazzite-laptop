@@ -188,6 +188,20 @@ uv pip install -r requirements.txt  # Install/update deps
 
 ---
 
+## OpenCode (z.ai GLM-5)
+
+Secondary coding agent for audits, reviews, and small targeted edits.
+
+**Config:** `opencode.json` in project root (not in git)
+**Instructions:** `.opencode/AGENTS.md`
+**Shared context:** `.claude-flow/SHARED-CONTEXT.md` (read by both agents)
+**MCP access:** bazzite-tools via mcp-remote → 127.0.0.1:8766/mcp
+**LLM provider:** z.ai GLM-5 (direct, not through local proxy)
+
+OpenCode follows the same rules as Claude Code. It cannot run sudo, read .env files, or push to git. Use for read-heavy audits and small config fixes. Defer multi-file refactors to Claude Code.
+
+---
+
 ## NEVER Violate
 
 1. No local LLM generation models — Ollama `nomic-embed-text` is emergency embed fallback only (Gemini Embedding 001 is primary)
