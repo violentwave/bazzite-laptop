@@ -6,7 +6,7 @@
 **CPU**: Intel i7-7700HQ | **RAM**: 16GB | **Vulkan**: 1.4.341
 **NVIDIA Driver**: 580.95.05 | **CUDA**: 13.0
 **Internal storage**: 256GB SK hynix SSD (OS only, LUKS encrypted)
-**External storage**: 1.8TB SanDisk Extreme SSD at /run/media/lch/SteamLibrary (ext4)
+**External storage**: 1.8TB SanDisk Extreme SSD at /var/mnt/ext-ssd (ext4)
 **Displays**: Laptop 1920x1080 (eDP) + Vizio TV via HDMI (on NVIDIA GPU)
 
 ---

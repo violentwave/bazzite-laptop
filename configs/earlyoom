@@ -1,0 +1,1 @@
+EARLYOOM_ARGS="-m 4 -M 90 --avoid '^(plasmashell|kwin_wayland|systemd|dbus)$' --prefer '^(Web Content|python3|ollama|Steam)$' -n --notification"

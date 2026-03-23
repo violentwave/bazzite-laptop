@@ -1,0 +1,23 @@
+{
+  "strategies": {
+    "dedupe": { "enabled": true },
+    "supersedeWrites": { "enabled": true },
+    "summarizeLargeOutputs": {
+      "enabled": true,
+      "maxTokensBeforeSummary": 2000
+    }
+  },
+  "protectSystemMessages": true,
+  "protectedTools": [
+    "system.llm_status",
+    "security.status",
+    "system.key_status",
+    "system.mcp_manifest"
+  ],
+  "protectedFilePatterns": [
+    "**/ai/config/**",
+    "**/.env*",
+    "**/keys*",
+    "**/bazzite-ai-system-profile.md"
+  ]
+}

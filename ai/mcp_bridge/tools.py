@@ -98,8 +98,13 @@ def _load_allowlist() -> dict:
     global _allowlist  # noqa: PLW0603
     if _allowlist is not None:
         return _allowlist
-    with open(_ALLOWLIST_PATH) as f:
-        data = yaml.safe_load(f) or {}
+    try:
+        with open(_ALLOWLIST_PATH) as f:
+            data = yaml.safe_load(f) or {}
+    except FileNotFoundError as exc:
+        raise RuntimeError(f"allowlist not found: {_ALLOWLIST_PATH}") from exc
+    except yaml.YAMLError as exc:
+        raise RuntimeError(f"failed to parse allowlist: {exc}") from exc
     _allowlist = data.get("tools", {})
     return _allowlist
 
@@ -249,7 +254,9 @@ async def _execute_gpu_tool(tool_name: str) -> str:
     if tool_name == "system.gpu_health":
         # Decode throttle reason bitmask
         try:
-            throttle_val = int(throttle_hex, 16) if throttle_hex.startswith("0x") else int(throttle_hex)
+            throttle_val = (
+                int(throttle_hex, 16) if throttle_hex.startswith("0x") else int(throttle_hex)
+            )
         except ValueError:
             throttle_val = 0
 
@@ -261,7 +268,10 @@ async def _execute_gpu_tool(tool_name: str) -> str:
 
         # Warn if headroom is dangerously low
         if headroom_c <= _GPU_HEADROOM_WARN_C:
-            warn_msg = f"GPU headroom only {headroom_c}°C ({temp_c}°C / {_GPU_TEMP_THROTTLE_THRESHOLD}°C)"
+            warn_msg = (
+                f"GPU headroom only {headroom_c}°C "
+                f"({temp_c}°C / {_GPU_TEMP_THROTTLE_THRESHOLD}°C)"
+            )
             result["warning"] = warn_msg
             # Fire a desktop notification (best-effort, non-blocking)
             asyncio.ensure_future(_run_subprocess([

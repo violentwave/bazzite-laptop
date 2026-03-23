@@ -87,8 +87,9 @@ def format_single_row(report: ThreatReport) -> str:
         detection = "N/A"
         detection_style = f"{_CELL_STYLE};color:#64748b"
 
-    # Family column
-    family = html.escape(report.family) if report.family else "Unknown"
+    # Family column — escape HTML then encode '=' to neutralise attribute injection
+    # (e.g. onerror=… survives plain html.escape because '=' is not a special char)
+    family = html.escape(report.family).replace("=", "&#61;") if report.family else "Unknown"
 
     # Risk badge
     risk = report.risk_level if report.has_data else "unknown"

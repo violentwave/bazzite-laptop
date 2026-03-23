@@ -36,6 +36,7 @@
 **Root cause**: Drive root owned by root:root, Steam couldn't write to it
 **Fix**: `sudo chown lch:lch /run/media/lch/SteamLibrary/`
 **Note**: The `lost+found` directory on the drive is normal ext4 — not malware.
+**Update (Phase 7):** SSD now persistently mounted at /var/mnt/ext-ssd via fstab. The udisks2/chown workaround is no longer needed.
 
 ### 7. vm.swappiness set to wrong value
 **Problem**: We lowered swappiness from 180 to 10 for "gaming optimization"

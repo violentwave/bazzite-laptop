@@ -1,0 +1,8 @@
+{
+  "patterns": [
+    { "name": "API_KEY", "regex": "[A-Za-z0-9_\\-]{32,}" },
+    { "name": "BEARER_TOKEN", "regex": "Bearer [A-Za-z0-9._\\-]+" },
+    { "name": "HOME_PATH", "regex": "/home/lch" }
+  ],
+  "deterministic": true
+}

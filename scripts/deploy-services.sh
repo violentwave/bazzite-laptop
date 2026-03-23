@@ -260,6 +260,87 @@ for timer_name in release-watch fedora-updates; do
 done
 
 # ══════════════════════════════════════════════════════════════════
+# 4d. Kernel / boot-time tune services
+# ══════════════════════════════════════════════════════════════════
+echo ""
+echo "=== Deploying Kernel / Boot-Time Tune Services ==="
+
+# btrfs-readahead-tune (oneshot, no timer)
+if [[ -f "$SRC/btrfs-readahead-tune.service" ]]; then
+    sudo install -m 644 "$SRC/btrfs-readahead-tune.service" /etc/systemd/system/btrfs-readahead-tune.service
+    sudo restorecon -v /etc/systemd/system/btrfs-readahead-tune.service
+    echo "  Installed btrfs-readahead-tune.service to /etc/systemd/system/"
+fi
+
+if [[ -f "$SRC/btrfs-readahead-tune.service" ]]; then
+    sudo systemctl daemon-reload
+    sudo systemctl enable btrfs-readahead-tune.service 2>/dev/null || \
+        echo "  WARNING: btrfs-readahead-tune.service enable failed"
+    echo "  Enabled btrfs-readahead-tune.service"
+fi
+
+# nvidia-persistence
+if [[ -f "$SRC/nvidia-persistence.service" ]]; then
+    sudo install -m 644 "$SRC/nvidia-persistence.service" /etc/systemd/system/nvidia-persistence.service
+    sudo restorecon -v /etc/systemd/system/nvidia-persistence.service
+    echo "  Installed nvidia-persistence.service to /etc/systemd/system/"
+fi
+
+if [[ -f "$SRC/nvidia-persistence.service" ]]; then
+    sudo systemctl daemon-reload
+    sudo systemctl enable --now nvidia-persistence.service 2>/dev/null || \
+        echo "  WARNING: nvidia-persistence.service enable/start failed"
+    echo "  Enabled nvidia-persistence.service"
+fi
+
+# ══════════════════════════════════════════════════════════════════
+# 4e. Config file deployments (sysctl, sysconfig, oomd, X11)
+# ══════════════════════════════════════════════════════════════════
+echo ""
+echo "=== Deploying Config Files ==="
+
+REPO_CONFIGS="$(cd "$(dirname "$0")/.." && pwd)/configs"
+
+# 20-nvidia-coolbits.conf → /etc/X11/xorg.conf.d/
+if [[ -f "$REPO_CONFIGS/20-nvidia-coolbits.conf" ]]; then
+    sudo mkdir -p /etc/X11/xorg.conf.d
+    sudo install -m 644 "$REPO_CONFIGS/20-nvidia-coolbits.conf" /etc/X11/xorg.conf.d/20-nvidia-coolbits.conf
+    echo "  Installed 20-nvidia-coolbits.conf to /etc/X11/xorg.conf.d/"
+fi
+
+# 90-bazzite-vm.conf → /etc/sysctl.d/
+if [[ -f "$REPO_CONFIGS/90-bazzite-vm.conf" ]]; then
+    sudo mkdir -p /etc/sysctl.d
+    sudo install -m 644 "$REPO_CONFIGS/90-bazzite-vm.conf" /etc/sysctl.d/90-bazzite-vm.conf
+    echo "  Installed 90-bazzite-vm.conf to /etc/sysctl.d/"
+fi
+
+# earlyoom → /etc/sysconfig/earlyoom
+if [[ -f "$REPO_CONFIGS/earlyoom" ]]; then
+    sudo mkdir -p /etc/sysconfig
+    sudo install -m 644 "$REPO_CONFIGS/earlyoom" /etc/sysconfig/earlyoom
+    echo "  Installed earlyoom to /etc/sysconfig/earlyoom"
+fi
+
+# 90-bazzite-oomd.conf → /etc/systemd/oomd.conf.d/
+if [[ -f "$REPO_CONFIGS/90-bazzite-oomd.conf" ]]; then
+    sudo mkdir -p /etc/systemd/oomd.conf.d
+    sudo install -m 644 "$REPO_CONFIGS/90-bazzite-oomd.conf" /etc/systemd/oomd.conf.d/90-bazzite-oomd.conf
+    echo "  Installed 90-bazzite-oomd.conf to /etc/systemd/oomd.conf.d/"
+fi
+
+# 90-oomd-protect-user-slice.conf → /etc/systemd/system/user.slice.d/
+if [[ -f "$REPO_CONFIGS/90-oomd-protect-user-slice.conf" ]]; then
+    sudo mkdir -p /etc/systemd/system/user.slice.d
+    sudo install -m 644 "$REPO_CONFIGS/90-oomd-protect-user-slice.conf" \
+        /etc/systemd/system/user.slice.d/90-oomd-protect-user-slice.conf
+    sudo restorecon -v /etc/systemd/system/user.slice.d/90-oomd-protect-user-slice.conf
+    echo "  Installed 90-oomd-protect-user-slice.conf to /etc/systemd/system/user.slice.d/"
+fi
+
+sudo systemctl daemon-reload
+
+# ══════════════════════════════════════════════════════════════════
 # 5. Status checks
 # ══════════════════════════════════════════════════════════════════
 sleep 3
@@ -300,6 +381,10 @@ printf "  %-35s %s\n" "release-watch.timer" \
     "$(sudo systemctl is-enabled release-watch.timer 2>/dev/null || echo 'not installed')"
 printf "  %-35s %s\n" "fedora-updates.timer" \
     "$(sudo systemctl is-enabled fedora-updates.timer 2>/dev/null || echo 'not installed')"
+printf "  %-35s %s\n" "btrfs-readahead-tune.service" \
+    "$(sudo systemctl is-enabled btrfs-readahead-tune.service 2>/dev/null || echo 'not installed')"
+printf "  %-35s %s\n" "nvidia-persistence.service" \
+    "$(sudo systemctl is-enabled nvidia-persistence.service 2>/dev/null || echo 'not installed')"
 
 # ══════════════════════════════════════════════════════════════════
 # 6. Health checks (port listening + HTTP where available)
@@ -315,6 +400,6 @@ ss -tln | grep -q ':8766 ' \
     || echo "  MCP bridge (8766): not responding"
 
 echo ""
-echo "Done. User services auto-start on login. All 12 timers deployed."
+echo "Done. User services auto-start on login. All 12 timers + 2 system services + 5 config files deployed."
 echo "  Daily: health 8:00, perf 8:15, audit 8:30, rag 9:00, knowledge 9:15, release 9:45, clamav-quick 12:00"
 echo "  Weekly: clamav-healthcheck Wed 14:00, clamav-deep Fri 23:00, cve-scanner Sat 00:00, log-archive Sun 01:00, fedora-updates Mon 03:00"

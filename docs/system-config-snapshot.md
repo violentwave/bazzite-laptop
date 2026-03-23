@@ -76,13 +76,13 @@ None installed.
 | /dev/sda1 | 600M | /boot/efi | EFI | Boot |
 | /dev/sda2 | 1G | /boot | ext4 | Kernel/initramfs |
 | /dev/sda3 | 236.9G | / (LUKS) | btrfs | OS — LUKS encrypted |
-| /dev/sdb1 | 1.8T | /run/media/lch/SteamLibrary | ext4 | Steam library (external SSD) |
+| /dev/sdb1 | 1.8T | /var/mnt/ext-ssd | ext4 | Steam library (external SSD) |
 | /dev/zram0 | 7.7G | [SWAP] | zstd compressed | ZRAM swap |
 
 ### External SSD Mount Options
 ```
-/dev/sdb1 on /run/media/lch/SteamLibrary type ext4
-(rw,nosuid,nodev,relatime,seclabel,errors=remount-ro,stripe=256,uhelper=udisks2)
+/dev/sdb1 on /var/mnt/ext-ssd type ext4
+(rw,noatime,x-systemd.automount,x-systemd.idle-timeout=600,nofail)
 ```
 
 ### Active Systemd Timers

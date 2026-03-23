@@ -1,0 +1,11 @@
+[Unit]
+Description=Reduce btrfs readahead to prevent D-state under memory pressure
+After=local-fs.target
+
+[Service]
+Type=oneshot
+ExecStart=/bin/bash -c 'echo 128 > /sys/fs/btrfs/$(findmnt -n -o UUID /)/bdi/read_ahead_kb'
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
