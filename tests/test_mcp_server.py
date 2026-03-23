@@ -100,8 +100,8 @@ class TestToolRegistration:
             from ai.mcp_bridge.server import create_app
 
             app = create_app()
-            # 41 allowlisted tools + 1 health tool registered via mcp.tool()
-            assert len(app._tool_manager._tools) == 42
+            # 43 allowlisted tools + 1 health tool registered via mcp.tool()
+            assert len(app._tool_manager._tools) == 44
 
 
 # ---------------------------------------------------------------------------
@@ -149,7 +149,7 @@ class TestHealthEndpoint:
 
             result = await health_check()
             assert result["status"] == "ok"
-            assert result["tools"] == 41
+            assert result["tools"] == 43
 
 
 # ---------------------------------------------------------------------------

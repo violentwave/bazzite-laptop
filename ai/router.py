@@ -30,8 +30,18 @@ from ai.rate_limiter import RateLimiter
 
 logger = logging.getLogger(APP_NAME)
 
-# Disk-based exact-match cache (5-min TTL — prevents stale system data)
-_CACHE_DIR = Path.home() / "security" / "llm-cache"
+# Per-task-type cache TTLs (seconds). External SSD reduces internal SSD wear.
+_CACHE_TTL: dict[str, int] = {
+    "fast": 300,       # 5 min — health checks, quick lookups
+    "code": 3600,      # 1 hour — code generation
+    "reason": 1800,    # 30 min — analysis
+    "batch": 86400,    # 24 hours — bulk operations
+}
+
+# Prefer external SSD; fall back to ~/security/llm-cache; then tmpdir.
+_EXT_SSD_CACHE = Path("/var/mnt/ext-ssd/bazzite-ai/llm-cache")
+_INTERNAL_CACHE = Path.home() / "security" / "llm-cache"
+_CACHE_DIR = _EXT_SSD_CACHE if _EXT_SSD_CACHE.parent.exists() else _INTERNAL_CACHE
 try:
     _CACHE_DIR.mkdir(parents=True, exist_ok=True)
 except OSError:
@@ -356,6 +366,12 @@ def route_query(task_type: str, prompt: str, **kwargs: object) -> str:
     if not providers:
         raise RuntimeError(f"No available providers for task_type '{task_type}'")
 
+    # Inject per-task-type TTL for disk cache unless caller overrides
+    kwargs.setdefault("cache", {
+        "namespace": task_type,
+        "ttl": _CACHE_TTL.get(task_type, 300),
+    })
+
     last_error = None
     for provider in providers:
         try:
@@ -365,6 +381,71 @@ def route_query(task_type: str, prompt: str, **kwargs: object) -> str:
         except Exception as e:
             last_error = e
             logger.warning("Provider '%s' failed: %s", provider, e)
+            continue
+
+    raise RuntimeError(
+        f"LLM call failed for task_type '{task_type}': "
+        f"all providers exhausted. Last error: {last_error}"
+    ) from last_error
+
+
+def route_chat(task_type: str, messages: list[dict], **kwargs: object) -> str:
+    """Route a multi-turn conversation to the best available provider.
+
+    Unlike route_query(), this accepts the full messages array (including
+    system prompt, assistant turns, and conversation history) so multi-turn
+    context is preserved. Used by the non-streaming path of llm_proxy.py.
+
+    Args:
+        task_type: One of "fast", "reason", "batch", "code"
+        messages: Full litellm-format messages list
+        **kwargs: Additional LiteLLM parameters
+
+    Returns:
+        The LLM response text.
+
+    Raises:
+        ValueError: If task_type is not recognized or is "embed".
+        RuntimeError: If all providers are exhausted or rate-limited.
+    """
+    valid_chat_types = {"fast", "reason", "batch", "code"}
+    if task_type not in valid_chat_types:
+        raise ValueError(f"task_type must be one of {valid_chat_types}, got '{task_type}'")
+
+    config = _load_config()
+    _check_rate_limits(config, task_type)
+    providers = _get_provider_order(config, task_type)
+
+    if not providers:
+        raise RuntimeError(f"No available providers for task_type '{task_type}'")
+
+    # Inject per-task-type TTL for disk cache unless caller overrides
+    kwargs.setdefault("cache", {
+        "namespace": task_type,
+        "ttl": _CACHE_TTL.get(task_type, 300),
+    })
+
+    router = _get_router()
+    last_error = None
+    for provider in providers:
+        kwargs.setdefault("timeout", _get_timeout(task_type))
+        start = time.time()
+        try:
+            response = router.completion(
+                model=task_type,
+                messages=messages,
+                **kwargs,
+            )
+            latency_ms = (time.time() - start) * 1000
+            actual_provider = _extract_provider(getattr(response, "model", "") or provider)
+            _health_tracker.record_success(actual_provider, latency_ms)
+            _get_rate_limiter().record_call(actual_provider)
+            _increment_usage(task_type, response)
+            return response.choices[0].message.content
+        except Exception as e:
+            _health_tracker.record_failure(provider, "call failed")
+            last_error = e
+            logger.warning("Provider '%s' failed (chat): %s", provider, e)
             continue
 
     raise RuntimeError(

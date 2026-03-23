@@ -25,7 +25,7 @@ AI chat/voice assistant) as the primary interface.
     ┌─────▼──────┐        ┌──────▼──────────────┐
     │ LLM Proxy  │        │  MCP Bridge         │
     │ :8767      │        │  :8766 (FastMCP)    │
-    │ Starlette  │        │  41 tools           │
+    │ Starlette  │        │  43 tools           │
     └─────┬──────┘        └──────┬──────────────┘
           │                      │
     ┌─────▼──────┐        ┌──────▼──────────────┐
@@ -165,7 +165,7 @@ bash scripts/start-security-tray-qt.sh
 
 ---
 
-## 4. MCP Tools Reference (41 tools)
+## 4. MCP Tools Reference (43 tools)
 
 All tools are accessible through Newelle via the MCP bridge. They are read-only
 (no system mutations). Output is truncated to 4 KB and paths are redacted.
@@ -181,12 +181,14 @@ All tools are accessible through Newelle via the MCP bridge. They are read-only
 | `system.uptime`         | —      | System uptime and load average                     |
 | `system.service_status` | —      | Status of clamav-freshclam, system-health.timer, mcp-bridge, llm-proxy |
 | `system.llm_models`     | —      | Available modes (fast/reason/batch/code/embed), provider chains, proxy URL |
-| `system.mcp_manifest`   | —      | All 41 tools with descriptions and args (8 KB limit) |
+| `system.mcp_manifest`   | —      | All 43 tools with descriptions and args (8 KB limit) |
 | `system.llm_status`     | —      | Provider health scores, token usage, active models |
 | `system.key_status`     | —      | API key presence: "set" or "missing" per key (never values) |
 | `system.release_watch`  | —      | Upstream dependency release updates (GitHub Releases, GHSA) |
 | `system.fedora_updates` | —      | Fedora/Bazzite pending security and package updates (Bodhi) |
 | `system.pkg_intel`      | —      | Package advisories, provenance, version status (deps.dev) |
+| `system.gpu_perf`       | —      | GPU perf snapshot: temp, pstate, clocks, VRAM, throttle reasons, headroom |
+| `system.gpu_health`     | —      | GPU health diagnostic with throttle bit interpretation and thermal warning |
 
 ### security.* (12 tools)
 
@@ -914,8 +916,7 @@ bandit -r ai/ -c pyproject.toml           # Security scan
 
 ## 14. Resource Budget
 
-Gaming ALWAYS takes priority. The AI layer is designed to stay within a
-small resource envelope.
+The active workload takes priority. When gaming, AI services are throttled. When coding, AI gets normal priority. Resource control is managed via systemd slices and GameMode hooks. The AI layer is designed to stay within a small resource envelope.
 
 | Component                   | RAM     | VRAM   | When active          |
 |-----------------------------|---------|--------|----------------------|

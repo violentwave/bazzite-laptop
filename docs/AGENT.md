@@ -13,7 +13,7 @@ this codebase. See `docs/project-onboarding.md` for detailed constraints and
 Newelle (Flatpak GTK4)
   │
   ├── MCP tools ──► bazzite-mcp-bridge  127.0.0.1:8766  (FastMCP)
-  │                 ai/mcp_bridge/server.py — 41 tools
+  │                 ai/mcp_bridge/server.py — 43 tools
   │
   └── LLM chat  ──► bazzite-llm-proxy   127.0.0.1:8767  (OpenAI-compat)
                     ai/llm_proxy.py — 6 cloud providers

@@ -35,7 +35,7 @@ These are the packages actively used by `ai/`, `tray/`, and `tests/`.
 | socksio | 1.0.0 | SOCKS proxy support for httpx in bubblewrap |
 | requests | 2.32.5 | `ai/threat_intel/` — threat intel API calls |
 | openai | 2.28.0 | litellm OpenAI-compatible provider support |
-| ollama | 0.6.1 | `ai/rag/` — local embedding calls |
+| ollama | 0.6.1 | `ai/rag/` — emergency local embedding fallback only |
 | boto3 | 1.38.0 | `scripts/archive-logs-r2.py` — Cloudflare R2 log archiving |
 | cohere | 5.15.0 | `ai/rag/embedder.py` — Cohere rerank for RAG QA |
 | pillow | 12.1.1 | Image processing utilities |
@@ -97,14 +97,14 @@ All providers are free-tier unless noted. Keys stored in `~/.config/bazzite-ai/k
 | OpenRouter | `OPENROUTER_API_KEY` | fast, reason, batch, code | Routes to Llama and Claude |
 | z.ai | `ZAI_API_KEY` | fast, reason, code | OpenAI-compatible at `api.z.ai`; paid |
 | Cerebras | `CEREBRAS_API_KEY` | fast, batch | Fallback; free tier |
-| Ollama (local) | — | embed | `nomic-embed-text` (~300 MB VRAM); no API key |
+| Ollama (local) | — | embed | `nomic-embed-text`; emergency fallback only, no VRAM used in normal operation |
 
 **Provider chain order (health-weighted at runtime):**
 - `fast`: Gemini → Groq → Mistral → OpenRouter → z.ai → Cerebras
 - `reason`: Gemini → Groq → Mistral → OpenRouter(Claude) → z.ai
 - `batch`: Gemini → Groq → Mistral → OpenRouter → Cerebras
 - `code`: Gemini → Groq → Mistral(Codestral) → OpenRouter(Claude) → z.ai
-- `embed`: Ollama → Mistral
+- `embed`: Gemini Embedding 001 (primary, free) → Cohere embed-english-v3.0 (fallback) → Ollama nomic-embed-text (emergency local)
 
 ---
 

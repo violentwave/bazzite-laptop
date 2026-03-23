@@ -86,3 +86,5 @@ vectors.db
 /config/
 /src/
 /examples/
+node_modules/
+.local/share/opencode/sessions/

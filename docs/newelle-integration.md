@@ -31,7 +31,7 @@ only to 127.0.0.1. They never touch 0.0.0.0 and they never share a process.
 
 ### What it does
 
-Exposes **41 tools + 1 health endpoint** to Newelle via the Model Context
+Exposes **43 tools + 1 health endpoint** to Newelle via the Model Context
 Protocol. Newelle can call any tool by name; the bridge validates, rate-limits,
 and dispatches each call.
 
@@ -206,12 +206,13 @@ requests. Disable if Newelle's built-in semantic memory covers this need.
 
 | Provider | Endpoint | Model | Dimension | When used |
 |----------|----------|-------|-----------|-----------|
-| Ollama (primary) | `http://127.0.0.1:11434` | `nomic-embed-text` | 768 | Ollama running |
-| Cohere (fallback) | cloud | `embed-english-v3.0` | 1024 | Ollama down + key set |
+| Gemini (primary) | cloud | `gemini-embedding-001` | 768 | Default — free 10M TPM |
+| Cohere (fallback) | cloud | `embed-english-v3.0` | 768 | Gemini down/rate-limited |
+| Ollama (emergency) | `http://127.0.0.1:11434` | `nomic-embed-text` | 768 | Both cloud providers fail |
 
 The provider is selected once per ingestion run (`select_provider()`) and
-locked for the whole batch to avoid dimension mismatches. Cohere 1024-dim
-vectors are rejected by `store.add_doc_chunks()` (enforces EMBEDDING_DIM=768).
+locked for the whole batch to avoid dimension mismatches. Gemini requests
+768-dim via Matryoshka — you MUST pass `dimensions=768` explicitly (default is 3072).
 
 ### Document ingestion
 

@@ -314,3 +314,15 @@ tools:
     module: ai.system.pkg_intel
     function: mcp_handler
     args: null
+
+  system.gpu_perf:
+    description: "NVIDIA GPU perf snapshot: temp, pstate, clocks, VRAM, throttle reasons, headroom"
+    source: python
+    module: "ai.mcp_bridge.tools"
+    args: null
+
+  system.gpu_health:
+    description: "NVIDIA GPU health diagnostic with throttle bit interpretation and trend logging"
+    source: python
+    module: "ai.mcp_bridge.tools"
+    args: null

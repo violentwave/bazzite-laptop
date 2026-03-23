@@ -1,6 +1,6 @@
 """FastMCP server for the Newelle MCP bridge.
 
-Exposes 41 tools + 1 health endpoint on localhost.
+Exposes 43 tools + 1 health endpoint on localhost.
 NEVER bind to 0.0.0.0. NEVER import ai.router (it loads all keys unscoped).
 """
 
@@ -16,7 +16,7 @@ DEFAULT_BIND = "127.0.0.1"
 DEFAULT_PORT = int(__import__("os").environ.get("MCP_BRIDGE_PORT", "8766"))
 
 # Number of tools in the allowlist (excludes health endpoint itself)
-_TOOL_COUNT = 41
+_TOOL_COUNT = 43
 
 
 def _assert_localhost(bind: str) -> None:

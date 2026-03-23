@@ -7,6 +7,53 @@ Bazzite security/gaming system.
 
 ---
 
+## Phase 7 — Stabilization, OpenCode Integration, GPU Optimization
+
+**Phase 7A — Emergency Stabilization:**
+- Added systemd unit files for memory freeze prevention: `btrfs-readahead-tune.service`,
+  `configs/earlyoom`, `configs/90-bazzite-oomd.conf`, `configs/90-oomd-protect-user-slice.conf`
+- Added `configs/90-bazzite-vm.conf` to reduce dirty_ratio from 20% to 10%
+- Added `configs/kwin-nvidia.sh` to mitigate KDE/NVIDIA fd-leak (NVIDIA bug 5556719)
+- Capped `bazzite-llm-proxy.service` and `bazzite-mcp-bridge.service` at MemoryMax=150M
+- Updated external SSD path from `/run/media/lch/SteamLibrary` to `/var/mnt/ext-ssd`
+
+**Phase 7A.3 — Cloud Embeddings Migration:**
+- Rewrote `ai/rag/embedder.py`: Gemini Embedding 001 primary → Cohere fallback → Ollama emergency
+- Gemini Embedding 001 (768-dim Matryoshka, free 10M TPM) — permanently frees ~300MB VRAM
+- Added `gemini_embed` rate limit config to `configs/ai-rate-limits.json` (1500 rpm, 10K rpd, 10M tpm)
+- Added `scripts/migrate-embeddings.sh` for one-time re-ingestion of all LanceDB tables
+- Ollama `keep_alive=60` added — model unloads after 60s idle (emergency fallback only)
+
+**Phase 7A.4 — Active Task Priority:**
+- Updated "Gaming ALWAYS takes priority" to "active workload takes priority" in all docs
+- Resource control now managed via systemd slices and GameMode hooks (Phase B manual step)
+
+**Phase 7B.1 — LLM Proxy Multi-Turn Fix:**
+- Added `route_chat(task_type, messages)` to `ai/router.py` — passes full message array
+- Fixed non-streaming path in `ai/llm_proxy.py` to use `route_chat` (was sending only last message)
+
+**Phase 7B.2-3 — OpenCode Integration:**
+- Created `opencode.json` pointing at local LLM proxy (http://127.0.0.1:8767/v1, streaming:false)
+- Added `scripts/mcp-stdio-bridge.sh` — stdio-to-HTTP shim for OpenCode → bazzite MCP bridge
+- Created `.opencode/plugins/guard-destructive.js` — blocks rm -rf, git reset --hard, systemctl, rpm-ostree
+- Updated `.opencode/dcp.json` with plan strategy settings and protectedSystemMessages:true
+- Updated `.opencode/vibeguard.json` with clean pattern names (deterministic:true)
+
+**Phase 7B.4 — LiteLLM Disk Cache:**
+- Extended `ai/router.py` disk cache: prefer `/var/mnt/ext-ssd/bazzite-ai/llm-cache` over internal SSD
+- Added per-task-type TTL: fast=5m, reason=30m, code=1h, batch=24h
+
+**Phase 7B.5 — RuFlo Sidecar:**
+- Created `configs/ruflo-sidecar.json` for manual dev session configuration
+- Added RuFlo MCP entry to `opencode.json` (on-demand only, never auto-start via systemd)
+
+**Phase 7C.2 — GPU Health MCP Tools (43 tools total):**
+- Added `system.gpu_perf` — GPU perf snapshot via nvidia-smi
+- Added `system.gpu_health` — throttle bit decoding + thermal headroom warning (notify-send at 8°C)
+- Updated MCP bridge tool count to 43 in server.py, all tests, all docs
+
+---
+
 ## Phase 6 Amendment — Package Intelligence + Release Watching + Fedora Updates
 
 **Modules added:**

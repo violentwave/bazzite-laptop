@@ -50,6 +50,8 @@ Full routing table:
 | User intent                                    | Call this tool                |
 |------------------------------------------------|-------------------------------|
 | GPU info, VRAM, temperature, clock speed       | system.gpu_status             |
+| GPU perf snapshot: temp, pstate, clocks, VRAM  | system.gpu_perf               |
+| GPU health diagnostic with throttle analysis   | system.gpu_health             |
 | CPU temperature, thermal sensors               | system.cpu_temps              |
 | Disk / storage usage                           | system.disk_usage             |
 | RAM / memory usage                             | system.memory_usage           |

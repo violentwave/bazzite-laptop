@@ -4,13 +4,13 @@
 - Machine: Acer Predator G3-571, Bazzite 43 / KDE Plasma 6 / Wayland
 - CPU: Intel i7-7700HQ (4c/8t), RAM: 16GB + ZRAM 7.7GB (zstd, swappiness=180)
 - GPU: NVIDIA GTX 1060 Mobile 6GB (gaming/Wayland) + Intel HD 630 (hybrid mode)
-- Storage: 256GB internal (LUKS/btrfs) + 1.8TB external SSD (/run/media/lch/SteamLibrary)
+- Storage: 256GB internal (LUKS/btrfs) + 1.8TB external SSD (/var/mnt/ext-ssd)
 - User: lch
 
 ## VRAM Budget — HARD LIMITS
 - Total VRAM: 6GB — gaming workloads claim 5.7GB minimum
-- AI overhead budget: 300MB VRAM MAX
-- ONLY local model allowed: nomic-embed-text (300MB) via Ollama for embeddings
+- AI overhead budget: 0 VRAM (cloud embeddings — Gemini Embedding 001 is primary)
+- Ollama nomic-embed-text is emergency local fallback only — do NOT load it by default
 - NEVER suggest local LLM generation (no llama.cpp, no text-generation-webui, no Ollama gen)
 
 ## Security Rules (Non-Negotiable)
@@ -34,10 +34,12 @@
 
 ## Tooling Stack
 - LLM Proxy: 127.0.0.1:8767 (OpenAI-compatible, LiteLLM V2 router)
-- MCP Bridge: 127.0.0.1:8766 (FastMCP, 41 tools, allowlist-based)
-- Ollama: 127.0.0.1:11434 (embeddings only — nomic-embed-text)
+- MCP Bridge: 127.0.0.1:8766 (FastMCP, 43 tools, allowlist-based)
+- OpenCode: on-demand CLI pointing at LLM proxy (opencode.json)
+- Ollama: 127.0.0.1:11434 (emergency embed fallback only — nomic-embed-text)
 - Providers: Gemini, Groq, Mistral, OpenRouter, z.ai, Cerebras (health-weighted)
-- Task types: fast, reason, batch, code (→ z.ai GLM), embed (→ Ollama/Mistral)
+- Task types: fast, reason, batch, code (→ z.ai GLM), embed (→ Gemini Embedding 001)
+- Resource control: active workload takes priority (systemd slices + GameMode hooks)
 
 ## Two-Phase Workflow
 - Phase A: Agent edits files, runs pytest/ruff/bandit in .venv (no root needed)

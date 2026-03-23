@@ -200,7 +200,7 @@ Claude-flow (`npx claude-flow`) is available for manual dev sessions but does no
 - `curl`, `wget`, `brew install` (no sudo)
 - `uv venv`, `uv pip install`, `source .venv/bin/activate`
 - `gpg`, `sops --encrypt`, `sops --decrypt`
-- `ollama pull nomic-embed-text`, `ollama run nomic-embed-text`
+- `ollama pull nomic-embed-text` (emergency fallback only — Gemini Embedding 001 is primary)
 - `python -m ai.threat_intel.lookup`, `python -m ai.rag.query`, etc.
 
 **Two-phase workflow (only for system-level changes):**
@@ -433,4 +433,4 @@ These components were evaluated and removed:
 | threat-intel.py | ~30MB | 0 | Per-scan only |
 | **Total AI overhead** | **~320MB** | **~300MB** | **Services + burst** |
 
-Gaming ALWAYS takes priority. Ollama loads nomic-embed-text, generates embeddings, then the model can be unloaded.
+The active workload takes priority. When gaming, AI services are throttled. When coding, AI gets normal priority. Resource control is managed via systemd slices and GameMode hooks.

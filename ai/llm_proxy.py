@@ -171,12 +171,11 @@ def create_app():
                 headers={"Cache-Control": "no-cache"},
             )
 
-        # Non-streaming
+        # Non-streaming — pass full messages to preserve multi-turn history
         try:
-            from ai.router import route_query  # noqa: PLC0415
+            from ai.router import route_chat  # noqa: PLC0415
 
-            prompt = messages[-1]["content"] if messages else ""
-            result = route_query(task_type, prompt)
+            result = route_chat(task_type, messages)
 
             # Store interaction in conversation memory after successful response
             if user_message and os.environ.get("ENABLE_CONVERSATION_MEMORY", "").lower() == "true":

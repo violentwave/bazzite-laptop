@@ -11,6 +11,13 @@ ExecStart=/var/home/lch/projects/bazzite-laptop/.venv/bin/python -m ai.llm_proxy
 Restart=on-failure
 RestartSec=5
 
+# Resource limits — prevent memory leaks from freezing the system
+MemoryAccounting=yes
+MemoryHigh=80M
+MemoryMax=150M
+CPUWeight=80
+TasksMax=32
+
 # Security hardening
 NoNewPrivileges=yes
 ProtectSystem=strict

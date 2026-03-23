@@ -179,6 +179,100 @@ async def _run_subprocess(command: list[str]) -> str:
             return "[Tool timed out]"
 
 
+_GPU_THROTTLE_BITS: dict[int, str] = {
+    0x02: "SW_POWER_CAP",
+    0x08: "HW_SLOWDOWN",
+    0x20: "HW_THERMAL",
+    0x40: "HW_POWER_BRAKE",
+    0x80: "SYNC_BOOST",
+    0x100: "SW_THERMAL",
+}
+_GPU_TEMP_THROTTLE_THRESHOLD = 83  # °C — GTX 1060 thermal throttle point
+_GPU_HEADROOM_WARN_C = 8           # °C below threshold → send warning
+
+
+async def _execute_gpu_tool(tool_name: str) -> str:
+    """Query nvidia-smi for GPU performance and health data."""
+    # Query all needed fields in one nvidia-smi call
+    fields = (
+        "temperature.gpu,"
+        "pstate,"
+        "clocks.gr,"
+        "clocks.mem,"
+        "power.draw,"
+        "memory.used,"
+        "memory.free,"
+        "memory.total,"
+        "fan.speed,"
+        "clocks_throttle_reasons.active"
+    )
+    raw = await _run_subprocess([
+        "nvidia-smi",
+        f"--query-gpu={fields}",
+        "--format=csv,noheader,nounits",
+    ])
+
+    if raw in ("[Command not found]", "[Tool timed out]"):
+        return json.dumps({"error": "nvidia-smi not available"})
+
+    parts = [p.strip() for p in raw.strip().split(",")]
+    if len(parts) < 10:
+        return json.dumps({"error": f"Unexpected nvidia-smi output: {raw!r}"})
+
+    try:
+        temp_c = int(parts[0])
+        pstate = parts[1]
+        clock_gr = parts[2]
+        clock_mem = parts[3]
+        power_w = parts[4]
+        vram_used = parts[5]
+        vram_free = parts[6]
+        vram_total = parts[7]
+        fan_pct = parts[8]
+        throttle_hex = parts[9].strip()
+    except (ValueError, IndexError) as e:
+        return json.dumps({"error": f"Parse error: {e}", "raw": raw})
+
+    headroom_c = _GPU_TEMP_THROTTLE_THRESHOLD - temp_c
+
+    result: dict = {
+        "temperature_c": temp_c,
+        "pstate": pstate,
+        "clocks_mhz": {"graphics": clock_gr, "memory": clock_mem},
+        "power_draw_w": power_w,
+        "vram_mb": {"used": vram_used, "free": vram_free, "total": vram_total},
+        "fan_speed_pct": fan_pct,
+        "throttle_reasons_raw": throttle_hex,
+        "headroom_c": headroom_c,
+    }
+
+    if tool_name == "system.gpu_health":
+        # Decode throttle reason bitmask
+        try:
+            throttle_val = int(throttle_hex, 16) if throttle_hex.startswith("0x") else int(throttle_hex)
+        except ValueError:
+            throttle_val = 0
+
+        active_reasons = [
+            name for bit, name in _GPU_THROTTLE_BITS.items() if throttle_val & bit
+        ]
+        result["throttle_active"] = active_reasons
+        result["is_throttling"] = bool(active_reasons)
+
+        # Warn if headroom is dangerously low
+        if headroom_c <= _GPU_HEADROOM_WARN_C:
+            warn_msg = f"GPU headroom only {headroom_c}°C ({temp_c}°C / {_GPU_TEMP_THROTTLE_THRESHOLD}°C)"
+            result["warning"] = warn_msg
+            # Fire a desktop notification (best-effort, non-blocking)
+            asyncio.ensure_future(_run_subprocess([
+                "notify-send", "--urgency=critical",
+                "--icon=dialog-warning",
+                "GPU Thermal Warning", warn_msg,
+            ]))
+
+    return json.dumps(result, indent=2)
+
+
 async def execute_tool(tool_name: str, args: dict) -> str:
     """Execute a tool by name with validated arguments.
 
@@ -483,6 +577,12 @@ async def _execute_python_tool(tool_name: str, tool_def: dict, args: dict) -> st
 
             result = mcp_handler()
             return _truncate(json.dumps(result, indent=2))
+
+        elif tool_name == "system.gpu_perf":
+            return await _execute_gpu_tool(tool_name)
+
+        elif tool_name == "system.gpu_health":
+            return await _execute_gpu_tool(tool_name)
 
         elif tool_name == "security.run_ingest":
             proc = await asyncio.create_subprocess_exec(

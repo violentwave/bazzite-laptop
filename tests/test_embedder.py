@@ -75,7 +75,7 @@ class TestEmbedOllama:
         mock_ollama.embed.return_value = resp
         result = _embed_ollama(["hello"])
         assert result == [ZERO_VEC]
-        mock_ollama.embed.assert_called_once_with(model=OLLAMA_MODEL, input=["hello"])
+        mock_ollama.embed.assert_called_once_with(model=OLLAMA_MODEL, input=["hello"], keep_alive=60)
 
     @patch("ai.rag.embedder.ollama")
     def test_multiple_texts(self, mock_ollama):
@@ -157,22 +157,31 @@ class TestEmbedCohere:
 
 
 class TestEmbedTexts:
-    @patch("ai.rag.embedder._embed_ollama", return_value=[ZERO_VEC])
-    def test_ollama_primary_path(self, mock_ollama):
+    @patch("ai.rag.embedder._embed_gemini", return_value=[ZERO_VEC])
+    def test_gemini_primary_path(self, mock_gemini):
         result = embed_texts(["hello"])
         assert result == [ZERO_VEC]
-        mock_ollama.assert_called_once_with(["hello"])
+        mock_gemini.assert_called_once()
 
     @patch("ai.rag.embedder._embed_cohere", return_value=[ZERO_VEC])
-    @patch("ai.rag.embedder._embed_ollama", return_value=None)
-    def test_cohere_fallback(self, _mock_ollama, mock_cohere):
+    @patch("ai.rag.embedder._embed_gemini", return_value=None)
+    def test_cohere_fallback_when_gemini_fails(self, _mock_gemini, mock_cohere):
         result = embed_texts(["hello"])
         assert result == [ZERO_VEC]
         mock_cohere.assert_called_once()
 
+    @patch("ai.rag.embedder._embed_ollama", return_value=[ZERO_VEC])
     @patch("ai.rag.embedder._embed_cohere", return_value=None)
+    @patch("ai.rag.embedder._embed_gemini", return_value=None)
+    def test_ollama_emergency_when_both_cloud_fail(self, _mock_gemini, _mock_cohere, mock_ollama):
+        result = embed_texts(["hello"])
+        assert result == [ZERO_VEC]
+        mock_ollama.assert_called_once()
+
     @patch("ai.rag.embedder._embed_ollama", return_value=None)
-    def test_both_unavailable_raises(self, _mock_ollama, _mock_cohere):
+    @patch("ai.rag.embedder._embed_cohere", return_value=None)
+    @patch("ai.rag.embedder._embed_gemini", return_value=None)
+    def test_all_unavailable_raises(self, _mock_gemini, _mock_cohere, _mock_ollama):
         with pytest.raises(RuntimeError, match="All embedding providers unavailable"):
             embed_texts(["hello"])
 
@@ -180,8 +189,8 @@ class TestEmbedTexts:
         result = embed_texts([])
         assert result == []
 
-    @patch("ai.rag.embedder._embed_ollama", return_value=[ZERO_VEC])
-    def test_does_not_call_cohere_when_ollama_works(self, _mock_ollama):
+    @patch("ai.rag.embedder._embed_gemini", return_value=[ZERO_VEC])
+    def test_does_not_call_cohere_when_gemini_works(self, _mock_gemini):
         with patch("ai.rag.embedder._embed_cohere") as mock_cohere:
             embed_texts(["hello"])
             mock_cohere.assert_not_called()
@@ -191,8 +200,8 @@ class TestEmbedTexts:
 
 
 class TestEmbedSingle:
-    @patch("ai.rag.embedder._embed_ollama", return_value=[ZERO_VEC])
-    def test_returns_single_vector(self, _mock_ollama):
+    @patch("ai.rag.embedder._embed_gemini", return_value=[ZERO_VEC])
+    def test_returns_single_vector(self, _mock_gemini):
         result = embed_single("hello")
         assert result == ZERO_VEC
         assert isinstance(result, list)

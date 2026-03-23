@@ -33,7 +33,7 @@ CVE_REPORTS_DIR = SECURITY_DIR / "cve-reports"
 GAME_PROFILES = Path.home() / ".config" / "bazzite-ai" / "game-profiles.json"
 MANGOHUD_CONFIG = Path.home() / ".config" / "MangoHud" / "MangoHud.conf"
 MANGOHUD_LOG_DIR = Path.home() / ".local" / "share" / "MangoHud"
-STEAM_LIBRARY_DEFAULT = Path("/run/media/lch/SteamLibrary")
+STEAM_LIBRARY_DEFAULT = Path("/var/mnt/ext-ssd")
 
 # ── Key Scopes ──
 
