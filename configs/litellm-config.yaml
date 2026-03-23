@@ -7,7 +7,7 @@
 #   reason: Gemini → Groq → Mistral → OpenRouter(Claude) → z.ai
 #   batch:  Gemini → Groq → Mistral → OpenRouter → Cerebras
 #   code:   Gemini → Groq → Mistral(Codestral) → OpenRouter(Claude) → z.ai
-#   embed:  Ollama(nomic-embed-text) → Mistral
+#   embed:  Gemini → Mistral
 # Note: router.py handles health-weighted ordering; LiteLLM's
 # routing_strategy is not used for provider selection.
 # g4f is DISABLED — privacy risk, all providers below have free tiers.
@@ -118,11 +118,11 @@ model_list:
       api_key: os.environ/ZAI_API_KEY
       api_base: https://api.z.ai/api/coding/paas/v4
 
-  # ── EMBEDDINGS (local-first) ──
+  # ── EMBEDDINGS (Gemini primary, Mistral fallback) ──
   - model_name: "embed"
     litellm_params:
-      model: ollama/nomic-embed-text
-      api_base: http://localhost:11434
+      model: gemini/gemini-embedding-001
+      api_key: os.environ/GEMINI_API_KEY
   - model_name: "embed"
     litellm_params:
       model: mistral/mistral-embed

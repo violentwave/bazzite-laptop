@@ -88,3 +88,9 @@ vectors.db
 /examples/
 node_modules/
 .local/share/opencode/sessions/
+
+# Phase 7
+.opencode/
+opencode.json
+llm-cache/
+*.cache

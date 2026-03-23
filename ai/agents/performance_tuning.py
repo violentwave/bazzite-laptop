@@ -25,7 +25,7 @@ logger = logging.getLogger(APP_NAME)
 
 HEALTH_LOG_DIR = Path("/var/log/system-health")
 HEALTH_LATEST = HEALTH_LOG_DIR / "health-latest.log"
-STEAM_MOUNT = Path("/run/media/lch/SteamLibrary")
+STEAM_MOUNT = Path("/var/mnt/ext-ssd")
 
 PERF_REPORTS_DIR = SECURITY_DIR / "perf-reports"
 

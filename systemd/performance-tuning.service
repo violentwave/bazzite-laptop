@@ -20,7 +20,7 @@ SyslogIdentifier=performance-tuning
 # Security hardening
 NoNewPrivileges=yes
 PrivateTmp=yes
-ReadWritePaths=/home/lch/security /var/log/system-health /run/media/lch/SteamLibrary
+ReadWritePaths=/home/lch/security /var/log/system-health /var/mnt/ext-ssd
 
 [Install]
 WantedBy=multi-user.target

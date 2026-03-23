@@ -23,7 +23,7 @@ from ai.config import APP_NAME, SECURITY_DIR, VECTOR_DB_DIR
 
 logger = logging.getLogger(APP_NAME)
 
-STEAM_MOUNT = Path("/run/media/lch/SteamLibrary")
+STEAM_MOUNT = Path("/var/mnt/ext-ssd")
 STORAGE_REPORTS_DIR = SECURITY_DIR / "storage-reports"
 
 _DOC_STATE_FILE = VECTOR_DB_DIR / ".doc-ingest-state.json"

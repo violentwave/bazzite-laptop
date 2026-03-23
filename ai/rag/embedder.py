@@ -72,7 +72,7 @@ def _embed_gemini(
                 response = litellm.embedding(
                     model=GEMINI_EMBED_MODEL,
                     input=[text],
-                    dimensions=768,
+                    dimensions=EMBEDDING_DIM,
                     task_type=task_type,
                 )
                 vectors.append(response.data[0]["embedding"])
