@@ -1,0 +1,16 @@
+[Unit]
+Description=Weekly log archiving to Cloudflare R2
+Documentation=file:///home/lch/projects/bazzite-laptop/docs/ai-operational-playbook.md
+
+[Timer]
+# Weekly on Sunday at 01:00 — quiet period after all other timers
+OnCalendar=Sun *-*-* 01:00:00
+
+# If missed (laptop was off/sleeping), run on next boot
+Persistent=true
+
+# Jitter to avoid collision with other timers
+RandomizedDelaySec=300
+
+[Install]
+WantedBy=timers.target

@@ -1,0 +1,29 @@
+[Unit]
+Description=Archive old logs to Cloudflare R2
+After=network.target
+
+[Service]
+Type=oneshot
+User=lch
+WorkingDirectory=/home/lch/projects/bazzite-laptop
+ExecStart=/home/lch/projects/bazzite-laptop/.venv/bin/python scripts/archive-logs-r2.py
+
+# Timeout: compression + uploads should finish in under 10 minutes
+TimeoutStartSec=600
+
+# Low priority — run quietly during off-hours
+Nice=19
+IOSchedulingClass=idle
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=log-archive
+
+# Security hardening
+NoNewPrivileges=yes
+PrivateTmp=yes
+ReadWritePaths=/var/log/system-health /var/log/clamav-scans /home/lch/security
+
+[Install]
+WantedBy=multi-user.target

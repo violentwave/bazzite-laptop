@@ -1,0 +1,9 @@
+[Unit]
+Description=Background AI services slice (low priority)
+Before=slices.target
+
+[Slice]
+CPUWeight=200
+IOWeight=200
+MemoryHigh=1500M
+MemoryMax=2000M

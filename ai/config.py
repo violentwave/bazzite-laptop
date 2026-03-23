@@ -34,6 +34,7 @@ GAME_PROFILES = Path.home() / ".config" / "bazzite-ai" / "game-profiles.json"
 MANGOHUD_CONFIG = Path.home() / ".config" / "MangoHud" / "MangoHud.conf"
 MANGOHUD_LOG_DIR = Path.home() / ".local" / "share" / "MangoHud"
 STEAM_LIBRARY_DEFAULT = Path("/var/mnt/ext-ssd")
+LLM_CACHE_DIR = Path("/var/mnt/ext-ssd/bazzite-ai/llm-cache")
 
 # ── Key Scopes ──
 

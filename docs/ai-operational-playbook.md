@@ -10,11 +10,12 @@ modify the system safely.
 
 - Security dir (canonical root): `~/security/`
 - Status JSON (tray + MCP read this): `~/security/.status`
-- LanceDB root: `~/security/vector-db/`
+- LanceDB root: `~/security/vector-db/` (symlinked to `/var/mnt/ext-ssd/bazzite-ai/vector-db`)
   - Health: `health_records.lance`
   - Scans: `scan_records.lance`
   - Log intel: `security_logs.lance`
   - Threat intel: `threat_intel.lance`
+- LLM cache: `/var/mnt/ext-ssd/bazzite-ai/llm-cache`
 - Ingest state file: `~/security/vector-db/.ingest-state.json`
 - Health logs: `/var/log/system-health/`
   - Latest symlink: `/var/log/system-health/health-latest.log`
@@ -110,7 +111,7 @@ bash
 source .venv/bin/activate
 python3 -c "
 import lancedb
-db = lancedb.connect('/home/lch/security/vector-db')
+db = lancedb.connect(str(VECTOR_DB_DIR))  # from ai.config import VECTOR_DB_DIR
 for name in db.table_names():
     t = db.open_table(name)
     print(f'{name}: {t.count_rows()} rows')
@@ -177,6 +178,10 @@ project-onboarding.md
 project-instructions-updated.md
 
 newelle-integration.md
+
+opencode.json
+
+.opencode/
 
 Skim:
 

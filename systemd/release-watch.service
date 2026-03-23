@@ -1,0 +1,14 @@
+[Unit]
+Description=Bazzite AI — upstream release watch
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=lch
+ExecStart=/var/home/lch/projects/bazzite-laptop/.venv/bin/python -m ai.system.release_watch --check
+WorkingDirectory=/var/home/lch/projects/bazzite-laptop
+NoNewPrivileges=yes
+ProtectSystem=strict
+PrivateTmp=yes
+ReadWritePaths=%h/security

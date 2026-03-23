@@ -11,6 +11,8 @@ ExecStart=/var/home/lch/projects/bazzite-laptop/.venv/bin/python -m ai.mcp_bridg
 Restart=on-failure
 RestartSec=5
 
+Slice=ai.slice
+
 # Resource limits — prevent memory leaks from freezing the system
 MemoryAccounting=yes
 MemoryHigh=80M

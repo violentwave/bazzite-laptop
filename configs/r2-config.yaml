@@ -1,0 +1,20 @@
+r2:
+  endpoint: "https://027522e9508efa0726b1aef30178eebc.r2.cloudflarestorage.com"
+  bucket: "lch"
+  region: "auto"
+  storage_class: "STANDARD"
+archive:
+  local_log_dirs:
+    - "/var/log/system-health"
+    - "/var/log/clamav-scans"
+  report_dirs:
+    - "~/security/audit-reports"
+    - "~/security/perf-reports"
+    - "~/security/storage-reports"
+    - "~/security/code-reports"
+    - "~/security/cve-reports"
+  local_retention_days: 7
+  remote_retention_days: 365
+keys:
+  access_key_env: "R2_ACCESS_KEY_ID"
+  secret_key_env: "R2_SECRET_ACCESS_KEY"

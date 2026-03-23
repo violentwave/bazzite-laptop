@@ -43,6 +43,12 @@ Everything needed to fully restore the system from a fresh Bazzite install:
 | `health-deltas.dat` | `/var/log/system-health/health-deltas.dat` |
 | `system-health-units/` | `/etc/systemd/system/system-health.*` |
 | `health-desktop-entries/` | `~/.local/share/applications/security-health-*.desktop` |
+| `configs/90-bazzite-vm.conf` | `/etc/sysctl.d/` |
+| `configs/90-bazzite-oomd.conf` | `/etc/systemd/oomd.conf.d/` |
+| `configs/20-nvidia-coolbits.conf` | `/etc/X11/xorg.conf.d/` |
+| `configs/earlyoom` | `/etc/sysconfig/earlyoom` |
+| `systemd/btrfs-readahead-tune.service` | `/etc/systemd/system/` |
+| `nvidia-persistence.service` | `/etc/systemd/system/` |
 
 ### Scripts
 | Backup Name | Original Location |
@@ -61,6 +67,11 @@ Everything needed to fully restore the system from a fresh Bazzite install:
 | PySide6 tray | `tray/security_tray_qt.py`, `tray/dashboard_window.py`, `tray/state_machine.py` |
 | `autostart/` | `~/.config/autostart/bazzite-security-tray.desktop` |
 | `dot-status` | `~/security/.status` (tray status file) |
+| `opencode.json` | `~/projects/bazzite-laptop/` |
+| `.opencode/` | `~/projects/bazzite-laptop/.opencode/` |
+| `configs/kwin-nvidia.sh` | `~/.config/plasma-workspace/env/kwin-nvidia.sh` |
+| `llm-proxy-drop-in/` | `~/.config/systemd/user/bazzite-llm-proxy.service.d/` |
+| `mcp-bridge-drop-in/` | `~/.config/systemd/user/bazzite-mcp-bridge.service.d/` |
 
 ### Desktop Shortcuts
 | Backup Name | Original Location |

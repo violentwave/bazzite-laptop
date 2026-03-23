@@ -341,6 +341,19 @@ fi
 sudo systemctl daemon-reload
 
 # ══════════════════════════════════════════════════════════════════
+# 4f. AI slice (resource cgroup for AI services)
+# ══════════════════════════════════════════════════════════════════
+echo ""
+echo "=== Deploying AI Slice ==="
+
+if [[ -f "$SRC/ai.slice" ]]; then
+    sudo install -m 644 "$SRC/ai.slice" /etc/systemd/system/ai.slice
+    sudo restorecon -v /etc/systemd/system/ai.slice
+    echo "  Installed ai.slice to /etc/systemd/system/"
+    sudo systemctl daemon-reload
+fi
+
+# ══════════════════════════════════════════════════════════════════
 # 5. Status checks
 # ══════════════════════════════════════════════════════════════════
 sleep 3

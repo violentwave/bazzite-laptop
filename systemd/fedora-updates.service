@@ -1,0 +1,14 @@
+[Unit]
+Description=Bazzite AI — Fedora/Bodhi update awareness
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=lch
+ExecStart=/var/home/lch/projects/bazzite-laptop/.venv/bin/python -m ai.system.fedora_updates --check
+WorkingDirectory=/var/home/lch/projects/bazzite-laptop
+NoNewPrivileges=yes
+ProtectSystem=strict
+PrivateTmp=yes
+ReadWritePaths=%h/security
