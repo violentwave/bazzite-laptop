@@ -281,10 +281,10 @@ Cerebras (health-weighted, hot-swappable via `configs/litellm-config.yaml`)
 
 | Metric | Value |
 |--------|-------|
-| MCP tools | **41** (+ 1 built-in health endpoint) |
+| MCP tools | **43** (+ 1 built-in health endpoint) |
 | Systemd timers | **12** (8 original + cve-scanner, log-archive, release-watch, fedora-updates) |
 | Cloud providers | **6** (Gemini, Groq, Mistral, OpenRouter, z.ai, Cerebras) |
 | Threat intel APIs | **16** (VT, OTX, MalwareBazaar, AbuseIPDB, GreyNoise, Hybrid Analysis, NVD, OSV, CISA KEV, Shodan, URLhaus, ThreatFox, CIRCL, GitHub, Fedora Bodhi, deps.dev) |
-| Unit tests | **969** |
+| Unit tests | **998** |
 | AI layer LOC | **~8 000+** |
 | Python packages | **~34** in `.venv/` |

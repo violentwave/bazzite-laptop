@@ -71,7 +71,7 @@ tools. Three security gates run on every call:
 All output is truncated to 4 KB. Paths containing `/home/lch` are redacted
 to `[HOME]` before returning.
 
-### The 33 tools
+### The 43 tools
 
 | Tool | Type | What it returns |
 |------|------|----------------|
@@ -117,7 +117,7 @@ to `[HOME]` before returning.
 | `security.sandbox_submit` | python | Submit a quarantine file to Hybrid Analysis sandbox |
 | `security.threat_summary` | python | Compile threat summary from all agent/scan report directories |
 
-`health` (built-in) returns `{"status": "ok", "tools": 41}`.
+`health` (built-in) returns `{"status": "ok", "tools": 43}`.
 
 ---
 
@@ -178,7 +178,7 @@ Newelle  ──►  MCP bridge (tools.py)
                 ├── rag_query(question, use_llm=False)
                 │     │
                 │     ├── embed_single(question, input_type="search_query")
-                │     │     └── ollama.embed("nomic-embed-text", input=[question])
+                │     │     └── Gemini Embedding 001 (primary) → Cohere → Ollama (emergency)
                 │     │         → 768-dim float vector
                 │     │
                 │     ├── store.search_logs(vector, limit=5)
@@ -235,7 +235,7 @@ State file location: `~/security/vector-db/.doc-ingest-state.json`
 ai/
   mcp_bridge/
     server.py       FastMCP app, tool registration, localhost guard
-    tools.py        execute_tool(), all 41 dispatch handlers
+    tools.py        execute_tool(), all 43 dispatch handlers
   llm_proxy.py      Starlette app, /v1/chat/completions, model mapping, opt-in memory
   router.py         LiteLLM wrapper, health-weighted provider selection
   health.py         Provider health tracking, auto-demotion on failure
@@ -243,7 +243,7 @@ ai/
   config.py         Paths, APP_NAME, key loading
   key_manager.py    API key presence checker, writes ~/security/key-status.json
   rag/
-    embedder.py     embed_texts(), select_provider(), Ollama + Cohere rerank
+    embedder.py     embed_texts(), select_provider(), Gemini Embed primary + Cohere fallback + Ollama emergency
     store.py        VectorStore, LanceDB tables, add/search methods
     query.py        rag_query(), QueryResult dataclass
     ingest_docs.py  chunk_markdown(), ingest_files(), --force dedup logic
@@ -260,7 +260,7 @@ ai/
     summary.py      Compile threat summary from all report directories
 
 configs/
-  mcp-bridge-allowlist.yaml   All 41 tool definitions + validation rules
+  mcp-bridge-allowlist.yaml   All 43 tool definitions + validation rules
   litellm-config.yaml         LiteLLM provider routing config
   ai-rate-limits.json         Per-provider rate limits (threat intel + LLM)
   r2-config.yaml              Cloudflare R2 log archive settings

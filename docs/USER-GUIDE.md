@@ -42,7 +42,7 @@ AI chat/voice assistant) as the primary interface.
 
     ┌───────────────────────────────────────────┐
     │         Local Infrastructure              │
-    │  Ollama (embeddings only, :11434)         │
+    │  Ollama (emergency embed fallback, :11434)│
     │  LanceDB (~/security/vector-db/)          │
     │  ClamAV (scans via systemd timers)        │
     │  PySide6 tray app (4 tabs)                │
@@ -75,7 +75,7 @@ systemctl --user start bazzite-llm-proxy.service bazzite-mcp-bridge.service
 ```bash
 # MCP bridge health
 curl -s http://127.0.0.1:8766/health
-# Expected: {"status": "ok", "tools": 41}
+# Expected: {"status": "ok", "tools": 43}
 
 # LLM proxy health
 curl -s http://127.0.0.1:8767/health
@@ -252,7 +252,7 @@ All tools are accessible through Newelle via the MCP bridge. They are read-only
 
 | Tool     | Returns                           |
 |----------|-----------------------------------|
-| `health` | `{"status": "ok", "tools": 41}`   |
+| `health` | `{"status": "ok", "tools": 43}`   |
 
 ---
 
@@ -266,7 +266,7 @@ All tools are accessible through Newelle via the MCP bridge. They are read-only
 | `reason`| Deep analysis       | Gemini → Groq → Mistral → OpenRouter(Claude) → z.ai     |
 | `batch` | Volume processing   | Gemini → Groq → Mistral → OpenRouter → Cerebras         |
 | `code`  | Code-specialized    | Gemini → Groq → Mistral(Codestral) → OpenRouter → z.ai  |
-| `embed` | Embeddings (local)  | Ollama nomic-embed-text → Mistral                        |
+| `embed` | Embeddings          | Gemini Embedding 001 → Cohere → Ollama (emergency)       |
 
 Newelle sends a model name (e.g., `fast`, `reason`) in the request body.
 The LLM proxy maps it to a task type and routes through the provider chain.
@@ -469,13 +469,14 @@ LanceDB lives at `~/security/vector-db/` (symlinked to external SSD).
 
 ### Embedding
 
-| Provider  | Model              | Dimension | When used            |
-|-----------|--------------------|-----------|----------------------|
-| Ollama    | `nomic-embed-text` | 768       | Primary (local)      |
-| Cohere    | `embed-english-v3` | 1024      | Fallback (rejected if dim mismatch) |
+| Provider  | Model                   | Dimension | When used                             |
+|-----------|-------------------------|-----------|---------------------------------------|
+| Gemini    | `gemini-embedding-001`  | 768       | Primary — free 10M TPM                |
+| Cohere    | `embed-english-v3.0`    | 768       | Fallback when Gemini down/rate-limited |
+| Ollama    | `nomic-embed-text`      | 768       | Emergency fallback only — not loaded by default |
 
 The provider is locked per ingestion batch to avoid dimension mismatches.
-Cohere 1024-dim vectors are rejected by the store (enforces 768-dim).
+Gemini requests 768-dim via Matryoshka (pass `dimensions=768` explicitly).
 
 ### Query the knowledge base
 
@@ -767,7 +768,7 @@ ollama pull nomic-embed-text
 | `ai/rate_limiter.py`                      | Cross-script rate limiting                 |
 | `ai/key_manager.py`                       | API key presence checker                   |
 | `ai/mcp_bridge/server.py`                 | FastMCP server on :8766                    |
-| `ai/mcp_bridge/tools.py`                  | All 41 tool dispatch handlers              |
+| `ai/mcp_bridge/tools.py`                  | All 43 tool dispatch handlers              |
 | `ai/threat_intel/lookup.py`               | VT + OTX + MalwareBazaar hash enrichment   |
 | `ai/threat_intel/ip_lookup.py`            | AbuseIPDB + GreyNoise + Shodan             |
 | `ai/threat_intel/ioc_lookup.py`           | URLhaus + ThreatFox + CIRCL                |
@@ -777,7 +778,7 @@ ollama pull nomic-embed-text
 | `ai/system/release_watch.py`              | GitHub Releases + GHSA watcher             |
 | `ai/system/fedora_updates.py`             | Fedora Bodhi polling                       |
 | `ai/system/pkg_intel.py`                  | deps.dev package intelligence              |
-| `ai/rag/embedder.py`                      | Ollama + Cohere embedding                  |
+| `ai/rag/embedder.py`                      | Gemini Embed primary + Cohere fallback + Ollama emergency |
 | `ai/rag/store.py`                         | LanceDB VectorStore                        |
 | `ai/rag/query.py`                         | RAG query engine                           |
 | `ai/rag/ingest_docs.py`                   | Document ingestion + dedup                 |
@@ -795,7 +796,7 @@ ollama pull nomic-embed-text
 
 | Path                                      | Purpose                                    |
 |-------------------------------------------|--------------------------------------------|
-| `configs/mcp-bridge-allowlist.yaml`       | 41 MCP tool definitions + arg validation   |
+| `configs/mcp-bridge-allowlist.yaml`       | 43 MCP tool definitions + arg validation   |
 | `configs/litellm-config.yaml`             | LiteLLM provider routing (23 models)       |
 | `configs/ai-rate-limits.json`             | Per-provider rate limits                   |
 | `configs/r2-config.yaml`                  | Cloudflare R2 log archive settings         |
@@ -905,7 +906,7 @@ sudo systemctl enable --now system-health.timer
 
 ```bash
 source .venv/bin/activate
-python3 -m pytest tests/ -v              # All 969 tests
+python3 -m pytest tests/ -v              # All 998 tests
 python3 -m pytest tests/ -v -k "mcp"     # MCP-related tests only
 python3 -m pytest tests/ -v -k "router"  # Router tests only
 ruff check ai/ tests/                     # Lint
@@ -923,11 +924,13 @@ The active workload takes priority. When gaming, AI services are throttled. When
 | LLM Proxy (llm_proxy.py)   | ~20 MB  | 0      | Always (user service) |
 | MCP Bridge (mcp_bridge)     | ~60 MB  | 0      | Always (user service) |
 | LanceDB                     | ~10 MB  | 0      | On query only (mmap)  |
-| Ollama + nomic-embed-text   | ~200 MB | ~300 MB | Embedding only       |
+| Gemini Embed API            | ~5 MB   | 0      | During embed batches  |
+| Ollama + nomic-embed-text   | 0 MB    | 0      | Emergency embed fallback — not loaded by default |
 | Threat intel modules         | ~30 MB  | 0      | Per-scan only         |
 | PySide6 tray app             | ~80 MB  | 0      | Always (user session) |
-| **Total AI overhead**       | **~400 MB** | **~300 MB** | **Services + burst** |
+| **Total AI overhead**       | **~275 MB** | **0** | **Services + burst** |
 
-The GPU has 6 GB VRAM. Gaming workloads claim 5.7 GB minimum. The only
-local model (`nomic-embed-text`) uses ~300 MB and can be unloaded after
-embedding completes. Never run local LLM generation models on this hardware.
+The GPU has 6 GB VRAM. Embeddings now use Gemini Embedding 001 (cloud, free),
+so VRAM usage is 0 in normal operation. Ollama `nomic-embed-text` is available
+as emergency fallback only — not loaded by default. Never run local LLM
+generation models on this hardware.
