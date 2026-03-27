@@ -128,27 +128,47 @@ def _redact_paths(text: str) -> str:
 def _read_file_tail(path: str, lines: int, pattern: str | None = None) -> str:
     """Read last N lines from a file or latest file in a directory.
 
-    Skips empty files and symlinks to empty files (e.g. after logrotate).
+    Skips empty files. For symlinks, resolves the target and uses it if
+    non-empty. Falls back to logrotated files (pattern + "-*") when all
+    primary files are empty (logrotate empties the original .log and stores
+    data in health-*.log-YYYYMMDD).
     """
     p = Path(path)
     if p.is_dir() and pattern:
         import glob as globmod
-        # Sort by mtime descending, pick first non-empty file
-        candidates = sorted(
-            globmod.glob(str(p / pattern)),
-            key=lambda f: Path(f).stat().st_mtime,
-            reverse=True,
-        )
-        p = None
-        for c in candidates:
-            cp = Path(c)
-            # Skip symlinks (health-latest.log) and empty files (rotated)
-            if cp.is_symlink() or cp.stat().st_size == 0:
-                continue
-            p = cp
-            break
-        if p is None:
+
+        def _first_nonempty(globs: list[str]) -> Path | None:
+            def _mtime(f: str) -> float:
+                try:
+                    return Path(f).stat().st_mtime
+                except OSError:
+                    return 0.0
+            for fstr in sorted(globs, key=_mtime, reverse=True):
+                fp = Path(fstr)
+                if fp.is_symlink():
+                    try:
+                        resolved = fp.resolve()
+                        if resolved.stat().st_size > 0:
+                            return resolved
+                    except OSError:
+                        pass
+                    continue
+                try:
+                    if fp.stat().st_size > 0:
+                        return fp
+                except OSError:
+                    continue
+            return None
+
+        # Primary: e.g. health-*.log
+        chosen = _first_nonempty(globmod.glob(str(p / pattern)))
+        if chosen is None:
+            # Fallback: logrotated copies e.g. health-*.log-20260323
+            chosen = _first_nonempty(globmod.glob(str(p / (pattern + "-*"))))
+        if chosen is None:
             raise FileNotFoundError(f"No non-empty files matching {pattern} in {path}")
+        p = chosen
+
     all_lines = p.read_text().splitlines()
     return "\n".join(all_lines[-lines:])
 
@@ -521,6 +541,25 @@ async def _execute_python_tool(tool_name: str, tool_def: dict, args: dict) -> st
             })
 
         elif tool_name == "security.run_health":
+            # Clear a stale flock lock file if it's older than 5 minutes.
+            # system-health-snapshot.sh uses flock(1) on this file to prevent
+            # concurrent runs.  If a previous snapshot crashed without releasing
+            # its fd (e.g. stuck on smartctl with a disconnected device), the old
+            # inode retains the lock and all new runs silently exit 0 with no log.
+            # Unlinking the file forces the next run to open a fresh inode which
+            # has no locks, so flock -n succeeds regardless of the stuck process.
+            _HEALTH_LOCK = Path("/var/log/system-health/.health-snapshot.lock")
+            lock_cleared = False
+            if _HEALTH_LOCK.exists():
+                import time as _time  # noqa: PLC0415
+                age_s = _time.time() - _HEALTH_LOCK.stat().st_mtime
+                if age_s > 300:  # older than 5 minutes → stale
+                    try:
+                        _HEALTH_LOCK.unlink()
+                        lock_cleared = True
+                    except OSError:
+                        pass  # permission denied — service will handle it
+
             proc = await asyncio.create_subprocess_exec(
                 "systemctl", "start", "system-health.service",
                 stdout=asyncio.subprocess.PIPE,
@@ -537,13 +576,18 @@ async def _execute_python_tool(tool_name: str, tool_def: dict, args: dict) -> st
                                "Ensure system-health.service is deployed at "
                                "/etc/systemd/system/system-health.service.",
                 })
+            result_msg = (
+                "Health snapshot started. "
+                "Raw results available via security.health_snapshot in ~30 seconds. "
+                "Indexed results in logs.health_trend after next ingestion "
+                "(daily 9AM or manual security.run_ingest)."
+            )
+            if lock_cleared:
+                result_msg += " (stale lock file cleared before start)"
             return json.dumps({
                 "triggered": True,
                 "service": "system-health.service",
-                "message": "Health snapshot started. "
-                           "Raw results available via security.health_snapshot in ~30 seconds. "
-                           "Indexed results in logs.health_trend after next ingestion "
-                           "(daily 9AM or manual security.run_ingest).",
+                "message": result_msg,
             })
 
         elif tool_name == "code.search":

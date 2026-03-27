@@ -100,6 +100,71 @@ class TestSubprocessTools:
         assert "[Tool timed out]" in result
 
 
+class TestFileTail:
+    """Unit tests for _read_file_tail logrotate fallback logic."""
+
+    def test_file_tail_reads_normal_log(self, tmp_path):
+        from ai.mcp_bridge.tools import _read_file_tail
+
+        log = tmp_path / "health-2026-03-27-0800.log"
+        log.write_text("line1\nline2\nline3")
+        result = _read_file_tail(str(tmp_path), 10, "health-*.log")
+        assert "line3" in result
+
+    def test_file_tail_skips_zero_byte_log(self, tmp_path):
+        from ai.mcp_bridge.tools import _read_file_tail
+
+        # Primary .log is empty (logrotated); no rotated fallback either
+        (tmp_path / "health-2026-03-21-1841.log").write_text("")
+        with pytest.raises(FileNotFoundError):
+            _read_file_tail(str(tmp_path), 10, "health-*.log")
+
+    def test_file_tail_falls_back_to_rotated_file(self, tmp_path):
+        from ai.mcp_bridge.tools import _read_file_tail
+
+        # Primary .log is 0 bytes; data lives in the logrotated copy
+        (tmp_path / "health-2026-03-21-1841.log").write_text("")
+        rotated = tmp_path / "health-2026-03-21-1841.log-20260323"
+        rotated.write_text("snapshot data\ngpu: ok\n")
+        result = _read_file_tail(str(tmp_path), 10, "health-*.log")
+        assert "snapshot data" in result
+        assert "gpu: ok" in result
+
+    def test_file_tail_prefers_primary_over_rotated(self, tmp_path):
+        from ai.mcp_bridge.tools import _read_file_tail
+
+        primary = tmp_path / "health-2026-03-27-0800.log"
+        primary.write_text("fresh data")
+        rotated = tmp_path / "health-2026-03-21-1841.log-20260323"
+        rotated.write_text("old rotated data")
+        result = _read_file_tail(str(tmp_path), 10, "health-*.log")
+        assert "fresh data" in result
+        assert "old rotated data" not in result
+
+    def test_file_tail_symlink_to_nonempty_resolved(self, tmp_path):
+        from ai.mcp_bridge.tools import _read_file_tail
+
+        real_file = tmp_path / "health-2026-03-27-0800.log"
+        real_file.write_text("real content")
+        symlink = tmp_path / "health-latest.log"
+        symlink.symlink_to(real_file)
+        # Only symlink present, but target is non-empty → should read it
+        result = _read_file_tail(str(tmp_path), 10, "health-latest.log")
+        assert "real content" in result
+
+    def test_file_tail_symlink_to_empty_falls_back_to_rotated(self, tmp_path):
+        from ai.mcp_bridge.tools import _read_file_tail
+
+        empty = tmp_path / "health-2026-03-21-1841.log"
+        empty.write_text("")
+        symlink = tmp_path / "health-latest.log"
+        symlink.symlink_to(empty)
+        rotated = tmp_path / "health-2026-03-21-1841.log-20260323"
+        rotated.write_text("rotated content")
+        result = _read_file_tail(str(tmp_path), 10, "health-*.log")
+        assert "rotated content" in result
+
+
 class TestFileTools:
     @pytest.mark.asyncio
     async def test_last_scan_missing_file(self):
@@ -144,6 +209,11 @@ class TestStatusTool:
 
 
 class TestRunHealth:
+    def setup_method(self):
+        import ai.mcp_bridge.tools as t
+        t._global_call_times.clear()
+        t._per_tool_call_times.clear()
+
     @pytest.mark.asyncio
     @patch("ai.mcp_bridge.tools.asyncio.create_subprocess_exec")
     async def test_run_health_success_message(self, mock_exec):
@@ -176,6 +246,82 @@ class TestRunHealth:
         data = json.loads(result)
         assert data["triggered"] is False
         assert "Unit not found" in data["error"]
+
+    @pytest.mark.asyncio
+    @patch("ai.mcp_bridge.tools.asyncio.create_subprocess_exec")
+    async def test_run_health_clears_stale_lock(self, mock_exec, tmp_path):
+        """Stale lock file (>5 min old) is removed before starting the service."""
+        import time
+
+        proc = AsyncMock()
+        proc.communicate.return_value = (b"", b"")
+        proc.returncode = 0
+        mock_exec.return_value = proc
+
+        lock_file = tmp_path / ".health-snapshot.lock"
+        lock_file.write_text("")
+        # Make it appear 10 minutes old
+        old_time = time.time() - 600
+        import os
+        os.utime(lock_file, (old_time, old_time))
+
+        with patch("ai.mcp_bridge.tools.Path") as mock_path_cls:
+            # Route only the lock path through our tmp_path
+            real_path = Path
+            def _path_factory(arg):
+                if arg == "/var/log/system-health/.health-snapshot.lock":
+                    return lock_file
+                return real_path(arg)
+            mock_path_cls.side_effect = _path_factory
+            # execute_tool imports Path at the top, so patch at usage site
+            from ai.mcp_bridge import tools as _tools
+            orig_path = _tools.Path
+            _tools.Path = _path_factory  # type: ignore[assignment]
+            try:
+                from ai.mcp_bridge.tools import execute_tool
+                result = await execute_tool("security.run_health", {})
+            finally:
+                _tools.Path = orig_path
+
+        assert not lock_file.exists()
+        data = json.loads(result)
+        assert data["triggered"] is True
+        assert "stale lock" in data["message"]
+
+    @pytest.mark.asyncio
+    @patch("ai.mcp_bridge.tools.asyncio.create_subprocess_exec")
+    async def test_run_health_keeps_fresh_lock(self, mock_exec, tmp_path):
+        """Lock file younger than 5 minutes is NOT deleted."""
+        import time
+
+        proc = AsyncMock()
+        proc.communicate.return_value = (b"", b"")
+        proc.returncode = 0
+        mock_exec.return_value = proc
+
+        lock_file = tmp_path / ".health-snapshot.lock"
+        lock_file.write_text("")
+        # 60 seconds old — still fresh
+        recent = time.time() - 60
+        import os
+        os.utime(lock_file, (recent, recent))
+
+        from ai.mcp_bridge import tools as _tools
+        real_path = _tools.Path
+        def _path_factory(arg):
+            if arg == "/var/log/system-health/.health-snapshot.lock":
+                return lock_file
+            return real_path(arg)
+        _tools.Path = _path_factory  # type: ignore[assignment]
+        try:
+            from ai.mcp_bridge.tools import execute_tool
+            result = await execute_tool("security.run_health", {})
+        finally:
+            _tools.Path = real_path
+
+        assert lock_file.exists()  # not deleted
+        data = json.loads(result)
+        assert "stale lock" not in data["message"]
 
 
 class TestConcurrencySemaphore:

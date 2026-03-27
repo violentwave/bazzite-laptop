@@ -670,6 +670,89 @@ class TestIngestState:
         )
         assert new_files == []
 
+    def test_find_new_files_rotated_pattern(self, tmp_path):
+        """find_new_files with health-*.log-* picks up logrotated files."""
+        from ai.log_intel.ingest import find_new_files
+
+        log_dir = tmp_path / "logs"
+        log_dir.mkdir()
+        (log_dir / "health-2026-03-21-1841.log").write_text("")  # empty (rotated)
+        (log_dir / "health-2026-03-21-1841.log-20260323").write_text("data")
+
+        new_files = find_new_files(log_dir=log_dir, pattern="health-*.log-*")
+        filenames = [f.name for f in new_files]
+        assert "health-2026-03-21-1841.log-20260323" in filenames
+
+
+class TestIngestHealthLogrotate:
+    """Verify ingest_health handles logrotate-emptied .log files."""
+
+    def test_ingest_health_skips_empty_primary_uses_rotated(self, tmp_path):
+        """ingest_health ingests the rotated copy when .log is 0 bytes."""
+        from ai.log_intel.ingest import ingest_health
+
+        log_dir = tmp_path / "logs"
+        log_dir.mkdir()
+        # Primary .log empty (logrotate cleared it)
+        (log_dir / "health-2026-03-21-1841.log").write_text("")
+        # Rotated copy has the real data
+        (log_dir / "health-2026-03-21-1841.log-20260323").write_text(SAMPLE_HEALTH_LOG)
+
+        mock_store = MagicMock()
+        mock_table = MagicMock()
+        mock_db = MagicMock()
+        mock_db.table_names.return_value = []
+        mock_db.create_table.return_value = mock_table
+        _mock_lancedb.connect.return_value = mock_db
+
+        with (
+            patch("ai.log_intel.ingest.HEALTH_LOG_DIR", log_dir),
+            patch("ai.log_intel.ingest.get_ingest_state", return_value={}),
+            patch("ai.log_intel.ingest.save_ingest_state"),
+            patch("ai.log_intel.ingest.VECTOR_DB_DIR", tmp_path / "vector-db"),
+            patch(
+                "ai.rag.embedder.embed_texts",
+                side_effect=lambda texts: [[0.1] * 768 for _ in texts],
+            ),
+            patch("ai.rag.store.get_store", return_value=mock_store),
+        ):
+            result = ingest_health()
+
+        assert result == 1
+
+    def test_ingest_health_logrotate_dedup_tracking(self, tmp_path):
+        """After ingesting a rotated file, its name is saved as last_health_file."""
+        from ai.log_intel.ingest import ingest_health
+
+        log_dir = tmp_path / "logs"
+        log_dir.mkdir()
+        (log_dir / "health-2026-03-21-1841.log").write_text("")
+        (log_dir / "health-2026-03-21-1841.log-20260323").write_text(SAMPLE_HEALTH_LOG)
+
+        saved_state: dict = {}
+
+        mock_table = MagicMock()
+        mock_db = MagicMock()
+        mock_db.table_names.return_value = []
+        mock_db.create_table.return_value = mock_table
+        _mock_lancedb.connect.return_value = mock_db
+
+        with (
+            patch("ai.log_intel.ingest.HEALTH_LOG_DIR", log_dir),
+            patch("ai.log_intel.ingest.get_ingest_state", return_value={}),
+            patch("ai.log_intel.ingest.save_ingest_state",
+                  side_effect=lambda state, state_dir=None: saved_state.update(state)),
+            patch("ai.log_intel.ingest.VECTOR_DB_DIR", tmp_path / "vector-db"),
+            patch(
+                "ai.rag.embedder.embed_texts",
+                side_effect=lambda texts: [[0.1] * 768 for _ in texts],
+            ),
+            patch("ai.rag.store.get_store", return_value=MagicMock()),
+        ):
+            ingest_health()
+
+        assert saved_state.get("last_health_file") == "health-2026-03-21-1841.log-20260323"
+
 
 # ═══════════════════════════════════════════════════════════════════════════
 # 6. ingest_scans → security_logs

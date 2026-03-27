@@ -536,7 +536,14 @@ def ingest_health() -> int:
 
     state = get_ingest_state()
     last_file = state.get("last_health_file")
-    new_files = find_new_files(HEALTH_LOG_DIR, "health-*.log", last_file)
+    # Also pick up logrotated copies: health-*.log-YYYYMMDD (logrotate empties
+    # the original .log and stores the real data with a date suffix).
+    new_primary = find_new_files(HEALTH_LOG_DIR, "health-*.log", last_file)
+    new_rotated = find_new_files(HEALTH_LOG_DIR, "health-*.log-*", last_file)
+    new_files = sorted(
+        {p for p in new_primary + new_rotated if p.stat().st_size > 0},
+        key=lambda p: p.name,
+    )
 
     if not new_files:
         logger.info("No new health logs to ingest")
