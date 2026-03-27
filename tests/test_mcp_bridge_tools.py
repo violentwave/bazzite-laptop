@@ -4,6 +4,7 @@ All tools are read-only with subprocess sandboxing. Tests mock subprocess calls.
 """
 
 import asyncio
+import json
 import time
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -353,6 +354,147 @@ class TestSpecificTools:
         with patch("ai.mcp_bridge.tools._load_allowlist", return_value={}):
             with pytest.raises(ValueError, match="Unknown tool"):
                 await execute_tool("nonexistent.tool", {})
+
+
+class TestMcpManifest:
+    """Tests for system.mcp_manifest compact output."""
+
+    def test_default_output_limit_is_4096(self):
+        """_DEFAULT_OUTPUT_LIMIT must be 4096."""
+        from ai.mcp_bridge.tools import _DEFAULT_OUTPUT_LIMIT
+
+        assert _DEFAULT_OUTPUT_LIMIT == 4096
+
+    def test_manifest_override_is_16384(self):
+        """system.mcp_manifest output limit override must be 16384."""
+        from ai.mcp_bridge.tools import _TOOL_OUTPUT_LIMITS
+
+        assert _TOOL_OUTPUT_LIMITS["system.mcp_manifest"] == 16384
+
+    @pytest.mark.asyncio()
+    async def test_manifest_is_valid_json_with_tool_count(self, tmp_path):
+        """mcp_manifest returns valid JSON containing 'tool_count'."""
+        import yaml
+
+        from ai.mcp_bridge import tools as tools_module
+
+        allowlist_data = {
+            "tools": {
+                "system.disk_usage": {"description": "Disk usage summary", "args": None},
+                "security.threat_lookup": {
+                    "description": "Hash threat lookup",
+                    "source": "python",
+                    "args": {"hash": {"type": "string", "required": True}},
+                },
+                "system.mcp_manifest": {
+                    "description": "List all available MCP tools",
+                    "source": "python",
+                    "args": None,
+                },
+            }
+        }
+        allowlist_path = tmp_path / "mcp-bridge-allowlist.yaml"
+        allowlist_path.write_text(yaml.dump(allowlist_data))
+
+        with patch("ai.mcp_bridge.tools._ALLOWLIST_PATH", allowlist_path):
+            tools_module._allowlist = None
+            result = await tools_module.execute_tool("system.mcp_manifest", {})
+
+        data = json.loads(result)
+        assert "tool_count" in data
+        assert "tools" in data
+
+    @pytest.mark.asyncio()
+    async def test_manifest_tool_count_matches_allowlist(self, tmp_path):
+        """tool_count equals the number of tools defined in the allowlist YAML."""
+        import yaml
+
+        from ai.mcp_bridge import tools as tools_module
+
+        n_tools = 5
+        tools_dict = {
+            f"system.tool_{i}": {"description": f"Tool {i}", "args": None}
+            for i in range(n_tools)
+        }
+        tools_dict["system.mcp_manifest"] = {
+            "description": "List all available MCP tools",
+            "source": "python",
+            "args": None,
+        }
+        allowlist_data = {"tools": tools_dict}
+        allowlist_path = tmp_path / "mcp-bridge-allowlist.yaml"
+        allowlist_path.write_text(yaml.dump(allowlist_data))
+
+        with patch("ai.mcp_bridge.tools._ALLOWLIST_PATH", allowlist_path):
+            tools_module._allowlist = None
+            result = await tools_module.execute_tool("system.mcp_manifest", {})
+
+        data = json.loads(result)
+        # tool_count includes the manifest tool itself
+        assert data["tool_count"] == n_tools + 1
+        assert len(data["tools"]) == n_tools + 1
+
+    @pytest.mark.asyncio()
+    async def test_manifest_compact_format(self, tmp_path):
+        """Each tool entry has only 'desc' (≤40 chars) and 'args' (list of names)."""
+        import yaml
+
+        from ai.mcp_bridge import tools as tools_module
+
+        long_desc = "A" * 60
+        allowlist_data = {
+            "tools": {
+                "system.no_args": {"description": "No args tool", "args": None},
+                "security.with_args": {
+                    "description": long_desc,
+                    "source": "python",
+                    "args": {
+                        "hash": {"type": "string", "required": True},
+                        "extra": {"type": "string", "required": False},
+                    },
+                },
+                "system.mcp_manifest": {
+                    "description": "List all available MCP tools",
+                    "source": "python",
+                    "args": None,
+                },
+            }
+        }
+        allowlist_path = tmp_path / "mcp-bridge-allowlist.yaml"
+        allowlist_path.write_text(yaml.dump(allowlist_data))
+
+        with patch("ai.mcp_bridge.tools._ALLOWLIST_PATH", allowlist_path):
+            tools_module._allowlist = None
+            result = await tools_module.execute_tool("system.mcp_manifest", {})
+
+        data = json.loads(result)
+        no_args_entry = data["tools"]["system.no_args"]
+        assert "desc" in no_args_entry
+        assert "args" in no_args_entry
+        assert no_args_entry["args"] == []
+        assert len(no_args_entry["desc"]) <= 40
+
+        with_args_entry = data["tools"]["security.with_args"]
+        assert len(with_args_entry["desc"]) <= 40
+        assert set(with_args_entry["args"]) == {"hash", "extra"}
+        # No metadata fields
+        assert "source" not in with_args_entry
+        assert "required" not in with_args_entry
+
+    @pytest.mark.asyncio()
+    async def test_manifest_output_under_4096_bytes(self, tmp_path):
+        """Compact manifest for the real allowlist YAML fits in under 4096 bytes."""
+        from ai.mcp_bridge import tools as tools_module
+
+        real_allowlist = tools_module._ALLOWLIST_PATH
+
+        with patch("ai.mcp_bridge.tools._ALLOWLIST_PATH", real_allowlist):
+            tools_module._allowlist = None
+            result = await tools_module.execute_tool("system.mcp_manifest", {})
+
+        assert len(result.encode()) < 4096, (
+            f"Manifest too large: {len(result.encode())} bytes"
+        )
 
 
 class TestEdgeCases:

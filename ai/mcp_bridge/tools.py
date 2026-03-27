@@ -17,7 +17,11 @@ from ai.config import CONFIGS_DIR, PROJECT_ROOT, STATUS_FILE
 
 logger = logging.getLogger("ai.mcp_bridge")
 
-_TOOL_OUTPUT_LIMITS: dict[str, int] = {"system.mcp_manifest": 8192}
+_TOOL_OUTPUT_LIMITS: dict[str, int] = {
+    "system.mcp_manifest": 16384,
+    "security.threat_summary": 8192,
+    "security.cve_check": 8192,
+}
 _DEFAULT_OUTPUT_LIMIT = 4096
 _SUBPROCESS_TIMEOUT_S = 30
 
@@ -521,11 +525,13 @@ async def _execute_python_tool(tool_name: str, tool_def: dict, args: dict) -> st
 
         elif tool_name == "system.mcp_manifest":
             allowlist = _load_allowlist()
-            tools_info = {
-                name: defn.get("description", "")[:60]
-                for name, defn in allowlist.items()
-            }
-            manifest = {"tool_count": len(tools_info), "tools": tools_info}
+            compact_tools = {}
+            for name, defn in allowlist.items():
+                desc = defn.get("description", "")[:40]
+                arg_defs = defn.get("args") or {}
+                arg_names = list(arg_defs.keys()) if isinstance(arg_defs, dict) else []
+                compact_tools[name] = {"desc": desc, "args": arg_names}
+            manifest = {"tool_count": len(compact_tools), "tools": compact_tools}
             limit = _TOOL_OUTPUT_LIMITS.get("system.mcp_manifest", _DEFAULT_OUTPUT_LIMIT)
             return _truncate(json.dumps(manifest), limit)
 

@@ -204,4 +204,4 @@ class TestMcpManifest:
         from ai.mcp_bridge.tools import _DEFAULT_OUTPUT_LIMIT, _TOOL_OUTPUT_LIMITS
 
         assert _DEFAULT_OUTPUT_LIMIT == 4096
-        assert _TOOL_OUTPUT_LIMITS.get("system.mcp_manifest") == 8192
+        assert _TOOL_OUTPUT_LIMITS.get("system.mcp_manifest") == 16384
