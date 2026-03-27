@@ -531,3 +531,91 @@ class TestEdgeCases:
 
         assert isinstance(result, str)
         assert len(result) >= 0  # May be empty or contain status message
+
+
+class TestGpuStatus:
+    """Tests for system.gpu_status labeled output."""
+
+    @pytest.mark.asyncio()
+    async def test_valid_csv_returns_labeled_output(self):
+        """Valid nvidia-smi CSV is parsed into labeled human-readable output."""
+        from ai.mcp_bridge.tools import _execute_gpu_status
+
+        mock_proc = AsyncMock()
+        mock_proc.communicate.return_value = (
+            b"GeForce GTX 1060, 52, 26, 6144, 6.47, N/A\n", b""
+        )
+        mock_proc.returncode = 0
+
+        with patch("asyncio.create_subprocess_exec", return_value=mock_proc):
+            result = await _execute_gpu_status(["nvidia-smi"])
+
+        assert "temperature:" in result
+        assert "52°C" in result
+        assert "VRAM:" in result
+        assert "6144 MB" in result
+        assert "utilization:" in result
+        assert "26%" in result
+        assert "power:" in result
+        assert "6.47 W" in result
+        assert "GTX 1060" in result
+
+    @pytest.mark.asyncio()
+    async def test_wrong_field_count_returns_fallback(self):
+        """Output with wrong number of fields falls back to raw with header."""
+        from ai.mcp_bridge.tools import _GPU_STATUS_FIELDS, _execute_gpu_status
+
+        mock_proc = AsyncMock()
+        mock_proc.communicate.return_value = (b"52, 26, 6144\n", b"")
+        mock_proc.returncode = 0
+
+        with patch("asyncio.create_subprocess_exec", return_value=mock_proc):
+            result = await _execute_gpu_status(["nvidia-smi"])
+
+        assert _GPU_STATUS_FIELDS in result
+        assert "52, 26, 6144" in result
+
+    @pytest.mark.asyncio()
+    async def test_command_not_found_returns_sentinel(self):
+        """If nvidia-smi is missing, the error sentinel is returned as-is."""
+        from ai.mcp_bridge.tools import _execute_gpu_status
+
+        mock_proc = AsyncMock()
+        mock_proc.communicate.side_effect = FileNotFoundError
+
+        with patch("asyncio.create_subprocess_exec", side_effect=FileNotFoundError):
+            result = await _execute_gpu_status(["nvidia-smi"])
+
+        assert result == "[Command not found]"
+
+    @pytest.mark.asyncio()
+    async def test_execute_tool_routes_to_gpu_status(self):
+        """execute_tool dispatches system.gpu_status to the labeled parser."""
+        from ai.mcp_bridge.tools import execute_tool
+
+        mock_proc = AsyncMock()
+        mock_proc.communicate.return_value = (
+            b"GeForce GTX 1060, 60, 80, 6144, 120.0, 65\n", b""
+        )
+        mock_proc.returncode = 0
+
+        gpu_cmd = [
+            "nvidia-smi",
+            "--query-gpu=name,temperature.gpu,utilization.gpu,memory.total,power.draw,fan.speed",
+            "--format=csv,noheader,nounits",
+        ]
+        fake_allowlist = {
+            "system.gpu_status": {
+                "description": "NVIDIA GPU name, temperature, memory, power",
+                "command": gpu_cmd,
+                "args": None,
+            }
+        }
+
+        with patch("ai.mcp_bridge.tools._load_allowlist", return_value=fake_allowlist):
+            with patch("asyncio.create_subprocess_exec", return_value=mock_proc):
+                result = await execute_tool("system.gpu_status", {})
+
+        assert "temperature:" in result
+        assert "VRAM:" in result
+        assert "GTX 1060" in result

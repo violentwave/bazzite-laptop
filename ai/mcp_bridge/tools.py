@@ -287,6 +287,30 @@ async def _execute_gpu_tool(tool_name: str) -> str:
     return json.dumps(result, indent=2)
 
 
+_GPU_STATUS_FIELDS = "name, temperature_C, utilization_%, memory_MB, power_W, fan"
+
+
+async def _execute_gpu_status(command: list[str]) -> str:
+    """Run nvidia-smi for gpu_status and return labeled human-readable output."""
+    raw = await _run_subprocess(command)
+    if raw.startswith("["):
+        # Error sentinel from _run_subprocess ("[Command not found]", etc.)
+        return raw
+
+    parts = [f.strip() for f in raw.strip().split(",")]
+    if len(parts) != 6:
+        return f"{_GPU_STATUS_FIELDS} | {raw.strip()}"
+
+    try:
+        name, temp, util, mem, power, fan = parts
+        return (
+            f"GPU: {name} (temperature: {temp}°C, utilization: {util}%, "
+            f"VRAM: {mem} MB, power: {power} W, fan: {fan})"
+        )
+    except ValueError:
+        return f"{_GPU_STATUS_FIELDS} | {raw.strip()}"
+
+
 async def execute_tool(tool_name: str, args: dict) -> str:
     """Execute a tool by name with validated arguments.
 
@@ -307,6 +331,10 @@ async def execute_tool(tool_name: str, args: dict) -> str:
     tool_def = allowlist[tool_name]
     _check_bridge_rate(tool_name)
     _validate_args(tool_def, args)
+
+    # system.gpu_status: parse CSV into labeled human-readable output
+    if tool_name == "system.gpu_status":
+        return await _execute_gpu_status(tool_def["command"])
 
     # system.service_status: split into system and user scope calls
     if tool_name == "system.service_status":

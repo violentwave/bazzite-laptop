@@ -17,8 +17,8 @@ tools:
     args: null
 
   system.gpu_status:
-    description: "NVIDIA GPU temperature, memory, power"
-    command: ["nvidia-smi", "--query-gpu=temperature.gpu,memory.used,memory.total,power.draw,power.limit", "--format=csv,noheader,nounits"]
+    description: "NVIDIA GPU name, temperature, memory, power"
+    command: ["nvidia-smi", "--query-gpu=name,temperature.gpu,utilization.gpu,memory.total,power.draw,fan.speed", "--format=csv,noheader,nounits"]
     args: null
 
   system.memory_usage:
