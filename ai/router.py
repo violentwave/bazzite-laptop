@@ -313,13 +313,13 @@ async def _stream_provider(
     kwargs.setdefault("timeout", _get_timeout(task_type))
     start = time.time()
     try:
-        response = router.completion(
+        response = await router.acompletion(
             model=task_type,
             messages=messages,
             stream=True,
             **kwargs,
         )
-        for chunk in response:
+        async for chunk in response:
             delta = chunk.choices[0].delta
             content = getattr(delta, "content", None)
             if content:
@@ -389,7 +389,7 @@ def route_query(task_type: str, prompt: str, **kwargs: object) -> str:
     ) from last_error
 
 
-def route_chat(task_type: str, messages: list[dict], **kwargs: object) -> str:
+async def route_chat(task_type: str, messages: list[dict], **kwargs: object) -> str:
     """Route a multi-turn conversation to the best available provider.
 
     Unlike route_query(), this accepts the full messages array (including
@@ -431,7 +431,7 @@ def route_chat(task_type: str, messages: list[dict], **kwargs: object) -> str:
         kwargs.setdefault("timeout", _get_timeout(task_type))
         start = time.time()
         try:
-            response = router.completion(
+            response = await router.acompletion(
                 model=task_type,
                 messages=messages,
                 **kwargs,

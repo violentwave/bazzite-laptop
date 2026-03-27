@@ -41,6 +41,7 @@ except Exception:  # noqa: BLE001
 DEFAULT_PORT = int(os.environ.get("LLM_PROXY_PORT", "8767"))
 _LLM_STATUS_FILE = Path.home() / "security" / "llm-status.json"
 _STATUS_WRITE_INTERVAL_S = 300  # 5 minutes
+_status_timer: threading.Timer | None = None
 
 
 def _write_llm_status() -> None:
@@ -72,11 +73,18 @@ def _write_llm_status() -> None:
 
 
 def _schedule_status_writer() -> None:
-    """Write status immediately, then reschedule every 5 minutes."""
+    """Write status immediately, then reschedule every 5 minutes.
+
+    Uses a module-level timer reference so repeated calls cancel the pending
+    timer instead of spawning a second parallel chain.
+    """
+    global _status_timer  # noqa: PLW0603
+    if _status_timer is not None:
+        _status_timer.cancel()
     _write_llm_status()
-    t = threading.Timer(_STATUS_WRITE_INTERVAL_S, _schedule_status_writer)
-    t.daemon = True
-    t.start()
+    _status_timer = threading.Timer(_STATUS_WRITE_INTERVAL_S, _schedule_status_writer)
+    _status_timer.daemon = True
+    _status_timer.start()
 
 
 def _assert_localhost(bind: str) -> None:
@@ -181,7 +189,7 @@ def create_app():
 
         # Non-streaming — pass full messages to preserve multi-turn history
         try:
-            result = route_chat(task_type, messages)
+            result = await route_chat(task_type, messages)
 
             # Store interaction in conversation memory after successful response
             if user_message and os.environ.get("ENABLE_CONVERSATION_MEMORY", "").lower() == "true":

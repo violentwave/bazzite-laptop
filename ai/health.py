@@ -101,3 +101,47 @@ class HealthTracker:
                 result.append(h)
         result.sort(key=lambda h: h.score, reverse=True)
         return result
+
+    def reset_all(self) -> None:
+        """Reset all tracked providers to a clean healthy state."""
+        for h in self._providers.values():
+            h.success_count = 100
+            h.failure_count = 0
+            h.consecutive_failures = 0
+            h.total_latency_ms = 0.0
+            h.last_error = None
+            h.last_error_time = None
+            h.disabled_until = None
+            h.auth_broken = False
+            h._demotion_count = 0
+
+
+if __name__ == "__main__":
+    import argparse
+    import json
+    from pathlib import Path
+
+    parser = argparse.ArgumentParser(description="LLM provider health management")
+    parser.add_argument("--reset", action="store_true", help="Reset all provider scores to 1.0")
+    args = parser.parse_args()
+
+    if not args.reset:
+        parser.print_help()
+        raise SystemExit(1)
+
+    status_path = Path.home() / "security" / "llm-status.json"
+    if status_path.exists():
+        data = json.loads(status_path.read_text())
+    else:
+        data = {}
+
+    providers = data.get("providers", {})
+    for name in providers:
+        providers[name]["score"] = 1.0
+        providers[name]["auth_broken"] = False
+
+    status_path.parent.mkdir(parents=True, exist_ok=True)
+    status_path.write_text(json.dumps(data, indent=2))
+    print(f"Reset {len(providers)} provider(s) to score=1.0:")
+    for name in providers:
+        print(f"  {name}: 1.0")

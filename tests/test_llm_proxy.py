@@ -4,7 +4,7 @@ All tests mock the router and Starlette internals — no real API calls.
 """
 
 import json
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -12,7 +12,7 @@ import pytest
 @pytest.fixture()
 def mock_router():
     """Mock ai.router functions."""
-    with patch("ai.llm_proxy.route_chat") as route_chat, \
+    with patch("ai.llm_proxy.route_chat", new_callable=AsyncMock) as route_chat, \
          patch("ai.llm_proxy.route_query_stream") as route_stream, \
          patch("ai.llm_proxy.get_health_snapshot") as health, \
          patch("ai.llm_proxy.get_usage_stats") as usage:

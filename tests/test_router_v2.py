@@ -4,7 +4,7 @@ Tests health-weighted selection, stream recovery, and provider exhaustion.
 """
 
 from types import SimpleNamespace
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -217,7 +217,8 @@ class TestAllProvidersExhausted:
 
 
 class TestRouteChat:
-    def test_passes_full_messages_array(self, mock_config):
+    @pytest.mark.asyncio()
+    async def test_passes_full_messages_array(self, mock_config):
         """route_chat sends the full messages list, not just the last message."""
         from ai.router import route_chat
 
@@ -229,12 +230,12 @@ class TestRouteChat:
         ]
         captured_messages = []
 
-        def fake_completion(model, messages, **kwargs):
+        async def fake_acompletion(model, messages, **kwargs):
             captured_messages.extend(messages)
             return _make_completion_response("answer", "groq/model")
 
         mock_router = MagicMock()
-        mock_router.completion.side_effect = fake_completion
+        mock_router.acompletion = AsyncMock(side_effect=fake_acompletion)
 
         with (
             patch("ai.router._load_config", return_value=mock_config),
@@ -247,26 +248,28 @@ class TestRouteChat:
             limiter.can_call.return_value = True
             mock_rl.return_value = limiter
 
-            result = route_chat("fast", messages)
+            result = await route_chat("fast", messages)
 
         assert result == "answer"
         assert len(captured_messages) == 4, "All 4 messages must be passed to router"
         assert captured_messages[0]["role"] == "system"
         assert captured_messages[-1]["content"] == "Follow-up?"
 
-    def test_raises_on_invalid_task_type(self, mock_config):
+    @pytest.mark.asyncio()
+    async def test_raises_on_invalid_task_type(self, mock_config):
         """route_chat rejects invalid task types including 'embed'."""
         from ai.router import route_chat
 
         with pytest.raises(ValueError, match="embed"):
-            route_chat("embed", [{"role": "user", "content": "hi"}])
+            await route_chat("embed", [{"role": "user", "content": "hi"}])
 
-    def test_raises_on_all_providers_exhausted(self, mock_config):
+    @pytest.mark.asyncio()
+    async def test_raises_on_all_providers_exhausted(self, mock_config):
         """route_chat raises RuntimeError when all providers fail."""
         from ai.router import route_chat
 
         mock_router = MagicMock()
-        mock_router.completion.side_effect = RuntimeError("provider down")
+        mock_router.acompletion = AsyncMock(side_effect=RuntimeError("provider down"))
 
         with (
             patch("ai.router._load_config", return_value=mock_config),
@@ -280,7 +283,7 @@ class TestRouteChat:
             mock_rl.return_value = limiter
 
             with pytest.raises(RuntimeError, match="all providers exhausted"):
-                route_chat("fast", [{"role": "user", "content": "hi"}])
+                await route_chat("fast", [{"role": "user", "content": "hi"}])
 
 
 # ── Num Retries Zero ──
