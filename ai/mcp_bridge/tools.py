@@ -521,12 +521,29 @@ async def _execute_python_tool(tool_name: str, tool_def: dict, args: dict) -> st
             })
 
         elif tool_name == "security.run_health":
-            await _run_subprocess(["systemctl", "start", "system-health.service"])
+            proc = await asyncio.create_subprocess_exec(
+                "systemctl", "start", "system-health.service",
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+            )
+            _, stderr_b = await asyncio.wait_for(proc.communicate(), timeout=60)
+            if proc.returncode != 0:
+                err = stderr_b.decode("utf-8", errors="replace").strip()
+                return json.dumps({
+                    "triggered": False,
+                    "service": "system-health.service",
+                    "error": err or f"systemctl exited {proc.returncode}",
+                    "message": "Service failed to start. "
+                               "Ensure system-health.service is deployed at "
+                               "/etc/systemd/system/system-health.service.",
+                })
             return json.dumps({
                 "triggered": True,
                 "service": "system-health.service",
                 "message": "Health snapshot started. "
-                           "Results will appear in logs.health_trend once complete.",
+                           "Raw results available via security.health_snapshot in ~30 seconds. "
+                           "Indexed results in logs.health_trend after next ingestion "
+                           "(daily 9AM or manual security.run_ingest).",
             })
 
         elif tool_name == "code.search":

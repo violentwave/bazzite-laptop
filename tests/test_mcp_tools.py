@@ -143,6 +143,41 @@ class TestStatusTool:
             assert "secret_data" not in data
 
 
+class TestRunHealth:
+    @pytest.mark.asyncio
+    @patch("ai.mcp_bridge.tools.asyncio.create_subprocess_exec")
+    async def test_run_health_success_message(self, mock_exec):
+        proc = AsyncMock()
+        proc.communicate.return_value = (b"", b"")
+        proc.returncode = 0
+        mock_exec.return_value = proc
+
+        from ai.mcp_bridge.tools import execute_tool
+
+        result = await execute_tool("security.run_health", {})
+        data = json.loads(result)
+        assert data["triggered"] is True
+        assert "health_snapshot" in data["message"]
+        assert "run_ingest" in data["message"]
+
+    @pytest.mark.asyncio
+    @patch("ai.mcp_bridge.tools.asyncio.create_subprocess_exec")
+    async def test_run_health_service_not_found(self, mock_exec):
+        proc = AsyncMock()
+        proc.communicate.return_value = (
+            b"", b"Failed to start system-health.service: Unit not found."
+        )
+        proc.returncode = 5
+        mock_exec.return_value = proc
+
+        from ai.mcp_bridge.tools import execute_tool
+
+        result = await execute_tool("security.run_health", {})
+        data = json.loads(result)
+        assert data["triggered"] is False
+        assert "Unit not found" in data["error"]
+
+
 class TestConcurrencySemaphore:
     @pytest.mark.asyncio
     async def test_max_4_concurrent(self):
