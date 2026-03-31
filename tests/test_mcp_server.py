@@ -30,13 +30,20 @@ def _make_fastmcp_mock():
             self.name = name
             self._tool_manager = MagicMock()
             self._tool_manager._tools = {}
+            self._middleware: list = []
+            self._tool_annotations: dict = {}
 
-        def tool(self, name: str, description: str = ""):
-            """Decorator that records the tool and returns the function unchanged."""
+        def tool(self, name: str, description: str = "", annotations=None, **kwargs):
+            """Decorator that records the tool (and its annotations) and returns fn unchanged."""
             def decorator(fn):
                 self._tool_manager._tools[name] = fn
+                self._tool_annotations[name] = annotations
                 return fn
             return decorator
+
+        def add_middleware(self, middleware) -> None:
+            """Record added middleware for test assertions."""
+            self._middleware.append(middleware)
 
         def custom_route(self, path: str, methods: list | None = None):
             """Decorator that records a custom HTTP route (no-op in tests)."""
@@ -62,8 +69,13 @@ class TestServerCreation:
 
     def test_creates_fastmcp_app(self):
         fake_fastmcp = _make_fastmcp_mock()
+        fake_middleware = MagicMock()
+        fake_middleware.PingMiddleware = MagicMock(return_value=MagicMock())
         with (
-            patch.dict(sys.modules, {"fastmcp": fake_fastmcp}),
+            patch.dict(sys.modules, {
+                "fastmcp": fake_fastmcp,
+                "fastmcp.server.middleware": fake_middleware,
+            }),
             patch("ai.mcp_bridge.server.load_keys", return_value=True),
         ):
             from ai.mcp_bridge.server import create_app
@@ -73,8 +85,13 @@ class TestServerCreation:
 
     def test_startup_guard_fails_on_missing_keys(self):
         fake_fastmcp = _make_fastmcp_mock()
+        fake_middleware = MagicMock()
+        fake_middleware.PingMiddleware = MagicMock(return_value=MagicMock())
         with (
-            patch.dict(sys.modules, {"fastmcp": fake_fastmcp}),
+            patch.dict(sys.modules, {
+                "fastmcp": fake_fastmcp,
+                "fastmcp.server.middleware": fake_middleware,
+            }),
             patch("ai.mcp_bridge.server.load_keys", return_value=False),
         ):
             from ai.mcp_bridge.server import create_app
@@ -93,8 +110,13 @@ class TestToolRegistration:
 
     def test_all_allowlisted_tools_registered(self):
         fake_fastmcp = _make_fastmcp_mock()
+        fake_middleware = MagicMock()
+        fake_middleware.PingMiddleware = MagicMock(return_value=MagicMock())
         with (
-            patch.dict(sys.modules, {"fastmcp": fake_fastmcp}),
+            patch.dict(sys.modules, {
+                "fastmcp": fake_fastmcp,
+                "fastmcp.server.middleware": fake_middleware,
+            }),
             patch("ai.mcp_bridge.server.load_keys", return_value=True),
         ):
             from ai.mcp_bridge.server import create_app
@@ -167,3 +189,82 @@ class TestMainModule:
         main_path = Path(__file__).parent.parent / "ai" / "mcp_bridge" / "__main__.py"
         source = main_path.read_text()
         assert 'scope="threat_intel"' in source or "scope='threat_intel'" in source
+
+
+# ---------------------------------------------------------------------------
+# TestPingMiddleware
+# ---------------------------------------------------------------------------
+
+class TestPingMiddleware:
+    def setup_method(self):
+        _reload_server()
+
+    def test_ping_middleware_added_to_server(self):
+        """create_app must call mcp.add_middleware(PingMiddleware(interval_ms=25000))."""
+        fake_fastmcp = _make_fastmcp_mock()
+        FakePing = MagicMock(return_value=MagicMock())
+        fake_middleware = MagicMock()
+        fake_middleware.PingMiddleware = FakePing
+
+        with (
+            patch.dict(sys.modules, {
+                "fastmcp": fake_fastmcp,
+                "fastmcp.server.middleware": fake_middleware,
+            }),
+            patch("ai.mcp_bridge.server.load_keys", return_value=True),
+        ):
+            from ai.mcp_bridge.server import create_app
+
+            app = create_app()
+            FakePing.assert_called_once_with(interval_ms=25000)
+            assert len(app._middleware) == 1
+
+
+# ---------------------------------------------------------------------------
+# TestToolAnnotations
+# ---------------------------------------------------------------------------
+
+class TestToolAnnotations:
+    def setup_method(self):
+        _reload_server()
+
+    def _make_app(self):
+        """Helper: build app with all required mocks."""
+        fake_fastmcp = _make_fastmcp_mock()
+        fake_middleware = MagicMock()
+        fake_middleware.PingMiddleware = MagicMock(return_value=MagicMock())
+
+        with (
+            patch.dict(sys.modules, {
+                "fastmcp": fake_fastmcp,
+                "fastmcp.server.middleware": fake_middleware,
+            }),
+            patch("ai.mcp_bridge.server.load_keys", return_value=True),
+        ):
+            from ai.mcp_bridge.server import create_app
+
+            return create_app()
+
+    def test_readonly_tool_has_readonly_hint(self):
+        """system.disk_usage must have readOnlyHint=True."""
+        app = self._make_app()
+        ann = app._tool_annotations.get("system.disk_usage")
+        assert ann is not None
+        assert ann.get("readOnlyHint") is True
+
+    def test_destructive_tool_has_destructive_hint(self):
+        """security.sandbox_submit must have destructiveHint=True."""
+        app = self._make_app()
+        ann = app._tool_annotations.get("security.sandbox_submit")
+        assert ann is not None
+        assert ann.get("destructiveHint") is True
+
+    def test_all_44_allowlisted_tools_have_annotations(self):
+        """Every allowlisted tool (excludes built-in health endpoint) must have annotations."""
+        app = self._make_app()
+        unannotated = [
+            name
+            for name, ann in app._tool_annotations.items()
+            if name != "health" and ann is None
+        ]
+        assert unannotated == [], f"Missing annotations: {unannotated}"
