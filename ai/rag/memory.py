@@ -38,14 +38,16 @@ def _get_schema():
     """Lazy-load pyarrow schema to avoid Flatpak sandbox segfault."""
     import pyarrow as pa  # noqa: PLC0415
 
-    return pa.schema([
-        pa.field("id", pa.utf8()),
-        pa.field("query", pa.utf8()),
-        pa.field("response_summary", pa.utf8()),
-        pa.field("task_type", pa.utf8()),
-        pa.field("timestamp", pa.utf8()),
-        pa.field("vector", pa.list_(pa.float32(), EMBEDDING_DIM)),
-    ])
+    return pa.schema(
+        [
+            pa.field("id", pa.utf8()),
+            pa.field("query", pa.utf8()),
+            pa.field("response_summary", pa.utf8()),
+            pa.field("task_type", pa.utf8()),
+            pa.field("timestamp", pa.utf8()),
+            pa.field("vector", pa.list_(pa.float32(), EMBEDDING_DIM)),
+        ]
+    )
 
 
 def _get_table(db_path: Path | None = None):
@@ -56,7 +58,7 @@ def _get_table(db_path: Path | None = None):
     path.mkdir(parents=True, exist_ok=True)
     db = lancedb.connect(str(path))
     schema = _get_schema()
-    if _TABLE_NAME in db.table_names():
+    if _TABLE_NAME in db.list_tables():
         return db.open_table(_TABLE_NAME)
     return db.create_table(_TABLE_NAME, schema=schema)
 

@@ -7,6 +7,14 @@ Bazzite security/gaming system.
 
 ---
 
+## Phase 13 — LanceDB Hybrid Search + Compaction (2026-03-31)
+
+- Upgraded LanceDB from 0.29.2 to 0.30.1
+- Added BM25 full-text search indexes to security_logs, docs, health_records, scan_records tables
+- Fixed table_names() deprecation — migrated to list_tables() across codebase
+- Added lancedb-optimize.timer (weekly Sunday 02:00) for table compaction
+- Timer count: 13 → 14
+
 ## Phase 12 — FastMCP 3.x Upgrade + Tool Annotations (2026-03-31)
 
 - **PingMiddleware:** Added `PingMiddleware(interval_ms=25000)` to the MCP bridge server
@@ -376,7 +384,7 @@ Cerebras (health-weighted, hot-swappable via `configs/litellm-config.yaml`)
 | Metric | Value |
 |--------|-------|
 | MCP tools | **44** (+ 1 built-in health endpoint; all tools carry MCP annotations) |
-| Systemd timers | **12** |
+| Systemd timers | **14** |
 | Cloud providers | **6** (Gemini, Groq, Mistral, OpenRouter, z.ai, Cerebras) |
 | Threat intel APIs | **16** |
 | Unit tests | **1111 passed, 57 skipped** |

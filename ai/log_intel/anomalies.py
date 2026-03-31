@@ -34,15 +34,17 @@ def _get_anomaly_schema():
     """Lazy-load pyarrow schema to avoid import-time overhead."""
     import pyarrow as pa  # noqa: PLC0415
 
-    return pa.schema([
-        pa.field("id", pa.utf8()),
-        pa.field("timestamp", pa.utf8()),
-        pa.field("category", pa.utf8()),
-        pa.field("severity", pa.utf8()),
-        pa.field("message", pa.utf8()),
-        pa.field("acknowledged", pa.bool_()),
-        pa.field("source_record_id", pa.utf8()),
-    ])
+    return pa.schema(
+        [
+            pa.field("id", pa.utf8()),
+            pa.field("timestamp", pa.utf8()),
+            pa.field("category", pa.utf8()),
+            pa.field("severity", pa.utf8()),
+            pa.field("message", pa.utf8()),
+            pa.field("acknowledged", pa.bool_()),
+            pa.field("source_record_id", pa.utf8()),
+        ]
+    )
 
 
 def _connect():
@@ -55,7 +57,7 @@ def _connect():
 
 def _ensure_table(db, name: str, schema):
     """Open or create a table by name."""
-    if name in db.table_names():
+    if name in db.list_tables():
         return db.open_table(name)
     return db.create_table(name, schema=schema)
 
@@ -67,7 +69,7 @@ def _recent_health_records(days: int = HISTORY_DAYS) -> list[dict]:
     """Fetch health_records from LanceDB within the last *days* days."""
     try:
         db = _connect()
-        if "health_records" not in db.table_names():
+        if "health_records" not in db.list_tables():
             return []
         table = db.open_table("health_records")
         df = table.to_pandas()
@@ -135,11 +137,14 @@ def check_anomalies(
         # Absolute thermal threshold
         for label, temp in [("GPU", gpu), ("CPU", cpu)]:
             if temp is not None and temp > TEMP_ABS_CRITICAL_C:
-                anomalies.append(_make_anomaly(
-                    "thermal", "critical",
-                    f"{label} temperature {temp:.0f} C exceeds {TEMP_ABS_CRITICAL_C} C",
-                    rid,
-                ))
+                anomalies.append(
+                    _make_anomaly(
+                        "thermal",
+                        "critical",
+                        f"{label} temperature {temp:.0f} C exceeds {TEMP_ABS_CRITICAL_C} C",
+                        rid,
+                    )
+                )
 
         # Relative thermal spike (7-day average)
         history = _recent_health_records()
@@ -150,12 +155,15 @@ def check_anomalies(
                 if temps and current is not None:
                     avg = sum(temps) / len(temps)
                     if current - avg > TEMP_SPIKE_DELTA_C:
-                        anomalies.append(_make_anomaly(
-                            "thermal", "warning",
-                            f"{label} temperature {current:.0f} C is "
-                            f"{current - avg:.1f} C above 7-day average ({avg:.0f} C)",
-                            rid,
-                        ))
+                        anomalies.append(
+                            _make_anomaly(
+                                "thermal",
+                                "warning",
+                                f"{label} temperature {current:.0f} C is "
+                                f"{current - avg:.1f} C above 7-day average ({avg:.0f} C)",
+                                rid,
+                            )
+                        )
 
         # Disk fill acceleration
         prev = _last_health_record()
@@ -166,41 +174,53 @@ def check_anomalies(
                 if cur_val is not None and prev_val is not None:
                     delta = cur_val - prev_val
                     if delta > DISK_ACCEL_PCT:
-                        anomalies.append(_make_anomaly(
-                            "disk", "warning",
-                            f"{label} disk usage jumped {delta:.1f}% "
-                            f"(from {prev_val:.1f}% to {cur_val:.1f}%)",
-                            rid,
-                        ))
+                        anomalies.append(
+                            _make_anomaly(
+                                "disk",
+                                "warning",
+                                f"{label} disk usage jumped {delta:.1f}% "
+                                f"(from {prev_val:.1f}% to {cur_val:.1f}%)",
+                                rid,
+                            )
+                        )
 
         # Failed services
         services_down = health_record.get("services_down", 0)
         if services_down and services_down > 0:
-            anomalies.append(_make_anomaly(
-                "service", "warning",
-                f"{services_down} systemd service(s) are down",
-                rid,
-            ))
+            anomalies.append(
+                _make_anomaly(
+                    "service",
+                    "warning",
+                    f"{services_down} systemd service(s) are down",
+                    rid,
+                )
+            )
 
         # SMART failure
         smart = health_record.get("smart_status", "PASSED")
         if smart != "PASSED":
-            anomalies.append(_make_anomaly(
-                "smart", "critical",
-                f"SMART self-test status: {smart}",
-                rid,
-            ))
+            anomalies.append(
+                _make_anomaly(
+                    "smart",
+                    "critical",
+                    f"SMART self-test status: {smart}",
+                    rid,
+                )
+            )
 
     if scan_record:
         rid = scan_record.get("id", "")
         threats = scan_record.get("threats_found", 0)
         if threats and threats > 0:
             names = scan_record.get("threat_names", "unknown")
-            anomalies.append(_make_anomaly(
-                "threat", "critical",
-                f"{threats} threat(s) detected: {names}",
-                rid,
-            ))
+            anomalies.append(
+                _make_anomaly(
+                    "threat",
+                    "critical",
+                    f"{threats} threat(s) detected: {names}",
+                    rid,
+                )
+            )
 
     return anomalies
 
@@ -236,11 +256,14 @@ def detect_anomalies(
     # Absolute thermal threshold
     for label, temp in [("GPU", gpu), ("CPU", cpu)]:
         if temp is not None and temp > TEMP_ABS_CRITICAL_C:
-            anomalies.append(_make_anomaly(
-                "thermal", "critical",
-                f"{label} temperature {temp:.0f} C exceeds {TEMP_ABS_CRITICAL_C} C",
-                rid,
-            ))
+            anomalies.append(
+                _make_anomaly(
+                    "thermal",
+                    "critical",
+                    f"{label} temperature {temp:.0f} C exceeds {TEMP_ABS_CRITICAL_C} C",
+                    rid,
+                )
+            )
 
     # Disk fill acceleration (using provided previous, or from DB)
     prev = previous
@@ -253,30 +276,39 @@ def detect_anomalies(
             if cur_val is not None and prev_val is not None:
                 delta = cur_val - prev_val
                 if delta > DISK_ACCEL_PCT:
-                    anomalies.append(_make_anomaly(
-                        "disk", "warning",
-                        f"{label} disk usage jumped {delta:.1f}% "
-                        f"(from {prev_val:.1f}% to {cur_val:.1f}%)",
-                        rid,
-                    ))
+                    anomalies.append(
+                        _make_anomaly(
+                            "disk",
+                            "warning",
+                            f"{label} disk usage jumped {delta:.1f}% "
+                            f"(from {prev_val:.1f}% to {cur_val:.1f}%)",
+                            rid,
+                        )
+                    )
 
     # Failed services
     services_down = record.get("services_down", 0)
     if services_down and services_down > 0:
-        anomalies.append(_make_anomaly(
-            "service", "warning",
-            f"{services_down} systemd service(s) are down",
-            rid,
-        ))
+        anomalies.append(
+            _make_anomaly(
+                "service",
+                "warning",
+                f"{services_down} systemd service(s) are down",
+                rid,
+            )
+        )
 
     # SMART failure
     smart = record.get("smart_status", "PASSED")
     if smart != "PASSED":
-        anomalies.append(_make_anomaly(
-            "smart", "critical",
-            f"SMART self-test status: {smart}",
-            rid,
-        ))
+        anomalies.append(
+            _make_anomaly(
+                "smart",
+                "critical",
+                f"SMART self-test status: {smart}",
+                rid,
+            )
+        )
 
     return anomalies
 
@@ -323,7 +355,8 @@ def update_status_file(anomalies: list[dict]) -> None:
     try:
         STATUS_FILE.parent.mkdir(parents=True, exist_ok=True)
         fd, tmp_path = tempfile.mkstemp(
-            dir=str(STATUS_FILE.parent), suffix=".tmp",
+            dir=str(STATUS_FILE.parent),
+            suffix=".tmp",
         )
         with os.fdopen(fd, "w", encoding="utf-8") as fh:
             json.dump(status, fh, indent=2)
@@ -346,7 +379,7 @@ def get_unacknowledged() -> list[dict]:
     """Return all anomaly records where ``acknowledged`` is False."""
     try:
         db = _connect()
-        if "anomalies" not in db.table_names():
+        if "anomalies" not in db.list_tables():
             return []
         table = db.open_table("anomalies")
         df = table.to_pandas()
@@ -367,7 +400,7 @@ def acknowledge(anomaly_id: str) -> None:
     """
     try:
         db = _connect()
-        if "anomalies" not in db.table_names():
+        if "anomalies" not in db.list_tables():
             logger.warning("No anomalies table to acknowledge id=%s", anomaly_id)
             return
         table = db.open_table("anomalies")

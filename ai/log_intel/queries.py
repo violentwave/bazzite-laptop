@@ -30,7 +30,7 @@ def _connect(db_path: str | None = None) -> lancedb.DBConnection:
 def _table_exists(db: lancedb.DBConnection, name: str) -> bool:
     """Check whether a table exists in the database."""
     try:
-        return name in db.table_names()
+        return name in db.list_tables()
     except Exception:
         return False
 
@@ -171,7 +171,7 @@ def _search_logs_with_vector(
 def pipeline_stats(*, db_path: str | None = None) -> dict:
     """Return record counts per table, last ingestion time, and DB size."""
     db = _connect(db_path)
-    tables = db.table_names() if hasattr(db, "table_names") else []
+    tables = db.list_tables() if hasattr(db, "list_tables") else []
     table_names = ("health_records", "scan_records", "sig_updates", "anomalies")
     counts: dict[str, int] = {}
 

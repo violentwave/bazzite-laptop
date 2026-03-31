@@ -22,47 +22,55 @@ def _get_schemas() -> dict:
     """Lazy-load pyarrow schemas to avoid import-time segfault in Flatpak sandbox."""
     import pyarrow as pa  # noqa: PLC0415
 
-    security_log_schema = pa.schema([
-        pa.field("id", pa.utf8()),
-        pa.field("source_file", pa.utf8()),
-        pa.field("section", pa.utf8()),
-        pa.field("content", pa.utf8()),
-        pa.field("log_type", pa.utf8()),
-        pa.field("timestamp", pa.utf8()),
-        pa.field("vector", pa.list_(pa.float32(), EMBEDDING_DIM)),
-    ])
+    security_log_schema = pa.schema(
+        [
+            pa.field("id", pa.utf8()),
+            pa.field("source_file", pa.utf8()),
+            pa.field("section", pa.utf8()),
+            pa.field("content", pa.utf8()),
+            pa.field("log_type", pa.utf8()),
+            pa.field("timestamp", pa.utf8()),
+            pa.field("vector", pa.list_(pa.float32(), EMBEDDING_DIM)),
+        ]
+    )
 
-    threat_intel_schema = pa.schema([
-        pa.field("id", pa.utf8()),
-        pa.field("hash", pa.utf8()),
-        pa.field("source", pa.utf8()),
-        pa.field("family", pa.utf8()),
-        pa.field("risk_level", pa.utf8()),
-        pa.field("content", pa.utf8()),
-        pa.field("timestamp", pa.utf8()),
-        pa.field("vector", pa.list_(pa.float32(), EMBEDDING_DIM)),
-    ])
+    threat_intel_schema = pa.schema(
+        [
+            pa.field("id", pa.utf8()),
+            pa.field("hash", pa.utf8()),
+            pa.field("source", pa.utf8()),
+            pa.field("family", pa.utf8()),
+            pa.field("risk_level", pa.utf8()),
+            pa.field("content", pa.utf8()),
+            pa.field("timestamp", pa.utf8()),
+            pa.field("vector", pa.list_(pa.float32(), EMBEDDING_DIM)),
+        ]
+    )
 
-    docs_schema = pa.schema([
-        pa.field("id", pa.utf8()),
-        pa.field("source_file", pa.utf8()),
-        pa.field("section_title", pa.utf8()),
-        pa.field("doc_type", pa.utf8()),
-        pa.field("content", pa.utf8()),
-        pa.field("vector", pa.list_(pa.float32(), EMBEDDING_DIM)),
-    ])
+    docs_schema = pa.schema(
+        [
+            pa.field("id", pa.utf8()),
+            pa.field("source_file", pa.utf8()),
+            pa.field("section_title", pa.utf8()),
+            pa.field("doc_type", pa.utf8()),
+            pa.field("content", pa.utf8()),
+            pa.field("vector", pa.list_(pa.float32(), EMBEDDING_DIM)),
+        ]
+    )
 
-    code_files_schema = pa.schema([
-        pa.field("id", pa.utf8()),
-        pa.field("relative_path", pa.utf8()),
-        pa.field("repo_root", pa.utf8()),
-        pa.field("language", pa.utf8()),
-        pa.field("symbol_name", pa.utf8()),
-        pa.field("line_start", pa.int32()),
-        pa.field("line_end", pa.int32()),
-        pa.field("content", pa.utf8()),
-        pa.field("vector", pa.list_(pa.float32(), EMBEDDING_DIM)),
-    ])
+    code_files_schema = pa.schema(
+        [
+            pa.field("id", pa.utf8()),
+            pa.field("relative_path", pa.utf8()),
+            pa.field("repo_root", pa.utf8()),
+            pa.field("language", pa.utf8()),
+            pa.field("symbol_name", pa.utf8()),
+            pa.field("line_start", pa.int32()),
+            pa.field("line_end", pa.int32()),
+            pa.field("content", pa.utf8()),
+            pa.field("vector", pa.list_(pa.float32(), EMBEDDING_DIM)),
+        ]
+    )
 
     return {
         "security_logs": security_log_schema,
@@ -70,6 +78,7 @@ def _get_schemas() -> dict:
         "docs": docs_schema,
         CODE_TABLE: code_files_schema,
     }
+
 
 # ── Store ──
 
@@ -103,13 +112,41 @@ class VectorStore:
         """Open a table by name, creating it from schema if it does not exist."""
         db = self._connect()
         try:
-            existing = db.table_names()
+            existing = db.list_tables()
             if name in existing:
-                return db.open_table(name)
-            return db.create_table(name, schema=schema)
+                table = db.open_table(name)
+            else:
+                table = db.create_table(name, schema=schema)
+
+            # Add FTS index for text columns after table creation/opening
+            self._ensure_fts_index(table, name)
+            return table
         except Exception:
             logger.exception("Failed to ensure table '%s'", name)
             raise
+
+    def _ensure_fts_index(self, table, table_name: str) -> None:
+        """Create FTS index if not already present. Silently skip on error."""
+        try:
+            # Define text columns to index per table
+            text_columns = {
+                "security_logs": "content",
+                "docs": "content",
+                "health_records": "summary",
+                "scan_records": "summary",
+                "threat_intel": "content",
+                "conversations": "query",
+                CODE_TABLE: "content",
+            }
+
+            column = text_columns.get(table_name)
+            if column:
+                try:
+                    table.create_fts_index(column, replace=True)
+                except Exception as e:
+                    logger.debug("Could not create FTS index for %s.%s: %s", table_name, column, e)
+        except Exception:  # noqa: S110
+            pass
 
     def add_log_chunks(self, chunks: list[dict]) -> int:
         """Add embedded log chunks to security_logs table. Returns count added."""
@@ -223,7 +260,7 @@ class VectorStore:
         """Return row count for a table. Returns 0 if table doesn't exist."""
         try:
             db = self._connect()
-            if table_name not in db.table_names():
+            if table_name not in db.list_tables():
                 return 0
             table = db.open_table(table_name)
             return table.count_rows()

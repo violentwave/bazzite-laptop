@@ -57,44 +57,50 @@ def _get_schemas() -> dict:
     """Lazy-load pyarrow schemas."""
     import pyarrow as pa  # noqa: PLC0415
 
-    health_schema = pa.schema([
-        pa.field("id", pa.utf8()),
-        pa.field("timestamp", pa.utf8()),
-        pa.field("gpu_temp_c", pa.float32()),
-        pa.field("cpu_temp_c", pa.float32()),
-        pa.field("disk_usage_pct", pa.float32()),
-        pa.field("steam_usage_pct", pa.float32()),
-        pa.field("ram_used_gb", pa.float32()),
-        pa.field("swap_used_gb", pa.float32()),
-        pa.field("smart_status", pa.utf8()),
-        pa.field("services_ok", pa.int32()),
-        pa.field("services_down", pa.int32()),
-        pa.field("summary", pa.utf8()),
-        pa.field("source_file", pa.utf8()),
-        pa.field("vector", pa.list_(pa.float32(), EMBEDDING_DIM)),
-    ])
+    health_schema = pa.schema(
+        [
+            pa.field("id", pa.utf8()),
+            pa.field("timestamp", pa.utf8()),
+            pa.field("gpu_temp_c", pa.float32()),
+            pa.field("cpu_temp_c", pa.float32()),
+            pa.field("disk_usage_pct", pa.float32()),
+            pa.field("steam_usage_pct", pa.float32()),
+            pa.field("ram_used_gb", pa.float32()),
+            pa.field("swap_used_gb", pa.float32()),
+            pa.field("smart_status", pa.utf8()),
+            pa.field("services_ok", pa.int32()),
+            pa.field("services_down", pa.int32()),
+            pa.field("summary", pa.utf8()),
+            pa.field("source_file", pa.utf8()),
+            pa.field("vector", pa.list_(pa.float32(), EMBEDDING_DIM)),
+        ]
+    )
 
-    scan_schema = pa.schema([
-        pa.field("id", pa.utf8()),
-        pa.field("timestamp", pa.utf8()),
-        pa.field("scan_type", pa.utf8()),
-        pa.field("files_scanned", pa.int32()),
-        pa.field("threats_found", pa.int32()),
-        pa.field("threat_names", pa.utf8()),
-        pa.field("duration_s", pa.float32()),
-        pa.field("quarantined", pa.int32()),
-        pa.field("summary", pa.utf8()),
-        pa.field("source_file", pa.utf8()),
-        pa.field("vector", pa.list_(pa.float32(), EMBEDDING_DIM)),
-    ])
+    scan_schema = pa.schema(
+        [
+            pa.field("id", pa.utf8()),
+            pa.field("timestamp", pa.utf8()),
+            pa.field("scan_type", pa.utf8()),
+            pa.field("files_scanned", pa.int32()),
+            pa.field("threats_found", pa.int32()),
+            pa.field("threat_names", pa.utf8()),
+            pa.field("duration_s", pa.float32()),
+            pa.field("quarantined", pa.int32()),
+            pa.field("summary", pa.utf8()),
+            pa.field("source_file", pa.utf8()),
+            pa.field("vector", pa.list_(pa.float32(), EMBEDDING_DIM)),
+        ]
+    )
 
-    sig_schema = pa.schema([
-        pa.field("id", pa.utf8()),
-        pa.field("timestamp", pa.utf8()),
-        pa.field("sig_version", pa.utf8()),
-        pa.field("sig_count", pa.int32()),
-        pa.field("source_file", pa.utf8()),
-    ])
+    sig_schema = pa.schema(
+        [
+            pa.field("id", pa.utf8()),
+            pa.field("timestamp", pa.utf8()),
+            pa.field("sig_version", pa.utf8()),
+            pa.field("sig_count", pa.int32()),
+            pa.field("source_file", pa.utf8()),
+        ]
+    )
 
     return {
         "health_records": health_schema,
@@ -396,7 +402,7 @@ def parse_scan_log(
     # Parse summary section if present
     files_scanned = 0
     summary_match = _RE_SCAN_SUMMARY_SEP.search(text)
-    summary_block = text[summary_match.end():] if summary_match else text
+    summary_block = text[summary_match.end() :] if summary_match else text
 
     scanned_m = _RE_SCANNED.search(summary_block)
     if scanned_m:
@@ -426,10 +432,7 @@ def parse_scan_log(
     # Quarantined -- count "moved to" lines
     quarantined = text.lower().count("moved to")
 
-    summary = (
-        f"{scan_type.capitalize()} scan: {files_scanned} files, "
-        f"{threats_found} threats"
-    )
+    summary = f"{scan_type.capitalize()} scan: {files_scanned} files, {threats_found} threats"
     if threats_found > 0:
         summary += f" ({threat_names})"
 
@@ -520,9 +523,33 @@ def _connect_db():
 
 def _ensure_table(db, name: str, schema):
     """Open or create a LanceDB table."""
-    if name in db.table_names():
-        return db.open_table(name)
-    return db.create_table(name, schema=schema)
+    if name in db.list_tables():
+        table = db.open_table(name)
+    else:
+        table = db.create_table(name, schema=schema)
+
+    # Add FTS index for text columns after table creation/opening
+    _ensure_fts_index(table, name)
+    return table
+
+
+def _ensure_fts_index(table, table_name: str) -> None:
+    """Create FTS index if not already present. Silently skip on error."""
+    try:
+        text_columns = {
+            "health_records": "summary",
+            "scan_records": "summary",
+            "sig_updates": "sig_version",
+            "security_logs": "content",
+        }
+        column = text_columns.get(table_name)
+        if column:
+            try:
+                table.create_fts_index(column, replace=True)
+            except Exception as e:
+                logger.debug("Could not create FTS index for %s.%s: %s", table_name, column, e)
+    except Exception:  # noqa: S110
+        pass
 
 
 # ── Ingestion routines ───────────────────────────────────────
@@ -771,7 +798,8 @@ def main() -> None:
         help="Ingest all new logs (health + scan + freshclam)",
     )
     parser.add_argument(
-        "--verbose", "-v",
+        "--verbose",
+        "-v",
         action="store_true",
         help="Enable debug logging",
     )

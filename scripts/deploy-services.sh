@@ -208,6 +208,22 @@ if [[ -f "$SRC/knowledge-storage.timer" ]]; then
     echo "  Enabled knowledge-storage.timer"
 fi
 
+# lancedb-optimize
+for unit in lancedb-optimize.service lancedb-optimize.timer; do
+    if [[ -f "$SRC/$unit" ]]; then
+        sudo install -m 644 "$SRC/$unit" "/etc/systemd/system/$unit"
+        sudo restorecon -v "/etc/systemd/system/$unit"
+        echo "  Installed $unit to /etc/systemd/system/"
+    fi
+done
+
+if [[ -f "$SRC/lancedb-optimize.timer" ]]; then
+    sudo systemctl daemon-reload
+    sudo systemctl enable --now lancedb-optimize.timer 2>/dev/null || \
+        echo "  WARNING: lancedb-optimize.timer enable/start failed"
+    echo "  Enabled lancedb-optimize.timer"
+fi
+
 # cve-scanner
 for unit in cve-scanner.service cve-scanner.timer; do
     if [[ -f "$SRC/$unit" ]]; then
@@ -456,7 +472,7 @@ echo ""
 echo "Done. User services auto-start on login. All 13 timers + 2 system services + 5 config files deployed."
 echo "  Daily: health 8:00, perf 8:15, audit 8:30, rag 9:00, knowledge 9:15, release 9:45, clamav-quick 12:00"
 echo "  Every 15m: service-canary (user)"
-echo "  Weekly: clamav-healthcheck Wed 14:00, clamav-deep Fri 23:00, cve-scanner Sat 00:00, log-archive Sun 01:00, fedora-updates Mon 03:00"
+echo "  Weekly: clamav-healthcheck Wed 14:00, clamav-deep Fri 23:00, cve-scanner Sat 00:00, log-archive Sun 01:00, fedora-updates Mon 03:00, lancedb-optimize Sun 02:00"
 
 # ══════════════════════════════════════════════════════════════════
 # 8. Auto-verify (not in dry-run)

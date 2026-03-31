@@ -41,7 +41,7 @@ def mock_table():
     table = MagicMock()
     table.count_rows.return_value = 0
     mock_db = MagicMock()
-    mock_db.table_names.return_value = []
+    mock_db.list_tables.return_value = []
     mock_db.create_table.return_value = table
     _mock_lancedb.connect.return_value = mock_db
     return table

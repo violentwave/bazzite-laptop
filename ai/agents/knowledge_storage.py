@@ -35,13 +35,14 @@ _EMBED_MODEL = "nomic-embed-text"
 
 # ── Collectors ─────────────────────────────────────────────────────────────────
 
+
 def _check_lancedb() -> dict:
     """Connect to LanceDB, list tables, and count rows. Returns dict or error."""
     try:
         import lancedb  # noqa: PLC0415
 
         db = lancedb.connect(str(VECTOR_DB_DIR))
-        tables = db.table_names()
+        tables = db.list_tables()
         row_counts: dict[str, int] = {}
         for name in tables:
             try:
@@ -154,9 +155,7 @@ def _check_ollama() -> dict:
             return {"running": False, "nomic_available": False}
         data = json.loads(result.stdout)
         models = data.get("models", [])
-        nomic_available = any(
-            _EMBED_MODEL in m.get("name", "").lower() for m in models
-        )
+        nomic_available = any(_EMBED_MODEL in m.get("name", "").lower() for m in models)
         return {"running": True, "nomic_available": nomic_available}
     except Exception as e:
         logger.debug("Ollama check error: %s", e)
@@ -164,6 +163,7 @@ def _check_ollama() -> dict:
 
 
 # ── Recommendation engine ──────────────────────────────────────────────────────
+
 
 def _build_recommendations(
     db: dict,
@@ -203,9 +203,7 @@ def _build_recommendations(
         recs.append("Document ingest state not found — run knowledge.ingest_docs")
         stale_issues += 1
     elif docs_hours > 48:
-        recs.append(
-            f"Document embeddings are stale ({docs_hours:.0f}h ago), consider re-ingesting"
-        )
+        recs.append(f"Document embeddings are stale ({docs_hours:.0f}h ago), consider re-ingesting")
         stale_issues += 1
 
     logs_hours = log_state.get("hours_ago")
@@ -213,17 +211,13 @@ def _build_recommendations(
         recs.append("Log ingest state not found — run security.run_ingest")
         stale_issues += 1
     elif logs_hours > 48:
-        recs.append(
-            f"Log embeddings are stale ({logs_hours:.0f}h ago), run security.run_ingest"
-        )
+        recs.append(f"Log embeddings are stale ({logs_hours:.0f}h ago), run security.run_ingest")
         stale_issues += 1
 
     # Vector DB size
     size_bytes = db.get("size_bytes", 0)
     if size_bytes and size_bytes > 500 * 1024 * 1024:
-        recs.append(
-            f"Vector DB getting large ({_human_bytes(size_bytes)}), consider cleanup"
-        )
+        recs.append(f"Vector DB getting large ({_human_bytes(size_bytes)}), consider cleanup")
         stale_issues += 1
 
     # Disk usage
@@ -254,6 +248,7 @@ def _build_recommendations(
 
 
 # ── Main workflow ──────────────────────────────────────────────────────────────
+
 
 def run_storage_check() -> dict:
     """Run storage and knowledge base health check.

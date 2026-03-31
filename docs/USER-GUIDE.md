@@ -284,6 +284,30 @@ type name. The proxy maps common model names too:
 | `code`                        | `code`  |
 | anything else                 | `fast`  |
 
+### Switching models via Newelle Profiles
+
+Newelle's Profile Manager (Settings → Profile Manager) lets you create
+isolated profiles with different model names. Each profile remembers its
+own settings and model preference, so you can switch task types per-chat
+without changing the global API setting.
+
+Suggested profiles to create:
+
+| Profile name   | Model field | Use case                                  |
+|----------------|-------------|-------------------------------------------|
+| General        | `fast`      | Default — interactive queries, speed      |
+| Code Review    | `code`      | Code-specialized providers (Codestral)    |
+| Deep Analysis  | `reason`    | Multi-step reasoning, architecture review |
+| Batch          | `batch`     | High-volume or bulk processing tasks      |
+
+All profiles use the same API endpoint (`http://127.0.0.1:8767/v1`) and the
+same API key. Only the model name changes — the proxy maps it to the
+appropriate provider chain automatically.
+
+The system prompt instructs Newelle to suggest profile switches when a query
+would benefit from deeper reasoning (e.g., "For deeper analysis, switch to
+your 'reason' profile in Settings → Profile Manager").
+
 ### Health tracking
 
 Each provider gets a health score (0.0–1.0) based on success rate and

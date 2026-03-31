@@ -510,7 +510,7 @@ class TestAnomalyDetection:
 
 class TestQueryFunctions:
     def test_health_trend_empty_when_no_table(self, mock_db):
-        mock_db.table_names.return_value = []
+        mock_db.list_tables.return_value = []
 
         from ai.log_intel.ingest import health_trend
 
@@ -518,7 +518,7 @@ class TestQueryFunctions:
         assert result == []
 
     def test_scan_history_empty_when_no_table(self, mock_db):
-        mock_db.table_names.return_value = []
+        mock_db.list_tables.return_value = []
 
         from ai.log_intel.ingest import scan_history
 
@@ -526,7 +526,7 @@ class TestQueryFunctions:
         assert result == []
 
     def test_pipeline_stats_zero_counts(self, mock_db):
-        mock_db.table_names.return_value = []
+        mock_db.list_tables.return_value = []
 
         from ai.log_intel.ingest import pipeline_stats
 
@@ -536,7 +536,7 @@ class TestQueryFunctions:
         assert result["anomalies"] == 0
 
     def test_search_logs_handles_embed_failure(self, mock_db):
-        mock_db.table_names.return_value = ["health_records"]
+        mock_db.list_tables.return_value = ["health_records"]
 
         with patch("ai.log_intel.ingest.embed_texts", side_effect=RuntimeError("Ollama down")):
             from ai.log_intel.ingest import search_logs
@@ -546,7 +546,7 @@ class TestQueryFunctions:
 
     def test_health_trend_returns_records(self, mock_db):
         mock_table = MagicMock()
-        mock_db.table_names.return_value = ["health_records"]
+        mock_db.list_tables.return_value = ["health_records"]
         mock_db.open_table.return_value = mock_table
 
         fake_records = [
@@ -563,7 +563,7 @@ class TestQueryFunctions:
 
     def test_scan_history_returns_records(self, mock_db):
         mock_table = MagicMock()
-        mock_db.table_names.return_value = ["scan_records"]
+        mock_db.list_tables.return_value = ["scan_records"]
         mock_db.open_table.return_value = mock_table
 
         fake_records = [
@@ -579,7 +579,7 @@ class TestQueryFunctions:
     def test_pipeline_stats_with_data(self, mock_db):
         mock_table = MagicMock()
         mock_table.count_rows.return_value = 42
-        mock_db.table_names.return_value = ["health_records", "scan_records", "anomalies"]
+        mock_db.list_tables.return_value = ["health_records", "scan_records", "anomalies"]
         mock_db.open_table.return_value = mock_table
 
         from ai.log_intel.ingest import pipeline_stats
@@ -701,7 +701,7 @@ class TestIngestHealthLogrotate:
         mock_store = MagicMock()
         mock_table = MagicMock()
         mock_db = MagicMock()
-        mock_db.table_names.return_value = []
+        mock_db.list_tables.return_value = []
         mock_db.create_table.return_value = mock_table
         _mock_lancedb.connect.return_value = mock_db
 
@@ -733,7 +733,7 @@ class TestIngestHealthLogrotate:
 
         mock_table = MagicMock()
         mock_db = MagicMock()
-        mock_db.table_names.return_value = []
+        mock_db.list_tables.return_value = []
         mock_db.create_table.return_value = mock_table
         _mock_lancedb.connect.return_value = mock_db
 
@@ -785,7 +785,7 @@ class TestIngestScansPopulatesSecurityLogs:
         mock_store = MagicMock()
         mock_table = MagicMock()
         mock_db = MagicMock()
-        mock_db.table_names.return_value = []
+        mock_db.list_tables.return_value = []
         mock_db.create_table.return_value = mock_table
         _mock_lancedb.connect.return_value = mock_db
 
@@ -834,7 +834,7 @@ class TestIngestHealthPopulatesSecurityLogs:
         mock_store = MagicMock()
         mock_table = MagicMock()
         mock_db = MagicMock()
-        mock_db.table_names.return_value = []
+        mock_db.list_tables.return_value = []
         mock_db.create_table.return_value = mock_table
         _mock_lancedb.connect.return_value = mock_db
 

@@ -1,0 +1,9 @@
+[Unit]
+Description=LanceDB weekly compaction
+After=network.target
+
+[Service]
+Type=oneshot
+ExecStart=/var/home/lch/projects/bazzite-laptop/scripts/lancedb-optimize.sh
+StandardOutput=journal
+StandardError=journal

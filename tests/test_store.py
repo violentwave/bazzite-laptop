@@ -108,7 +108,7 @@ class TestAddLogChunks:
     def test_add_chunks(self, store, mock_db, sample_log_chunk):
         """Successfully adds chunks and returns count."""
         mock_table = MagicMock()
-        mock_db.table_names.return_value = ["security_logs"]
+        mock_db.list_tables.return_value = ["security_logs"]
         mock_db.open_table.return_value = mock_table
 
         count = store.add_log_chunks([sample_log_chunk])
@@ -119,7 +119,7 @@ class TestAddLogChunks:
     def test_add_multiple_chunks(self, store, mock_db, sample_log_chunk):
         """Adds multiple chunks in one call."""
         mock_table = MagicMock()
-        mock_db.table_names.return_value = ["security_logs"]
+        mock_db.list_tables.return_value = ["security_logs"]
         mock_db.open_table.return_value = mock_table
 
         chunks = [sample_log_chunk.copy() for _ in range(3)]
@@ -135,7 +135,7 @@ class TestAddLogChunks:
     def test_generates_id_if_missing(self, store, mock_db, sample_log_chunk):
         """Auto-generates UUID id when not provided in chunk."""
         mock_table = MagicMock()
-        mock_db.table_names.return_value = []
+        mock_db.list_tables.return_value = []
         mock_db.create_table.return_value = mock_table
 
         del sample_log_chunk["id"]
@@ -147,7 +147,7 @@ class TestAddLogChunks:
 
     def test_add_failure_returns_zero(self, store, mock_db, sample_log_chunk):
         """Returns 0 on LanceDB error instead of crashing."""
-        mock_db.table_names.side_effect = RuntimeError("disk full")
+        mock_db.list_tables.side_effect = RuntimeError("disk full")
 
         count = store.add_log_chunks([sample_log_chunk])
         assert count == 0
@@ -155,7 +155,7 @@ class TestAddLogChunks:
     def test_creates_table_if_missing(self, store, mock_db, sample_log_chunk):
         """Creates the security_logs table when it does not exist."""
         mock_table = MagicMock()
-        mock_db.table_names.return_value = []
+        mock_db.list_tables.return_value = []
         mock_db.create_table.return_value = mock_table
 
         store.add_log_chunks([sample_log_chunk])
@@ -171,7 +171,7 @@ class TestAddThreatReports:
     def test_add_reports(self, store, mock_db, sample_threat_report):
         """Successfully adds threat reports and returns count."""
         mock_table = MagicMock()
-        mock_db.table_names.return_value = ["threat_intel"]
+        mock_db.list_tables.return_value = ["threat_intel"]
         mock_db.open_table.return_value = mock_table
 
         count = store.add_threat_reports([sample_threat_report])
@@ -187,7 +187,7 @@ class TestAddThreatReports:
     def test_generates_id_if_missing(self, store, mock_db, sample_threat_report):
         """Auto-generates UUID id when not provided."""
         mock_table = MagicMock()
-        mock_db.table_names.return_value = ["threat_intel"]
+        mock_db.list_tables.return_value = ["threat_intel"]
         mock_db.open_table.return_value = mock_table
 
         del sample_threat_report["id"]
@@ -198,7 +198,7 @@ class TestAddThreatReports:
 
     def test_add_failure_returns_zero(self, store, mock_db, sample_threat_report):
         """Returns 0 on LanceDB error."""
-        mock_db.table_names.side_effect = RuntimeError("connection lost")
+        mock_db.list_tables.side_effect = RuntimeError("connection lost")
 
         count = store.add_threat_reports([sample_threat_report])
         assert count == 0
@@ -206,7 +206,7 @@ class TestAddThreatReports:
     def test_creates_table_if_missing(self, store, mock_db, sample_threat_report):
         """Creates the threat_intel table when it does not exist."""
         mock_table = MagicMock()
-        mock_db.table_names.return_value = []
+        mock_db.list_tables.return_value = []
         mock_db.create_table.return_value = mock_table
 
         store.add_threat_reports([sample_threat_report])
@@ -222,7 +222,7 @@ class TestSearchLogs:
     def test_search_returns_results(self, store, mock_db):
         """Vector search returns matching log entries."""
         mock_table = MagicMock()
-        mock_db.table_names.return_value = ["security_logs"]
+        mock_db.list_tables.return_value = ["security_logs"]
         mock_db.open_table.return_value = mock_table
 
         result_list = [{
@@ -247,7 +247,7 @@ class TestSearchLogs:
     def test_search_empty_results(self, store, mock_db):
         """Returns empty list when no matches found."""
         mock_table = MagicMock()
-        mock_db.table_names.return_value = ["security_logs"]
+        mock_db.list_tables.return_value = ["security_logs"]
         mock_db.open_table.return_value = mock_table
 
         mock_table.search.return_value.limit.return_value.to_list.return_value = []
@@ -257,7 +257,7 @@ class TestSearchLogs:
 
     def test_search_failure_returns_empty(self, store, mock_db):
         """Returns empty list on search error."""
-        mock_db.table_names.side_effect = RuntimeError("broken")
+        mock_db.list_tables.side_effect = RuntimeError("broken")
 
         results = store.search_logs([0.1] * 768)
         assert results == []
@@ -270,7 +270,7 @@ class TestSearchThreats:
     def test_search_returns_results(self, store, mock_db):
         """Vector search returns matching threat reports."""
         mock_table = MagicMock()
-        mock_db.table_names.return_value = ["threat_intel"]
+        mock_db.list_tables.return_value = ["threat_intel"]
         mock_db.open_table.return_value = mock_table
 
         result_list = [{
@@ -295,7 +295,7 @@ class TestSearchThreats:
     def test_search_respects_limit(self, store, mock_db):
         """Passes limit parameter through to LanceDB search."""
         mock_table = MagicMock()
-        mock_db.table_names.return_value = ["threat_intel"]
+        mock_db.list_tables.return_value = ["threat_intel"]
         mock_db.open_table.return_value = mock_table
         mock_table.search.return_value.limit.return_value.to_list.return_value = []
 
@@ -305,7 +305,7 @@ class TestSearchThreats:
 
     def test_search_failure_returns_empty(self, store, mock_db):
         """Returns empty list on search error."""
-        mock_db.table_names.side_effect = RuntimeError("broken")
+        mock_db.list_tables.side_effect = RuntimeError("broken")
 
         results = store.search_threats([0.1] * 768)
         assert results == []
@@ -319,20 +319,20 @@ class TestCount:
         """Returns row count for an existing table."""
         mock_table = MagicMock()
         mock_table.count_rows.return_value = 42
-        mock_db.table_names.return_value = ["security_logs"]
+        mock_db.list_tables.return_value = ["security_logs"]
         mock_db.open_table.return_value = mock_table
 
         assert store.count("security_logs") == 42
 
     def test_count_missing_table(self, store, mock_db):
         """Returns 0 for a table that does not exist."""
-        mock_db.table_names.return_value = []
+        mock_db.list_tables.return_value = []
 
         assert store.count("security_logs") == 0
 
     def test_count_failure_returns_zero(self, store, mock_db):
         """Returns 0 on error instead of crashing."""
-        mock_db.table_names.side_effect = RuntimeError("broken")
+        mock_db.list_tables.side_effect = RuntimeError("broken")
 
         assert store.count("security_logs") == 0
 

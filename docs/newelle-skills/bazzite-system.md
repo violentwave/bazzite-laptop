@@ -24,7 +24,7 @@ Safety Rules below.
 | `system.mcp_manifest` | Full list of all MCP tools with descriptions and argument schemas | none |
 | `system.release_watch` | GitHub Releases + GHSA watcher results for tracked dependencies | none |
 | `system.fedora_updates` | Fedora Bodhi pending security and package updates | none |
-| `system.pkg_intel` | deps.dev package intelligence: advisories, provenance, version status | `package` (string, required) |
+| `system.pkg_intel` | deps.dev package intelligence: advisories, provenance, version status | none |
 | `logs.health_trend` | Last 7 health snapshots with delta trends (temps, disk, RAM) | none |
 | `logs.search` | Semantic search across all system logs | `query` (string, max 500 chars, required) |
 | `logs.stats` | Log pipeline statistics: record counts, last ingestion time, DB size | none |

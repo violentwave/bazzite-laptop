@@ -13,7 +13,7 @@ class TestCheckLancedb:
         fake_tbl.count_rows.return_value = 42
 
         fake_db = MagicMock()
-        fake_db.table_names.return_value = ["security_logs", "docs"]
+        fake_db.list_tables.return_value = ["security_logs", "docs"]
         fake_db.open_table.return_value = fake_tbl
 
         fake_lancedb = MagicMock()
@@ -196,7 +196,9 @@ def _run_storage_patched(tmp_path, **overrides):
         f"{_KS}._get_vector_db_size": (5 * 1024 * 1024, "5.0 MB"),
         f"{_KS}._read_ingest_state": {"last_ingest": "2026-03-21T09:00:00+00:00", "hours_ago": 5.0},
         f"{_KS}._collect_disk": {
-            "home_used_pct": 65.0, "steam_used_pct": 50.0, "steam_mounted": True
+            "home_used_pct": 65.0,
+            "steam_used_pct": 50.0,
+            "steam_mounted": True,
         },
         f"{_KS}._check_ollama": {"running": True, "nomic_available": True},
         f"{_KS}.STORAGE_REPORTS_DIR": tmp_path / "reports",
@@ -243,8 +245,13 @@ class TestRunStorageCheck:
         result = _run_storage_patched(tmp_path)
 
         expected_keys = {
-            "timestamp", "vector_db", "ingestion", "disk",
-            "ollama", "recommendations", "status",
+            "timestamp",
+            "vector_db",
+            "ingestion",
+            "disk",
+            "ollama",
+            "recommendations",
+            "status",
         }
         assert set(result.keys()) == expected_keys
 

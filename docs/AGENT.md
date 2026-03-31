@@ -262,7 +262,7 @@ Source: `configs/mcp-bridge-allowlist.yaml` (44 entries).
 | `configs/ai-rate-limits.json` | Per-provider rate limits |
 | `configs/keys.env.enc` | sops-encrypted API keys (in git, safe) |
 | `scripts/` | 40 shell/Python scripts (deploy, scan, backup, etc.) |
-| `systemd/` | 13 timers + associated services |
+| `systemd/` | 14 timers + associated services |
 | `tests/` | 1115 pytest tests |
 | `tray/` | PySide6 system tray app |
 

@@ -1,6 +1,6 @@
 # Morning Briefing Prompt — Bazzite Gaming Laptop
 <!-- Paste into Newelle as a scheduled task (daily ~08:30) -->
-<!-- Last updated: 2026-03-22 -->
+<!-- Last updated: 2026-03-31 -->
 
 ```
 Good morning. Run my daily system briefing. Call ALL of the following tools

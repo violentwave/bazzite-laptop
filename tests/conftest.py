@@ -4,6 +4,14 @@ import os
 
 import pytest
 
+# Pre-load pyarrow so that test files using sys.modules.setdefault("pyarrow", MagicMock())
+# are no-ops. Without this, pandas' Cython code (lib.is_pyarrow_array) crashes when it
+# encounters a MagicMock instead of the real pyarrow C extension.
+try:
+    import pyarrow as _pyarrow  # noqa: F401
+except Exception:  # noqa: S110
+    pass
+
 # Must be set before PySide6 is imported anywhere in the test session.
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
