@@ -40,7 +40,8 @@ try:
     )
 except Exception:  # noqa: BLE001
     load_keys = None  # type: ignore[assignment]
-    AllProvidersExhausted = RuntimeError  # type: ignore[assignment,misc]
+    class AllProvidersExhausted(Exception):  # type: ignore[misc]
+        """Sentinel — never raised when import succeeds."""
     route_chat = None  # type: ignore[assignment]
     route_query_stream = None  # type: ignore[assignment]
     get_health_snapshot = None  # type: ignore[assignment]

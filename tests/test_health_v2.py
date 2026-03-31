@@ -17,11 +17,12 @@ class TestStaleness:
         assert sorted_providers[0].effective_score <= 0.8
 
     def test_fresh_provider_not_demoted(self):
-        """Provider probed recently keeps its real score above 0.8."""
+        """Provider probed recently is not staleness-capped (effective_score == score)."""
         tracker = HealthTracker()
         tracker.record_success("groq", latency_ms=100.0)
         sorted_providers = tracker.get_sorted(["groq"])
-        assert sorted_providers[0].effective_score > 0.8
+        h = sorted_providers[0]
+        assert h.effective_score == h.score  # no staleness cap applied
 
     def test_record_success_sets_last_probe_time(self):
         tracker = HealthTracker()
