@@ -74,9 +74,11 @@ Key constraints:
 
 ---
 
-## MCP Tools (43 + health)
+## MCP Tools (44 + health)
 
-Source: `configs/mcp-bridge-allowlist.yaml` (43 entries).
+Source: `configs/mcp-bridge-allowlist.yaml` (44 entries).
+
+> **Phase 12:** PingMiddleware (25s keepalive) active. All 44 tools carry MCP annotations (readOnly/destructive/openWorld hints).
 
 ### system.* (16 tools)
 
@@ -161,7 +163,7 @@ Source: `configs/mcp-bridge-allowlist.yaml` (43 entries).
 
 | Tool | Description |
 |------|-------------|
-| `health` | Returns `{"status": "ok", "tools": 43}` |
+| `health` | Returns `{"status": "ok", "tools": 44}` |
 
 ---
 
@@ -248,14 +250,14 @@ Source: `configs/mcp-bridge-allowlist.yaml` (43 entries).
 | `ai/rate_limiter.py` | Cross-script rate limiting with file locking |
 | `ai/key_manager.py` | API key presence checker |
 | `ai/mcp_bridge/server.py` | FastMCP server on :8766, tool registration |
-| `ai/mcp_bridge/tools.py` | Tool dispatch handlers for all 43 tools |
+| `ai/mcp_bridge/tools.py` | Tool dispatch handlers for all 44 tools |
 | `ai/threat_intel/` | VT, OTX, AbuseIPDB, GreyNoise, NVD, URLhaus, etc. (6 API modules) |
 | `ai/rag/` | LanceDB store, embedder, query engine, code query |
 | `ai/log_intel/` | Log ingestion, anomaly detection, semantic search |
 | `ai/agents/` | Automated agents (4): security, perf, knowledge, code quality |
 | `ai/gaming/` | MangoHud analysis, ScopeBuddy profiles |
 | `ai/system/` | release_watch, fedora_updates, pkg_intel |
-| `configs/mcp-bridge-allowlist.yaml` | 43 tool definitions + argument validation |
+| `configs/mcp-bridge-allowlist.yaml` | 44 tool definitions + argument validation |
 | `configs/litellm-config.yaml` | LiteLLM provider routing config |
 | `configs/ai-rate-limits.json` | Per-provider rate limits |
 | `configs/keys.env.enc` | sops-encrypted API keys (in git, safe) |
@@ -355,7 +357,7 @@ Agents working on this project share context via `HANDOFF.md` in the project roo
 Newelle (Flatpak GTK4) is the AI chat/voice UI for this system.
 
 - **LLM**: `http://127.0.0.1:8767/v1/` (`model="fast"`)
-- **MCP**: `http://127.0.0.1:8766/mcp` (43 tools)
+- **MCP**: `http://127.0.0.1:8766/mcp` (44 tools)
 - **System prompt**: `docs/newelle-system-prompt.md`
 - **Skills**: `docs/newelle-skills/` — 5 bundles: security, system, dev, gaming, agents
 - **Morning briefing**: `docs/morning-briefing-prompt.md` (scheduled 9:30 AM)

@@ -7,6 +7,23 @@ Bazzite security/gaming system.
 
 ---
 
+## Phase 12 — FastMCP 3.x Upgrade + Tool Annotations (2026-03-31)
+
+- **PingMiddleware:** Added `PingMiddleware(interval_ms=25000)` to the MCP bridge server
+  to prevent idle disconnections (previously dropped after ~60s of inactivity)
+- **MCP Tool Annotations:** Added behavioural hints to all 44 allowlisted tools via
+  the `annotations=` kwarg on `@mcp.tool()`:
+  - `readOnlyHint=True` on 30 read-only tools → Newelle skips confirmation dialogs
+  - `idempotentHint=True` on 35 safe-to-retry tools
+  - `openWorldHint=True` on 4 external threat-intel tools (VT/AbuseIPDB/etc.)
+  - `destructiveHint=True` on `security.sandbox_submit` (irreversible external action)
+- **FastMCP upgrade:** Attempted upgrade to 3.2.0; blocked by proxy/network issue.
+  All Phase 12 features were available in the existing 3.1.1 install.
+- **Background tasks:** Skipped — `task=True` requires `pydocket` (Redis-backed);
+  adding Redis as a dependency is out of scope for this single-user system.
+
+---
+
 ## Phase 11 — Cache Security Fix
 
 - Replaced `diskcache` 5.6.3 with new `ai/cache.py` (`JsonFileCache`) to fix
@@ -358,7 +375,7 @@ Cerebras (health-weighted, hot-swappable via `configs/litellm-config.yaml`)
 
 | Metric | Value |
 |--------|-------|
-| MCP tools | **43** (+ 1 built-in health endpoint) |
+| MCP tools | **44** (+ 1 built-in health endpoint; all tools carry MCP annotations) |
 | Systemd timers | **12** |
 | Cloud providers | **6** (Gemini, Groq, Mistral, OpenRouter, z.ai, Cerebras) |
 | Threat intel APIs | **16** |
