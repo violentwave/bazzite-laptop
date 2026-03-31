@@ -28,6 +28,7 @@ logger = logging.getLogger("ai.llm_proxy")
 # Module-level aliases — populated lazily on first use.
 # Defined here so patch("ai.llm_proxy.route_chat") works in tests.
 try:
+    from ai.config import load_keys
     from ai.rag.memory import retrieve_relevant_context, store_interaction
     from ai.router import (
         get_cost_stats,
@@ -37,6 +38,7 @@ try:
         route_query_stream,
     )
 except Exception:  # noqa: BLE001
+    load_keys = None  # type: ignore[assignment]
     route_chat = None  # type: ignore[assignment]
     route_query_stream = None  # type: ignore[assignment]
     get_health_snapshot = None  # type: ignore[assignment]
@@ -44,6 +46,30 @@ except Exception:  # noqa: BLE001
     get_cost_stats = None  # type: ignore[assignment]
     retrieve_relevant_context = None  # type: ignore[assignment]
     store_interaction = None  # type: ignore[assignment]
+
+
+def _init_sentry() -> None:
+    """Initialize Sentry error tracking if SENTRY_DSN is configured.
+
+    Completely optional — import failures and empty DSN both silently no-op.
+    Only called from llm_proxy.py; never from the MCP bridge.
+    """
+    try:
+        import sentry_sdk  # noqa: PLC0415
+        keys = load_keys("monitoring")
+        dsn = keys.get("SENTRY_DSN", "")
+        if dsn:
+            sentry_sdk.init(
+                dsn=dsn,
+                traces_sample_rate=0.1,
+                environment="production",
+                release="bazzite-ai@phase14",
+            )
+    except Exception:  # noqa: BLE001, S110
+        pass  # Sentry is optional — never break the proxy
+
+
+_init_sentry()
 
 DEFAULT_PORT = int(os.environ.get("LLM_PROXY_PORT", "8767"))
 _LLM_STATUS_FILE = Path.home() / "security" / "llm-status.json"
