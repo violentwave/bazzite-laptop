@@ -333,8 +333,9 @@ def _check_rate_limits(config: dict, task_type: str) -> None:
         wait_msg = f" (shortest wait: {min_wait:.1f}s)" if min_wait > 0 else ""
     except TypeError:
         wait_msg = ""
-    raise RuntimeError(
-        f"All providers rate-limited for task_type '{task_type}'{wait_msg}"
+    raise AllProvidersExhausted(
+        task_type,
+        f"all providers rate-limited{wait_msg}",
     )
 
 
@@ -397,7 +398,7 @@ def route_query(task_type: str, prompt: str, **kwargs: object) -> str:
         try:
             return _try_embed(task_type, prompt, **kwargs)
         except Exception as e:
-            raise RuntimeError(f"LLM call failed for task_type '{task_type}': {e}") from e
+            raise AllProvidersExhausted(task_type, str(e)) from e
 
     # Health-weighted provider ordering
     providers = _get_provider_order(config, task_type)

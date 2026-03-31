@@ -230,7 +230,7 @@ class TestRateLimiting:
         with (
             patch("ai.router._get_rate_limiter", return_value=limiter),
         ):
-            with pytest.raises(RuntimeError, match="All providers rate-limited"):
+            with pytest.raises(Exception, match="all providers rate-limited"):
                 route_query("fast", "hello")
 
     def test_records_call_after_success(
