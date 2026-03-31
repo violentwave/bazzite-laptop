@@ -2,13 +2,31 @@
 # Deploy/update Bazzite systemd services (user + system).
 #
 # User services (Newelle AI layer):
-#   bazzite-llm-proxy, bazzite-mcp-bridge
+#   bazzite-llm-proxy, bazzite-mcp-bridge, service-canary.timer
 #
 # System services (health monitoring):
 #   system-health.timer/service, system-health-snapshot.sh
 #
 # Usage: bash scripts/deploy-services.sh          (no sudo!)
+#        bash scripts/deploy-services.sh --dry-run (print commands without executing)
 set -euo pipefail
+
+# ── Dry-run mode ──────────────────────────────────────────────────
+DRY_RUN=0
+if [[ "${1:-}" == "--dry-run" ]]; then
+    DRY_RUN=1
+    echo "[DRY-RUN] Commands will be printed, not executed"
+    echo ""
+fi
+
+# Wrapper: echo in dry-run, execute otherwise
+run_cmd() {
+    if [[ "$DRY_RUN" -eq 1 ]]; then
+        echo "  [dry-run] $*"
+    else
+        "$@"
+    fi
+}
 
 # ── Guard: refuse to run as root ──────────────────────────────────
 if [[ "$EUID" -eq 0 ]]; then
@@ -26,23 +44,36 @@ SCRIPTS="$(cd "$(dirname "$0")" && pwd)"
 echo "=== Deploying User Services ==="
 
 DEST="$HOME/.config/systemd/user"
-mkdir -p "$DEST"
+run_cmd mkdir -p "$DEST"
 
-for svc in bazzite-llm-proxy.service bazzite-mcp-bridge.service; do
+for svc in bazzite-llm-proxy.service bazzite-mcp-bridge.service service-canary.service; do
     if [[ -f "$SRC/$svc" ]]; then
-        cp "$SRC/$svc" "$DEST/$svc"
+        run_cmd cp "$SRC/$svc" "$DEST/$svc"
         echo "  Copied $svc"
     fi
 done
 
-systemctl --user daemon-reload
+run_cmd systemctl --user daemon-reload
 echo "  Daemon reloaded"
 
 for svc in bazzite-llm-proxy bazzite-mcp-bridge; do
-    systemctl --user enable "$svc.service" 2>/dev/null || true
-    systemctl --user restart "$svc.service"
+    run_cmd systemctl --user enable "$svc.service" 2>/dev/null || true
+    run_cmd systemctl --user restart "$svc.service"
     echo "  Restarted $svc"
 done
+
+# Deploy service-canary script + timer
+if [[ -f "$SCRIPTS/service-canary.sh" ]]; then
+    run_cmd sudo cp "$SCRIPTS/service-canary.sh" /usr/local/bin/service-canary.sh
+    run_cmd sudo chmod 755 /usr/local/bin/service-canary.sh
+    echo "  Deployed service-canary.sh to /usr/local/bin/"
+fi
+if [[ -f "$SRC/service-canary.timer" ]]; then
+    run_cmd cp "$SRC/service-canary.timer" "$DEST/service-canary.timer"
+    run_cmd systemctl --user enable service-canary.timer 2>/dev/null || true
+    run_cmd systemctl --user start service-canary.timer
+    echo "  Enabled service-canary.timer"
+fi
 
 # ══════════════════════════════════════════════════════════════════
 # 2. System services (requires sudo for /etc/systemd/system)
@@ -398,6 +429,8 @@ printf "  %-35s %s\n" "btrfs-readahead-tune.service" \
     "$(sudo systemctl is-enabled btrfs-readahead-tune.service 2>/dev/null || echo 'not installed')"
 printf "  %-35s %s\n" "nvidia-persistence.service" \
     "$(sudo systemctl is-enabled nvidia-persistence.service 2>/dev/null || echo 'not installed')"
+printf "  %-35s %s\n" "service-canary.timer" \
+    "$(systemctl --user is-enabled service-canary.timer 2>/dev/null || echo 'not installed')"
 
 # ══════════════════════════════════════════════════════════════════
 # 6. Health checks (port listening + HTTP where available)
@@ -412,7 +445,24 @@ ss -tln | grep -q ':8766 ' \
     && echo "  MCP bridge (8766): listening" \
     || echo "  MCP bridge (8766): not responding"
 
+# ══════════════════════════════════════════════════════════════════
+# 7. SELinux: blanket restorecon (catches any missed contexts)
+# ══════════════════════════════════════════════════════════════════
 echo ""
-echo "Done. User services auto-start on login. All 12 timers + 2 system services + 5 config files deployed."
+echo "=== SELinux: blanket restorecon ==="
+sudo restorecon -Rv /usr/local/bin/ /etc/systemd/system/ 2>/dev/null || true
+
+echo ""
+echo "Done. User services auto-start on login. All 13 timers + 2 system services + 5 config files deployed."
 echo "  Daily: health 8:00, perf 8:15, audit 8:30, rag 9:00, knowledge 9:15, release 9:45, clamav-quick 12:00"
+echo "  Every 15m: service-canary (user)"
 echo "  Weekly: clamav-healthcheck Wed 14:00, clamav-deep Fri 23:00, cve-scanner Sat 00:00, log-archive Sun 01:00, fedora-updates Mon 03:00"
+
+# ══════════════════════════════════════════════════════════════════
+# 8. Auto-verify (not in dry-run)
+# ══════════════════════════════════════════════════════════════════
+if [[ "$DRY_RUN" -eq 0 ]]; then
+    echo ""
+    echo "=== Running verify-services.sh ==="
+    bash "$SCRIPTS/verify-services.sh" || true
+fi

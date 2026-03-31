@@ -203,6 +203,7 @@ def _run_code_patched(tmp_path):
         ),
         patch(f"{_CQ}._run_git_log", return_value=["abc123 feat: something"]),
         patch(f"{_CQ}._run_pytest_collect", return_value={"collected": 594, "count_known": True}),
+        patch(f"{_CQ}._run_dep_check", return_value={"available": False, "output": "", "ok": True}),
         patch(f"{_CQ}.CODE_REPORTS_DIR", tmp_path / "reports"),
     ]
     with ExitStack() as stack:
@@ -233,7 +234,7 @@ class TestRunCodeCheck:
         result = _run_code_patched(tmp_path)
 
         expected_keys = {
-            "timestamp", "ruff", "bandit", "git", "tests", "recommendations", "status",
+            "timestamp", "ruff", "bandit", "git", "tests", "deps", "recommendations", "status",
         }
         assert set(result.keys()) == expected_keys
 
@@ -245,3 +246,54 @@ class TestRunCodeCheck:
         result = _run_code_patched(tmp_path)
         assert "last_commits" in result["git"]
         assert len(result["git"]["last_commits"]) == 1
+
+    def test_report_includes_deps_key(self, tmp_path):
+        result = _run_code_patched(tmp_path)
+        assert "deps" in result
+        assert "ok" in result["deps"]
+
+
+class TestDepCheck:
+    def test_missing_script_returns_ok(self, tmp_path):
+        with patch(f"{_CQ}.PROJECT_ROOT", tmp_path):
+            from ai.agents.code_quality_agent import _run_dep_check
+
+            result = _run_dep_check()
+        assert result["ok"] is True
+        assert result["available"] is False
+
+    def test_script_failure_adds_recommendation(self):
+        mismatch_output = "[MISMATCH] litellm pinned=1.0.0 installed=2.0.0"  # noqa: E501
+        mock_result = MagicMock(returncode=1, stdout=mismatch_output)
+        with patch(f"{_CQ}.subprocess.run", return_value=mock_result):
+            with patch(f"{_CQ}.PROJECT_ROOT") as mock_root:
+                mock_script = MagicMock()
+                mock_script.exists.return_value = True
+                mock_root.__truediv__ = lambda self, other: mock_script
+                from ai.agents.code_quality_agent import _build_recommendations
+
+                deps = {"available": True, "output": mock_result.stdout, "ok": False}
+                ruff = {"total_errors": 0, "by_rule": {}, "clean": True, "error": None}
+                bandit = {"total_issues": 0, "high": 0, "medium": 0, "low": 0, "clean": True}
+                git = {"untracked": 0, "modified": 0, "staged": 0, "dirty": False, "error": None}
+                tests = {"collected": 594, "count_known": True}
+                recs, status = _build_recommendations(ruff, bandit, git, tests, deps)
+        assert any("dependency" in r.lower() for r in recs)
+        assert status == "warnings"
+
+    def test_timeout_returns_ok(self):
+        import subprocess as _subprocess
+
+        with patch(
+            f"{_CQ}.subprocess.run",
+            side_effect=_subprocess.TimeoutExpired("bash", 30),
+        ):
+            with patch(f"{_CQ}.PROJECT_ROOT") as mock_root:
+                mock_script = MagicMock()
+                mock_script.exists.return_value = True
+                mock_root.__truediv__ = lambda self, other: mock_script
+                from ai.agents.code_quality_agent import _run_dep_check
+
+                result = _run_dep_check()
+        assert result["ok"] is True
+        assert result["available"] is False

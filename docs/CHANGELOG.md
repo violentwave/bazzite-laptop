@@ -7,6 +7,17 @@ Bazzite security/gaming system.
 
 ---
 
+## Phase 9 — Automation & Resilience
+
+- VS Code: `tasks.json` updated (Verify Services fixed, Ingest Code + Full Quality Gate added)
+- Pre-commit hook: ruff lint on staged `.py` files (`scripts/pre-commit-hook.sh` + `install-hooks.sh`)
+- Dependency freshness checker: `scripts/check-deps.sh` + `code_quality_agent` integration
+- RAG smart embed: `scripts/rag-smart-embed.sh` with staleness detection (skips unchanged docs/code)
+- Service resilience: `RestartSec=10`, `RestartMax=5`, `service-canary.timer` (every 15m)
+- Deploy safety: `--dry-run` flag, blanket `restorecon`, auto-verify on deploy
+
+---
+
 ## Phase 8 — Clean Slate
 
 **Bug fixes:**

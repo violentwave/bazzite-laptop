@@ -1,0 +1,7 @@
+[Unit]
+Description=Bazzite AI service health canary
+After=bazzite-mcp-bridge.service bazzite-llm-proxy.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/service-canary.sh

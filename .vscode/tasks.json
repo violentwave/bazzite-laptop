@@ -31,7 +31,20 @@
         {
             "label": "Verify Services",
             "type": "shell",
-            "command": "systemctl --user status bazzite-mcp-bridge.service bazzite-llm-proxy.service",
+            "command": "bash scripts/verify-services.sh",
+            "presentation": {"reveal": "always", "panel": "shared"}
+        },
+        {
+            "label": "Ingest Code",
+            "type": "shell",
+            "command": "source .venv/bin/activate && bash scripts/ingest-code.sh",
+            "presentation": {"reveal": "always", "panel": "shared"}
+        },
+        {
+            "label": "Full Quality Gate",
+            "type": "shell",
+            "command": "source .venv/bin/activate && ruff check ai/ tests/ && bandit -r ai/ -c pyproject.toml && python -m pytest tests/ -q",
+            "group": "build",
             "presentation": {"reveal": "always", "panel": "shared"}
         },
         {

@@ -9,7 +9,8 @@ WorkingDirectory=/var/home/lch/projects/bazzite-laptop
 Environment=PATH=/var/home/lch/projects/bazzite-laptop/.venv/bin:/usr/bin:/bin
 ExecStart=/var/home/lch/projects/bazzite-laptop/.venv/bin/python -m ai.mcp_bridge --bind 127.0.0.1 --port 8766
 Restart=on-failure
-RestartSec=5
+RestartSec=10
+RestartMax=5
 
 Slice=ai.slice
 

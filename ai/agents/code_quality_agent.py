@@ -172,6 +172,31 @@ def _run_pytest_collect() -> dict:
         return {"collected": 0, "count_known": False}
 
 
+def _run_dep_check() -> dict:
+    """Run check-deps.sh and return dependency freshness status."""
+    script = PROJECT_ROOT / "scripts" / "check-deps.sh"
+    if not script.exists():
+        return {"available": False, "output": "", "ok": True}
+    try:
+        result = subprocess.run(
+            ["bash", str(script)],
+            capture_output=True,
+            text=True,
+            timeout=30,
+            cwd=str(PROJECT_ROOT),
+        )
+        return {
+            "available": True,
+            "output": result.stdout.strip(),
+            "ok": result.returncode == 0,
+        }
+    except subprocess.TimeoutExpired:
+        return {"available": False, "output": "timeout", "ok": True}
+    except Exception as e:
+        logger.debug("dep check error: %s", e)
+        return {"available": False, "output": str(e), "ok": True}
+
+
 # ── Recommendation engine ──────────────────────────────────────────────────────
 
 def _build_recommendations(
@@ -179,6 +204,7 @@ def _build_recommendations(
     bandit: dict,
     git: dict,
     tests: dict,
+    deps: dict | None = None,
 ) -> tuple[list[str], str]:
     """Apply threshold rules and return (recommendations, status).
 
@@ -230,6 +256,11 @@ def _build_recommendations(
             )
             warnings += 1
 
+    # Deps
+    if deps and deps.get("available") and not deps.get("ok"):
+        recs.append("Dependency versions drifted — run: bash scripts/check-deps.sh")
+        warnings += 1
+
     if not recs:
         recs.append("Code quality excellent")
 
@@ -252,7 +283,7 @@ def run_code_check() -> dict:
     No cloud API calls. Results written atomically to ~/security/code-reports/.
 
     Returns:
-        dict with keys: timestamp, ruff, bandit, git, tests, recommendations, status.
+        dict with keys: timestamp, ruff, bandit, git, tests, deps, recommendations, status.
     """
     now = datetime.now(UTC)
     timestamp = now.isoformat()
@@ -263,11 +294,12 @@ def run_code_check() -> dict:
     git_status = _run_git_status()
     git_log = _run_git_log()
     tests = _run_pytest_collect()
+    deps = _run_dep_check()
 
     git_report = dict(git_status)
     git_report["last_commits"] = git_log
 
-    recs, status = _build_recommendations(ruff, bandit, git_status, tests)
+    recs, status = _build_recommendations(ruff, bandit, git_status, tests, deps)
 
     report: dict = {
         "timestamp": timestamp,
@@ -275,6 +307,7 @@ def run_code_check() -> dict:
         "bandit": bandit,
         "git": git_report,
         "tests": tests,
+        "deps": deps,
         "recommendations": recs,
         "status": status,
     }

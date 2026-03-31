@@ -55,7 +55,7 @@
 
 System Layer:
   ClamAV (3 timers) | Health (1 timer) | Agents (3 timers)
-  RAG embed (1 timer) | CVE/Release/Fedora (3 timers) | R2 archive (1 timer)
+  RAG embed (1 timer) | CVE/Release/Fedora (3 timers) | R2 archive (1 timer) | Canary (1 timer)
   LanceDB → ext-ssd | Disk cache → ext-ssd | Tray app (PySide6)
 ```
 
@@ -194,7 +194,7 @@ Source: `configs/mcp-bridge-allowlist.yaml` (43 entries).
 
 ---
 
-## Systemd Timers (12)
+## Systemd Timers (13)
 
 | Timer | Schedule | Purpose |
 |-------|----------|---------|
@@ -210,6 +210,7 @@ Source: `configs/mcp-bridge-allowlist.yaml` (43 entries).
 | `release-watch.timer` | Daily 9:45 | GitHub Releases + GHSA watcher |
 | `fedora-updates.timer` | Mon 3:00 | Fedora Bodhi update check |
 | `log-archive.timer` | Sun 1:00 | Upload old logs to Cloudflare R2 |
+| `service-canary.timer` | Every 15m | AI service health check + auto-restart |
 
 ---
 
@@ -258,8 +259,8 @@ Source: `configs/mcp-bridge-allowlist.yaml` (43 entries).
 | `configs/ai-rate-limits.json` | Per-provider rate limits |
 | `configs/keys.env.enc` | sops-encrypted API keys (in git, safe) |
 | `scripts/` | 40 shell/Python scripts (deploy, scan, backup, etc.) |
-| `systemd/` | 12 timers + associated services |
-| `tests/` | 1111 pytest tests |
+| `systemd/` | 13 timers + associated services |
+| `tests/` | 1115 pytest tests |
 | `tray/` | PySide6 system tray app |
 
 ### Runtime paths (not in repo)
@@ -285,7 +286,7 @@ Source: `configs/mcp-bridge-allowlist.yaml` (43 entries).
 
 ```bash
 source .venv/bin/activate
-python -m pytest tests/ -v          # 1111 tests
+python -m pytest tests/ -v          # 1115 tests
 ruff check ai/ tests/               # Lint
 bandit -r ai/ -c pyproject.toml     # Security scan
 uv pip install -r requirements.txt  # Install/update deps
