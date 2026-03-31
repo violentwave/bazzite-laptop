@@ -16,8 +16,8 @@ def allowlist():
 
 
 class TestAllowlistIntegrity:
-    def test_has_43_tools(self, allowlist):
-        assert len(allowlist["tools"]) == 43
+    def test_has_44_tools(self, allowlist):
+        assert len(allowlist["tools"]) == 44
 
     def test_all_expected_tools_present(self, allowlist):
         expected = {
@@ -26,6 +26,7 @@ class TestAllowlistIntegrity:
             "system.llm_models", "system.mcp_manifest", "system.llm_status",
             "system.key_status", "system.release_watch", "system.fedora_updates",
             "system.pkg_intel", "system.gpu_perf", "system.gpu_health",
+            "system.cache_stats",
             "security.last_scan", "security.health_snapshot", "security.status",
             "security.threat_lookup", "security.ip_lookup", "security.url_lookup",
             "knowledge.rag_query", "knowledge.rag_qa", "knowledge.ingest_docs",

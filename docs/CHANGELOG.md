@@ -7,6 +7,38 @@ Bazzite security/gaming system.
 
 ---
 
+## Phase 11 — Cache Security Fix
+
+- Replaced `diskcache` 5.6.3 with new `ai/cache.py` (`JsonFileCache`) to fix
+  CVE-2025-69872 (insecure pickle deserialization RCE)
+- `JsonFileCache`: JSON-only storage, atomic writes (tempfile + os.replace),
+  2-level directory sharding, per-task-type TTLs, thread-safe counters
+- Removed `diskcache` from tracked dependencies; `litellm.cache` set to `None`
+- Added `system.cache_stats` MCP tool (tool count: 43 → 44)
+- Manual cache get/set wraps provider calls in `route_query()` and `route_chat()`
+
+---
+
+## Phase 10 — Newelle Full Operational Capability
+
+- Rewrote `docs/newelle-system-prompt.md` from scratch: compact 43-tool routing
+  table, run/show disambiguation, model switching guidance, workflow recipes,
+  tool-first enforcement with correct/incorrect examples, Newelle prompt
+  variables ({DATE}, {USER}, {COND: tts_on})
+- Updated `docs/newelle-skills/bazzite-system.md`: fixed `system.pkg_intel`
+  args to match AGENT.md (no required args, not `package`)
+- Verified `docs/newelle-skills/` (all 5 bundles) against AGENT.md — remaining
+  4 bundles confirmed current, no other changes needed
+- Verified `docs/morning-briefing-prompt.md` — all 7 tool names confirmed
+  correct; updated "Last updated" date to 2026-03-31
+- Added `### Switching models via Newelle Profiles` subsection to USER-GUIDE.md
+  section 5 (LLM Provider Chain): Profile Manager workflow, 4 suggested profiles,
+  endpoint/key configuration notes
+- AGENT.md confirmed current: 13 timers (service-canary.timer present), date
+  2026-03-31 — no changes needed
+
+---
+
 ## Phase 9 — Automation & Resilience
 
 - VS Code: `tasks.json` updated (Verify Services fixed, Ingest Code + Full Quality Gate added)

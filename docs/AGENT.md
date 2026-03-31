@@ -40,7 +40,7 @@
           ┌──────────────▼──┐ ┌─▼──────────────────┐
           │  MCP Bridge     │ │  LLM Proxy          │
           │  :8766 FastMCP  │ │  :8767 OpenAI-compat│
-          │  43 tools       │ │  6 cloud providers  │
+          │  44 tools       │ │  6 cloud providers  │
           └──┬──┬──┬──┬─────┘ └──┬──────────────────┘
              │  │  │  │          │
     ┌────────┘  │  │  └───┐     │  Health-weighted routing
@@ -78,7 +78,7 @@ Key constraints:
 
 Source: `configs/mcp-bridge-allowlist.yaml` (43 entries).
 
-### system.* (15 tools)
+### system.* (16 tools)
 
 | Tool | Source | Args | Description |
 |------|--------|------|-------------|
@@ -97,6 +97,7 @@ Source: `configs/mcp-bridge-allowlist.yaml` (43 entries).
 | `system.release_watch` | json_file: `~/security/release-watch.json` | — | Upstream release updates (GitHub, GHSA) |
 | `system.fedora_updates` | json_file: `~/security/fedora-updates.json` | — | Fedora/Bazzite pending updates (Bodhi) |
 | `system.pkg_intel` | python: `ai.system.pkg_intel` | — | Package advisories via deps.dev |
+| `system.cache_stats` | python: `ai.cache` | — | LLM cache statistics: entries, size, hit rate |
 
 ### security.* (12 tools)
 
@@ -298,7 +299,7 @@ uv pip install -r requirements.txt  # Install/update deps
 
 > Full version details: see `docs/verified-deps.md`
 
-**Python 3.12** in `.venv/` managed by `uv`. Key packages: litellm (multi-provider routing), lancedb (vector DB), fastmcp (MCP server), pydantic, httpx, requests, diskcache, cohere (rerank), boto3 (R2 archiving), pillow.
+**Python 3.12** in `.venv/` managed by `uv`. Key packages: litellm (multi-provider routing), lancedb (vector DB), fastmcp (MCP server), pydantic, httpx, requests, cohere (rerank), boto3 (R2 archiving), pillow. LLM response cache: `ai/cache.py` (JsonFileCache, zero-dep, no pickle).
 
 **Node.js v25** for RuFlo orchestration CLI (`@claude-flow/cli` v3.5.15) + 2 plugins (code-intelligence, test-intelligence).
 

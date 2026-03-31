@@ -14,6 +14,7 @@ Usage:
     result = route_query("fast", "Summarize this alert...")
 """
 
+import hashlib
 import json
 import logging
 import time
@@ -22,8 +23,8 @@ from pathlib import Path
 
 import litellm
 import yaml
-from litellm.caching.caching import Cache
 
+from ai.cache import JsonFileCache
 from ai.config import APP_NAME, LITELLM_CONFIG, load_keys
 from ai.health import HealthTracker
 from ai.rate_limiter import RateLimiter
@@ -31,11 +32,13 @@ from ai.rate_limiter import RateLimiter
 logger = logging.getLogger(APP_NAME)
 
 # Per-task-type cache TTLs (seconds). External SSD reduces internal SSD wear.
-_CACHE_TTL: dict[str, int] = {
+# TTL=0 means never cache (embed type).
+_TASK_TTL: dict[str, int] = {
     "fast": 300,       # 5 min — health checks, quick lookups
     "code": 3600,      # 1 hour — code generation
     "reason": 1800,    # 30 min — analysis
     "batch": 86400,    # 24 hours — bulk operations
+    "embed": 0,        # never cache embeddings
 }
 
 # Prefer external SSD; fall back to ~/security/llm-cache; then tmpdir.
@@ -49,35 +52,9 @@ except OSError:
     import tempfile  # noqa: PLC0415
     _CACHE_DIR = Path(tempfile.gettempdir()) / "bazzite-llm-cache"
     _CACHE_DIR.mkdir(parents=True, exist_ok=True)
-def _init_litellm_cache(cache_dir: Path) -> "Cache | None":
-    """Initialize LiteLLM disk cache, returning None on failure."""
-    try:
-        return Cache(
-            type="disk",
-            disk_cache_dir=str(cache_dir),
-            default_in_memory_ttl=300,
-        )
-    except Exception as exc:
-        logger.debug("LLM disk cache unavailable at %s: %s", cache_dir, exc)
-        return None
 
-
-# Try preferred location first; if read-only (e.g. created by systemd as root),
-# fall back to the project temp dir, then disable caching as a last resort.
-litellm.cache = _init_litellm_cache(_CACHE_DIR)
-if litellm.cache is None:
-    import tempfile as _tempfile  # noqa: PLC0415
-
-    _FALLBACK_CACHE_DIR = Path(_tempfile.gettempdir()) / "bazzite-llm-cache"
-    try:
-        _FALLBACK_CACHE_DIR.mkdir(parents=True, exist_ok=True)
-    except OSError:
-        pass
-    litellm.cache = _init_litellm_cache(_FALLBACK_CACHE_DIR)
-    if litellm.cache is not None:
-        _CACHE_DIR = _FALLBACK_CACHE_DIR
-    else:
-        logger.warning("LLM disk cache unavailable — running without cache")
+_llm_cache = JsonFileCache(_CACHE_DIR, default_ttl=300)
+litellm.cache = None
 
 VALID_TASK_TYPES = ("fast", "reason", "batch", "code", "embed")
 
@@ -366,18 +343,22 @@ def route_query(task_type: str, prompt: str, **kwargs: object) -> str:
     if not providers:
         raise RuntimeError(f"No available providers for task_type '{task_type}'")
 
-    # Inject per-task-type TTL for disk cache unless caller overrides
-    kwargs.setdefault("cache", {
-        "namespace": task_type,
-        "ttl": _CACHE_TTL.get(task_type, 300),
-    })
+    # Manual cache lookup
+    cache_key = f"{task_type}:{hashlib.sha256(prompt.encode()).hexdigest()}"
+    cached = _llm_cache.get(cache_key)
+    if cached is not None:
+        return cached["content"]
 
     last_error = None
     for provider in providers:
         try:
             response = _try_provider(provider, task_type, prompt, **kwargs)
             _increment_usage(task_type, response)
-            return response.choices[0].message.content
+            content = response.choices[0].message.content
+            ttl = _TASK_TTL.get(task_type, 300)
+            if ttl > 0:
+                _llm_cache.set(cache_key, {"content": content}, ttl=ttl)
+            return content
         except Exception as e:
             last_error = e
             logger.warning("Provider '%s' failed: %s", provider, e)
@@ -419,11 +400,12 @@ async def route_chat(task_type: str, messages: list[dict], **kwargs: object) -> 
     if not providers:
         raise RuntimeError(f"No available providers for task_type '{task_type}'")
 
-    # Inject per-task-type TTL for disk cache unless caller overrides
-    kwargs.setdefault("cache", {
-        "namespace": task_type,
-        "ttl": _CACHE_TTL.get(task_type, 300),
-    })
+    # Manual cache lookup
+    _msg_hash = hashlib.sha256(json.dumps(messages, sort_keys=True).encode()).hexdigest()
+    cache_key = f"{task_type}:chat:{_msg_hash}"
+    cached = _llm_cache.get(cache_key)
+    if cached is not None:
+        return cached["content"]
 
     router = _get_router()
     last_error = None
@@ -441,7 +423,11 @@ async def route_chat(task_type: str, messages: list[dict], **kwargs: object) -> 
             _health_tracker.record_success(actual_provider, latency_ms)
             _get_rate_limiter().record_call(actual_provider)
             _increment_usage(task_type, response)
-            return response.choices[0].message.content
+            content = response.choices[0].message.content
+            ttl = _TASK_TTL.get(task_type, 300)
+            if ttl > 0:
+                _llm_cache.set(cache_key, {"content": content}, ttl=ttl)
+            return content
         except Exception as e:
             _health_tracker.record_failure(provider, "call failed")
             last_error = e
@@ -566,3 +552,4 @@ def reset_router() -> None:
     _config = None
     _rate_limiter = None
     _health_tracker = HealthTracker()
+    _llm_cache.clear()

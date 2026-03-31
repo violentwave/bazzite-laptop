@@ -7,10 +7,12 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+from ai.cache import JsonFileCache
 from ai.router import (
     _CACHE_DIR,
     VALID_TASK_TYPES,
     _extract_provider,
+    _llm_cache,
     get_usage_stats,
     reset_router,
     reset_usage_stats,
@@ -316,17 +318,17 @@ class TestUsageTracking:
             assert stats[tt]["completion_tokens"] == 0
 
 
-# ── Disk Cache Tests ──
+# ── Cache Tests ──
 
 
 class TestDiskCache:
-    def test_litellm_cache_is_cache_instance(self):
-        import litellm
-        from litellm.caching.caching import Cache
+    def test_json_file_cache_is_instance(self):
+        assert isinstance(_llm_cache, JsonFileCache)
 
-        assert litellm.cache is not None
-        assert isinstance(litellm.cache, Cache)
-        assert litellm.cache.type == "disk"
+    def test_litellm_cache_is_none(self):
+        import litellm
+
+        assert litellm.cache is None
 
     def test_cache_dir_path(self):
         # Preferred location; falls back to TMPDIR in restricted environments

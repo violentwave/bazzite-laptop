@@ -19,7 +19,6 @@ source "$VENV"
 # ── Pinned versions from docs/verified-deps.md ────────────────────────────────
 declare -A PINNED=(
     ["litellm"]="1.82.2"
-    ["diskcache"]="5.6.3"
     ["lancedb"]="0.29.2"
     ["fastmcp"]="3.1.1"
     ["uvicorn"]="0.42.0"

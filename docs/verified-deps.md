@@ -22,7 +22,6 @@ These are the packages actively used by `ai/`, `tray/`, and `tests/`.
 | Package | Version | Used by |
 |---------|---------|--------|
 | litellm | 1.82.2 | `ai/router.py` — multi-provider LLM routing |
-| diskcache | 5.6.3 | `ai/router.py` — disk-based LLM response cache |
 | lancedb | 0.29.2 | `ai/rag/` — vector database for embeddings |
 | fastmcp | 3.1.1 | `ai/mcp_bridge/server.py` — MCP server |
 | uvicorn | 0.42.0 | `ai/llm_proxy.py` — ASGI server for LLM proxy |
@@ -140,7 +139,7 @@ Keys stored in `~/.config/bazzite-ai/keys.env`.
 | Dependency | Issue | Workaround |
 |------------|-------|-----------|
 | `litellm`, `rich`, `python-dotenv` | Do not expose `__version__` attribute | Use `importlib.metadata.version("package-name")` instead |
-| `litellm.cache` (disk type) | Requires `diskcache` separate install (`litellm[caching]`) | `diskcache==5.6.3` added to `requirements.txt` |
+| `diskcache` | CVE-2025-69872 (pickle RCE) | Replaced with `ai/cache.py` (`JsonFileCache`) in Phase 11. No pickle, JSON-only. |
 | `litellm.Router` | Does **not** check `litellm.cache` via `router.completion()` without `cache_responses=True`; caching is at `litellm.completion()` level | Integration-level cache testing requires a real router, not mocks |
 | NVIDIA PRIME offload vars | `__NV_PRIME_RENDER_OFFLOAD`, `__GLX_VENDOR_LIBRARY_NAME`, `prime-run` **crash** Proton/Vulkan on GTX 1060 + Intel HD 630 with `nvidia-drm.modeset=1` | Never set these; games route to NVIDIA automatically via DXVK/Vulkan |
 | `vm.swappiness` | Value of 180 is intentionally high for ZRAM; do **not** lower it | Leave at 180 |

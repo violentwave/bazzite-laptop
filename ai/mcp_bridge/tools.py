@@ -689,6 +689,12 @@ async def _execute_python_tool(tool_name: str, tool_def: dict, args: dict) -> st
         elif tool_name == "system.gpu_health":
             return await _execute_gpu_tool(tool_name)
 
+        elif tool_name == "system.cache_stats":
+            from ai.cache import get_cache_stats  # noqa: PLC0415
+
+            result = get_cache_stats()
+            return json.dumps(result, indent=2)
+
         elif tool_name == "security.run_ingest":
             proc = await asyncio.create_subprocess_exec(
                 str(Path(__file__).parent.parent.parent / ".venv" / "bin" / "python"),

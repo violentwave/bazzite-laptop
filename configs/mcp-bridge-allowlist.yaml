@@ -326,3 +326,10 @@ tools:
     source: python
     module: "ai.mcp_bridge.tools"
     args: null
+
+  system.cache_stats:
+    description: "LLM cache statistics: entries, size, hit rate"
+    source: python
+    module: ai.cache
+    function: get_cache_stats
+    args: null
