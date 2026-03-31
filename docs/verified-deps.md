@@ -82,6 +82,8 @@ These must exist on the host — they are **not** installed via pip or npm.
 | `@claude-flow/plugin-code-intelligence` | file:plugins/code-intelligence | Semantic code search plugin |
 | `@claude-flow/plugin-test-intelligence` | file:plugins/test-intelligence | Predictive test selection plugin |
 | `agentic-flow` | ^2.0.7 | Agentic workflow runtime |
+| `vitest` | ^4.1.2 (dev) | Plugin test runner |
+| `vite` | ^6.1.6 (dev) | Plugin build tool |
 
 ---
 

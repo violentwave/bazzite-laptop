@@ -277,6 +277,34 @@ Cerebras (health-weighted, hot-swappable via `configs/litellm-config.yaml`)
 
 ---
 
+## Phase 8 — Clean Slate
+
+**Documentation fixes:**
+- Fixed `docs/USER-GUIDE.md` system.* tool count (13 → 15)
+- Removed stale `bazzite-ai-system-profile.md` reference from `.opencode/AGENTS.md`
+- Updated Known Active Issues in `docs/AGENT.md` (5 → 4 items)
+
+**Bug fixes:**
+- `scripts/system-health-snapshot.sh`: Added root-check guards for smartctl calls (skip gracefully when not root)
+- `scripts/system-health-snapshot.sh`: Fixed `findmnt` returning multiple lines for composefs overlay (`grep '^/dev/' | head -1`)
+- `scripts/system-health-snapshot.sh`: Fixed `log()`/`tlog()` functions causing silent exit under `set -euo pipefail` when `QUIET=true` (`|| true` added)
+- `ai/rag/ingest_code.py`: Filter empty/whitespace chunks before Gemini embedding to prevent "empty Part" errors
+- `ai/system/pkg_intel.py`: Handle `licenses` field as string or list from deps.dev API
+- SELinux: 14 scripts in `/usr/local/bin/` relabeled from `user_home_t` to `bin_t` (were failing with 203/EXEC in systemd)
+
+**Dependency updates:**
+- Updated `vitest` to 4.x and `vite` to 6.x in plugin workspaces (npm audit vulns 7 → 3)
+
+**Deprecations:**
+- AgentDB bridge formally deprecated; `.swarm/` directory deleted
+- `--email` flag removed from `systemd/system-health.service` ExecStart
+
+**Data refreshed:**
+- RAG docs re-ingested with `--force` (7 files, 68 chunks via Gemini Embedding 001)
+- Code index built (354 files, 1046 chunks)
+- Log intel re-ingested (2 health records, 1 scan record)
+- Package intel initial scan completed (13 packages)
+
 ## Final Metrics (Phase 6 Amendment complete)
 
 | Metric | Value |
