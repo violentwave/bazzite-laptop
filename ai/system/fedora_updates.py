@@ -19,6 +19,7 @@ import requests
 
 from ai.config import APP_NAME, SECURITY_DIR, load_keys, setup_logging
 from ai.rate_limiter import RateLimiter
+from ai.utils.freshness import stamp_generated_at
 
 logger = logging.getLogger(APP_NAME)
 
@@ -100,9 +101,7 @@ def _parse_update(raw: dict) -> dict:
         "status": raw.get("status", ""),
         "date_submitted": (raw.get("date_submitted") or "")[:10],
         "url": f"https://bodhi.fedoraproject.org/updates/{raw.get('alias', '')}",
-        "packages": [
-            b.get("name", "") for b in raw.get("builds", []) if b.get("name")
-        ],
+        "packages": [b.get("name", "") for b in raw.get("builds", []) if b.get("name")],
     }
 
 
@@ -128,20 +127,16 @@ def check_updates(rate_limiter: RateLimiter | None = None) -> dict:
 
     security_updates = [u for u in all_updates if u["type"] == "security"]
     relevant_updates = [
-        u for u in all_updates
-        if u["type"] != "security" and installed_rpms & set(u["packages"])
+        u for u in all_updates if u["type"] != "security" and installed_rpms & set(u["packages"])
     ]
 
-    critical_count = sum(
-        1 for u in security_updates if u["severity"] == "critical"
-    )
+    critical_count = sum(1 for u in security_updates if u["severity"] == "critical")
 
     report = {
         "checked_at": datetime.now(tz=UTC).isoformat(),
         "fedora_release": _FEDORA_RELEASE,
         "security_updates": [
-            {k: v for k, v in u.items() if k != "packages"}
-            for u in security_updates
+            {k: v for k, v in u.items() if k != "packages"} for u in security_updates
         ],
         "relevant_updates": relevant_updates,
         "summary": {
@@ -158,6 +153,7 @@ def check_updates(rate_limiter: RateLimiter | None = None) -> dict:
 def _write_report(data: dict) -> None:
     """Atomic write to ~/security/fedora-updates.json."""
     SECURITY_DIR.mkdir(parents=True, exist_ok=True)
+    stamp_generated_at(data)
     tmp = FEDORA_UPDATES_PATH.with_suffix(".tmp")
     tmp.write_text(json.dumps(data, indent=2))
     tmp.rename(FEDORA_UPDATES_PATH)
@@ -168,9 +164,7 @@ def _write_report(data: dict) -> None:
 
 def main() -> None:
     """CLI entry point."""
-    parser = argparse.ArgumentParser(
-        description="Check Fedora/Bodhi updates for Bazzite"
-    )
+    parser = argparse.ArgumentParser(description="Check Fedora/Bodhi updates for Bazzite")
     parser.add_argument("--check", action="store_true", help="Run update check")
     parser.parse_args()
 

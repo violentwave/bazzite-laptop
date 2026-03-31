@@ -22,6 +22,7 @@ import tempfile
 from pathlib import Path
 
 from ai.config import APP_NAME, KEYS_ENV, SECURITY_DIR
+from ai.utils.freshness import stamp_generated_at
 
 logger = logging.getLogger(APP_NAME)
 
@@ -94,15 +95,9 @@ def _compute_summary(key_presence: dict[str, str]) -> dict:
     """Derive categorised flags from a key-presence dict."""
     missing = [k for k, v in key_presence.items() if v == "missing"]
     return {
-        "all_llm_keys_present": all(
-            key_presence.get(k) == "set" for k in _LLM_KEYS
-        ),
-        "all_threat_keys_present": all(
-            key_presence.get(k) == "set" for k in _THREAT_KEYS
-        ),
-        "all_storage_keys_present": all(
-            key_presence.get(k) == "set" for k in _STORAGE_KEYS
-        ),
+        "all_llm_keys_present": all(key_presence.get(k) == "set" for k in _LLM_KEYS),
+        "all_threat_keys_present": all(key_presence.get(k) == "set" for k in _THREAT_KEYS),
+        "all_storage_keys_present": all(key_presence.get(k) == "set" for k in _STORAGE_KEYS),
         "missing_keys": missing,
         "categories": {
             "llm_providers": {k: key_presence.get(k, "missing") for k in _LLM_KEYS},
@@ -166,6 +161,7 @@ def write_status_file(key_presence: dict[str, str] | None = None) -> None:
         "keys": key_presence,
         "summary": _compute_summary(key_presence),
     }
+    stamp_generated_at(payload)
     SECURITY_DIR.mkdir(parents=True, exist_ok=True)
     fd, tmp_path = tempfile.mkstemp(
         dir=str(SECURITY_DIR),

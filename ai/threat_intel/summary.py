@@ -141,6 +141,122 @@ def _overall_status(sections: dict[str, dict[str, Any]]) -> str:
     return worst
 
 
+def _calculate_risk_score(sections: dict[str, dict[str, Any]]) -> str:
+    """Calculate overall risk score: low, medium, high, critical."""
+    score = 0
+
+    # Check CVE severity
+    cve = sections.get("cve", {})
+    score += cve.get("kev_cves", 0) * 3
+    score += cve.get("high_severity", 0) * 2
+    score += cve.get("medium_severity", 0) * 1
+
+    # Check audit issues
+    audit = sections.get("audit", {})
+    score += audit.get("critical_issues", 0) * 3
+    score += audit.get("high_issues", 0) * 2
+    score += audit.get("medium_issues", 0) * 1
+
+    # Check storage issues
+    storage = sections.get("storage", {})
+    if storage.get("db_healthy") is False:
+        score += 2
+    if storage.get("disk_space_critical", False):
+        score += 2
+
+    # Determine risk level
+    if score >= 10:
+        return "critical"
+    elif score >= 5:
+        return "high"
+    elif score >= 2:
+        return "medium"
+    return "low"
+
+
+def _extract_correlation_links(sections: dict[str, dict[str, Any]]) -> list[dict[str, str]]:
+    """Extract correlation links between findings."""
+    links = []
+
+    # Link CVEs to related findings
+    cve = sections.get("cve", {})
+    for cve_id in cve.get("top_cves", [])[:3]:
+        links.append(
+            {
+                "type": "cve_to_audit",
+                "source": f"cve:{cve_id}",
+                "target": "audit:security_checks",
+                "relationship": "may_exploit",
+            }
+        )
+
+    # Link storage to perf
+    storage = sections.get("storage", {})
+    if not storage.get("db_healthy", True):
+        links.append(
+            {
+                "type": "storage_to_perf",
+                "source": "storage:vector_db",
+                "target": "perf:query_latency",
+                "relationship": "degraded",
+            }
+        )
+
+    return links
+
+
+def _extract_recommended_actions(sections: dict[str, dict[str, Any]]) -> list[dict[str, str]]:
+    """Extract recommended next actions from all sections."""
+    actions = []
+
+    # CVE recommendations
+    cve = sections.get("cve", {})
+    if cve.get("kev_cves", 0) > 0:
+        actions.append(
+            {
+                "priority": "critical",
+                "action": "Review KEV CVEs",
+                "tool": "security.cve_check",
+                "finding": f"{cve.get('kev_cves', 0)} KEV CVEs found",
+            }
+        )
+    if cve.get("high_severity", 0) > 0:
+        actions.append(
+            {
+                "priority": "high",
+                "action": "Apply high-severity patches",
+                "tool": "system.fedora_updates",
+                "finding": f"{cve.get('high_severity', 0)} high-severity CVEs",
+            }
+        )
+
+    # Audit recommendations
+    audit = sections.get("audit", {})
+    if audit.get("critical_issues", 0) > 0:
+        actions.append(
+            {
+                "priority": "critical",
+                "action": "Run security audit",
+                "tool": "agents.security_audit",
+                "finding": f"{audit.get('critical_issues', 0)} critical issues",
+            }
+        )
+
+    # Storage recommendations
+    storage = sections.get("storage", {})
+    if not storage.get("db_healthy", True):
+        actions.append(
+            {
+                "priority": "high",
+                "action": "Check vector DB health",
+                "tool": "agents.knowledge_storage",
+                "finding": "Database unhealthy",
+            }
+        )
+
+    return actions
+
+
 # ── Orchestration ─────────────────────────────────────────────────────────────
 
 
@@ -149,7 +265,8 @@ def build_summary() -> dict[str, Any]:
 
     Returns:
         Dict with top-level keys: generated_at, date, overall_status,
-        and one sub-dict per report source.  Missing dirs are recorded
+        risk_score, correlation_links, recommended_actions, and one
+        sub-dict per report source. Missing dirs are recorded
         in ``missing_sources`` rather than raising.
     """
     now = datetime.now(tz=UTC)
@@ -176,11 +293,17 @@ def build_summary() -> dict[str, Any]:
         sections["cve"] = _extract_cve_highlights(raw["cve"])
 
     overall = _overall_status(sections)
+    risk_score = _calculate_risk_score(sections)
+    correlation_links = _extract_correlation_links(sections)
+    recommended_actions = _extract_recommended_actions(sections)
 
     summary: dict[str, Any] = {
         "generated_at": now.isoformat(),
         "date": date.today().isoformat(),
         "overall_status": overall,
+        "risk_score": risk_score,
+        "correlation_links": correlation_links,
+        "recommended_actions": recommended_actions,
         "missing_sources": missing,
         **sections,
     }

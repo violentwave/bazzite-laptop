@@ -14,8 +14,11 @@ from pathlib import Path
 import yaml
 
 from ai.config import CONFIGS_DIR, PROJECT_ROOT, STATUS_FILE
+from ai.utils.freshness import format_freshness_age
 
 logger = logging.getLogger("ai.mcp_bridge")
+
+_LLM_STATUS_PATH = Path.home() / "security" / "llm-status.json"
 
 _TOOL_OUTPUT_LIMITS: dict[str, int] = {
     "system.mcp_manifest": 16384,
@@ -143,6 +146,7 @@ def _read_file_tail(path: str, lines: int, pattern: str | None = None) -> str:
                     return Path(f).stat().st_mtime
                 except OSError:
                     return 0.0
+
             for fstr in sorted(globs, key=_mtime, reverse=True):
                 fp = Path(fstr)
                 if fp.is_symlink():
@@ -180,7 +184,12 @@ def _read_status_file() -> dict:
 
 # Status key whitelist
 _STATUS_ALLOWED_KEYS = {
-    "state", "scan_type", "last_scan_time", "result", "health_status", "health_issues"
+    "state",
+    "scan_type",
+    "last_scan_time",
+    "result",
+    "health_status",
+    "health_issues",
 }
 
 
@@ -217,7 +226,7 @@ _GPU_THROTTLE_BITS: dict[int, str] = {
     0x100: "SW_THERMAL",
 }
 _GPU_TEMP_THROTTLE_THRESHOLD = 83  # °C — GTX 1060 thermal throttle point
-_GPU_HEADROOM_WARN_C = 8           # °C below threshold → send warning
+_GPU_HEADROOM_WARN_C = 8  # °C below threshold → send warning
 
 
 async def _execute_gpu_tool(tool_name: str) -> str:
@@ -235,11 +244,13 @@ async def _execute_gpu_tool(tool_name: str) -> str:
         "fan.speed,"
         "clocks_throttle_reasons.active"
     )
-    raw = await _run_subprocess([
-        "nvidia-smi",
-        f"--query-gpu={fields}",
-        "--format=csv,noheader,nounits",
-    ])
+    raw = await _run_subprocess(
+        [
+            "nvidia-smi",
+            f"--query-gpu={fields}",
+            "--format=csv,noheader,nounits",
+        ]
+    )
 
     if raw in ("[Command not found]", "[Tool timed out]"):
         return json.dumps({"error": "nvidia-smi not available"})
@@ -284,30 +295,133 @@ async def _execute_gpu_tool(tool_name: str) -> str:
         except ValueError:
             throttle_val = 0
 
-        active_reasons = [
-            name for bit, name in _GPU_THROTTLE_BITS.items() if throttle_val & bit
-        ]
+        active_reasons = [name for bit, name in _GPU_THROTTLE_BITS.items() if throttle_val & bit]
         result["throttle_active"] = active_reasons
         result["is_throttling"] = bool(active_reasons)
 
         # Warn if headroom is dangerously low
         if headroom_c <= _GPU_HEADROOM_WARN_C:
             warn_msg = (
-                f"GPU headroom only {headroom_c}°C "
-                f"({temp_c}°C / {_GPU_TEMP_THROTTLE_THRESHOLD}°C)"
+                f"GPU headroom only {headroom_c}°C ({temp_c}°C / {_GPU_TEMP_THROTTLE_THRESHOLD}°C)"
             )
             result["warning"] = warn_msg
             # Fire a desktop notification (best-effort, non-blocking)
-            asyncio.ensure_future(_run_subprocess([
-                "notify-send", "--urgency=critical",
-                "--icon=dialog-warning",
-                "GPU Thermal Warning", warn_msg,
-            ]))
+            asyncio.ensure_future(
+                _run_subprocess(
+                    [
+                        "notify-send",
+                        "--urgency=critical",
+                        "--icon=dialog-warning",
+                        "GPU Thermal Warning",
+                        warn_msg,
+                    ]
+                )
+            )
 
     return json.dumps(result, indent=2)
 
 
 _GPU_STATUS_FIELDS = "name, temperature_C, utilization_%, memory_MB, power_W, fan"
+
+
+async def _execute_token_report() -> str:
+    """Generate token usage report from llm-status.json.
+
+    Returns structured report with freshness indicator.
+    """
+    import json
+
+    from ai.utils.freshness import format_freshness_age
+
+    status_path = _LLM_STATUS_PATH
+
+    try:
+        if not status_path.exists():
+            return json.dumps(
+                {
+                    "error": "LLM status file not found",
+                    "message": "Run the LLM proxy to generate status data",
+                },
+                indent=2,
+            )
+
+        data = json.loads(status_path.read_text())
+    except json.JSONDecodeError:
+        return json.dumps(
+            {
+                "error": "LLM status file is malformed",
+                "message": "Status file contains invalid JSON",
+            },
+            indent=2,
+        )
+    except OSError as e:
+        return json.dumps(
+            {"error": f"Failed to read status file: {e}", "message": "Check file permissions"},
+            indent=2,
+        )
+
+    # Build report from available data
+    report: dict = {
+        "generated_at": data.get("generated_at", "unknown"),
+        "note": (
+            "Daily/weekly rollups not yet available. Showing cumulative totals since proxy start."
+        ),
+    }
+
+    # Extract usage data if available
+    usage = data.get("usage", {}) if isinstance(data, dict) else {}
+    if usage:
+        total_prompt = 0
+        total_completion = 0
+        total_requests = 0
+
+        task_breakdown: dict[str, dict] = {}
+
+        for task_type, stats in usage.items():
+            if not isinstance(stats, dict):
+                continue
+            prompt = stats.get("prompt_tokens", 0) or 0
+            completion = stats.get("completion_tokens", 0) or 0
+            requests = stats.get("requests", 0) or 0
+
+            total_prompt += prompt
+            total_completion += completion
+            total_requests += requests
+
+            task_breakdown[task_type] = {
+                "prompt_tokens": prompt,
+                "completion_tokens": completion,
+                "requests": requests,
+            }
+
+        report["usage"] = {
+            "total_tokens": total_prompt + total_completion,
+            "prompt_tokens": total_prompt,
+            "completion_tokens": total_completion,
+            "requests": total_requests,
+        }
+
+        if task_breakdown:
+            report["usage"]["by_task"] = task_breakdown
+
+    # Extract provider health data if available
+    providers = data.get("providers", {}) if isinstance(data, dict) else {}
+    if providers and isinstance(providers, dict):
+        report["providers"] = {
+            name: {
+                "health_score": info.get("score", "unknown"),
+                "auth_broken": info.get("auth_broken", False),
+            }
+            for name, info in providers.items()
+            if isinstance(info, dict)
+        }
+
+    # Add freshness warning if stale
+    freshness = format_freshness_age(data.get("generated_at"))
+    if freshness:
+        report["freshness_warning"] = freshness
+
+    return json.dumps(report, indent=2)
 
 
 async def _execute_gpu_status(command: list[str]) -> str:
@@ -358,14 +472,27 @@ async def execute_tool(tool_name: str, args: dict) -> str:
 
     # system.service_status: split into system and user scope calls
     if tool_name == "system.service_status":
-        system_out = await _run_subprocess([
-            "systemctl", "show", "-p", "Id,ActiveState",
-            "clamav-freshclam.service", "system-health.timer",
-        ])
-        user_out = await _run_subprocess([
-            "systemctl", "--user", "show", "-p", "Id,ActiveState",
-            "bazzite-mcp-bridge.service", "bazzite-llm-proxy.service",
-        ])
+        system_out = await _run_subprocess(
+            [
+                "systemctl",
+                "show",
+                "-p",
+                "Id,ActiveState",
+                "clamav-freshclam.service",
+                "system-health.timer",
+            ]
+        )
+        user_out = await _run_subprocess(
+            [
+                "systemctl",
+                "--user",
+                "show",
+                "-p",
+                "Id,ActiveState",
+                "bazzite-mcp-bridge.service",
+                "bazzite-llm-proxy.service",
+            ]
+        )
         parts = []
         if system_out.strip():
             parts.append("[system]\n" + system_out.strip())
@@ -381,7 +508,9 @@ async def execute_tool(tool_name: str, args: dict) -> str:
     if tool_def.get("source") == "file_tail":
         try:
             text = _read_file_tail(
-                tool_def["path"], tool_def.get("lines", 20), tool_def.get("pattern"),
+                tool_def["path"],
+                tool_def.get("lines", 20),
+                tool_def.get("pattern"),
             )
             return _truncate(_redact_paths(text))
         except FileNotFoundError:
@@ -392,7 +521,15 @@ async def execute_tool(tool_name: str, args: dict) -> str:
         try:
             if "path" in tool_def:
                 data = json.loads(Path(tool_def["path"]).expanduser().read_text())
-                return _truncate(json.dumps(data, indent=2))
+                freshness = (
+                    format_freshness_age(data.get("generated_at"))
+                    if isinstance(data, dict)
+                    else None
+                )
+                json_str = json.dumps(data, indent=2)
+                if freshness:
+                    json_str = f"{json_str}\n\n[{freshness}]"
+                return _truncate(json_str)
             data = _read_status_file()
             filtered = {k: v for k, v in data.items() if k in _STATUS_ALLOWED_KEYS}
             return json.dumps(filtered, indent=2)
@@ -416,8 +553,13 @@ async def _execute_python_tool(tool_name: str, tool_def: dict, args: dict) -> st
             result = lookup_hash(args["hash"])
             # Sanitize: strip raw_data, return only safe fields
             safe_fields = {
-                "hash", "source", "family", "risk_level",
-                "detection_ratio", "description", "tags",
+                "hash",
+                "source",
+                "family",
+                "risk_level",
+                "detection_ratio",
+                "description",
+                "tags",
             }
             if isinstance(result, dict):
                 filtered = {k: v for k, v in result.items() if k in safe_fields}
@@ -429,8 +571,14 @@ async def _execute_python_tool(tool_name: str, tool_def: dict, args: dict) -> st
 
             result = lookup_ip(args["ip"])
             safe_fields = {
-                "ip", "source", "abuse_score", "greynoise_classification",
-                "recommendation", "ports", "vulns", "description",
+                "ip",
+                "source",
+                "abuse_score",
+                "greynoise_classification",
+                "recommendation",
+                "ports",
+                "vulns",
+                "description",
             }
             data = json.loads(result.to_json())
             filtered = {k: v for k, v in data.items() if k in safe_fields}
@@ -441,8 +589,14 @@ async def _execute_python_tool(tool_name: str, tool_def: dict, args: dict) -> st
 
             result = lookup_url(args["url"])
             safe_fields = {
-                "ioc", "source", "threat_type", "malware_family",
-                "risk_level", "tags", "description", "circl_hits",
+                "ioc",
+                "source",
+                "threat_type",
+                "malware_family",
+                "risk_level",
+                "tags",
+                "description",
+                "circl_hits",
             }
             data = json.loads(result.to_json())
             filtered = {k: v for k, v in data.items() if k in safe_fields}
@@ -524,7 +678,7 @@ async def _execute_python_tool(tool_name: str, tool_def: dict, args: dict) -> st
             result = {
                 "modes": {k: {"providers": v, "count": len(v)} for k, v in models.items()},
                 "how_to_switch": "In Newelle: Settings → API → Model field. "
-                                 "Change from 'fast' to any mode name listed above.",
+                "Change from 'fast' to any mode name listed above.",
                 "proxy_url": "http://127.0.0.1:8767/v1/",
             }
             return json.dumps(result, indent=2)
@@ -533,12 +687,14 @@ async def _execute_python_tool(tool_name: str, tool_def: dict, args: dict) -> st
             scan_type = args.get("scan_type", "quick")
             service = f"clamav-{scan_type}.service"
             result = await _run_subprocess(["systemctl", "start", service])
-            return json.dumps({
-                "triggered": True,
-                "service": service,
-                "message": f"ClamAV {scan_type} scan started. "
-                           "Results will appear in logs.scan_history once complete.",
-            })
+            return json.dumps(
+                {
+                    "triggered": True,
+                    "service": service,
+                    "message": f"ClamAV {scan_type} scan started. "
+                    "Results will appear in logs.scan_history once complete.",
+                }
+            )
 
         elif tool_name == "security.run_health":
             # Clear a stale flock lock file if it's older than 5 minutes.
@@ -552,6 +708,7 @@ async def _execute_python_tool(tool_name: str, tool_def: dict, args: dict) -> st
             lock_cleared = False
             if _HEALTH_LOCK.exists():
                 import time as _time  # noqa: PLC0415
+
                 age_s = _time.time() - _HEALTH_LOCK.stat().st_mtime
                 if age_s > 300:  # older than 5 minutes → stale
                     try:
@@ -561,21 +718,25 @@ async def _execute_python_tool(tool_name: str, tool_def: dict, args: dict) -> st
                         pass  # permission denied — service will handle it
 
             proc = await asyncio.create_subprocess_exec(
-                "systemctl", "start", "system-health.service",
+                "systemctl",
+                "start",
+                "system-health.service",
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
             )
             _, stderr_b = await asyncio.wait_for(proc.communicate(), timeout=60)
             if proc.returncode != 0:
                 err = stderr_b.decode("utf-8", errors="replace").strip()
-                return json.dumps({
-                    "triggered": False,
-                    "service": "system-health.service",
-                    "error": err or f"systemctl exited {proc.returncode}",
-                    "message": "Service failed to start. "
-                               "Ensure system-health.service is deployed at "
-                               "/etc/systemd/system/system-health.service.",
-                })
+                return json.dumps(
+                    {
+                        "triggered": False,
+                        "service": "system-health.service",
+                        "error": err or f"systemctl exited {proc.returncode}",
+                        "message": "Service failed to start. "
+                        "Ensure system-health.service is deployed at "
+                        "/etc/systemd/system/system-health.service.",
+                    }
+                )
             result_msg = (
                 "Health snapshot started. "
                 "Raw results available via security.health_snapshot in ~30 seconds. "
@@ -584,25 +745,42 @@ async def _execute_python_tool(tool_name: str, tool_def: dict, args: dict) -> st
             )
             if lock_cleared:
                 result_msg += " (stale lock file cleared before start)"
-            return json.dumps({
-                "triggered": True,
-                "service": "system-health.service",
-                "message": result_msg,
-            })
+            return json.dumps(
+                {
+                    "triggered": True,
+                    "service": "system-health.service",
+                    "message": result_msg,
+                }
+            )
 
         elif tool_name == "code.search":
             query = args.get("query", "")
             repo_root = str(PROJECT_ROOT)
-            output = await _run_subprocess([
-                "rg", "--no-heading", "--line-number",
-                "--max-count", "20", "--glob", "*.py",
-                query, repo_root,
-            ])
+            output = await _run_subprocess(
+                [
+                    "rg",
+                    "--no-heading",
+                    "--line-number",
+                    "--max-count",
+                    "20",
+                    "--glob",
+                    "*.py",
+                    query,
+                    repo_root,
+                ]
+            )
             if output == "[Command not found]":
                 # rg not available — fall back to grep (-F: fixed string, not regex)
-                output = await _run_subprocess([
-                    "grep", "-rn", "-F", "--include=*.py", query, repo_root,
-                ])
+                output = await _run_subprocess(
+                    [
+                        "grep",
+                        "-rn",
+                        "-F",
+                        "--include=*.py",
+                        query,
+                        repo_root,
+                    ]
+                )
             return _truncate(_redact_paths(output))
 
         elif tool_name == "code.rag_query":
@@ -653,8 +831,14 @@ async def _execute_python_tool(tool_name: str, tool_def: dict, args: dict) -> st
 
             result = submit_file(args["file_path"])
             safe_fields = {
-                "file_path", "sha256", "status", "verdict",
-                "threat_score", "threat_level", "job_id", "description",
+                "file_path",
+                "sha256",
+                "status",
+                "verdict",
+                "threat_score",
+                "threat_level",
+                "job_id",
+                "description",
             }
             data = json.loads(result.to_json())
             filtered = {k: v for k, v in data.items() if k in safe_fields}
@@ -671,8 +855,15 @@ async def _execute_python_tool(tool_name: str, tool_def: dict, args: dict) -> st
 
             result = build_summary()
             safe_fields = {
-                "generated_at", "date", "overall_status", "missing_sources",
-                "audit", "perf", "storage", "code", "cve",
+                "generated_at",
+                "date",
+                "overall_status",
+                "missing_sources",
+                "audit",
+                "perf",
+                "storage",
+                "code",
+                "cve",
             }
             filtered = {k: v for k, v in result.items() if k in safe_fields}
             return json.dumps(filtered, indent=2)
@@ -695,10 +886,38 @@ async def _execute_python_tool(tool_name: str, tool_def: dict, args: dict) -> st
             result = get_cache_stats()
             return json.dumps(result, indent=2)
 
+        elif tool_name == "system.token_report":
+            return await _execute_token_report()
+
+        elif tool_name == "security.correlate":
+            from ai.threat_intel.correlator import correlate_ioc  # noqa: PLC0415
+
+            ioc = args.get("ioc", "")
+            ioc_type = args.get("ioc_type", "hash")
+            if not ioc:
+                return json.dumps({"error": "Missing required argument: ioc"}, indent=2)
+            report = correlate_ioc(ioc, ioc_type)
+            return json.dumps(report.to_dict(), indent=2)
+
+        elif tool_name == "security.recommend_action":
+            from ai.threat_intel.playbooks import get_response_plan  # noqa: PLC0415
+
+            finding_type = args.get("finding_type", "")
+            finding_id = args.get("finding_id", "")
+            if not finding_type or not finding_id:
+                return json.dumps(
+                    {"error": "Missing required arguments: finding_type, finding_id"},
+                    indent=2,
+                )
+            response = get_response_plan(finding_type, finding_id)
+            return json.dumps(response.to_dict(), indent=2)
+
         elif tool_name == "security.run_ingest":
             proc = await asyncio.create_subprocess_exec(
                 str(Path(__file__).parent.parent.parent / ".venv" / "bin" / "python"),
-                "-m", "ai.log_intel", "--all",
+                "-m",
+                "ai.log_intel",
+                "--all",
                 cwd=str(Path(__file__).parent.parent.parent),
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,

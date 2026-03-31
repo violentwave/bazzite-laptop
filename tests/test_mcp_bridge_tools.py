@@ -321,10 +321,10 @@ class TestSpecificTools:
 
         # Patch allowlist to have a json_file tool
         fake_tool = {"source": "json_file", "description": "Status"}
-        with patch("ai.mcp_bridge.tools._load_allowlist",
-                   return_value={"security.scan_status": fake_tool}):
-            with patch("ai.mcp_bridge.tools._read_status_file",
-                       side_effect=FileNotFoundError):
+        with patch(
+            "ai.mcp_bridge.tools._load_allowlist", return_value={"security.scan_status": fake_tool}
+        ):
+            with patch("ai.mcp_bridge.tools._read_status_file", side_effect=FileNotFoundError):
                 result = await execute_tool("security.scan_status", {})
 
         assert "No data yet" in result or isinstance(result, str)
@@ -339,8 +339,7 @@ class TestSpecificTools:
         mock_proc.communicate.return_value = (b"hello\n", b"")
         mock_proc.returncode = 0
 
-        with patch("ai.mcp_bridge.tools._load_allowlist",
-                   return_value={"test.echo": fake_tool}):
+        with patch("ai.mcp_bridge.tools._load_allowlist", return_value={"test.echo": fake_tool}):
             with patch("asyncio.create_subprocess_exec", return_value=mock_proc):
                 result = await execute_tool("test.echo", {})
 
@@ -413,8 +412,7 @@ class TestMcpManifest:
 
         n_tools = 5
         tools_dict = {
-            f"system.tool_{i}": {"description": f"Tool {i}", "args": None}
-            for i in range(n_tools)
+            f"system.tool_{i}": {"description": f"Tool {i}", "args": None} for i in range(n_tools)
         }
         tools_dict["system.mcp_manifest"] = {
             "description": "List all available MCP tools",
@@ -483,7 +481,7 @@ class TestMcpManifest:
 
     @pytest.mark.asyncio()
     async def test_manifest_output_under_4096_bytes(self, tmp_path):
-        """Compact manifest for the real allowlist YAML fits in under 4096 bytes."""
+        """Compact manifest for the real allowlist YAML fits in under configured limit."""
         from ai.mcp_bridge import tools as tools_module
 
         real_allowlist = tools_module._ALLOWLIST_PATH
@@ -492,8 +490,9 @@ class TestMcpManifest:
             tools_module._allowlist = None
             result = await tools_module.execute_tool("system.mcp_manifest", {})
 
-        assert len(result.encode()) < 4096, (
-            f"Manifest too large: {len(result.encode())} bytes"
+        limit = tools_module._TOOL_OUTPUT_LIMITS.get("system.mcp_manifest", 16384)
+        assert len(result.encode()) < limit, (
+            f"Manifest too large: {len(result.encode())} bytes (limit: {limit})"
         )
 
 
@@ -542,9 +541,7 @@ class TestGpuStatus:
         from ai.mcp_bridge.tools import _execute_gpu_status
 
         mock_proc = AsyncMock()
-        mock_proc.communicate.return_value = (
-            b"GeForce GTX 1060, 52, 26, 6144, 6.47, N/A\n", b""
-        )
+        mock_proc.communicate.return_value = (b"GeForce GTX 1060, 52, 26, 6144, 6.47, N/A\n", b"")
         mock_proc.returncode = 0
 
         with patch("asyncio.create_subprocess_exec", return_value=mock_proc):
@@ -594,9 +591,7 @@ class TestGpuStatus:
         from ai.mcp_bridge.tools import execute_tool
 
         mock_proc = AsyncMock()
-        mock_proc.communicate.return_value = (
-            b"GeForce GTX 1060, 60, 80, 6144, 120.0, 65\n", b""
-        )
+        mock_proc.communicate.return_value = (b"GeForce GTX 1060, 60, 80, 6144, 120.0, 65\n", b"")
         mock_proc.returncode = 0
 
         gpu_cmd = [

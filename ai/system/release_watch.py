@@ -18,6 +18,7 @@ import requests
 
 from ai.config import APP_NAME, SECURITY_DIR, get_key, load_keys, setup_logging
 from ai.rate_limiter import RateLimiter
+from ai.utils.freshness import stamp_generated_at
 
 logger = logging.getLogger(APP_NAME)
 
@@ -117,6 +118,7 @@ def _write_report(repos: dict) -> None:
         "checked_at": datetime.now(tz=UTC).isoformat(),
         "repos": repos,
     }
+    stamp_generated_at(data)
     tmp = RELEASE_WATCH_PATH.with_suffix(".tmp")
     tmp.write_text(json.dumps(data, indent=2))
     tmp.rename(RELEASE_WATCH_PATH)
@@ -182,12 +184,8 @@ def check_releases(
 
 def main() -> None:
     """CLI entry point for release watching."""
-    parser = argparse.ArgumentParser(
-        description="Check GitHub releases for watched dependencies"
-    )
-    parser.add_argument(
-        "--check", action="store_true", help="Run release check (default action)"
-    )
+    parser = argparse.ArgumentParser(description="Check GitHub releases for watched dependencies")
+    parser.add_argument("--check", action="store_true", help="Run release check (default action)")
     parser.add_argument(
         "--repo",
         metavar="OWNER/REPO",

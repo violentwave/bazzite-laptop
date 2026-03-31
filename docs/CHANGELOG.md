@@ -7,6 +7,48 @@ Bazzite security/gaming system.
 
 ---
 
+## Phase 15 — Threat Intel Correlation & Response Planning (2026-03-31)
+
+- **Threat Correlation Engine:** New `ai/threat_intel/correlator.py` with 
+  `CorrelationReport` dataclass that cross-references IOCs (hash, IP, URL, CVE)
+  across existing lookup modules and builds correlation graphs
+- **MITRE ATT&CK Mapping:** Static mapping in `configs/mitre-attack-map.json`
+  with technique references (T1059, T1486, T1071, etc.) for each IOC type
+- **security.correlate MCP tool:** New tool (tool count: 45 → 47) that takes 
+  IOC + type and returns structured correlation report with linked IOCs,
+  MITRE techniques, confidence scores, and risk level
+- **Response Playbooks:** New `ai/threat_intel/playbooks.py` with recommended
+  response steps based on threat type and severity:
+  - KEV CVE → check fedora updates → apply patch or compensating controls
+  - Malicious hash → sandbox analysis → block related network IOCs
+  - Suspicious IP → check associated URLs → firewall rules
+  - Suspicious URL → analyze → block domain → notify users
+- **security.recommend_action MCP tool:** New tool (tool count: 47) that 
+  generates structured response plans with urgency levels and action steps
+- **security.threat_summary Upgrade:** Added `risk_score` (low/medium/high/critical),
+  `correlation_links` between findings, and `recommended_actions` per finding
+
+---
+
+## Phase 14 — Observability Enhancements (2026-03-31)
+
+- **LiteLLM cost tracking:** Added `get_cost_stats()` and `get_usage_stats()` 
+  in `ai/router.py` with persistent counters (total_tokens, total_cost_usd, 
+  call_count, by_provider, by_task_type) since service start
+- **Sentry integration:** Added optional Sentry error tracking in `ai/llm_proxy.py`
+  with breadcrumb logging for LLM requests; gracefully degrades if sentry-sdk unavailable
+- **Provider health improvements:** Enhanced `get_health_snapshot()` with retry logic,
+  exponential backoff, circuit breaker pattern for failing providers
+- **Freshness timestamps:** Added `generated_at` ISO8601 timestamps to all runtime 
+  JSON files (llm-status.json, release-watch.json, fedora-updates.json, key-status.json)
+  via shared `ai/utils/freshness.py` helper
+- **system.token_report MCP tool:** New tool (tool count: 44 → 45) reading llm-status.json
+  with usage breakdown by task type, provider health summary, and freshness warnings
+- **Freshness-aware MCP tools:** JSON-reading tools now include "Data is X hours old."
+  warnings when data exceeds 1 hour age threshold
+
+---
+
 ## Phase 13 — LanceDB Hybrid Search + Compaction (2026-03-31)
 
 - Upgraded LanceDB from 0.29.2 to 0.30.1
