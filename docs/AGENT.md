@@ -390,8 +390,7 @@ The base security/gaming system is managed in the "Bazzite Laptop" Claude.ai pro
 
 ## Known Active Issues
 
-1. **Security status shows WARNING** — `smartctl` not found during health checks; needs investigation
-2. **Eicar test files stuck in quarantine** — chattr +i set, needs `sudo chattr -i` + `rm` to clean up
-3. **npm audit: 4 moderate vulns** — esbuild/vite/vitest dev dependency chain (not production, not urgent)
-4. **AgentDB bridge broken in RuFlo v3.5.15** — file-based workaround using `.swarm/agentdb-unified.db`
-5. **CPU 87°C idle** — needs repaste with Kryonaut Extreme (thermal compound degradation)
+1. **Eicar test files stuck in quarantine** — chattr +i set, needs `sudo chattr -i` + `rm` to clean up
+2. **npm audit: 3 remaining vulns** — path-to-regexp (high), picomatch (high), brace-expansion (moderate) in RuFlo orchestrator deps (not fixable without upstream changes)
+3. **CPU 87°C idle** — needs repaste with Kryonaut Extreme (thermal compound degradation)
+4. **auto-memory-store stale data** — 56 stale paths + 115 outdated tool counts in `.claude-flow/data/auto-memory-store.json`, plus ~64 legacy AgentDB references in `.claude/` skills/agents/rules

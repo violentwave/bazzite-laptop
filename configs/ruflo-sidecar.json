@@ -1,0 +1,25 @@
+{
+  "_comment": "RuFlo v3.5 config for manual coding sessions. Never auto-start via systemd.",
+  "llm": {
+    "baseURL": "http://127.0.0.1:8767/v1",
+    "apiKey": "sk-bazzite-local",
+    "defaultModel": "code"
+  },
+  "context": {
+    "systemFile": "docs/bazzite-ai-system-profile.md"
+  },
+  "plugins": [
+    "code-intelligence",
+    "test-intelligence"
+  ],
+  "memory": {
+    "backend": "wasm",
+    "scope": "dev-session"
+  },
+  "rules": {
+    "noDaemon": true,
+    "noSystemdUnit": true,
+    "noAutoStart": true,
+    "longTermKnowledgeBackend": "lancedb"
+  }
+}

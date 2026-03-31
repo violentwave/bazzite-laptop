@@ -7,7 +7,7 @@ After=multi-user.target
 
 [Service]
 Type=oneshot
-ExecStart=/usr/local/bin/system-health-snapshot.sh --email --quiet
+ExecStart=/usr/local/bin/system-health-snapshot.sh --quiet
 
 # Low priority — never interfere with gaming or scans
 Nice=19

@@ -75,7 +75,7 @@ readonly DEV_SDA="$_DEV_SDA"
 readonly SDA_LABEL="Internal SSD (${DEV_SDA:-not found} — SK hynix 256GB SATA)"
 
 # External NVMe: resolve from mount point to parent disk device for SMART checks
-_SDB_PART=$(findmnt -no SOURCE "${NVME_MOUNT:-/var/mnt/ext-ssd}" 2>/dev/null) || true
+_SDB_PART=$(findmnt -no SOURCE "${NVME_MOUNT:-/var/mnt/ext-ssd}" 2>/dev/null | grep '^/dev/' | head -1) || true
 _DEV_SDB=""
 if [[ -n "$_SDB_PART" ]]; then
     _SDB_PARENT=$(lsblk -no pkname "$_SDB_PART" 2>/dev/null | head -1)
@@ -159,6 +159,10 @@ fi
 # ─────────────────────────────────────────────────────────────
 
 if [[ "$RUN_SELFTEST" == true ]]; then
+    if [ "$(id -u)" -ne 0 ]; then
+        echo "Error: SMART self-test requires root privileges" >&2
+        exit 3
+    fi
     # Guard: smartctl must be installed for self-test mode
     if ! command -v smartctl &>/dev/null; then
         echo "Error: smartctl not installed (need smartmontools)" >&2
@@ -229,13 +233,13 @@ CRITICAL=()
 
 log() {
     echo "$1" >> "$LOG_FILE"
-    [[ "$QUIET" == false ]] && echo "$1"
+    [[ "$QUIET" == false ]] && echo "$1" || true
 }
 
 tlog() {
     local plain="$1" colored="$2"
     echo "$plain" >> "$LOG_FILE"
-    [[ "$QUIET" == false ]] && echo -e "$colored"
+    [[ "$QUIET" == false ]] && echo -e "$colored" || true
 }
 
 section() {
@@ -333,7 +337,9 @@ log "Uptime: $(uptime -p)"
 
 section "$SDA_LABEL"
 
-if command -v smartctl &>/dev/null && [[ -b "$DEV_SDA" ]]; then
+if [ "$(id -u)" -ne 0 ]; then
+    info "SMART: skipped (requires root)"
+elif command -v smartctl &>/dev/null && [[ -b "$DEV_SDA" ]]; then
     SDA_RAW=$(smartctl -a "$DEV_SDA" 2>&1) || true
 
     # Overall health
@@ -412,7 +418,9 @@ fi
 
 section "$SDB_LABEL"
 
-if command -v smartctl &>/dev/null && [[ -b "$DEV_SDB" ]]; then
+if [ "$(id -u)" -ne 0 ]; then
+    info "SMART: skipped (requires root)"
+elif command -v smartctl &>/dev/null && [[ -b "$DEV_SDB" ]]; then
     SDB_RAW=$(smartctl -a "$DEV_SDB" 2>&1) || true
     SDB_HEALTH=$(echo "$SDB_RAW" | grep -i "SMART overall-health" | awk -F': ' '{print $2}' | xargs)
 

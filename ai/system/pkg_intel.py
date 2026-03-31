@@ -99,10 +99,17 @@ def _extract_package_info(
     source_repo = ""
 
     if ver_data:
-        licenses = [lic.get("spdxExpression", "") for lic in ver_data.get("licenses", [])]
-        advisory_keys = [
-            a.get("sourceId", "") for a in ver_data.get("advisoryKeys", [])
-        ]
+        raw_licenses = ver_data.get("licenses", [])
+        if isinstance(raw_licenses, str):
+            licenses = [raw_licenses]
+        elif isinstance(raw_licenses, list):
+            licenses = [
+                lic.get("spdxExpression", "") if isinstance(lic, dict) else str(lic)
+                for lic in raw_licenses
+            ]
+        else:
+            licenses = []
+        advisory_keys = [a.get("sourceId", "") for a in ver_data.get("advisoryKeys", [])]
         has_provenance = bool(ver_data.get("slsaProvenance"))
         for link in ver_data.get("links", []):
             if link.get("label") in ("SOURCE_REPO", "SOURCE"):
@@ -235,7 +242,9 @@ def mcp_handler() -> dict:
     """MCP entry point: return the latest scan report."""
     report = _latest_report()
     if report is None:
-        return {"error": "No scan report found. Run: python -m ai.system.pkg_intel --scan requirements.txt"}  # noqa: E501
+        return {
+            "error": "No scan report found. Run: python -m ai.system.pkg_intel --scan requirements.txt"
+        }  # noqa: E501
     return report
 
 
@@ -244,9 +253,7 @@ def mcp_handler() -> dict:
 
 def main() -> None:
     """CLI entry point."""
-    parser = argparse.ArgumentParser(
-        description="Package intelligence via deps.dev"
-    )
+    parser = argparse.ArgumentParser(description="Package intelligence via deps.dev")
     parser.add_argument("--package", help="Package name")
     parser.add_argument("--version", help="Package version")
     parser.add_argument("--ecosystem", default="pypi", help="Ecosystem (pypi, npm)")

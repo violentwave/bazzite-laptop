@@ -170,7 +170,7 @@ bash scripts/start-security-tray-qt.sh
 All tools are accessible through Newelle via the MCP bridge. They are read-only
 (no system mutations). Output is truncated to 4 KB and paths are redacted.
 
-### system.* (13 tools)
+### system.* (15 tools)
 
 | Tool                    | Args   | What it returns                                    |
 |-------------------------|--------|----------------------------------------------------|

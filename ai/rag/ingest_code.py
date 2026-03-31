@@ -268,17 +268,22 @@ def ingest_files(
     # Embed and store
     chunks_created = 0
     if all_chunks:
-        texts = [c["content"] for c in all_chunks]
-        all_vectors: list[list[float]] = []
-        for i in range(0, len(texts), 1):
-            batch = texts[i : i + 1]
-            vectors = embed_texts(batch, provider=provider)
-            all_vectors.extend(vectors)
+        # Filter empty/whitespace chunks to avoid Gemini empty Part errors
+        filtered = [c for c in all_chunks if c["content"].strip()]
+        if not filtered:
+            chunks_created = 0
+        else:
+            texts = [c["content"] for c in filtered]
+            all_vectors: list[list[float]] = []
+            for i in range(0, len(texts), 1):
+                batch = texts[i : i + 1]
+                vectors = embed_texts(batch, provider=provider)
+                all_vectors.extend(vectors)
 
-        for chunk, vector in zip(all_chunks, all_vectors, strict=True):
-            chunk["vector"] = vector
+            for chunk, vector in zip(filtered, all_vectors, strict=True):
+                chunk["vector"] = vector
 
-        chunks_created = store.add_code_chunks(all_chunks)
+            chunks_created = store.add_code_chunks(filtered)
 
     if new_state and chunks_created > 0:
         merged = {} if force else _load_state()
