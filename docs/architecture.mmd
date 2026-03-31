@@ -1,69 +1,86 @@
 graph TD
     subgraph "User Interfaces"
-        NEWELLE["Newelle (Flatpak GTK4)\nAI Chat + Voice"]
-        OPENCODE["OpenCode\nAI Code Editor"]
-        TRAY["PySide6 Tray App\n~80 MB"]
+        NEWELLE["Newelle 1.3.5\n(Flatpak GTK4)\nAI Chat + Voice"]
+        CLAUDECODE["Claude Code\n(VS Code, sandbox)"]
+        OPENCODE["OpenCode\n(z.ai GLM-4 direct)"]
+        TRAY["PySide6 Tray\n4 tabs · ~80 MB"]
     end
 
     subgraph "AI Proxy Layer"
-        PROXY["LLM Proxy\n:8767 (OpenAI-compat)\nai/llm_proxy.py"]
-        MCP["MCP Bridge\n:8766 (FastMCP)\nai/mcp_bridge/server.py\n43 tools"]
+        PROXY["LLM Proxy :8767\nOpenAI-compat · streaming\nai/llm_proxy.py"]
+        MCP["MCP Bridge :8766\nFastMCP streamable-http\n43 tools · ai/mcp_bridge/"]
     end
 
     subgraph "AI Core"
-        ROUTER["LiteLLM Router\nai/router.py\nhealth-weighted"]
-        RAG["RAG Pipeline\nai/rag/\nLanceDB + Cohere rerank"]
-        INTEL["Threat Intel\nai/threat_intel/\n6 modules"]
-        AGENTS["AI Agents\nai/agents/\n4 agents"]
-        HEALTH["Health Tracker\nai/health.py\nprovider scoring"]
+        ROUTER["LiteLLM Router V2\nai/router.py\nhealth-weighted · disk cache"]
+        HEALTH["Health Tracker\nai/health.py\nscoring · auto-demotion"]
+        RATELIMIT["Rate Limiter\nai/rate_limiter.py\nfile-locked · atomic"]
+        RAG["RAG Pipeline\nai/rag/\nLanceDB · Cohere rerank"]
+        INTEL["Threat Intel\nai/threat_intel/\n6 modules · 10 APIs"]
+        LOGINTEL["Log Intelligence\nai/log_intel/\ningest · anomalies · search"]
+        AGENTS["AI Agents (4)\nai/agents/\nsecurity · perf · knowledge · code"]
+        SYSMOD["System Modules\nai/system/\nrelease_watch · fedora · pkg_intel"]
+        GAMING["Gaming\nai/gaming/\nScopeBuddy · MangoHud"]
     end
 
-    subgraph "Cloud LLM Providers"
-        GEMINI["Gemini\nfast/reason/embed"]
-        GROQ["Groq\nfast/reason"]
-        MISTRAL["Mistral + Codestral\ncode/batch"]
-        OPENROUTER["OpenRouter\nreason/code"]
-        ZAI["z.ai\nfast/code"]
-        CEREBRAS["Cerebras\nbatch fallback"]
+    subgraph "Cloud LLM Providers (6)"
+        GEMINI["Gemini\nfast/reason/batch/code/embed"]
+        GROQ["Groq\nfast/reason/batch/code"]
+        MISTRAL["Mistral + Codestral\nfast/reason/batch/code"]
+        OPENROUTER["OpenRouter\nfast/reason/batch/code"]
+        ZAI["z.ai\nfast/reason/code"]
+        CEREBRAS["Cerebras\nfast/batch"]
     end
 
-    subgraph "Threat Intel APIs"
+    subgraph "Threat Intel APIs (16)"
         VT["VirusTotal"]
         OTX["AlienVault OTX"]
+        MALWAREBAZAAR["MalwareBazaar"]
         ABUSEIPDB["AbuseIPDB"]
         GREYNOISE["GreyNoise"]
+        SHODAN["Shodan InternetDB"]
         NVD["NVD + OSV + CISA KEV"]
-        URLHAUS["URLhaus + ThreatFox"]
+        URLHAUS["URLhaus + ThreatFox\n+ CIRCL Hashlookup"]
         HYBRID["Hybrid Analysis"]
     end
 
-    subgraph "Storage"
-        LANCEDB["LanceDB\n~/security/vector-db/\n(→ /var/mnt/ext-ssd)"]
-        DISKCACHE["LiteLLM Disk Cache\n/var/mnt/ext-ssd/bazzite-ai/llm-cache"]
-        SECDIR["~/security/\nlogs, quarantine, status"]
+    subgraph "Storage (ext SSD)"
+        LANCEDB["LanceDB\n~/security/vector-db/\n→ /var/mnt/ext-ssd"]
+        DISKCACHE["LLM Disk Cache\n/var/mnt/ext-ssd/\nbazzite-ai/llm-cache"]
+        SECDIR["~/security/\n.status · logs · quarantine\nkey-status · llm-status"]
     end
 
     subgraph "System Layer"
-        CLAMAV["ClamAV\nclamd + freshclam"]
+        CLAMAV["ClamAV\nclamd + freshclam\n3 timers"]
         HEALTH_MON["Health Monitor\nsystem-health-snapshot.sh"]
         SYSTEMD["systemd timers\n12 scheduled jobs"]
-        NVIDIA["NVIDIA GTX 1060\n6 GB VRAM (0 used normal)"]
-        ZRAM["ZRAM swap\nswappiness=180"]
+        OLLAMA["Ollama :11434\nnomic-embed-text\nemergency embed only"]
+        NVIDIA["NVIDIA GTX 1060 6GB\n0 VRAM used (normal)"]
+        ZRAM["ZRAM 7.7GB\nzstd · swappiness=180"]
     end
 
-    NEWELLE -->|MCP tools| MCP
-    NEWELLE -->|LLM calls| PROXY
-    OPENCODE -->|LLM calls| PROXY
-    TRAY -->|reads| SECDIR
+    %% User → Proxy connections
+    NEWELLE -->|"MCP tools"| MCP
+    NEWELLE -->|"LLM chat"| PROXY
+    CLAUDECODE -->|"LLM chat"| PROXY
+    TRAY -->|"reads .status"| SECDIR
 
+    %% Proxy → Core (IMPORTANT: MCP does NOT connect to ROUTER)
     PROXY --> ROUTER
-    MCP --> ROUTER
+    ROUTER --> HEALTH
+
+    %% MCP dispatches to subsystems (NOT to router)
     MCP --> RAG
     MCP --> INTEL
+    MCP --> LOGINTEL
     MCP --> AGENTS
+    MCP --> SYSMOD
+    MCP --> GAMING
     MCP --> HEALTH_MON
     MCP --> CLAMAV
 
+    %% Router → Providers
+    ROUTER --> RATELIMIT
     ROUTER --> GEMINI
     ROUTER --> GROQ
     ROUTER --> MISTRAL
@@ -71,34 +88,53 @@ graph TD
     ROUTER --> ZAI
     ROUTER --> CEREBRAS
     ROUTER --> DISKCACHE
-    ROUTER --> HEALTH
 
+    %% RAG connections
     RAG --> LANCEDB
-    RAG -->|embed| GEMINI
+    RAG -->|"embed (primary)"| GEMINI
+    RAG -->|"embed (emergency)"| OLLAMA
 
+    %% Threat intel
     INTEL --> VT
     INTEL --> OTX
+    INTEL --> MALWAREBAZAAR
     INTEL --> ABUSEIPDB
     INTEL --> GREYNOISE
+    INTEL --> SHODAN
     INTEL --> NVD
     INTEL --> URLHAUS
     INTEL --> HYBRID
 
+    %% Log intel
+    LOGINTEL --> LANCEDB
+    LOGINTEL --> SECDIR
+
+    %% Agents orchestrate subsystems
     AGENTS --> RAG
     AGENTS --> INTEL
-    AGENTS --> CLAMAV
-    AGENTS --> HEALTH_MON
+    AGENTS --> LOGINTEL
 
+    %% System writes
     CLAMAV --> SECDIR
     HEALTH_MON --> SECDIR
+
+    %% Systemd triggers
     SYSTEMD -.->|triggers| CLAMAV
     SYSTEMD -.->|triggers| HEALTH_MON
     SYSTEMD -.->|triggers| RAG
+    SYSTEMD -.->|triggers| AGENTS
+    SYSTEMD -.->|triggers| SYSMOD
 
+    %% OpenCode goes direct to z.ai (NOT through local proxy)
+    OPENCODE -->|"direct API"| ZAI
+
+    %% Styling
     style NEWELLE fill:#4a90d9,color:#fff
+    style CLAUDECODE fill:#4a90d9,color:#fff
     style OPENCODE fill:#4a90d9,color:#fff
     style MCP fill:#7b68ee,color:#fff
     style PROXY fill:#7b68ee,color:#fff
     style ROUTER fill:#e8956d,color:#fff
     style LANCEDB fill:#5ba85f,color:#fff
     style CLAMAV fill:#c0392b,color:#fff
+    style OLLAMA fill:#2c3e50,color:#fff
