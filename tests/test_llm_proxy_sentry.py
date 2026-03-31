@@ -49,3 +49,4 @@ class TestInitSentry:
         assert call_kwargs["dsn"] == "https://abc@sentry.io/123"
         assert call_kwargs["traces_sample_rate"] == pytest.approx(0.1)
         assert call_kwargs["environment"] == "production"
+        assert call_kwargs["release"] == "bazzite-ai@phase14"
