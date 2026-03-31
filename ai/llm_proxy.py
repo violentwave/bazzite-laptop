@@ -69,8 +69,6 @@ def _init_sentry() -> None:
         pass  # Sentry is optional — never break the proxy
 
 
-_init_sentry()
-
 DEFAULT_PORT = int(os.environ.get("LLM_PROXY_PORT", "8767"))
 _LLM_STATUS_FILE = Path.home() / "security" / "llm-status.json"
 _STATUS_WRITE_INTERVAL_S = 300  # 5 minutes
@@ -283,6 +281,7 @@ def main():
     _assert_localhost(args.bind)
 
     logging.basicConfig(level=logging.INFO)
+    _init_sentry()
     _schedule_status_writer()
     logger.info("LLM proxy starting on %s:%d", args.bind, args.port)
     logger.info("Provider chain: Gemini → Groq → Mistral → OpenRouter → z.ai → Cerebras")

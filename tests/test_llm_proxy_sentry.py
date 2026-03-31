@@ -14,20 +14,8 @@ class TestInitSentry:
 
     def test_init_sentry_noop_when_sentry_not_installed(self):
         """_init_sentry must not raise when sentry_sdk import fails."""
-        import sys
-        # Remove sentry_sdk from sys.modules if present, then block import
-        sys.modules.pop("sentry_sdk", None)
-
-        import builtins
-        real_import = builtins.__import__
-
-        def _block_sentry(name, *args, **kwargs):
-            if name == "sentry_sdk":
-                raise ImportError("sentry_sdk not installed")
-            return real_import(name, *args, **kwargs)
-
         with (
-            patch("builtins.__import__", side_effect=_block_sentry),
+            patch.dict("sys.modules", {"sentry_sdk": None}),  # None causes ImportError on import
             patch("ai.llm_proxy.load_keys", return_value={"SENTRY_DSN": "https://abc@sentry.io/1"}),
         ):
             from ai.llm_proxy import _init_sentry
