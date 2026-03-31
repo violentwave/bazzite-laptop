@@ -19,6 +19,7 @@ import json
 import logging
 import time
 from collections.abc import AsyncGenerator
+from datetime import UTC, datetime
 from pathlib import Path
 
 import litellm
@@ -85,6 +86,65 @@ _usage_counters: dict[str, dict[str, int]] = {
     tt: {"prompt_tokens": 0, "completion_tokens": 0, "requests": 0}
     for tt in ("fast", "reason", "batch", "code")
 }
+
+
+# Cost/token tracking (resets on service restart)
+_cost_stats: dict = {
+    "total_tokens": 0,
+    "total_cost_usd": 0.0,
+    "call_count": 0,
+    "by_provider": {},
+    "by_task_type": {},
+    "started_at": datetime.now(UTC).isoformat().replace("+00:00", "Z"),
+}
+
+
+def _track_cost(response: object, task_type: str, provider: str) -> None:
+    """Track token usage and cost from a completion response.
+
+    Never raises — cost tracking failures must not affect the request path.
+    """
+    try:
+        usage = getattr(response, "usage", None)
+        if not usage:
+            return
+        cost = litellm.completion_cost(completion_response=response) or 0.0
+        prompt_tokens = getattr(usage, "prompt_tokens", 0) or 0
+        completion_tokens = getattr(usage, "completion_tokens", 0) or 0
+
+        _cost_stats["total_tokens"] += prompt_tokens + completion_tokens
+        _cost_stats["total_cost_usd"] += cost
+        _cost_stats["by_provider"][provider] = (
+            _cost_stats["by_provider"].get(provider, 0.0) + cost
+        )
+        _cost_stats["by_task_type"][task_type] = (
+            _cost_stats["by_task_type"].get(task_type, 0.0) + cost
+        )
+        _cost_stats["call_count"] += 1
+    except Exception:  # noqa: BLE001, S110
+        pass  # Never let cost tracking break the request path
+
+
+def get_cost_stats() -> dict:
+    """Return a copy of cost tracking counters since service start."""
+    return {
+        "total_tokens": _cost_stats["total_tokens"],
+        "total_cost_usd": _cost_stats["total_cost_usd"],
+        "call_count": _cost_stats["call_count"],
+        "by_provider": dict(_cost_stats["by_provider"]),
+        "by_task_type": dict(_cost_stats["by_task_type"]),
+        "started_at": _cost_stats["started_at"],
+    }
+
+
+def reset_cost_stats() -> None:
+    """Zero all cost counters. Used for test isolation."""
+    _cost_stats["total_tokens"] = 0
+    _cost_stats["total_cost_usd"] = 0.0
+    _cost_stats["call_count"] = 0
+    _cost_stats["by_provider"].clear()
+    _cost_stats["by_task_type"].clear()
+    _cost_stats["started_at"] = datetime.now(UTC).isoformat().replace("+00:00", "Z")
 
 
 def _increment_usage(task_type: str, response: object) -> None:
@@ -354,6 +414,7 @@ def route_query(task_type: str, prompt: str, **kwargs: object) -> str:
         try:
             response = _try_provider(provider, task_type, prompt, **kwargs)
             _increment_usage(task_type, response)
+            _track_cost(response, task_type=task_type, provider=provider)
             content = response.choices[0].message.content
             ttl = _TASK_TTL.get(task_type, 300)
             if ttl > 0:
@@ -423,6 +484,7 @@ async def route_chat(task_type: str, messages: list[dict], **kwargs: object) -> 
             _health_tracker.record_success(actual_provider, latency_ms)
             _get_rate_limiter().record_call(actual_provider)
             _increment_usage(task_type, response)
+            _track_cost(response, task_type=task_type, provider=actual_provider)
             content = response.choices[0].message.content
             ttl = _TASK_TTL.get(task_type, 300)
             if ttl > 0:
@@ -553,3 +615,4 @@ def reset_router() -> None:
     _rate_limiter = None
     _health_tracker = HealthTracker()
     _llm_cache.clear()
+    reset_cost_stats()

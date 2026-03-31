@@ -29,12 +29,19 @@ logger = logging.getLogger("ai.llm_proxy")
 # Defined here so patch("ai.llm_proxy.route_chat") works in tests.
 try:
     from ai.rag.memory import retrieve_relevant_context, store_interaction
-    from ai.router import get_health_snapshot, get_usage_stats, route_chat, route_query_stream
+    from ai.router import (
+        get_cost_stats,
+        get_health_snapshot,
+        get_usage_stats,
+        route_chat,
+        route_query_stream,
+    )
 except Exception:  # noqa: BLE001
     route_chat = None  # type: ignore[assignment]
     route_query_stream = None  # type: ignore[assignment]
     get_health_snapshot = None  # type: ignore[assignment]
     get_usage_stats = None  # type: ignore[assignment]
+    get_cost_stats = None  # type: ignore[assignment]
     retrieve_relevant_context = None  # type: ignore[assignment]
     store_interaction = None  # type: ignore[assignment]
 
@@ -62,7 +69,8 @@ def _write_llm_status() -> None:
         status = {
             "updated_at": datetime.now(UTC).isoformat(),
             "providers": get_health_snapshot(),
-            "usage": get_usage_stats(),
+            "usage": get_cost_stats(),
+            "generated_at": datetime.now(UTC).isoformat(),
             "models": {k: models.get(k, "?") for k in ("fast", "reason", "batch", "code")},
         }
         tmp = _LLM_STATUS_FILE.with_suffix(".tmp")
