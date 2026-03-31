@@ -133,14 +133,14 @@ class TestRouterInit:
         with (
             patch("ai.router._load_config", return_value={}),
         ):
-            with pytest.raises(RuntimeError, match="No available providers"):
+            with pytest.raises(RuntimeError, match="no available providers"):
                 route_query("fast", "hello")
 
     def test_empty_model_list_raises(self, patch_keys, patch_limiter):
         with (
             patch("ai.router._load_config", return_value={"model_list": []}),
         ):
-            with pytest.raises(RuntimeError, match="No available providers"):
+            with pytest.raises(RuntimeError, match="no available providers"):
                 route_query("fast", "hello")
 
     def test_keys_loaded_before_router(self, mock_config, patch_limiter):

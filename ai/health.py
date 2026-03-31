@@ -13,6 +13,15 @@ logger = logging.getLogger("ai.health")
 _FAILURE_THRESHOLD = 3
 _BASE_COOLDOWN_S = 300
 _MAX_COOLDOWN_S = 1800
+_STALENESS_THRESHOLD_S = 600  # 10 minutes
+
+
+class AllProvidersExhausted(RuntimeError):
+    """Raised when no LLM provider is available for a task type."""
+
+    def __init__(self, task_type: str, reason: str = "all providers exhausted") -> None:
+        super().__init__(f"LLM call failed for task_type '{task_type}': {reason}")
+        self.task_type = task_type
 
 
 @dataclass
@@ -28,6 +37,8 @@ class ProviderHealth:
     last_error_time: float | None = None
     disabled_until: float | None = None
     auth_broken: bool = False
+    consecutive_auth_failures: int = 0
+    last_probe_time: float | None = None
     _demotion_count: int = field(default=0, repr=False)
 
     @property
@@ -48,6 +59,17 @@ class ProviderHealth:
             return False
         return time.time() < self.disabled_until
 
+    @property
+    def effective_score(self) -> float:
+        """Score with staleness cap: >10min without probe -> max 0.8."""
+        s = self.score
+        if (
+            self.last_probe_time is not None
+            and (time.time() - self.last_probe_time) > _STALENESS_THRESHOLD_S
+        ):
+            return min(s, 0.8)
+        return s
+
 
 class HealthTracker:
     """Manages health state for all LLM providers."""
@@ -67,18 +89,30 @@ class HealthTracker:
         h.success_count += 1
         h.total_latency_ms += latency_ms
         h.consecutive_failures = 0
+        h.consecutive_auth_failures = 0
         h.auth_broken = False
+        h.last_probe_time = time.time()
 
-    def record_failure(self, name: str, error: str) -> None:
+    def record_failure(self, name: str, error: str, status_code: int | None = None) -> None:
         """Record a failed API call. Auto-demotes after threshold."""
         h = self.get(name)
         h.failure_count += 1
         h.consecutive_failures += 1
         h.last_error = error
         h.last_error_time = time.time()
+        h.last_probe_time = time.time()
 
-        if "401" in error or "403" in error:
-            h.auth_broken = True
+        is_auth_error = (
+            status_code in (401, 403)
+            or "401" in error
+            or "403" in error
+        )
+        if is_auth_error:
+            h.consecutive_auth_failures += 1
+            if h.consecutive_auth_failures >= 3:
+                h.auth_broken = True
+        else:
+            h.consecutive_auth_failures = 0
 
         if h.consecutive_failures >= _FAILURE_THRESHOLD:
             cooldown = min(
@@ -93,13 +127,13 @@ class HealthTracker:
             )
 
     def get_sorted(self, names: list[str]) -> list[ProviderHealth]:
-        """Return health entries sorted by score descending, excluding disabled."""
+        """Return health entries sorted by effective_score descending, excluding disabled/auth_broken."""  # noqa: E501
         result = []
         for name in names:
             h = self.get(name)
-            if not h.is_disabled:
+            if not h.is_disabled and not h.auth_broken:
                 result.append(h)
-        result.sort(key=lambda h: h.score, reverse=True)
+        result.sort(key=lambda h: h.effective_score, reverse=True)
         return result
 
     def reset_all(self) -> None:
@@ -108,11 +142,13 @@ class HealthTracker:
             h.success_count = 100
             h.failure_count = 0
             h.consecutive_failures = 0
+            h.consecutive_auth_failures = 0
             h.total_latency_ms = 0.0
             h.last_error = None
             h.last_error_time = None
             h.disabled_until = None
             h.auth_broken = False
+            h.last_probe_time = None
             h._demotion_count = 0
 
 

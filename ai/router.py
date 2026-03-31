@@ -27,7 +27,7 @@ import yaml
 
 from ai.cache import JsonFileCache
 from ai.config import APP_NAME, LITELLM_CONFIG, load_keys
-from ai.health import HealthTracker
+from ai.health import AllProvidersExhausted, HealthTracker
 from ai.rate_limiter import RateLimiter
 
 logger = logging.getLogger(APP_NAME)
@@ -284,9 +284,10 @@ def _try_provider(provider_name: str, task_type: str, prompt: str, **kwargs) -> 
         limiter = _get_rate_limiter()
         limiter.record_call(actual_provider)
         return response
-    except Exception:
+    except Exception as e:
         latency_ms = (time.time() - start) * 1000
-        _health_tracker.record_failure(provider_name, "call failed")
+        status_code = getattr(e, "status_code", None)
+        _health_tracker.record_failure(provider_name, "call failed", status_code=status_code)
         raise
 
 
@@ -365,8 +366,9 @@ async def _stream_provider(
         latency_ms = (time.time() - start) * 1000
         _health_tracker.record_success(provider_name, latency_ms)
         limiter.record_call(provider_name)
-    except Exception:
-        _health_tracker.record_failure(provider_name, "stream failed")
+    except Exception as e:
+        status_code = getattr(e, "status_code", None)
+        _health_tracker.record_failure(provider_name, "stream failed", status_code=status_code)
         raise
 
 
@@ -401,7 +403,7 @@ def route_query(task_type: str, prompt: str, **kwargs: object) -> str:
     providers = _get_provider_order(config, task_type)
 
     if not providers:
-        raise RuntimeError(f"No available providers for task_type '{task_type}'")
+        raise AllProvidersExhausted(task_type, "no available providers")
 
     # Manual cache lookup
     cache_key = f"{task_type}:{hashlib.sha256(prompt.encode()).hexdigest()}"
@@ -425,9 +427,9 @@ def route_query(task_type: str, prompt: str, **kwargs: object) -> str:
             logger.warning("Provider '%s' failed: %s", provider, e)
             continue
 
-    raise RuntimeError(
-        f"LLM call failed for task_type '{task_type}': "
-        f"all providers exhausted. Last error: {last_error}"
+    raise AllProvidersExhausted(
+        task_type,
+        f"all providers exhausted. Last error: {last_error}",
     ) from last_error
 
 
@@ -459,7 +461,7 @@ async def route_chat(task_type: str, messages: list[dict], **kwargs: object) -> 
     providers = _get_provider_order(config, task_type)
 
     if not providers:
-        raise RuntimeError(f"No available providers for task_type '{task_type}'")
+        raise AllProvidersExhausted(task_type, "no available providers")
 
     # Manual cache lookup
     _msg_hash = hashlib.sha256(json.dumps(messages, sort_keys=True).encode()).hexdigest()
@@ -491,14 +493,15 @@ async def route_chat(task_type: str, messages: list[dict], **kwargs: object) -> 
                 _llm_cache.set(cache_key, {"content": content}, ttl=ttl)
             return content
         except Exception as e:
-            _health_tracker.record_failure(provider, "call failed")
+            status_code = getattr(e, "status_code", None)
+            _health_tracker.record_failure(provider, "call failed", status_code=status_code)
             last_error = e
             logger.warning("Provider '%s' failed (chat): %s", provider, e)
             continue
 
-    raise RuntimeError(
-        f"LLM call failed for task_type '{task_type}': "
-        f"all providers exhausted. Last error: {last_error}"
+    raise AllProvidersExhausted(
+        task_type,
+        f"all providers exhausted. Last error: {last_error}",
     ) from last_error
 
 
@@ -533,7 +536,7 @@ async def route_query_stream(
     providers = _get_provider_order(config, task_type)
 
     if not providers:
-        raise RuntimeError(f"No available providers for task_type '{task_type}'")
+        raise AllProvidersExhausted(task_type, "no available providers")
 
     last_error = None
     for provider in providers:
@@ -577,9 +580,9 @@ async def route_query_stream(
             )
             continue
 
-    raise RuntimeError(
-        f"Streaming LLM call failed for task_type '{task_type}': all providers exhausted. "
-        f"Last error: {last_error}"
+    raise AllProvidersExhausted(
+        task_type,
+        f"all providers exhausted. Last error: {last_error}",
     ) from last_error
 
 

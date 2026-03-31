@@ -29,6 +29,7 @@ logger = logging.getLogger("ai.llm_proxy")
 # Defined here so patch("ai.llm_proxy.route_chat") works in tests.
 try:
     from ai.config import load_keys
+    from ai.health import AllProvidersExhausted
     from ai.rag.memory import retrieve_relevant_context, store_interaction
     from ai.router import (
         get_cost_stats,
@@ -39,6 +40,7 @@ try:
     )
 except Exception:  # noqa: BLE001
     load_keys = None  # type: ignore[assignment]
+    AllProvidersExhausted = RuntimeError  # type: ignore[assignment,misc]
     route_chat = None  # type: ignore[assignment]
     route_query_stream = None  # type: ignore[assignment]
     get_health_snapshot = None  # type: ignore[assignment]
@@ -242,6 +244,19 @@ def create_app():
                 }],
                 "usage": {"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0},
             })
+        except AllProvidersExhausted:
+            return JSONResponse(
+                status_code=503,
+                content={
+                    "error": {
+                        "message": f"All providers exhausted for task '{task_type}'. "
+                                   "Try again in 5 minutes.",
+                        "type": "provider_exhaustion",
+                        "retry_after_seconds": 300,
+                    }
+                },
+                headers={"Retry-After": "300"},
+            )
         except Exception as e:
             logger.error("Router query failed: %s", e)
             return JSONResponse(
