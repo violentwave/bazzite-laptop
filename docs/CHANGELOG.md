@@ -1,9 +1,45 @@
 # Changelog — Bazzite AI Enhancement Layer
-<!-- System: Acer Predator G3-571 | Bazzite 43 | Last updated: 2026-03-30 -->
+<!-- System: Acer Predator G3-571 | Bazzite 43 | Last updated: 2026-03-31 -->
 
 All notable changes are recorded here. Phases correspond to the original
 implementation plan for the AI enhancement layer built on top of the base
 Bazzite security/gaming system.
+
+---
+
+## Phase 8 — Clean Slate
+
+**Bug fixes:**
+- Fixed `smartctl` not found WARNING in health checks (added path resolution)
+- Fixed `findmnt` composefs false alarm (filtered immutable OS overlay)
+- Fixed log/tlog quiet mode crash (graceful handling of empty output)
+- Fixed `pkg_intel` license field parsing error
+- `ai/rag/ingest_code.py`: Filter empty/whitespace chunks before Gemini embedding
+
+**Cleanup:**
+- AgentDB formally deprecated — removed from AGENT.md known issues,
+  cleaned 64+ legacy references from `.claude/` skills/agents/rules
+- `auto-memory-store.json` cleaned: 97 outdated tool counts fixed,
+  488 AgentDB references stripped, stale SSD paths updated
+- SELinux relabeling: 14 scripts in `scripts/` restored to correct context
+- Eicar test files removed from quarantine (chattr -i + rm)
+- npm audit reduced from 7 to 3 vulnerabilities (remaining are upstream)
+
+**RAG & indexing:**
+- Full RAG re-ingestion: docs, code index, and logs refreshed
+- Code search index built for `code.rag_query` (354 files, 1046 chunks)
+
+**Documentation:**
+- USER-GUIDE.md: system.* tool count corrected (13 → 15)
+- `.opencode/AGENTS.md`: removed stale file reference
+- AGENT.md: Known Active Issues updated to reflect current state
+
+**Final metrics:**
+- Tests: 1111 passed, 57 skipped, 0 failures
+- MCP tools: 43 (+ 1 health)
+- Systemd timers: 12
+- Cloud providers: 6
+- Threat intel APIs: 16
 
 ---
 
@@ -275,37 +311,7 @@ Cerebras (health-weighted, hot-swappable via `configs/litellm-config.yaml`)
 
 **Python venv:** `.venv/` managed by `uv`; never global pip installs
 
----
-
-## Phase 8 — Clean Slate
-
-**Documentation fixes:**
-- Fixed `docs/USER-GUIDE.md` system.* tool count (13 → 15)
-- Removed stale `bazzite-ai-system-profile.md` reference from `.opencode/AGENTS.md`
-- Updated Known Active Issues in `docs/AGENT.md` (5 → 4 items)
-
-**Bug fixes:**
-- `scripts/system-health-snapshot.sh`: Added root-check guards for smartctl calls (skip gracefully when not root)
-- `scripts/system-health-snapshot.sh`: Fixed `findmnt` returning multiple lines for composefs overlay (`grep '^/dev/' | head -1`)
-- `scripts/system-health-snapshot.sh`: Fixed `log()`/`tlog()` functions causing silent exit under `set -euo pipefail` when `QUIET=true` (`|| true` added)
-- `ai/rag/ingest_code.py`: Filter empty/whitespace chunks before Gemini embedding to prevent "empty Part" errors
-- `ai/system/pkg_intel.py`: Handle `licenses` field as string or list from deps.dev API
-- SELinux: 14 scripts in `/usr/local/bin/` relabeled from `user_home_t` to `bin_t` (were failing with 203/EXEC in systemd)
-
-**Dependency updates:**
-- Updated `vitest` to 4.x and `vite` to 6.x in plugin workspaces (npm audit vulns 7 → 3)
-
-**Deprecations:**
-- AgentDB bridge formally deprecated; `.swarm/` directory deleted
-- `--email` flag removed from `systemd/system-health.service` ExecStart
-
-**Data refreshed:**
-- RAG docs re-ingested with `--force` (7 files, 68 chunks via Gemini Embedding 001)
-- Code index built (354 files, 1046 chunks)
-- Log intel re-ingested (2 health records, 1 scan record)
-- Package intel initial scan completed (13 packages)
-
-## Final Metrics (Phase 6 Amendment complete)
+## Final Metrics
 
 | Metric | Value |
 |--------|-------|
@@ -313,7 +319,7 @@ Cerebras (health-weighted, hot-swappable via `configs/litellm-config.yaml`)
 | Systemd timers | **12** |
 | Cloud providers | **6** (Gemini, Groq, Mistral, OpenRouter, z.ai, Cerebras) |
 | Threat intel APIs | **16** |
-| Unit tests | **1168** |
+| Unit tests | **1111 passed, 57 skipped** |
 | AI layer LOC | **~9,000+** |
 | Python packages | **~34** in .venv/ |
 | Embedding provider | Gemini Embedding 001 (cloud, free 10M TPM) |

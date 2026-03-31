@@ -259,7 +259,7 @@ Source: `configs/mcp-bridge-allowlist.yaml` (43 entries).
 | `configs/keys.env.enc` | sops-encrypted API keys (in git, safe) |
 | `scripts/` | 40 shell/Python scripts (deploy, scan, backup, etc.) |
 | `systemd/` | 12 timers + associated services |
-| `tests/` | 1168 pytest tests |
+| `tests/` | 1111 pytest tests |
 | `tray/` | PySide6 system tray app |
 
 ### Runtime paths (not in repo)
@@ -285,7 +285,7 @@ Source: `configs/mcp-bridge-allowlist.yaml` (43 entries).
 
 ```bash
 source .venv/bin/activate
-python -m pytest tests/ -v          # 1168 tests
+python -m pytest tests/ -v          # 1111 tests
 ruff check ai/ tests/               # Lint
 bandit -r ai/ -c pyproject.toml     # Security scan
 uv pip install -r requirements.txt  # Install/update deps
@@ -391,6 +391,6 @@ The base security/gaming system is managed in the "Bazzite Laptop" Claude.ai pro
 ## Known Active Issues
 
 1. **Eicar test files stuck in quarantine** — chattr +i set, needs `sudo chattr -i` + `rm` to clean up
-2. **npm audit: 3 remaining vulns** — path-to-regexp (high), picomatch (high), brace-expansion (moderate) in RuFlo orchestrator deps (not fixable without upstream changes)
+2. **npm audit: 30 remaining vulns** — path-to-regexp (high), brace-expansion (moderate) in RuFlo orchestrator deps (not fixable without upstream changes)
 3. **CPU 87°C idle** — needs repaste with Kryonaut Extreme (thermal compound degradation)
-4. **auto-memory-store stale data** — 56 stale paths + 115 outdated tool counts in `.claude-flow/data/auto-memory-store.json`, plus ~64 legacy AgentDB references in `.claude/` skills/agents/rules
+4. **Legacy AgentDB skill dirs** — `.claude/skills/agentdb-*` and `.claude/skills/reasoningbank-agentdb` are read-only in sandbox; delete manually outside Claude Code
