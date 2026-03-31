@@ -1,5 +1,5 @@
 # Verified Dependencies
-<!-- Last verified: 2026-03-22 | System: Acer Predator G3-571 | Bazzite 43 / Fedora Atomic -->
+<!-- Last verified: 2026-03-30 | System: Acer Predator G3-571 | Bazzite 43 / Fedora Atomic -->
 
 All versions pinned or noted below were confirmed working on this machine.
 "AI layer" packages live in `.venv/`; system packages are managed by Bazzite / rpm-ostree.
@@ -36,8 +36,8 @@ These are the packages actively used by `ai/`, `tray/`, and `tests/`.
 | requests | 2.32.5 | `ai/threat_intel/` — threat intel API calls |
 | openai | 2.28.0 | litellm OpenAI-compatible provider support |
 | ollama | 0.6.1 | `ai/rag/` — emergency local embedding fallback only |
-| boto3 | 1.38.0 | `scripts/archive-logs-r2.py` — Cloudflare R2 log archiving |
-| cohere | 5.15.0 | `ai/rag/embedder.py` — Cohere rerank for RAG QA |
+| boto3 | 1.42.73 | `scripts/archive-logs-r2.py` — Cloudflare R2 log archiving |
+| cohere | 5.20.7 | `ai/rag/embedder.py` — Cohere rerank for RAG QA |
 | pillow | 12.1.1 | Image processing utilities |
 
 ---

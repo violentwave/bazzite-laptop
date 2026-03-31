@@ -1,5 +1,5 @@
 # Changelog — Bazzite AI Enhancement Layer
-<!-- System: Acer Predator G3-571 | Bazzite 43 | Last updated: 2026-03-22 -->
+<!-- System: Acer Predator G3-571 | Bazzite 43 | Last updated: 2026-03-30 -->
 
 All notable changes are recorded here. Phases correspond to the original
 implementation plan for the AI enhancement layer built on top of the base
@@ -285,7 +285,7 @@ Cerebras (health-weighted, hot-swappable via `configs/litellm-config.yaml`)
 | Systemd timers | **12** |
 | Cloud providers | **6** (Gemini, Groq, Mistral, OpenRouter, z.ai, Cerebras) |
 | Threat intel APIs | **16** |
-| Unit tests | **998** (1 pre-existing failure in formatters — fix pending) |
+| Unit tests | **1168** |
 | AI layer LOC | **~9,000+** |
 | Python packages | **~34** in .venv/ |
 | Embedding provider | Gemini Embedding 001 (cloud, free 10M TPM) |

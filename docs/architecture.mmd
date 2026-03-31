@@ -1,0 +1,104 @@
+graph TD
+    subgraph "User Interfaces"
+        NEWELLE["Newelle (Flatpak GTK4)\nAI Chat + Voice"]
+        OPENCODE["OpenCode\nAI Code Editor"]
+        TRAY["PySide6 Tray App\n~80 MB"]
+    end
+
+    subgraph "AI Proxy Layer"
+        PROXY["LLM Proxy\n:8767 (OpenAI-compat)\nai/llm_proxy.py"]
+        MCP["MCP Bridge\n:8766 (FastMCP)\nai/mcp_bridge/server.py\n43 tools"]
+    end
+
+    subgraph "AI Core"
+        ROUTER["LiteLLM Router\nai/router.py\nhealth-weighted"]
+        RAG["RAG Pipeline\nai/rag/\nLanceDB + Cohere rerank"]
+        INTEL["Threat Intel\nai/threat_intel/\n6 modules"]
+        AGENTS["AI Agents\nai/agents/\n4 agents"]
+        HEALTH["Health Tracker\nai/health.py\nprovider scoring"]
+    end
+
+    subgraph "Cloud LLM Providers"
+        GEMINI["Gemini\nfast/reason/embed"]
+        GROQ["Groq\nfast/reason"]
+        MISTRAL["Mistral + Codestral\ncode/batch"]
+        OPENROUTER["OpenRouter\nreason/code"]
+        ZAI["z.ai\nfast/code"]
+        CEREBRAS["Cerebras\nbatch fallback"]
+    end
+
+    subgraph "Threat Intel APIs"
+        VT["VirusTotal"]
+        OTX["AlienVault OTX"]
+        ABUSEIPDB["AbuseIPDB"]
+        GREYNOISE["GreyNoise"]
+        NVD["NVD + OSV + CISA KEV"]
+        URLHAUS["URLhaus + ThreatFox"]
+        HYBRID["Hybrid Analysis"]
+    end
+
+    subgraph "Storage"
+        LANCEDB["LanceDB\n~/security/vector-db/\n(→ /var/mnt/ext-ssd)"]
+        DISKCACHE["LiteLLM Disk Cache\n/var/mnt/ext-ssd/bazzite-ai/llm-cache"]
+        SECDIR["~/security/\nlogs, quarantine, status"]
+    end
+
+    subgraph "System Layer"
+        CLAMAV["ClamAV\nclamd + freshclam"]
+        HEALTH_MON["Health Monitor\nsystem-health-snapshot.sh"]
+        SYSTEMD["systemd timers\n12 scheduled jobs"]
+        NVIDIA["NVIDIA GTX 1060\n6 GB VRAM (0 used normal)"]
+        ZRAM["ZRAM swap\nswappiness=180"]
+    end
+
+    NEWELLE -->|MCP tools| MCP
+    NEWELLE -->|LLM calls| PROXY
+    OPENCODE -->|LLM calls| PROXY
+    TRAY -->|reads| SECDIR
+
+    PROXY --> ROUTER
+    MCP --> ROUTER
+    MCP --> RAG
+    MCP --> INTEL
+    MCP --> AGENTS
+    MCP --> HEALTH_MON
+    MCP --> CLAMAV
+
+    ROUTER --> GEMINI
+    ROUTER --> GROQ
+    ROUTER --> MISTRAL
+    ROUTER --> OPENROUTER
+    ROUTER --> ZAI
+    ROUTER --> CEREBRAS
+    ROUTER --> DISKCACHE
+    ROUTER --> HEALTH
+
+    RAG --> LANCEDB
+    RAG -->|embed| GEMINI
+
+    INTEL --> VT
+    INTEL --> OTX
+    INTEL --> ABUSEIPDB
+    INTEL --> GREYNOISE
+    INTEL --> NVD
+    INTEL --> URLHAUS
+    INTEL --> HYBRID
+
+    AGENTS --> RAG
+    AGENTS --> INTEL
+    AGENTS --> CLAMAV
+    AGENTS --> HEALTH_MON
+
+    CLAMAV --> SECDIR
+    HEALTH_MON --> SECDIR
+    SYSTEMD -.->|triggers| CLAMAV
+    SYSTEMD -.->|triggers| HEALTH_MON
+    SYSTEMD -.->|triggers| RAG
+
+    style NEWELLE fill:#4a90d9,color:#fff
+    style OPENCODE fill:#4a90d9,color:#fff
+    style MCP fill:#7b68ee,color:#fff
+    style PROXY fill:#7b68ee,color:#fff
+    style ROUTER fill:#e8956d,color:#fff
+    style LANCEDB fill:#5ba85f,color:#fff
+    style CLAMAV fill:#c0392b,color:#fff

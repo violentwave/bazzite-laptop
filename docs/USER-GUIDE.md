@@ -906,7 +906,7 @@ sudo systemctl enable --now system-health.timer
 
 ```bash
 source .venv/bin/activate
-python3 -m pytest tests/ -v              # All 998 tests
+python3 -m pytest tests/ -v              # All 1168 tests
 python3 -m pytest tests/ -v -k "mcp"     # MCP-related tests only
 python3 -m pytest tests/ -v -k "router"  # Router tests only
 ruff check ai/ tests/                     # Lint
@@ -934,3 +934,60 @@ The GPU has 6 GB VRAM. Embeddings now use Gemini Embedding 001 (cloud, free),
 so VRAM usage is 0 in normal operation. Ollama `nomic-embed-text` is available
 as emergency fallback only — not loaded by default. Never run local LLM
 generation models on this hardware.
+
+---
+
+## 15. References
+
+### Bazzite / Fedora Atomic
+
+- [Bazzite documentation](https://docs.bazzite.gg/)
+- [ujust commands](https://docs.bazzite.gg/Installing_and_Managing_Software/ujust/)
+- [Game launch options & env variables](https://docs.bazzite.gg/Gaming/launch-options-env-variables/)
+- [Common issues & resolutions](https://docs.bazzite.gg/General/issues_and_resolutions/)
+- [FAQ](https://docs.bazzite.gg/General/FAQ/)
+- [Package layering (rpm-ostree)](https://docs.bazzite.gg/Installing_and_Managing_Software/rpm-ostree/)
+- [Updates, rollbacks & rebasing](https://docs.bazzite.gg/Installing_and_Managing_Software/Updates_Rollbacks_and_Rebasing/)
+- [Bazzite vs SteamOS comparison](https://docs.bazzite.gg/General/SteamOS_Comparison/)
+- [Bazzite CLI tools](https://docs.bazzite.gg/Advanced/bazzite-cli/)
+- [ScopeBuddy (advanced game launch management)](https://docs.bazzite.gg/Advanced/scopebuddy/)
+
+### Gaming
+
+- [ProtonDB (game compatibility)](https://www.protondb.com/)
+- [MangoHud GitHub](https://github.com/flightlessmango/MangoHud)
+- [GameMode GitHub](https://github.com/FeralInteractive/gamemode)
+- [Proton GitHub](https://github.com/ValveSoftware/Proton)
+
+### Security & Privacy
+
+- [ClamAV documentation](https://docs.clamav.net/)
+- [ClamAV scanning usage](https://docs.clamav.net/manual/Usage/Scanning.html)
+- [Firewalld documentation](https://firewalld.org/documentation/)
+- [USBGuard documentation](https://usbguard.github.io/)
+- [USBGuard ArchWiki](https://wiki.archlinux.org/title/USBGuard)
+- [arkenfox user.js (Firefox hardening)](https://github.com/arkenfox/user.js)
+- [EICAR test file info](https://www.eicar.org/download-anti-malware-testfile/)
+
+### Hardware & Monitoring
+
+- [NVIDIA SMI reference](https://developer.nvidia.com/nvidia-system-management-interface)
+- [lm-sensors wiki](https://hwmon.wiki.kernel.org/)
+- [ArchWiki SMART monitoring](https://wiki.archlinux.org/title/S.M.A.R.T.)
+- [smartmontools documentation](https://www.smartmontools.org/wiki/TocDoc)
+- [supergfxctl manual](https://asus-linux.org/manual/supergfxctl-manual/)
+- [Mission Center](https://missioncenter.io/)
+
+### AI / Development
+
+- [Claude Code documentation](https://code.claude.com/docs/en/)
+- [Claude Code GitHub](https://github.com/anthropics/claude-code)
+- [LiteLLM documentation](https://docs.litellm.ai/)
+- [PySide6/Qt6 documentation](https://doc.qt.io/qtforpython-6/)
+- [AppIndicator3 (system tray)](https://wiki.ubuntu.com/DesktopExperienceTeam/ApplicationIndicators)
+
+### Notifications & Email
+
+- [msmtp documentation](https://marlam.de/msmtp/)
+- [Moonshine STT](https://github.com/moonshine-ai/moonshine)
+- [Kokoro TTS](https://github.com/thewh1teagle/kokoro-onnx)
