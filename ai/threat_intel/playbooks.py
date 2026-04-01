@@ -482,3 +482,7 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+
+
+# Alias for backward-compatible imports
+get_playbook = get_response_plan

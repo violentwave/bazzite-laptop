@@ -230,13 +230,13 @@ class TestStatusWriter:
     """Tests for LLM status file writer."""
 
     @patch("ai.llm_proxy.get_health_snapshot")
-    @patch("ai.llm_proxy.get_usage_stats")
-    def test_write_llm_status_creates_file(self, mock_usage, mock_health, tmp_path):
+    @patch("ai.llm_proxy.get_cost_stats")
+    def test_write_llm_status_creates_file(self, mock_cost, mock_health, tmp_path):
         """Status writer creates atomic JSON file."""
         from ai.llm_proxy import _write_llm_status
 
         mock_health.return_value = {"groq": {"score": 0.9}}
-        mock_usage.return_value = {"total_calls": 100}
+        mock_cost.return_value = {"total_calls": 100}
 
         # Monkey-patch status file path to temp directory
         import ai.llm_proxy

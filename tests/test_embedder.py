@@ -75,7 +75,7 @@ class TestEmbedOllama:
         mock_ollama.embed.return_value = resp
         result = _embed_ollama(["hello"])
         assert result == [ZERO_VEC]
-        mock_ollama.embed.assert_called_once_with(model=OLLAMA_MODEL, input=["hello"], keep_alive=60)
+        mock_ollama.embed.assert_called_once_with(model=OLLAMA_MODEL, input=["hello"], keep_alive=60)  # noqa: E501
 
     @patch("ai.rag.embedder.ollama")
     def test_multiple_texts(self, mock_ollama):

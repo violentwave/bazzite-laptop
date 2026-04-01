@@ -40,7 +40,7 @@
           ┌──────────────▼──┐ ┌─▼──────────────────┐
           │  MCP Bridge     │ │  LLM Proxy          │
           │  :8766 FastMCP  │ │  :8767 OpenAI-compat│
-          │  44 tools       │ │  6 cloud providers  │
+          │  47 tools       │ │  6 cloud providers  │
           └──┬──┬──┬──┬─────┘ └──┬──────────────────┘
              │  │  │  │          │
     ┌────────┘  │  │  └───┐     │  Health-weighted routing
@@ -74,13 +74,13 @@ Key constraints:
 
 ---
 
-## MCP Tools (44 + health)
+## MCP Tools (47 + health)
 
-Source: `configs/mcp-bridge-allowlist.yaml` (44 entries).
+Source: `configs/mcp-bridge-allowlist.yaml` (47 entries).
 
-> **Phase 12:** PingMiddleware (25s keepalive) active. All 44 tools carry MCP annotations (readOnly/destructive/openWorld hints).
+> **Phase 12:** PingMiddleware (25s keepalive) active. All 47 tools carry MCP annotations (readOnly/destructive/openWorld hints).
 
-### system.* (16 tools)
+### system.* (17 tools)
 
 | Tool | Source | Args | Description |
 |------|--------|------|-------------|
@@ -100,8 +100,9 @@ Source: `configs/mcp-bridge-allowlist.yaml` (44 entries).
 | `system.fedora_updates` | json_file: `~/security/fedora-updates.json` | — | Fedora/Bazzite pending updates (Bodhi) |
 | `system.pkg_intel` | python: `ai.system.pkg_intel` | — | Package advisories via deps.dev |
 | `system.cache_stats` | python: `ai.cache` | — | LLM cache statistics: entries, size, hit rate |
+| `system.token_report` | python: `ai.mcp_bridge.tools` | — | Token usage and cost report from LLM proxy |
 
-### security.* (12 tools)
+### security.* (14 tools)
 
 | Tool | Source | Args | Description |
 |------|--------|------|-------------|
@@ -117,6 +118,8 @@ Source: `configs/mcp-bridge-allowlist.yaml` (44 entries).
 | `security.run_scan` | python | `scan_type` (`"quick"` or `"deep"`, optional) | Trigger ClamAV scan via systemctl |
 | `security.run_health` | python | — | Trigger health snapshot via systemctl |
 | `security.run_ingest` | python | — | Trigger log pipeline re-ingestion |
+| `security.correlate` | python: `ai.threat_intel.correlator` | `ioc`, `ioc_type` (required) | Correlate IOC across VT/OTX/AbuseIPDB/GreyNoise/URLhaus |
+| `security.recommend_action` | python: `ai.threat_intel.playbooks` | `finding_type`, `finding_id` (required) | Response playbook for threat findings |
 
 ### knowledge.* (3 tools)
 
@@ -163,7 +166,7 @@ Source: `configs/mcp-bridge-allowlist.yaml` (44 entries).
 
 | Tool | Description |
 |------|-------------|
-| `health` | Returns `{"status": "ok", "tools": 44}` |
+| `health` | Returns `{"status": "ok", "tools": 47}` |
 
 ---
 
@@ -250,7 +253,7 @@ Source: `configs/mcp-bridge-allowlist.yaml` (44 entries).
 | `ai/rate_limiter.py` | Cross-script rate limiting with file locking |
 | `ai/key_manager.py` | API key presence checker |
 | `ai/mcp_bridge/server.py` | FastMCP server on :8766, tool registration |
-| `ai/mcp_bridge/tools.py` | Tool dispatch handlers for all 44 tools |
+| `ai/mcp_bridge/tools.py` | Tool dispatch handlers for all 47 tools |
 | `ai/threat_intel/` | VT, OTX, AbuseIPDB, GreyNoise, NVD, URLhaus, etc. (6 API modules) |
 | `ai/rag/` | LanceDB store, embedder, query engine, code query |
 | `ai/log_intel/` | Log ingestion, anomaly detection, semantic search |
@@ -357,7 +360,7 @@ Agents working on this project share context via `HANDOFF.md` in the project roo
 Newelle (Flatpak GTK4) is the AI chat/voice UI for this system.
 
 - **LLM**: `http://127.0.0.1:8767/v1/` (`model="fast"`)
-- **MCP**: `http://127.0.0.1:8766/mcp` (44 tools)
+- **MCP**: `http://127.0.0.1:8766/mcp` (47 tools)
 - **System prompt**: `docs/newelle-system-prompt.md`
 - **Skills**: `docs/newelle-skills/` — 5 bundles: security, system, dev, gaming, agents
 - **Morning briefing**: `docs/morning-briefing-prompt.md` (scheduled 9:30 AM)

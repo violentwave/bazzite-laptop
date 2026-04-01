@@ -37,6 +37,7 @@ These are the packages actively used by `ai/`, `tray/`, and `tests/`.
 | ollama | 0.6.1 | `ai/rag/` — emergency local embedding fallback only |
 | boto3 | 1.42.73 | `scripts/archive-logs-r2.py` — Cloudflare R2 log archiving |
 | cohere | 5.20.7 | `ai/rag/embedder.py` — Cohere rerank for RAG QA |
+| sentry-sdk | 2.55.0 | `ai/llm_proxy.py` — error reporting (optional, via SENTRY_DSN key) |
 | pillow | 12.1.1 | Image processing utilities |
 
 ---

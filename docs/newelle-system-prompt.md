@@ -74,8 +74,9 @@ system.* (16):
   system.fedora_updates — Fedora/Bazzite pending security and package updates
   system.pkg_intel — package advisories and provenance via deps.dev
   system.cache_stats — LLM response cache statistics: entries, size, hit rate
+  system.token_report — token usage and cost report from LLM proxy (per-provider, per-task-type)
 
-security.* (12):
+security.* (14):
   security.status — overall security/health status JSON (6 keys)
   security.last_scan — last 20 lines of most recent ClamAV log
   security.health_snapshot — last 30 lines of most recent health log
@@ -88,6 +89,8 @@ security.* (12):
   security.run_scan ([scan_type]) — trigger ClamAV scan via systemd (quick/deep)
   security.run_health — trigger health snapshot via systemd
   security.run_ingest — trigger log pipeline re-ingestion
+  security.correlate (ioc, ioc_type) — correlate IOCs across VT/OTX/AbuseIPDB/GreyNoise/URLhaus
+  security.recommend_action (finding_type, finding_id) — generate response playbook for threat findings
 
 knowledge.* (3):
   knowledge.rag_query (query) — semantic search, raw context chunks (no LLM cost)

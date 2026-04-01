@@ -172,12 +172,12 @@ class TestTokenReportTool:
 class TestFreshnessHelperUnit:
     def test_format_freshness_age_returns_none_for_fresh_data(self):
         """format_freshness_age returns None for data < 1 hour old."""
-        from datetime import datetime, timedelta
+        from datetime import UTC, datetime, timedelta
 
         from ai.utils.freshness import format_freshness_age
 
         # Use timezone-aware UTC datetime
-        recent = datetime.now(datetime.UTC) - timedelta(minutes=30)
+        recent = datetime.now(UTC) - timedelta(minutes=30)
         result = format_freshness_age(recent)
         # Should be None since less than 1 hour old
         assert result is None

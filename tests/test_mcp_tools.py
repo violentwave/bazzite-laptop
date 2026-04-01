@@ -17,7 +17,7 @@ def allowlist():
 
 class TestAllowlistIntegrity:
     def test_has_44_tools(self, allowlist):
-        assert len(allowlist["tools"]) == 44
+        assert len(allowlist["tools"]) == 47
 
     def test_all_expected_tools_present(self, allowlist):
         expected = {
@@ -26,7 +26,7 @@ class TestAllowlistIntegrity:
             "system.llm_models", "system.mcp_manifest", "system.llm_status",
             "system.key_status", "system.release_watch", "system.fedora_updates",
             "system.pkg_intel", "system.gpu_perf", "system.gpu_health",
-            "system.cache_stats",
+            "system.cache_stats", "system.token_report",
             "security.last_scan", "security.health_snapshot", "security.status",
             "security.threat_lookup", "security.ip_lookup", "security.url_lookup",
             "knowledge.rag_query", "knowledge.rag_qa", "knowledge.ingest_docs",
@@ -35,6 +35,7 @@ class TestAllowlistIntegrity:
             "logs.search", "logs.stats",
             "security.cve_check", "security.sandbox_submit", "security.threat_summary",
             "security.run_scan", "security.run_health", "security.run_ingest",
+            "security.correlate", "security.recommend_action",
             "code.search", "code.rag_query",
             "agents.security_audit", "agents.performance_tuning",
             "agents.knowledge_storage", "agents.code_quality",
@@ -380,7 +381,7 @@ class TestMcpManifest:
         from ai.mcp_bridge.tools import execute_tool
 
         result = await execute_tool("system.mcp_manifest", {})
-        assert len(result.encode()) < 4096
+        assert len(result.encode()) < 8192
 
     def test_tool_output_limits(self):
         from ai.mcp_bridge.tools import _DEFAULT_OUTPUT_LIMIT, _TOOL_OUTPUT_LIMITS

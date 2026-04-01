@@ -243,8 +243,8 @@ def mcp_handler() -> dict:
     report = _latest_report()
     if report is None:
         return {
-            "error": "No scan report found. Run: python -m ai.system.pkg_intel --scan requirements.txt"
-        }  # noqa: E501
+            "error": "No scan report found. Run: python -m ai.system.pkg_intel --scan requirements.txt"  # noqa: E501
+        }
     return report
 
 

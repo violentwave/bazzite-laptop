@@ -114,7 +114,7 @@ class TestBackwardCompat:
             patch("ai.router._load_config", return_value=mock_config),
             patch("ai.router._get_rate_limiter", return_value=limiter),
         ):
-            with pytest.raises(RuntimeError, match="All providers rate-limited"):
+            with pytest.raises(RuntimeError, match="all providers rate-limited"):
                 route_query("fast", "hello")
 
     def test_reset_clears_state(self):

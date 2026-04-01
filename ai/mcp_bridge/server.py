@@ -1,6 +1,6 @@
 """FastMCP server for the Newelle MCP bridge.
 
-Exposes 43 tools + 1 health endpoint on localhost.
+Exposes 46 tools + 1 health endpoint on localhost.
 NEVER bind to 0.0.0.0. NEVER import ai.router (it loads all keys unscoped).
 """
 
@@ -16,7 +16,7 @@ DEFAULT_BIND = "127.0.0.1"
 DEFAULT_PORT = int(__import__("os").environ.get("MCP_BRIDGE_PORT", "8766"))
 
 # Number of tools in the allowlist (excludes health endpoint itself)
-_TOOL_COUNT = 44
+_TOOL_COUNT = 47
 
 
 def _assert_localhost(bind: str) -> None:
@@ -107,6 +107,11 @@ def create_app():
         "agents.performance_tuning": {"readOnlyHint": True, "idempotentHint": True},
         "agents.knowledge_storage": {"readOnlyHint": True, "idempotentHint": True},
         "agents.code_quality":      {"readOnlyHint": True, "idempotentHint": True},
+        # ── observability ────────────────────────────────────────────────────
+        "system.token_report":      {"readOnlyHint": True, "idempotentHint": True},
+        # ── threat intel correlation ─────────────────────────────────────────
+        "security.correlate":       {"readOnlyHint": True, "openWorldHint": True},
+        "security.recommend_action": {"readOnlyHint": True, "idempotentHint": True},
     }
 
     # Load tool definitions from the allowlist
@@ -158,6 +163,14 @@ def create_app():
             @mcp.tool(name=tool_name, description=description, annotations=ann)
             async def _handler_file_path(file_path: str, _tn=tool_name):
                 return await execute_tool(_tn, {"file_path": file_path})
+        elif "ioc" in arg_defs:
+            @mcp.tool(name=tool_name, description=description, annotations=ann)
+            async def _handler_ioc(ioc: str, ioc_type: str, _tn=tool_name):
+                return await execute_tool(_tn, {"ioc": ioc, "ioc_type": ioc_type})
+        elif "finding_type" in arg_defs:
+            @mcp.tool(name=tool_name, description=description, annotations=ann)
+            async def _handler_finding(finding_type: str, finding_id: str, _tn=tool_name):
+                return await execute_tool(_tn, {"finding_type": finding_type, "finding_id": finding_id})  # noqa: E501
 
         # Built-in health tool (MCP protocol)
     @mcp.tool(name="health", description="Bridge health check")
