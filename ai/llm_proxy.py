@@ -128,20 +128,47 @@ def _assert_localhost(bind: str) -> None:
 
 
 async def _stream_response(task_type: str, messages: list[dict]) -> AsyncGenerator[str, None]:
-    """Stream from the router, yielding SSE-formatted chunks."""
-    async for chunk in route_query_stream(task_type, messages):
-        data = {
-            "id": f"chatcmpl-{int(time.time())}",
+    """Stream from the router, yielding SSE-formatted chunks.
+
+    If the upstream stream fails after data has already been sent to the client
+    (post-commit failure), emit a graceful error chunk instead of letting
+    the raw connection error propagate to Newelle.
+    """
+    try:
+        async for chunk in route_query_stream(task_type, messages):
+            data = {
+                "id": f"chatcmpl-{int(time.time())}",
+                "object": "chat.completion.chunk",
+                "created": int(time.time()),
+                "model": f"bazzite-router/{task_type}",
+                "choices": [{
+                    "index": 0,
+                    "delta": {"content": chunk},
+                    "finish_reason": None,
+                }],
+            }
+            yield f"data: {json.dumps(data)}\n\n"
+    except Exception as e:
+        # Post-commit failure — stream already started, can't retry.
+        # Send an error chunk so Newelle gets a terminated SSE stream.
+        logger.warning("Stream interrupted for task_type=%s: %s", task_type, e)
+        error_data = {
+            "id": "error",
             "object": "chat.completion.chunk",
             "created": int(time.time()),
             "model": f"bazzite-router/{task_type}",
             "choices": [{
                 "index": 0,
-                "delta": {"content": chunk},
-                "finish_reason": None,
+                "delta": {
+                    "content": f"\n\n[Stream interrupted: {type(e).__name__}. "
+                    "Please regenerate.]",
+                },
+                "finish_reason": "error",
             }],
         }
-        yield f"data: {json.dumps(data)}\n\n"
+        yield f"data: {json.dumps(error_data)}\n\n"
+        yield "data: [DONE]\n\n"
+        return
 
     # Final chunk with finish_reason
     final = {

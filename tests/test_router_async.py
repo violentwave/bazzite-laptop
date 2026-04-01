@@ -260,8 +260,8 @@ class TestRouteQueryStream:
         from ai.router import route_query_stream
 
         async def mock_stream_provider(provider, task_type, messages, **kwargs):
-            # Yield enough data to hit commit threshold (>2KB)
-            yield "x" * 2100
+            # Yield enough data to hit commit threshold (>8KB)
+            yield "x" * 8200
             # Then fail post-commit
             raise Exception("Post-commit failure")
 
@@ -295,7 +295,7 @@ class TestRouteQueryStream:
     async def test_stream_small_response_below_threshold(
         self, patch_config, patch_limiter, patch_health
     ):
-        """Small responses buffered entirely (below 2KB threshold)."""
+        """Small responses buffered entirely (below 8KB threshold)."""
         from ai.router import route_query_stream
 
         async def mock_stream_provider(provider, task_type, messages, **kwargs):
@@ -316,13 +316,13 @@ class TestRouteQueryStream:
     async def test_stream_commit_threshold_behavior(
         self, patch_config, patch_limiter, patch_health
     ):
-        """Stream commits after 2KB, then switches to live streaming."""
+        """Stream commits after 8KB, then switches to live streaming."""
         from ai.router import route_query_stream
 
         async def mock_stream_provider(provider, task_type, messages, **kwargs):
-            # Yield chunks: 1KB + 1KB (hits threshold) + 500B
-            yield "a" * 1024
-            yield "b" * 1024  # Threshold hit here
+            # Yield chunks: 4KB + 4KB (hits threshold) + 500B
+            yield "a" * 4096
+            yield "b" * 4096  # Threshold hit here
             yield "c" * 500
 
         with patch("ai.router._stream_provider", side_effect=mock_stream_provider):
@@ -335,7 +335,7 @@ class TestRouteQueryStream:
 
             # All chunks should be yielded
             assert len(chunks) == 3
-            assert len("".join(chunks)) == 2548
+            assert len("".join(chunks)) == 8692
 
     @pytest.mark.asyncio()
     async def test_stream_invalid_task_type(self):

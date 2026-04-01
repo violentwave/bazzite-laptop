@@ -88,6 +88,34 @@ class TestChatCompletions:
         assert len(chunks) >= 3  # At least 2 content chunks + [DONE]
         assert chunks[-1].strip() == "data: [DONE]"
 
+    def test_streaming_error_sends_graceful_chunk(self, mock_router):
+        """Post-commit stream failure sends error chunk, not raw error."""
+        from starlette.testclient import TestClient
+
+        from ai.llm_proxy import create_app
+
+        async def error_stream(task_type, messages):
+            yield "partial "
+            raise RuntimeError("upstream died")
+
+        with patch("ai.llm_proxy.route_query_stream") as mock_rqs:
+            mock_rqs.return_value = error_stream("fast", [])
+            app = create_app()
+            client = TestClient(app)
+            response = client.post(
+                "/v1/chat/completions",
+                json={
+                    "model": "fast",
+                    "messages": [{"role": "user", "content": "Hi"}],
+                    "stream": True,
+                },
+            )
+        assert response.status_code == 200
+        text = response.text
+        assert "Stream interrupted" in text
+        assert "RuntimeError" in text
+        assert text.rstrip().endswith("data: [DONE]")
+
     def test_model_name_mapping(self, client, mock_router):
         """Model names are mapped to task types correctly."""
         test_cases = [

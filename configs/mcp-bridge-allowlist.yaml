@@ -341,7 +341,7 @@ tools:
     args: null
 
   security.correlate:
-    description: "Correlate IOCs across threat intel sources (hash, IP, URL, CVE)"
+    description: "Cross-reference an IOC across all threat intel sources. Pass ioc (the value) and ioc_type (hash|ip|url|cve)"
     source: python
     module: ai.mcp_bridge.tools
     args:
@@ -349,14 +349,15 @@ tools:
         type: string
         required: true
         max_length: 256
+        description: "The IOC value — a hash, IP address, URL, or CVE ID"
       ioc_type:
         type: string
-        required: false
+        required: true
         pattern: "^(hash|ip|url|cve)$"
-        default: "hash"
+        description: "Type of IOC: hash, ip, url, or cve"
 
   security.recommend_action:
-    description: "Generate response playbook for threat findings"
+    description: "Generate response playbook for a threat finding. Pass finding_type (cve|malware|suspicious_ip|suspicious_url) and finding_id"
     source: python
     module: ai.mcp_bridge.tools
     args:
@@ -364,7 +365,9 @@ tools:
         type: string
         required: true
         pattern: "^(cve|malware|suspicious_ip|suspicious_url)$"
+        description: "Type: cve, malware, suspicious_ip, or suspicious_url"
       finding_id:
         type: string
         required: true
         max_length: 256
+        description: "The identifier — CVE ID, hash, IP, or URL"

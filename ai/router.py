@@ -69,7 +69,7 @@ _FALLBACK_CHAINS: dict[str, list[str]] = {
 }
 
 # Stream recovery: buffer up to this many bytes before committing to a provider
-_STREAM_COMMIT_THRESHOLD = 2048  # 2KB
+_STREAM_COMMIT_THRESHOLD = 8192  # 8KB — gives room for provider failover
 
 # Per-task-type timeouts (seconds). reason/batch get more time for deep analysis.
 _DEFAULT_TIMEOUTS: dict[str, int] = {
