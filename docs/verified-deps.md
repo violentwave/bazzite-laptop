@@ -124,7 +124,7 @@ Keys stored in `~/.config/bazzite-ai/keys.env`.
 | GreyNoise | `GREYNOISE_API_KEY` | 5 rpm, 7 rpd | `ai/threat_intel/ip_lookup.py` |
 | Hybrid Analysis | `HYBRID_ANALYSIS_API_KEY` | 5 rpm, 200 rpd | `ai/threat_intel/sandbox.py` |
 | NVD (NIST) | `NVD_API_KEY` _(optional)_ | 50 per 30s (anon); higher with key | `ai/threat_intel/cve_scanner.py` |
-| OSV (Google) | _(none)_ | 30 rpm, 10 000 rpd | `ai/threat_intel/cve_scanner.py` |
+| OSV (Google) | _(none)_ | 60 rpm, 10 000 rpd | `ai/threat_intel/cve_scanner.py` |
 | CISA KEV | _(none)_ | No enforced limit (JSON feed) | `ai/threat_intel/cve_scanner.py` |
 | Shodan InternetDB | _(none)_ | No enforced limit | `ai/threat_intel/ip_lookup.py` |
 | MalwareBazaar | _(none)_ | No enforced limit | `ai/threat_intel/lookup.py` |

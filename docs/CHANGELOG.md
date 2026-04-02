@@ -1,5 +1,5 @@
 # Changelog — Bazzite AI Enhancement Layer
-<!-- System: Acer Predator G3-571 | Bazzite 43 | Last updated: 2026-03-31 -->
+<!-- System: Acer Predator G3-571 | Bazzite 43 | Last updated: 2026-04-02 -->
 
 All notable changes are recorded here. Phases correspond to the original
 implementation plan for the AI enhancement layer built on top of the base
@@ -9,6 +9,11 @@ Bazzite security/gaming system.
 
 ## Post-Phase 15 — Stabilization (2026-04-02)
 
+- fix: replace deprecated gemini-2.0-flash with gemini-1.5-flash in litellm-config.yaml (fast + batch task types)
+- fix: increase rate limits and reduce health cooldown thresholds
+  - `configs/ai-rate-limits.json`: groq 30→60 rpm, 14400→144000 rpd; cerebras 30→60 rpm; mistral 2→60 rpm; openrouter 20→60 rpm, 50→5000 rpd
+  - `ai/health.py`: failure_threshold 3→5, base_cooldown 300s→60s, max_cooldown 1800s→600s
+  - `configs/litellm-config.yaml`: num_retries 0→2, allowed_fails 1→3
 - Rebuilt Newelle system prompt: native file tool routing (`read_file`, `write_file`, `edit`, `list_directory`), absolute-path rules, failure recovery guards
 - Added memory content filtering in `ai/rag/memory.py` to reduce runtime prompt bloat
 - Added bounded retry with exponential backoff in `ai/rag/ingest_docs.py` for state-file writes (max 3 attempts)
@@ -407,8 +412,8 @@ CIRCL Hashlookup
 - `ai/config.py` — paths, `APP_NAME`, scoped `load_keys()` (never loads all keys)
 - `ai/router.py` — LiteLLM V2 Router with health-weighted provider selection;
   task types: `fast`, `reason`, `batch`, `code`, `embed`
-- `ai/health.py` — provider health scoring (0.0–1.0); 3 consecutive failures →
-  5 min cooldown with exponential backoff (max 30 min)
+- `ai/health.py` — provider health scoring (0.0–1.0); 5 consecutive failures →
+  1 min cooldown with exponential backoff (max 10 min)
 - `ai/llm_proxy.py` — Starlette/uvicorn OpenAI-compatible proxy on :8767 for
   Newelle; model name → task type mapping
 - `ai/rate_limiter.py` — cross-script rate limiting with file locking + atomic

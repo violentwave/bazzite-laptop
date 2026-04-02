@@ -311,7 +311,7 @@ your 'reason' profile in Settings → Profile Manager").
 ### Health tracking
 
 Each provider gets a health score (0.0–1.0) based on success rate and
-latency. 3 consecutive failures trigger auto-demotion with exponential
+latency. 5 consecutive failures trigger auto-demotion with exponential
 backoff: 5 min → 10 min → 30 min max. Recovery is automatic.
 
 ### Check status
