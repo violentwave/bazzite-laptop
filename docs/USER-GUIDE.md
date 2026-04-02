@@ -1,5 +1,5 @@
 # Bazzite AI Layer — User Guide
-<!-- System: Acer Predator G3-571 | Bazzite 43 | Last updated: 2026-03-22 -->
+<!-- System: Acer Predator G3-571 | Bazzite 43 | Last updated: 2026-04-02 -->
 
 Complete reference for operating, maintaining, and troubleshooting the AI
 enhancement layer on this Bazzite gaming laptop.

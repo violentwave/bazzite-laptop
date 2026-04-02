@@ -1,5 +1,5 @@
 # Bazzite AI Layer — Agent Reference
-<!-- System: Acer Predator G3-571 | Bazzite 43 | Updated: 2026-03-31 -->
+<!-- System: Acer Predator G3-571 | Bazzite 43 | Updated: 2026-04-02 -->
 
 ## Session Start
 
