@@ -25,7 +25,7 @@ AI chat/voice assistant) as the primary interface.
     ┌─────▼──────┐        ┌──────▼──────────────┐
     │ LLM Proxy  │        │  MCP Bridge         │
     │ :8767      │        │  :8766 (FastMCP)    │
-    │ Starlette  │        │  43 tools           │
+     │ Starlette  │        │  47 tools           │
     └─────┬──────┘        └──────┬──────────────┘
           │                      │
     ┌─────▼──────┐        ┌──────▼──────────────┐
@@ -165,7 +165,7 @@ bash scripts/start-security-tray-qt.sh
 
 ---
 
-## 4. MCP Tools Reference (43 tools)
+## 4. MCP Tools Reference (47 tools)
 
 All tools are accessible through Newelle via the MCP bridge. They are read-only
 (no system mutations). Output is truncated to 4 KB and paths are redacted.
@@ -181,7 +181,7 @@ All tools are accessible through Newelle via the MCP bridge. They are read-only
 | `system.uptime`         | —      | System uptime and load average                     |
 | `system.service_status` | —      | Status of clamav-freshclam, system-health.timer, mcp-bridge, llm-proxy |
 | `system.llm_models`     | —      | Available modes (fast/reason/batch/code/embed), provider chains, proxy URL |
-| `system.mcp_manifest`   | —      | All 43 tools with descriptions and args (8 KB limit) |
+| `system.mcp_manifest`   | —      | All 47 tools with descriptions and args (8 KB limit) |
 | `system.llm_status`     | —      | Provider health scores, token usage, active models |
 | `system.key_status`     | —      | API key presence: "set" or "missing" per key (never values) |
 | `system.release_watch`  | —      | Upstream dependency release updates (GitHub Releases, GHSA) |
@@ -820,7 +820,7 @@ ollama pull nomic-embed-text
 
 | Path                                      | Purpose                                    |
 |-------------------------------------------|--------------------------------------------|
-| `configs/mcp-bridge-allowlist.yaml`       | 43 MCP tool definitions + arg validation   |
+| `configs/mcp-bridge-allowlist.yaml`       | 47 MCP tool definitions + arg validation   |
 | `configs/litellm-config.yaml`             | LiteLLM provider routing (23 models)       |
 | `configs/ai-rate-limits.json`             | Per-provider rate limits                   |
 | `configs/r2-config.yaml`                  | Cloudflare R2 log archive settings         |
