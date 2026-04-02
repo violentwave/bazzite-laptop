@@ -1,7 +1,7 @@
 """Provider health tracking for the LLM router.
 
 Tracks success/failure rates, latency, and auto-demotes providers after
-consecutive failures. Exponential backoff: 5m -> 10m -> 30m max.
+consecutive failures. Exponential backoff: 2m -> 4m -> 10m max.
 """
 
 import logging
@@ -11,7 +11,7 @@ from dataclasses import dataclass, field
 logger = logging.getLogger("ai.health")
 
 _FAILURE_THRESHOLD = 5
-_BASE_COOLDOWN_S = 60
+_BASE_COOLDOWN_S = 120
 _MAX_COOLDOWN_S = 600
 _STALENESS_THRESHOLD_S = 600  # 10 minutes
 

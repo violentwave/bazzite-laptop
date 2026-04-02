@@ -9,10 +9,11 @@ Bazzite security/gaming system.
 
 ## Post-Phase 15 — Stabilization (2026-04-02)
 
-- fix: replace deprecated gemini-2.0-flash with gemini-1.5-flash in litellm-config.yaml (fast + batch task types)
-- fix: increase rate limits and reduce health cooldown thresholds
-  - `configs/ai-rate-limits.json`: groq 30→60 rpm, 14400→144000 rpd; cerebras 30→60 rpm; mistral 2→60 rpm; openrouter 20→60 rpm, 50→5000 rpd
-  - `ai/health.py`: failure_threshold 3→5, base_cooldown 300s→60s, max_cooldown 1800s→600s
+- fix: upgrade Gemini models to 2.5-series (1.5 shutdown, 2.0 deprecated June 2026)
+  - `configs/litellm-config.yaml`: fast/batch → `gemini-2.5-flash-lite`; reason → `gemini-2.5-pro`; code → `gemini-2.5-flash` (unchanged)
+- fix: correct health cooldown and rate limits to match actual upstream caps
+  - `ai/health.py`: failure_threshold 3→5, base_cooldown 300s→120s, max_cooldown 1800s→600s
+  - `configs/ai-rate-limits.json`: groq 30 rpm/14400 rpd; cerebras 30 rpm; mistral 20 rpm; openrouter 20 rpm/50 rpd
   - `configs/litellm-config.yaml`: num_retries 0→2, allowed_fails 1→3
 - Rebuilt Newelle system prompt: native file tool routing (`read_file`, `write_file`, `edit`, `list_directory`), absolute-path rules, failure recovery guards
 - Added memory content filtering in `ai/rag/memory.py` to reduce runtime prompt bloat

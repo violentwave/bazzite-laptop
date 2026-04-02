@@ -16,7 +16,7 @@ model_list:
   # ── INTERACTIVE (speed-first, Gemini preferred for tool calling) ──
   - model_name: "fast"
     litellm_params:
-      model: gemini/gemini-1.5-flash
+      model: gemini/gemini-2.5-flash-lite
       api_key: os.environ/GEMINI_API_KEY
   - model_name: "fast"
     litellm_params:
@@ -48,7 +48,7 @@ model_list:
   # ── DEEP ANALYSIS (reasoning-first) ──
   - model_name: "reason"
     litellm_params:
-      model: gemini/gemini-2.5-flash
+      model: gemini/gemini-2.5-pro
       api_key: os.environ/GEMINI_API_KEY
   - model_name: "reason"
     litellm_params:
@@ -76,7 +76,7 @@ model_list:
   # ── BATCH (volume-first) ──
   - model_name: "batch"
     litellm_params:
-      model: gemini/gemini-1.5-flash
+      model: gemini/gemini-2.5-flash-lite
       api_key: os.environ/GEMINI_API_KEY
   - model_name: "batch"
     litellm_params:
@@ -143,5 +143,5 @@ router_settings:
 # Health tracking (Router V2)
 health_settings:
   failure_threshold: 5
-  base_cooldown_s: 60
+  base_cooldown_s: 120
   max_cooldown_s: 600

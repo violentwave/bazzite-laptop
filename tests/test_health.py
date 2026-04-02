@@ -67,36 +67,36 @@ class TestHealthTracker:
         h = tracker.get("groq")
         assert h.consecutive_failures == 0
 
-    def test_auto_demotion_after_three_failures(self, tracker):
-        for _ in range(3):
+    def test_auto_demotion_after_five_failures(self, tracker):
+        for _ in range(5):
             tracker.record_failure("groq", error="err")
         h = tracker.get("groq")
         assert h.is_disabled is True
         assert h.disabled_until is not None
-        assert h.disabled_until == pytest.approx(time.time() + 300, abs=5)
+        assert h.disabled_until == pytest.approx(time.time() + 120, abs=5)
 
     def test_exponential_backoff_on_repeated_demotion(self, tracker):
-        for _ in range(3):
+        for _ in range(5):
             tracker.record_failure("groq", error="err")
         h = tracker.get("groq")
         first_duration = h.disabled_until - time.time()
-        assert first_duration == pytest.approx(300, abs=5)
+        assert first_duration == pytest.approx(120, abs=5)
         h.disabled_until = time.time() - 1
         h.consecutive_failures = 0
-        for _ in range(3):
+        for _ in range(5):
             tracker.record_failure("groq", error="err")
         h = tracker.get("groq")
         second_duration = h.disabled_until - time.time()
-        assert second_duration == pytest.approx(600, abs=5)
+        assert second_duration == pytest.approx(240, abs=5)
 
-    def test_backoff_caps_at_thirty_minutes(self, tracker):
+    def test_backoff_caps_at_ten_minutes(self, tracker):
         h = tracker.get("groq")
         h._demotion_count = 10
-        for _ in range(3):
+        for _ in range(5):
             tracker.record_failure("groq", error="err")
         h = tracker.get("groq")
         duration = h.disabled_until - time.time()
-        assert duration == pytest.approx(1800, abs=5)
+        assert duration == pytest.approx(600, abs=5)
 
     def test_get_creates_new_provider(self, tracker):
         h = tracker.get("new-provider")
@@ -131,7 +131,7 @@ class TestHealthTracker:
         assert tracker.get("gemini").auth_broken is False
 
     def test_get_sorted_excludes_disabled(self, tracker):
-        for _ in range(3):
+        for _ in range(5):
             tracker.record_failure("dead-provider", error="err")
         tracker.record_success("live-provider", latency_ms=100.0)
         names = [h.name for h in tracker.get_sorted(["dead-provider", "live-provider"])]

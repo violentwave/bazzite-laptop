@@ -1,10 +1,10 @@
 {
   "_comment": "Static rate limit definitions. Read by ai/rate_limiter.py. Do not edit at runtime.",
   "llm_providers": {
-    "groq": {"rpm": 60, "rpd": 144000},
-    "cerebras": {"rpm": 60, "rpd": null, "tokens_per_day": 1000000, "max_context": 8192},
-    "mistral": {"rpm": 60, "rpd": null, "tokens_per_month": 1000000000},
-    "openrouter": {"rpm": 60, "rpd": 5000},
+    "groq": {"rpm": 30, "rpd": 14400},
+    "cerebras": {"rpm": 30, "rpd": null, "tokens_per_day": 1000000, "max_context": 8192},
+    "mistral": {"rpm": 20, "rpd": null, "tokens_per_month": 1000000000},
+    "openrouter": {"rpm": 20, "rpd": 50},
     "cohere": {"rpm": 20, "rpd": null, "calls_per_month": 1000},
     "cohere_rerank": {"rpm": 10, "rpd": 100},
     "github_models": {"rpm": 15, "rpd": null},

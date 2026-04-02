@@ -182,7 +182,7 @@ Source: `configs/mcp-bridge-allowlist.yaml` (47 entries).
 
 **Model name mapping** (what Newelle sends → task type): `model="fast"` → `fast` chain, `model="reason"` → `reason` chain, etc.
 
-**Health tracking**: 5 consecutive failures → 1 min cooldown → exponential backoff → 10 min max. Providers auto-recover when health improves.
+**Health tracking**: 5 consecutive failures → 2 min cooldown → exponential backoff → 10 min max. Providers auto-recover when health improves.
 
 **Stream recovery**: 2 KB commit threshold. Pre-commit failure → retry next provider. Post-commit → fatal (partial output already sent).
 
