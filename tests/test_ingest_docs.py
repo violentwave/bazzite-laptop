@@ -155,7 +155,10 @@ class TestSaveStateRetry:
         import json
         import os
 
-        from ai.rag.ingest_docs import _STATE_FILE, _save_state
+        from ai.rag.ingest_docs import _save_state
+
+        # Save original before patching
+        orig_rename = os.rename
 
         # Track call count
         call_count = 0
@@ -167,15 +170,7 @@ class TestSaveStateRetry:
                 # Simulate Errno 5 (I/O error) on first attempts
                 raise OSError(5, "Input/output error")
             # Succeed on second try
-            return (
-                os.rename.__wrapped__(*args)
-                if hasattr(os.rename, "__wrapped__")
-                else os._orig_rename(*args)
-            )
-
-        # Save original
-        orig_rename = os.rename
-        orig_state_file = _STATE_FILE
+            return orig_rename(*args)
 
         # Use temp directory for state file
         test_state_file = tmp_path / ".test-doc-ingest-state.json"
@@ -199,7 +194,7 @@ class TestSaveStateRetry:
         """_save_state should work normally without retries on first success."""
         import json
 
-        from ai.rag.ingest_docs import _STATE_FILE, _save_state
+        from ai.rag.ingest_docs import _save_state
 
         test_state_file = tmp_path / ".test-doc-ingest-state.json"
         monkeypatch.setattr("ai.rag.ingest_docs._STATE_FILE", test_state_file)
