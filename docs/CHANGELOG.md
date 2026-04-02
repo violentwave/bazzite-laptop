@@ -7,6 +7,16 @@ Bazzite security/gaming system.
 
 ---
 
+## Post-Phase 15 — Provider Chain Cleanup (2026-04-02)
+
+- fix: full 6-provider chains for all task types, verified model names and rate limits
+  - `configs/litellm-config.yaml`: removed duplicate z.ai entries (GLM-4.7-Flash, GLM-4.5-Air, GLM-5, GLM-4.7); consolidated to `openai/GLM-4-32B` at `https://api.z.ai/v1` for fast, reason, code
+  - `configs/litellm-config.yaml`: batch mistral `codestral-latest` → `mistral-small-latest` (Codestral is code-specialized, not batch)
+  - `configs/litellm-config.yaml`: cerebras `llama3.1-8b` → `llama-4-scout-17b-16e-instruct` (fast/batch); added `retry_after: 5` to router_settings
+  - `configs/ai-rate-limits.json`: gemini 60 rpm → 1500 rpm / 10000 rpd (Pro subscription actual limit); cerebras rpd null → 1000; openrouter rpd 50 → 200
+
+---
+
 ## Post-Phase 15 — Stabilization (2026-04-02)
 
 - fix: upgrade Gemini models to 2.5-series (1.5 shutdown, 2.0 deprecated June 2026)
