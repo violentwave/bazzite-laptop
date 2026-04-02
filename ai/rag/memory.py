@@ -126,6 +126,28 @@ def store_interaction(
         return False
 
 
+# Content patterns that should NOT be injected as memory context
+# (These look like system prompt fragments and would duplicate instructions)
+_FILTER_PATTERNS = [
+    "TOOL ROUTING",
+    "MANDATORY RULES",
+    "HARD BANS",
+    "FILE vs QUERY",
+    "TOOL DISAMBIGUATION",
+    "TOOL FAILURE RECOVERY",
+    "knowledge.rag_query",
+    "knowledge.rag_qa",
+    "knowledge.ingest_docs",
+    "code.rag_query",
+    "━━━━━━━━━",  # Section dividers
+]
+
+
+def _is_filtered_content(text: str) -> bool:
+    """Return True if text looks like system prompt content (not conversation)."""
+    return any(pattern in text for pattern in _FILTER_PATTERNS)
+
+
 def retrieve_relevant_context(
     query: str,
     limit: int = 3,
@@ -134,6 +156,7 @@ def retrieve_relevant_context(
     """Return relevant past response summaries for a query.
 
     No-op and returns [] if ENABLE_CONVERSATION_MEMORY is not true.
+    Filters out any content that looks like system prompt fragments.
 
     Args:
         query: The current user message to find past context for.
@@ -151,7 +174,13 @@ def retrieve_relevant_context(
             return []
         table = _get_table(db_path)
         results = table.search(vectors[0]).limit(limit).to_list()
-        return [r["response_summary"] for r in results if r.get("response_summary")]
+        # Filter out any content that looks like system prompt
+        filtered = [
+            r["response_summary"]
+            for r in results
+            if r.get("response_summary") and not _is_filtered_content(r["response_summary"])
+        ]
+        return filtered
     except Exception:  # noqa: BLE001
         logger.debug("Conversation memory retrieval failed (table may not exist yet)")
         return []

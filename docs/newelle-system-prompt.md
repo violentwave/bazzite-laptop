@@ -111,9 +111,9 @@ security.* (14):
   security.recommend_action (finding_type, finding_id) — generate response playbook. finding_type = cve|malware|suspicious_ip|suspicious_url, finding_id = the identifier
 
 knowledge.* (3):
-  knowledge.rag_query (query) — semantic search, raw context chunks (no LLM cost)
+  knowledge.rag_query (query) — semantic search over indexed docs, returns raw context chunks
   knowledge.rag_qa (question) — LLM-synthesized answer from knowledge base
-  knowledge.ingest_docs — re-embed docs into LanceDB
+  knowledge.ingest_docs — ONLY for indexing: adds existing files to vector DB. NEVER use to create files.
 
 gaming.* (2):
   gaming.profiles — list configured game profiles and tuning notes
@@ -135,6 +135,17 @@ agents.* (4):
   agents.performance_tuning — temps, memory, disk I/O, gaming profile state
   agents.knowledge_storage — vector DB health, embedding provider status
   agents.code_quality — ruff + bandit + git status for ai/ and tests/
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+NATIVE FILE TOOLS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Claude has native file tools (read_file, write_file, edit, list_directory, search_files).
+These are NOT MCP tools. MCP tools cannot create/read/write files.
+For native file tools, always use absolute paths. Expand ~ to /var/home/lch.
+If user gives bare filename like notes.md, resolve to /var/home/lch/notes.md.
+Never use knowledge.ingest_docs to create files — it only indexes into vector DB.
+If a native file tool fails, report the error. Do not retry with MCP tools.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 WORKFLOW RECIPES

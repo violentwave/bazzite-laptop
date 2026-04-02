@@ -38,6 +38,7 @@ class TestFileSizeCap:
     def test_oversized_file_is_skipped(self, tmp_path, patched_deps, caplog):
         """Files larger than MAX_BYTES_PER_DOC are skipped with a warning."""
         import logging
+
         big = _make_md(tmp_path, "big.md", MAX_BYTES_PER_DOC + 1)
         small = _make_md(tmp_path, "small.md", 100)
 
@@ -67,6 +68,7 @@ class TestDocCountCap:
     def test_stops_at_max_docs_per_run(self, tmp_path, patched_deps, caplog):
         """Processing stops after MAX_DOCS_PER_RUN files; rest are deferred."""
         import logging
+
         # Create MAX_DOCS_PER_RUN + 5 small files
         files = [_make_md(tmp_path, f"doc{i:04d}.md", 50) for i in range(MAX_DOCS_PER_RUN + 5)]
 
@@ -143,3 +145,67 @@ class TestSummaryDict:
         assert result["skipped_size"] == 0
         assert result["skipped_deferred"] == 0
         assert result["skipped_unchanged"] == 0
+
+
+class TestSaveStateRetry:
+    """Tests for _save_state I/O error retry logic."""
+
+    def test_save_state_retries_on_io_error(self, tmp_path, monkeypatch):
+        """_save_state should retry transient I/O errors."""
+        import json
+        import os
+
+        from ai.rag.ingest_docs import _STATE_FILE, _save_state
+
+        # Track call count
+        call_count = 0
+
+        def failing_rename(*args):
+            nonlocal call_count
+            call_count += 1
+            if call_count < 2:
+                # Simulate Errno 5 (I/O error) on first attempts
+                raise OSError(5, "Input/output error")
+            # Succeed on second try
+            return (
+                os.rename.__wrapped__(*args)
+                if hasattr(os.rename, "__wrapped__")
+                else os._orig_rename(*args)
+            )
+
+        # Save original
+        orig_rename = os.rename
+        orig_state_file = _STATE_FILE
+
+        # Use temp directory for state file
+        test_state_file = tmp_path / ".test-doc-ingest-state.json"
+        monkeypatch.setattr("ai.rag.ingest_docs._STATE_FILE", test_state_file)
+
+        # Patch rename to fail then succeed
+        monkeypatch.setattr(os, "rename", failing_rename)
+
+        # Should succeed after retry (doesn't raise)
+        _save_state({"file": "hash123"})
+
+        # Should have retried at least once
+        assert call_count >= 2
+
+        # Verify file was written
+        assert test_state_file.exists()
+        data = json.loads(test_state_file.read_text())
+        assert data == {"file": "hash123"}
+
+    def test_save_state_succeeds_first_try(self, tmp_path, monkeypatch):
+        """_save_state should work normally without retries on first success."""
+        import json
+
+        from ai.rag.ingest_docs import _STATE_FILE, _save_state
+
+        test_state_file = tmp_path / ".test-doc-ingest-state.json"
+        monkeypatch.setattr("ai.rag.ingest_docs._STATE_FILE", test_state_file)
+
+        _save_state({"test": "data"})
+
+        assert test_state_file.exists()
+        data = json.loads(test_state_file.read_text())
+        assert data == {"test": "data"}

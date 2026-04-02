@@ -65,24 +65,48 @@ def _load_state() -> dict:
 
 
 def _save_state(state: dict) -> None:
-    """Atomically save the ingest state."""
+    """Atomically save the ingest state with retry on transient I/O errors."""
     import tempfile  # noqa: PLC0415
+    import time  # noqa: PLC0415
 
     _STATE_FILE.parent.mkdir(parents=True, exist_ok=True)
-    fd, tmp = tempfile.mkstemp(
-        dir=str(_STATE_FILE.parent),
-        prefix=".doc-ingest-state-",
-    )
-    try:
-        with os.fdopen(fd, "w", encoding="utf-8") as f:
-            json.dump(state, f, indent=2)
-        os.rename(tmp, str(_STATE_FILE))
-    except BaseException:
+
+    # Retry up to 3 times with exponential backoff for transient I/O errors
+    max_retries = 3
+    for attempt in range(max_retries):
+        fd, tmp = tempfile.mkstemp(
+            dir=str(_STATE_FILE.parent),
+            prefix=".doc-ingest-state-",
+        )
         try:
-            os.unlink(tmp)
-        except OSError:
-            pass
-        raise
+            with os.fdopen(fd, "w", encoding="utf-8") as f:
+                json.dump(state, f, indent=2)
+            os.rename(tmp, str(_STATE_FILE))
+            return  # Success
+        except OSError as e:
+            # Clean up temp file on failure
+            try:
+                os.unlink(tmp)
+            except OSError:
+                pass
+            # Retry on transient I/O errors (Errno 5)
+            if e.errno == 5 and attempt < max_retries - 1:
+                logger.warning(
+                    "I/O error saving state (attempt %d/%d), retrying: %s",
+                    attempt + 1,
+                    max_retries,
+                    e,
+                )
+                time.sleep(0.1 * (2**attempt))  # Exponential backoff: 0.1s, 0.2s
+                continue
+            raise  # Re-raise on final attempt or non-transient error
+        except BaseException:
+            # Clean up temp file on unexpected error
+            try:
+                os.unlink(tmp)
+            except OSError:
+                pass
+            raise
 
 
 def _split_oversized(content: str, section_title: str, base: dict) -> list[dict]:
@@ -102,12 +126,14 @@ def _split_oversized(content: str, section_title: str, base: dict) -> list[dict]
         joined_len = len("\n\n".join(current_parts))
         if (current_words + para_words > MAX_CHUNK_WORDS or joined_len > 4000) and current_parts:
             part_num = len(sub_chunks) + 1
-            sub_chunks.append({
-                **base,
-                "id": str(uuid4()),
-                "section_title": f"{section_title} (part {part_num})",
-                "content": "\n\n".join(current_parts),
-            })
+            sub_chunks.append(
+                {
+                    **base,
+                    "id": str(uuid4()),
+                    "section_title": f"{section_title} (part {part_num})",
+                    "content": "\n\n".join(current_parts),
+                }
+            )
             current_parts = []
             current_words = 0
         current_parts.append(para)
@@ -117,12 +143,14 @@ def _split_oversized(content: str, section_title: str, base: dict) -> list[dict]
         # If only one part was produced, keep the original title
         part_num = len(sub_chunks) + 1
         title = f"{section_title} (part {part_num})" if sub_chunks else section_title
-        sub_chunks.append({
-            **base,
-            "id": str(uuid4()),
-            "section_title": title,
-            "content": "\n\n".join(current_parts),
-        })
+        sub_chunks.append(
+            {
+                **base,
+                "id": str(uuid4()),
+                "section_title": title,
+                "content": "\n\n".join(current_parts),
+            }
+        )
 
     return sub_chunks
 
@@ -208,7 +236,9 @@ def ingest_files(paths: list[Path], force: bool = False) -> dict:
         if file_size > MAX_BYTES_PER_DOC:
             logger.warning(
                 "Skipping %s (%.1f KB > %d KB limit)",
-                path.name, file_size / 1024, MAX_BYTES_PER_DOC // 1024,
+                path.name,
+                file_size / 1024,
+                MAX_BYTES_PER_DOC // 1024,
             )
             skipped_size += 1
             continue
@@ -256,7 +286,8 @@ def ingest_files(paths: list[Path], force: bool = False) -> dict:
     if skipped_deferred:
         logger.info(
             "Reached max docs per run (%d), %d files deferred",
-            MAX_DOCS_PER_RUN, skipped_deferred,
+            MAX_DOCS_PER_RUN,
+            skipped_deferred,
         )
 
     # Embed all chunks in batches

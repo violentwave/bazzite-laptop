@@ -246,3 +246,64 @@ class TestCleanupIfNeeded:
         table.to_arrow.side_effect = RuntimeError("arrow failure")
         # Should not raise
         _cleanup_if_needed(table)
+
+
+# ---------------------------------------------------------------------------
+# Content filtering (_is_filtered_content)
+# ---------------------------------------------------------------------------
+
+
+class TestContentFiltering:
+    def test_filters_system_prompt_content(self, mock_table):
+        """Memory should not inject content that looks like system prompts."""
+        mock_table.search.return_value.limit.return_value.to_list.return_value = [
+            {"response_summary": "TOOL ROUTING section..."},
+            {"response_summary": "Some actual conversation summary"},
+            {"response_summary": "MANDATORY RULES here"},
+        ]
+        with patch.dict(os.environ, {"ENABLE_CONVERSATION_MEMORY": "true"}):
+            with patch("ai.rag.memory.embed_texts", return_value=[FAKE_VECTOR]):
+                with patch("ai.rag.memory._get_table", return_value=mock_table):
+                    result = retrieve_relevant_context("query")
+
+        assert result == ["Some actual conversation summary"]
+
+    def test_filters_knowledge_tool_names(self, mock_table):
+        """Memory should filter out content with tool names that look like schema."""
+        mock_table.search.return_value.limit.return_value.to_list.return_value = [
+            {"response_summary": "Use knowledge.rag_query for semantic search"},
+            {"response_summary": "Normal conversation"},
+            {"response_summary": "code.rag_query is for code search"},
+        ]
+        with patch.dict(os.environ, {"ENABLE_CONVERSATION_MEMORY": "true"}):
+            with patch("ai.rag.memory.embed_texts", return_value=[FAKE_VECTOR]):
+                with patch("ai.rag.memory._get_table", return_value=mock_table):
+                    result = retrieve_relevant_context("query")
+
+        assert result == ["Normal conversation"]
+
+    def test_filters_section_dividers(self, mock_table):
+        """Memory should filter out content with markdown section dividers."""
+        mock_table.search.return_value.limit.return_value.to_list.return_value = [
+            {"response_summary": "━━━━━━━━━ TOOL DISAMBIGUATION ━━━━━━━━━"},
+            {"response_summary": "User asked about GPU temperature"},
+        ]
+        with patch.dict(os.environ, {"ENABLE_CONVERSATION_MEMORY": "true"}):
+            with patch("ai.rag.memory.embed_texts", return_value=[FAKE_VECTOR]):
+                with patch("ai.rag.memory._get_table", return_value=mock_table):
+                    result = retrieve_relevant_context("query")
+
+        assert result == ["User asked about GPU temperature"]
+
+    def test_allows_normal_conversation(self, mock_table):
+        """Normal conversation summaries should pass through."""
+        mock_table.search.return_value.limit.return_value.to_list.return_value = [
+            {"response_summary": "GPU is running at 65C"},
+            {"response_summary": "System has 8GB RAM available"},
+        ]
+        with patch.dict(os.environ, {"ENABLE_CONVERSATION_MEMORY": "true"}):
+            with patch("ai.rag.memory.embed_texts", return_value=[FAKE_VECTOR]):
+                with patch("ai.rag.memory._get_table", return_value=mock_table):
+                    result = retrieve_relevant_context("query")
+
+        assert result == ["GPU is running at 65C", "System has 8GB RAM available"]
