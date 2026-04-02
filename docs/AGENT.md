@@ -200,7 +200,7 @@ Source: `configs/mcp-bridge-allowlist.yaml` (47 entries).
 
 ---
 
-## Systemd Timers (13)
+## Systemd Timers (14)
 
 | Timer | Schedule | Purpose |
 |-------|----------|---------|
@@ -217,6 +217,7 @@ Source: `configs/mcp-bridge-allowlist.yaml` (47 entries).
 | `fedora-updates.timer` | Mon 3:00 | Fedora Bodhi update check |
 | `log-archive.timer` | Sun 1:00 | Upload old logs to Cloudflare R2 |
 | `service-canary.timer` | Every 15m | AI service health check + auto-restart |
+| `lancedb-optimize.timer` | Sun 2:00 | Compact and optimize LanceDB tables |
 
 ---
 
@@ -260,13 +261,13 @@ Source: `configs/mcp-bridge-allowlist.yaml` (47 entries).
 | `ai/agents/` | Automated agents (4): security, perf, knowledge, code quality |
 | `ai/gaming/` | MangoHud analysis, ScopeBuddy profiles |
 | `ai/system/` | release_watch, fedora_updates, pkg_intel |
-| `configs/mcp-bridge-allowlist.yaml` | 44 tool definitions + argument validation |
+| `configs/mcp-bridge-allowlist.yaml` | 47 tool definitions + argument validation |
 | `configs/litellm-config.yaml` | LiteLLM provider routing config |
 | `configs/ai-rate-limits.json` | Per-provider rate limits |
 | `configs/keys.env.enc` | sops-encrypted API keys (in git, safe) |
 | `scripts/` | 40 shell/Python scripts (deploy, scan, backup, etc.) |
 | `systemd/` | 14 timers + associated services |
-| `tests/` | 1115 pytest tests |
+| `tests/` | ~1300 pytest tests |
 | `tray/` | PySide6 system tray app |
 
 ### Runtime paths (not in repo)
@@ -292,7 +293,7 @@ Source: `configs/mcp-bridge-allowlist.yaml` (47 entries).
 
 ```bash
 source .venv/bin/activate
-python -m pytest tests/ -v          # 1115 tests
+python -m pytest tests/ -v          # ~1300 tests
 ruff check ai/ tests/               # Lint
 bandit -r ai/ -c pyproject.toml     # Security scan
 uv pip install -r requirements.txt  # Install/update deps
@@ -401,3 +402,4 @@ The base security/gaming system is managed in the "Bazzite Laptop" Claude.ai pro
 2. **npm audit: 30 remaining vulns** — path-to-regexp (high), brace-expansion (moderate) in RuFlo orchestrator deps (not fixable without upstream changes)
 3. **CPU 87°C idle** — needs repaste with Kryonaut Extreme (thermal compound degradation)
 4. **Legacy AgentDB skill dirs** — `.claude/skills/agentdb-*` and `.claude/skills/reasoningbank-agentdb` are read-only in sandbox; delete manually outside Claude Code
+5. **requirements.txt contains system packages** — Brlapi, cockpit, etc. break venv rebuilds; use `requirements-ai.txt` instead (`uv pip install -r requirements-ai.txt`)

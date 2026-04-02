@@ -7,6 +7,17 @@ Bazzite security/gaming system.
 
 ---
 
+## Post-Phase 15 — Stabilization (2026-04-02)
+
+- Rebuilt Newelle system prompt: native file tool routing (`read_file`, `write_file`, `edit`, `list_directory`), absolute-path rules, failure recovery guards
+- Added memory content filtering in `ai/rag/memory.py` to reduce runtime prompt bloat
+- Added bounded retry with exponential backoff in `ai/rag/ingest_docs.py` for state-file writes (max 3 attempts)
+- Rebuilt `.venv` with clean `requirements-ai.txt` (125 packages, no system deps like Brlapi/cockpit)
+- Fixed 4 test failures: ingest retry mock (`os.rename` closure), MCP bridge health patch target (`_check_router_health` → none needed), rate limit test isolation (global + per-tool state leak)
+- Ruff clean: 15 auto-fixed errors + 2 manual fixes across test files
+
+---
+
 ## Phase 15 — Threat Intel Correlation & Response Planning (2026-03-31)
 
 - **Threat Correlation Engine:** New `ai/threat_intel/correlator.py` with 
@@ -421,17 +432,17 @@ Cerebras (health-weighted, hot-swappable via `configs/litellm-config.yaml`)
 
 **Python venv:** `.venv/` managed by `uv`; never global pip installs
 
-## Final Metrics
+## Final Metrics (Phase 15 complete)
 
 | Metric | Value |
 |--------|-------|
-| MCP tools | **44** (+ 1 built-in health endpoint; all tools carry MCP annotations) |
+| MCP tools | **47** (+ 1 built-in health endpoint) |
 | Systemd timers | **14** |
 | Cloud providers | **6** (Gemini, Groq, Mistral, OpenRouter, z.ai, Cerebras) |
 | Threat intel APIs | **16** |
-| Unit tests | **1111 passed, 57 skipped** |
-| AI layer LOC | **~9,000+** |
-| Python packages | **~34** in .venv/ |
+| Unit tests | **~1300** (1286 passed, 78 skipped, 1 pre-existing pandas dep failure) |
+| AI layer LOC | **~10,000+** |
+| Python packages | **125** in .venv/ (via requirements-ai.txt) |
 | Embedding provider | Gemini Embedding 001 (cloud, free 10M TPM) |
 | VRAM usage (normal) | **0 MB** (cloud embeddings, Ollama emergency only) |
 | RAM overhead | **~275 MB** (services + burst) |

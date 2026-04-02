@@ -39,6 +39,7 @@ These are the packages actively used by `ai/`, `tray/`, and `tests/`.
 | cohere | 5.20.7 | `ai/rag/embedder.py` — Cohere rerank for RAG QA |
 | sentry-sdk | 2.55.0 | `ai/llm_proxy.py` — error reporting (optional, via SENTRY_DSN key) |
 | pillow | 12.1.1 | Image processing utilities |
+| vt-py | 0.22.0 | `ai/threat_intel/lookup.py`, `correlator.py` — VirusTotal Python SDK |
 
 ---
 
@@ -50,6 +51,7 @@ These are the packages actively used by `ai/`, `tray/`, and `tests/`.
 | pytest-asyncio | 1.3.0 | Async test support |
 | ruff | 0.15.6 | Linter + formatter (also system tool) |
 | bandit | 1.9.4 | Security scanner (also system tool) |
+| pandas | 3.0.2 | `tests/` — anomaly query tests (optional; tests skip if unavailable) |
 
 ---
 
@@ -132,6 +134,18 @@ Keys stored in `~/.config/bazzite-ai/keys.env`.
 | GitHub Releases / GHSA | _(none)_ | 15 rpm, 500 rpd (anon) | `ai/system/release_watch.py` |
 | Fedora Bodhi | _(none)_ | 10 rpm, 500 rpd | `ai/system/fedora_updates.py` |
 | deps.dev | _(none)_ | 30 rpm, 5 000 rpd | `ai/system/pkg_intel.py` |
+
+---
+
+## Venv Rebuild
+
+> **Use `requirements-ai.txt`** (not `requirements.txt`) for venv rebuilds.
+> `requirements.txt` was generated from the system Python and includes system packages
+> (Brlapi, cockpit, rpm-python, etc.) that cannot be pip-installed and will break `uv pip install`.
+>
+> ```bash
+> uv pip install -r requirements-ai.txt
+> ```
 
 ---
 
