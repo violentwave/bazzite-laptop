@@ -10,9 +10,9 @@ from dataclasses import dataclass, field
 
 logger = logging.getLogger("ai.health")
 
-_FAILURE_THRESHOLD = 3
-_BASE_COOLDOWN_S = 300
-_MAX_COOLDOWN_S = 1800
+_FAILURE_THRESHOLD = 5
+_BASE_COOLDOWN_S = 60
+_MAX_COOLDOWN_S = 600
 _STALENESS_THRESHOLD_S = 600  # 10 minutes
 
 
@@ -102,11 +102,7 @@ class HealthTracker:
         h.last_error_time = time.time()
         h.last_probe_time = time.time()
 
-        is_auth_error = (
-            status_code in (401, 403)
-            or "401" in error
-            or "403" in error
-        )
+        is_auth_error = status_code in (401, 403) or "401" in error or "403" in error
         if is_auth_error:
             h.consecutive_auth_failures += 1
             if h.consecutive_auth_failures >= 3:
@@ -116,14 +112,16 @@ class HealthTracker:
 
         if h.consecutive_failures >= _FAILURE_THRESHOLD:
             cooldown = min(
-                _BASE_COOLDOWN_S * (2 ** h._demotion_count),
+                _BASE_COOLDOWN_S * (2**h._demotion_count),
                 _MAX_COOLDOWN_S,
             )
             h.disabled_until = time.time() + cooldown
             h._demotion_count += 1
             logger.warning(
                 "Provider '%s' disabled for %ds after %d consecutive failures",
-                name, cooldown, h.consecutive_failures,
+                name,
+                cooldown,
+                h.consecutive_failures,
             )
 
     def get_sorted(self, names: list[str]) -> list[ProviderHealth]:

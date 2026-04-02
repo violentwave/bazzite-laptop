@@ -130,9 +130,9 @@ model_list:
 
 router_settings:
   routing_strategy: "simple-shuffle"
-  num_retries: 0
+  num_retries: 2
   timeout: 30
-  allowed_fails: 1
+  allowed_fails: 3
   timeouts:
     fast: 30
     code: 30
@@ -142,6 +142,6 @@ router_settings:
 
 # Health tracking (Router V2)
 health_settings:
-  failure_threshold: 3
-  base_cooldown_s: 300
-  max_cooldown_s: 1800
+  failure_threshold: 5
+  base_cooldown_s: 60
+  max_cooldown_s: 600
