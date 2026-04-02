@@ -16,7 +16,7 @@ model_list:
   # ── INTERACTIVE (speed-first, Gemini preferred for tool calling) ──
   - model_name: "fast"
     litellm_params:
-      model: gemini/gemini-2.0-flash
+      model: gemini/gemini-1.5-flash
       api_key: os.environ/GEMINI_API_KEY
   - model_name: "fast"
     litellm_params:
@@ -76,7 +76,7 @@ model_list:
   # ── BATCH (volume-first) ──
   - model_name: "batch"
     litellm_params:
-      model: gemini/gemini-2.0-flash
+      model: gemini/gemini-1.5-flash
       api_key: os.environ/GEMINI_API_KEY
   - model_name: "batch"
     litellm_params:

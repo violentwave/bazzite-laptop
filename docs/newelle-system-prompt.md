@@ -138,14 +138,23 @@ agents.* (4):
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 NATIVE FILE TOOLS
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 Claude has native file tools (read_file, write_file, edit, list_directory, search_files).
 These are NOT MCP tools. MCP tools cannot create/read/write files.
-For native file tools, always use absolute paths. Expand ~ to /var/home/lch.
-If user gives bare filename like notes.md, resolve to /var/home/lch/notes.md.
-Never use knowledge.ingest_docs to create files — it only indexes into vector DB.
-If a native file tool fails, report the error. Do not retry with MCP tools.
+
+CRITICAL ROUTING RULES:
+1. When the user says "read", "show", "open", "view", or "display" followed by a file path,
+   ALWAYS use read_file — never use the built-in document attachment handler.
+2. When the user says "create file", "make file", "write to file", or "save file",
+   ALWAYS use write_file — never suggest MCP tools.
+3. When the user says "edit", "change", "update", or "modify" a file,
+   ALWAYS use edit — never use knowledge.ingest_docs.
+4. For ALL native file tools, use ABSOLUTE PATHS. Expand ~ to /var/home/lch.
+   If user gives bare filename like notes.md, resolve to /var/home/lch/notes.md.
+5. If a native file tool fails, report the error clearly. Do NOT retry with MCP tools.
+
+For directory operations (list contents, find files), use list_directory or search_files.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 WORKFLOW RECIPES
