@@ -1,5 +1,5 @@
 # Bazzite AI Layer — Agent Reference
-<!-- System: Acer Predator G3-571 | Bazzite 43 | Updated: 2026-04-02 -->
+<!-- System: Acer Predator G3-571 | Bazzite 43 | Updated: 2026-04-03 -->
 
 ## Session Start
 
@@ -267,7 +267,7 @@ Source: `configs/mcp-bridge-allowlist.yaml` (47 entries).
 | `configs/keys.env.enc` | sops-encrypted API keys (in git, safe) |
 | `scripts/` | 40 shell/Python scripts (deploy, scan, backup, etc.) |
 | `systemd/` | 14 timers + associated services |
-| `tests/` | ~1300 pytest tests |
+| `tests/` | ~1458 pytest tests |
 | `tray/` | PySide6 system tray app |
 
 ### Runtime paths (not in repo)
@@ -293,7 +293,7 @@ Source: `configs/mcp-bridge-allowlist.yaml` (47 entries).
 
 ```bash
 source .venv/bin/activate
-python -m pytest tests/ -v          # ~1300 tests
+python -m pytest tests/ -v          # ~1458 tests
 ruff check ai/ tests/               # Lint
 bandit -r ai/ -c pyproject.toml     # Security scan
 uv pip install -r requirements.txt  # Install/update deps

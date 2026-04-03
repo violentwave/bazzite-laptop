@@ -1,5 +1,5 @@
 # Bazzite AI Layer — User Guide
-<!-- System: Acer Predator G3-571 | Bazzite 43 | Last updated: 2026-04-02 -->
+<!-- System: Acer Predator G3-571 | Bazzite 43 | Last updated: 2026-04-03 -->
 
 Complete reference for operating, maintaining, and troubleshooting the AI
 enhancement layer on this Bazzite gaming laptop.
@@ -75,7 +75,7 @@ systemctl --user start bazzite-llm-proxy.service bazzite-mcp-bridge.service
 ```bash
 # MCP bridge health
 curl -s http://127.0.0.1:8766/health
-# Expected: {"status": "ok", "tools": 43}
+# Expected: {"status": "ok", "tools": 47}
 
 # LLM proxy health
 curl -s http://127.0.0.1:8767/health
@@ -111,16 +111,18 @@ All timers run unattended. This is the full daily/weekly timeline:
 | Daily 09:15   | `knowledge-storage.timer` | Knowledge base health check + auto-repair |
 | Daily 09:45   | `release-watch.timer`    | Upstream release + GHSA check         |
 | Daily 12:00   | `clamav-quick.timer`     | ClamAV quick scan                     |
+| Every 15m     | `service-canary.timer`   | AI service health check + auto-restart |
 | Wed 14:00     | `clamav-healthcheck.timer` | ClamAV daemon health check          |
 | Fri 23:00     | `clamav-deep.timer`      | ClamAV full deep scan                 |
 | Sat 00:00     | `cve-scanner.timer`      | CVE scan of installed packages        |
 | Sun 01:00     | `log-archive.timer`      | Compress + upload old logs to R2      |
+| Sun 02:00     | `lancedb-optimize.timer` | Compact and optimize LanceDB tables   |
 | Mon 03:00     | `fedora-updates.timer`   | Fedora Bodhi security update check    |
 
 Check timer status:
 
 ```bash
-systemctl list-timers --all | grep -E "clamav|system-health|rag-embed|security-audit|performance|knowledge|cve|release|fedora|log-archive"
+systemctl list-timers --all | grep -E "clamav|system-health|rag-embed|security-audit|performance|knowledge|cve|release|fedora|log-archive|service-canary|lancedb-optimize"
 ```
 
 ### Morning briefing
@@ -170,7 +172,7 @@ bash scripts/start-security-tray-qt.sh
 All tools are accessible through Newelle via the MCP bridge. They are read-only
 (no system mutations). Output is truncated to 4 KB and paths are redacted.
 
-### system.* (15 tools)
+### system.* (17 tools)
 
 | Tool                    | Args   | What it returns                                    |
 |-------------------------|--------|----------------------------------------------------|
@@ -189,23 +191,27 @@ All tools are accessible through Newelle via the MCP bridge. They are read-only
 | `system.pkg_intel`      | —      | Package advisories, provenance, version status (deps.dev) |
 | `system.gpu_perf`       | —      | GPU perf snapshot: temp, pstate, clocks, VRAM, throttle reasons, headroom |
 | `system.gpu_health`     | —      | GPU health diagnostic with throttle bit interpretation and thermal warning |
+| `system.cache_stats`    | —      | LLM cache statistics: entries, size, hit rate |
+| `system.token_report`   | —      | Token usage and cost report from LLM proxy |
 
-### security.* (12 tools)
+### security.* (14 tools)
 
-| Tool                      | Args                    | What it returns                             |
-|---------------------------|-------------------------|---------------------------------------------|
-| `security.last_scan`      | —                       | Last 20 lines of latest ClamAV scan log     |
-| `security.health_snapshot`| —                       | Last 30 lines of latest health snapshot     |
-| `security.status`         | —                       | Filtered `.status` JSON (6 keys: state, scan_type, last_scan_time, result, health_status, health_issues) |
-| `security.threat_lookup`  | `hash` (MD5/SHA256)     | VT + OTX + MalwareBazaar enrichment         |
-| `security.ip_lookup`      | `ip` (IPv4/IPv6)        | AbuseIPDB abuse score + GreyNoise classification + Shodan InternetDB ports/vulns |
-| `security.url_lookup`     | `url`                   | URLhaus + ThreatFox + CIRCL Hashlookup      |
-| `security.cve_check`      | —                       | CVE scan of installed packages (NVD + OSV + CISA KEV overlay) |
-| `security.sandbox_submit` | `file_path` (quarantine/) | Submit quarantine file to Hybrid Analysis sandbox |
-| `security.threat_summary` | —                       | Compiled summary from all agent/scan report dirs |
-| `security.run_scan`       | `scan_type` (quick\|deep) | Triggers ClamAV scan via systemctl         |
-| `security.run_health`     | —                       | Triggers health snapshot via systemctl      |
-| `security.run_ingest`     | —                       | Triggers log pipeline re-ingestion          |
+| Tool                         | Args                    | What it returns                             |
+|------------------------------|-------------------------|---------------------------------------------|
+| `security.last_scan`         | —                       | Last 20 lines of latest ClamAV scan log     |
+| `security.health_snapshot`   | —                       | Last 30 lines of latest health snapshot     |
+| `security.status`            | —                       | Filtered `.status` JSON (6 keys: state, scan_type, last_scan_time, result, health_status, health_issues) |
+| `security.threat_lookup`     | `hash` (MD5/SHA256)     | VT + OTX + MalwareBazaar enrichment         |
+| `security.ip_lookup`         | `ip` (IPv4/IPv6)        | AbuseIPDB abuse score + GreyNoise classification + Shodan InternetDB ports/vulns |
+| `security.url_lookup`        | `url`                   | URLhaus + ThreatFox + CIRCL Hashlookup      |
+| `security.cve_check`         | —                       | CVE scan of installed packages (NVD + OSV + CISA KEV overlay) |
+| `security.sandbox_submit`    | `file_path` (quarantine/) | Submit quarantine file to Hybrid Analysis sandbox |
+| `security.threat_summary`    | —                       | Compiled summary from all agent/scan report dirs |
+| `security.run_scan`          | `scan_type` (quick\|deep) | Triggers ClamAV scan via systemctl         |
+| `security.run_health`        | —                       | Triggers health snapshot via systemctl      |
+| `security.run_ingest`        | —                       | Triggers log pipeline re-ingestion          |
+| `security.correlate`         | `ioc`, `ioc_type`       | Correlate IOC across VT/OTX/AbuseIPDB/GreyNoise/URLhaus |
+| `security.recommend_action`  | `finding_type`, `finding_id` | Response playbook for threat findings  |
 
 ### knowledge.* (3 tools)
 
@@ -252,7 +258,7 @@ All tools are accessible through Newelle via the MCP bridge. They are read-only
 
 | Tool     | Returns                           |
 |----------|-----------------------------------|
-| `health` | `{"status": "ok", "tools": 43}`   |
+| `health` | `{"status": "ok", "tools": 47}`   |
 
 ---
 
@@ -690,7 +696,7 @@ systemctl --user status bazzite-llm-proxy.service
 ### Check all timers
 
 ```bash
-systemctl list-timers --all | grep -E "clamav|system-health|rag-embed|security-audit|performance|knowledge|cve|release|fedora|log-archive"
+systemctl list-timers --all | grep -E "clamav|system-health|rag-embed|security-audit|performance|knowledge|cve|release|fedora|log-archive|service-canary|lancedb-optimize"
 ```
 
 ---
@@ -957,7 +963,7 @@ sudo systemctl enable --now system-health.timer
 
 ```bash
 source .venv/bin/activate
-python3 -m pytest tests/ -v              # All 1168 tests
+python3 -m pytest tests/ -v              # ~1458 tests
 python3 -m pytest tests/ -v -k "mcp"     # MCP-related tests only
 python3 -m pytest tests/ -v -k "router"  # Router tests only
 ruff check ai/ tests/                     # Lint

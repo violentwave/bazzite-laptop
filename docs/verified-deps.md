@@ -1,5 +1,5 @@
 # Verified Dependencies
-<!-- Last verified: 2026-03-30 | System: Acer Predator G3-571 | Bazzite 43 / Fedora Atomic -->
+<!-- Last verified: 2026-04-03 | System: Acer Predator G3-571 | Bazzite 43 / Fedora Atomic -->
 
 All versions pinned or noted below were confirmed working on this machine.
 "AI layer" packages live in `.venv/`; system packages are managed by Bazzite / rpm-ostree.
@@ -22,7 +22,7 @@ These are the packages actively used by `ai/`, `tray/`, and `tests/`.
 | Package | Version | Used by |
 |---------|---------|--------|
 | litellm | 1.82.2 | `ai/router.py` — multi-provider LLM routing |
-| lancedb | 0.30.1 | `ai/rag/` — vector database for embeddings (FTS indexes added) |
+| lancedb | 0.29.2 | `ai/rag/` — vector database for embeddings (FTS indexes added) |
 | fastmcp | 3.1.1 | `ai/mcp_bridge/server.py` — MCP server (3.2.0 upgrade blocked: no PyPI access) |
 | uvicorn | 0.42.0 | `ai/llm_proxy.py` — ASGI server for LLM proxy |
 | starlette | 0.52.1 | `ai/llm_proxy.py` — ASGI framework |

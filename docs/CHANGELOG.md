@@ -454,7 +454,7 @@ CIRCL Hashlookup
 - `ai/router.py` — LiteLLM V2 Router with health-weighted provider selection;
   task types: `fast`, `reason`, `batch`, `code`, `embed`
 - `ai/health.py` — provider health scoring (0.0–1.0); 5 consecutive failures →
-  1 min cooldown with exponential backoff (max 10 min)
+  2 min cooldown with exponential backoff (max 10 min)
 - `ai/llm_proxy.py` — Starlette/uvicorn OpenAI-compatible proxy on :8767 for
   Newelle; model name → task type mapping
 - `ai/rate_limiter.py` — cross-script rate limiting with file locking + atomic

@@ -568,3 +568,224 @@ class TestTokenReport:
             data = json.loads(result)
 
             assert "freshness_warning" in data
+
+
+class TestCacheStats:
+    """Test system.cache_stats MCP tool."""
+
+    def test_returns_expected_keys(self, tmp_path):
+        """get_cache_stats returns dict with all expected stat keys."""
+        from ai.cache import get_cache_stats
+
+        with patch("ai.cache.Path") as mock_path_cls:
+            # Make ext-ssd parent appear absent so it falls back to internal path
+            mock_ext = MagicMock()
+            mock_ext.parent.exists.return_value = False
+            mock_path_cls.return_value = mock_ext
+
+            with patch("ai.cache.JsonFileCache") as mock_cache_cls:
+                mock_stats = {
+                    "total_entries": 12,
+                    "total_size_bytes": 4096,
+                    "hit_count": 30,
+                    "miss_count": 5,
+                    "hit_rate": 0.857,
+                }
+                mock_instance = MagicMock()
+                mock_instance.stats.return_value = mock_stats
+                mock_cache_cls.return_value = mock_instance
+
+                result = get_cache_stats()
+
+        assert "total_entries" in result
+        assert "total_size_bytes" in result
+        assert "hit_count" in result
+        assert "miss_count" in result
+        assert "hit_rate" in result
+        assert "cache_dir" in result
+
+    def test_returns_numeric_stats(self, tmp_path):
+        """get_cache_stats returns numeric values for stat fields."""
+        from ai.cache import get_cache_stats
+
+        with patch("ai.cache.JsonFileCache") as mock_cache_cls:
+            mock_instance = MagicMock()
+            mock_instance.stats.return_value = {
+                "total_entries": 5,
+                "total_size_bytes": 2048,
+                "hit_count": 10,
+                "miss_count": 2,
+                "hit_rate": 0.833,
+            }
+            mock_cache_cls.return_value = mock_instance
+
+            result = get_cache_stats()
+
+        assert isinstance(result["total_entries"], int)
+        assert isinstance(result["hit_rate"], float)
+
+    @pytest.mark.asyncio
+    async def test_execute_tool_returns_valid_json(self, tmp_path):
+        """execute_tool('system.cache_stats') returns valid JSON string."""
+        from ai.mcp_bridge.tools import execute_tool
+
+        with patch("ai.cache.get_cache_stats") as mock_stats:
+            mock_stats.return_value = {
+                "total_entries": 0,
+                "total_size_bytes": 0,
+                "hit_count": 0,
+                "miss_count": 0,
+                "hit_rate": 0.0,
+                "cache_dir": str(tmp_path),
+            }
+            result = await execute_tool("system.cache_stats", {})
+
+        data = json.loads(result)
+        assert "total_entries" in data
+        assert "cache_dir" in data
+
+
+class TestSecurityCorrelate:
+    """Test security.correlate MCP tool."""
+
+    def test_hash_correlation_returns_expected_keys(self):
+        """correlate_ioc with hash type returns CorrelationReport with expected structure."""
+        from unittest.mock import MagicMock
+
+        from ai.threat_intel.correlator import correlate_ioc
+
+        mock_report = MagicMock()
+        mock_report.has_data = False
+
+        with patch("ai.threat_intel.correlator.lookup_hash", return_value=mock_report):
+            report = correlate_ioc("abc123def456", "hash")
+
+        d = report.to_dict()
+        assert "primary_ioc" in d
+        assert "primary_type" in d
+        assert "linked_iocs" in d
+        assert "mitre_techniques" in d
+        assert "overall_confidence" in d
+        assert "risk_level" in d
+        assert "generated_at" in d
+
+    def test_ip_correlation_returns_expected_keys(self):
+        """correlate_ioc with ip type returns CorrelationReport with expected structure."""
+        from ai.threat_intel.correlator import correlate_ioc
+
+        with patch("ai.threat_intel.correlator.lookup_ip", return_value=None):
+            report = correlate_ioc("1.2.3.4", "ip")
+
+        d = report.to_dict()
+        assert d["primary_ioc"] == "1.2.3.4"
+        assert d["primary_type"] == "ip"
+        assert isinstance(d["linked_iocs"], list)
+
+    def test_unknown_type_returns_empty_correlations(self):
+        """correlate_ioc with unknown IOC type returns report with no linked IOCs."""
+        from ai.threat_intel.correlator import correlate_ioc
+
+        report = correlate_ioc("some-value", "unknown_type")
+
+        assert report.primary_ioc == "some-value"
+        assert report.primary_type == "unknown_type"
+        assert len(report.linked_iocs) == 0
+
+    @pytest.mark.asyncio
+    async def test_empty_ioc_arg_returns_error(self):
+        """execute_tool returns error JSON when ioc argument is empty string."""
+        from ai.mcp_bridge.tools import execute_tool
+
+        # Empty string passes schema validation (field is present) but
+        # the handler's own guard catches it and returns error JSON.
+        result = await execute_tool("security.correlate", {"ioc": "", "ioc_type": "hash"})
+        data = json.loads(result)
+        assert "error" in data
+        assert "ioc" in data["error"]
+
+    @pytest.mark.asyncio
+    async def test_execute_tool_returns_valid_json(self):
+        """execute_tool('security.correlate') returns valid JSON for a hash IOC."""
+        from ai.mcp_bridge.tools import execute_tool
+        from ai.threat_intel.correlator import CorrelationReport
+
+        mock_report = CorrelationReport(primary_ioc="aabbcc", primary_type="hash")
+
+        with patch("ai.threat_intel.correlator.correlate_ioc", return_value=mock_report):
+            result = await execute_tool("security.correlate", {"ioc": "aabbcc", "ioc_type": "hash"})
+
+        data = json.loads(result)
+        assert data["primary_ioc"] == "aabbcc"
+        assert data["primary_type"] == "hash"
+
+
+class TestSecurityRecommendAction:
+    """Test security.recommend_action MCP tool."""
+
+    def test_cve_finding_returns_expected_keys(self):
+        """get_response_plan for cve type returns RecommendedAction with expected keys."""
+        from ai.threat_intel.playbooks import get_response_plan
+
+        response = get_response_plan("cve", "CVE-2026-12345")
+        d = response.to_dict()
+
+        assert d["finding_type"] == "cve"
+        assert d["finding_id"] == "CVE-2026-12345"
+        assert "urgency" in d
+        assert "summary" in d
+        assert "action_steps" in d
+        assert isinstance(d["action_steps"], list)
+        assert len(d["action_steps"]) > 0
+        assert "generated_at" in d
+
+    def test_malware_finding_returns_expected_keys(self):
+        """get_response_plan for malware type returns RecommendedAction with expected keys."""
+        from ai.threat_intel.playbooks import get_response_plan
+
+        response = get_response_plan("malware", "abc123def456")
+        d = response.to_dict()
+
+        assert d["finding_type"] == "malware"
+        assert d["finding_id"] == "abc123def456"
+        assert "urgency" in d
+        assert isinstance(d["risk_factors"], list)
+        assert isinstance(d["compensating_controls"], list)
+
+    def test_unknown_finding_type_returns_fallback(self):
+        """get_response_plan for unknown type returns a valid fallback response."""
+        from ai.threat_intel.playbooks import get_response_plan
+
+        response = get_response_plan("unknown_type", "some-id")
+        d = response.to_dict()
+
+        assert d["finding_type"] == "unknown_type"
+        assert d["urgency"] == "low"
+        assert len(d["action_steps"]) > 0
+
+    @pytest.mark.asyncio
+    async def test_empty_finding_id_returns_error(self):
+        """execute_tool returns error JSON when finding_id is empty string."""
+        from ai.mcp_bridge.tools import execute_tool
+
+        # Both keys present (passes schema) but finding_id empty — handler guard catches it.
+        result = await execute_tool(
+            "security.recommend_action",
+            {"finding_type": "cve", "finding_id": ""},
+        )
+        data = json.loads(result)
+        assert "error" in data
+
+    @pytest.mark.asyncio
+    async def test_execute_tool_returns_valid_json(self):
+        """execute_tool('security.recommend_action') returns valid JSON response."""
+        from ai.mcp_bridge.tools import execute_tool
+
+        result = await execute_tool(
+            "security.recommend_action",
+            {"finding_type": "suspicious_ip", "finding_id": "1.2.3.4"},
+        )
+        data = json.loads(result)
+
+        assert data["finding_type"] == "suspicious_ip"
+        assert data["finding_id"] == "1.2.3.4"
+        assert "action_steps" in data
