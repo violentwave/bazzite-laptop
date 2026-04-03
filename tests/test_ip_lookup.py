@@ -26,6 +26,13 @@ _ENRICH_EMPTY = "ai.threat_intel.ip_lookup._enrich_shodan"
 # ── Fixtures ──────────────────────────────────────────────────────────────────
 
 
+@pytest.fixture(autouse=True)
+def clear_ip_cache():
+    """Prevent disk-based cache from polluting tests."""
+    with patch("ai.threat_intel.ip_lookup._ip_cache.get", return_value=None):
+        yield
+
+
 @pytest.fixture()
 def mock_limiter():
     """RateLimiter mock that allows all calls."""

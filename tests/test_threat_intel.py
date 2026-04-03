@@ -15,6 +15,13 @@ from ai.threat_intel.models import ThreatReport
 # ── Fixtures ──
 
 
+@pytest.fixture(autouse=True)
+def clear_threat_cache():
+    """Prevent disk-based cache from polluting tests."""
+    with patch("ai.threat_intel.lookup._threat_cache.get", return_value=None):
+        yield
+
+
 @pytest.fixture()
 def mock_limiter():
     """RateLimiter mock that allows all calls."""

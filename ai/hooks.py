@@ -93,7 +93,7 @@ def auto_save_handoff() -> None:
             text=True,
             timeout=10,
         )
-        modified = [line[3:].strip() for line in result.stdout.strip().split("\n") if line.strip()]
+        modified = [line[3:].strip() for line in result.stdout.splitlines() if line.strip()]
     except Exception:
         modified = []
 

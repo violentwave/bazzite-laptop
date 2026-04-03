@@ -44,13 +44,20 @@ def load_config():
             key, _, val = line.partition("=")
             key = key.strip()
             val = val.strip()
-            if key == "CPU_WARN":        CPU_WARN     = int(val)
-            elif key == "CPU_THROTTLE":  CPU_THROTTLE = int(val)
-            elif key == "CPU_CRITICAL":  CPU_CRITICAL = int(val)
-            elif key == "GPU_WARN":      GPU_WARN     = int(val)
-            elif key == "GPU_THROTTLE":  GPU_THROTTLE = int(val)
-            elif key == "GPU_CRITICAL":  GPU_CRITICAL = int(val)
-            elif key == "POLL_INTERVAL": POLL_INTERVAL = int(val)
+            if key == "CPU_WARN":
+                CPU_WARN = int(val)
+            elif key == "CPU_THROTTLE":
+                CPU_THROTTLE = int(val)
+            elif key == "CPU_CRITICAL":
+                CPU_CRITICAL = int(val)
+            elif key == "GPU_WARN":
+                GPU_WARN = int(val)
+            elif key == "GPU_THROTTLE":
+                GPU_THROTTLE = int(val)
+            elif key == "GPU_CRITICAL":
+                GPU_CRITICAL = int(val)
+            elif key == "POLL_INTERVAL":
+                POLL_INTERVAL = int(val)
     except Exception as e:
         print(f"[thermal] Warning: could not parse config: {e}", file=sys.stderr)
 
@@ -90,7 +97,7 @@ def _get_user_env() -> dict:
         env["DBUS_SESSION_BUS_ADDRESS"] = f"unix:path={dbus_path}"
         env["DISPLAY"] = ":0"
         env["XDG_RUNTIME_DIR"] = f"/run/user/{uid_out}"
-    except Exception:
+    except Exception:  # noqa: S110
         pass
     return env
 
@@ -140,7 +147,11 @@ def set_cpu_governor(governor: str) -> bool:
             log.error("Cannot set governor for cpu%d: %s", i, e)
             success = False
         except OSError as e:
-            log.warning("Governor '%s' rejected for cpu%d (Invalid argument) — trying powersave fallback: %s", governor, i, e)
+            log.warning(
+                "Governor '%s' rejected for cpu%d (Invalid argument) "
+                "— trying powersave fallback: %s",
+                governor, i, e,
+            )
             try:
                 Path(CPU_GOVERNOR_PATH.format(i)).write_text("powersave\n")
                 log.info("Fallback powersave accepted for cpu%d", i)
@@ -224,8 +235,8 @@ def get_cpu_temps() -> list[float]:
         )
         data = json.loads(out)
         temps = []
-        for chip, sensors in data.items():
-            for sensor_name, readings in sensors.items():
+        for _chip, sensors in data.items():
+            for _sensor_name, readings in sensors.items():
                 if not isinstance(readings, dict):
                     continue
                 for key, val in readings.items():
@@ -289,7 +300,8 @@ def evaluate_and_act(max_cpu: float, gpu: float | None):
         set_cpu_max_freq(800000)
         throttle_gpu_power(40)
         notify("CRITICAL TEMP 🚨",
-               f"CPU {max_cpu:.0f}°C · GPU {gpu_str}\nEmergency: CPU 800MHz · GPU 40W!\nClose heavy workloads now.",
+               f"CPU {max_cpu:.0f}°C · GPU {gpu_str}\n"
+               "Emergency: CPU 800MHz · GPU 40W!\nClose heavy workloads now.",
                urgency="critical")
 
 # ── Main loop ─────────────────────────────────────────────────────────────────

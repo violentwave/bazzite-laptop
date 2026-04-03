@@ -75,7 +75,7 @@ systemctl --user start bazzite-llm-proxy.service bazzite-mcp-bridge.service
 ```bash
 # MCP bridge health
 curl -s http://127.0.0.1:8766/health
-# Expected: {"status": "ok", "tools": 47}
+# Expected: {"status": "ok", "tools": 48}
 
 # LLM proxy health
 curl -s http://127.0.0.1:8767/health
@@ -261,7 +261,7 @@ All tools are accessible through Newelle via the MCP bridge. They are read-only
 
 | Tool     | Returns                           |
 |----------|-----------------------------------|
-| `health` | `{"status": "ok", "tools": 47}`   |
+| `health` | `{"status": "ok", "tools": 48}`   |
 
 ---
 
@@ -835,7 +835,7 @@ ollama pull nomic-embed-text
 | `ai/rate_limiter.py`                      | Cross-script rate limiting                 |
 | `ai/key_manager.py`                       | API key presence checker                   |
 | `ai/mcp_bridge/server.py`                 | FastMCP server on :8766                    |
-| `ai/mcp_bridge/tools.py`                  | All 43 tool dispatch handlers              |
+| `ai/mcp_bridge/tools.py`                  | All 48 tool dispatch handlers              |
 | `ai/threat_intel/lookup.py`               | VT + OTX + MalwareBazaar hash enrichment   |
 | `ai/threat_intel/ip_lookup.py`            | AbuseIPDB + GreyNoise + Shodan             |
 | `ai/threat_intel/ioc_lookup.py`           | URLhaus + ThreatFox + CIRCL                |
@@ -863,7 +863,7 @@ ollama pull nomic-embed-text
 
 | Path                                      | Purpose                                    |
 |-------------------------------------------|--------------------------------------------|
-| `configs/mcp-bridge-allowlist.yaml`       | 47 MCP tool definitions + arg validation   |
+| `configs/mcp-bridge-allowlist.yaml`       | 48 MCP tool definitions + arg validation   |
 | `configs/litellm-config.yaml`             | LiteLLM provider routing (23 models)       |
 | `configs/ai-rate-limits.json`             | Per-provider rate limits                   |
 | `configs/r2-config.yaml`                  | Cloudflare R2 log archive settings         |
@@ -973,7 +973,7 @@ sudo systemctl enable --now system-health.timer
 
 ```bash
 source .venv/bin/activate
-python3 -m pytest tests/ -v              # ~1438 tests
+python3 -m pytest tests/ -v              # ~1611 tests
 python3 -m pytest tests/ -v -k "mcp"     # MCP-related tests only
 python3 -m pytest tests/ -v -k "router"  # Router tests only
 ruff check ai/ tests/                     # Lint

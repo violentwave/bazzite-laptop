@@ -263,7 +263,7 @@ Source: `configs/mcp-bridge-allowlist.yaml` (48 entries).
 | `ai/agents/` | Automated agents (4): security, perf, knowledge, code quality |
 | `ai/gaming/` | MangoHud analysis, ScopeBuddy profiles |
 | `ai/system/` | release_watch, fedora_updates, pkg_intel |
-| `configs/mcp-bridge-allowlist.yaml` | 47 tool definitions + argument validation |
+| `configs/mcp-bridge-allowlist.yaml` | 48 tool definitions + argument validation |
 | `configs/litellm-config.yaml` | LiteLLM provider routing config |
 | `configs/ai-rate-limits.json` | Per-provider rate limits |
 | `configs/keys.env.enc` | sops-encrypted API keys (in git, safe) |
@@ -271,7 +271,7 @@ Source: `configs/mcp-bridge-allowlist.yaml` (48 entries).
 | `scripts/lancedb-prune.py` | LanceDB retention pruning (90d logs, 180d threats) + cache cleanup |
 | `scripts/r2-set-lifecycle.py` | One-time R2 bucket lifecycle rule setup (180d auto-expiration) |
 | `systemd/` | 15 timers + associated services |
-| `tests/` | ~1438 pytest tests |
+| `tests/` | ~1611 pytest tests |
 | `tray/` | PySide6 system tray app |
 
 ### Runtime paths (not in repo)
@@ -298,7 +298,7 @@ Source: `configs/mcp-bridge-allowlist.yaml` (48 entries).
 
 ```bash
 source .venv/bin/activate
-python -m pytest tests/ -v          # ~1458 tests
+python -m pytest tests/ -v          # ~1611 tests
 ruff check ai/ tests/               # Lint
 bandit -r ai/ -c pyproject.toml     # Security scan
 uv pip install -r requirements.txt  # Install/update deps

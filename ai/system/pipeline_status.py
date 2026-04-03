@@ -164,8 +164,10 @@ def get_pipeline_status() -> dict:
     except Exception:
         return result
 
+    _tables_resp = db.list_tables()
+    _existing = _tables_resp.tables if hasattr(_tables_resp, "tables") else list(_tables_resp)
     for table_name in table_names:
-        if table_name in db.table_names():
+        if table_name in _existing:
             try:
                 table = db.open_table(table_name)
                 result["tables"][table_name] = table.count_rows()

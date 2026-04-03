@@ -60,10 +60,10 @@ def is_pure_agentdb(entry: dict) -> bool:
     if AGENTDB_ONLY_KEYS.search(key):
         return True
     # Content is almost entirely about AgentDB (>80% of non-whitespace lines contain "agentdb")
-    lines = [l.strip() for l in content.splitlines() if l.strip()]
+    lines = [line.strip() for line in content.splitlines() if line.strip()]
     if not lines:
         return False
-    agentdb_lines = sum(1 for l in lines if "agentdb" in l.lower())
+    agentdb_lines = sum(1 for line in lines if "agentdb" in line.lower())
     return len(lines) > 0 and agentdb_lines / len(lines) >= 0.80
 
 
@@ -128,7 +128,7 @@ def main():
 
     total_after = len(cleaned_entries)
 
-    print(f"\n--- Results ---")
+    print("\n--- Results ---")
     print(f"Entries before:       {total_before}")
     print(f"Entries after:        {total_after}")
     print(f"Entries removed:      {removed}  (pure AgentDB)")
@@ -141,7 +141,9 @@ def main():
     print(f"\nWrote cleaned store to {STORE}")
 
     # Verify
-    remaining_ssd = sum(1 for e in cleaned_entries if "/run/media/lch/SteamLibrary" in e.get("content", ""))
+    remaining_ssd = sum(
+        1 for e in cleaned_entries if "/run/media/lch/SteamLibrary" in e.get("content", "")
+    )
     remaining_counts = sum(
         1 for e in cleaned_entries
         if any(c in e.get("content", "") for c in STALE_COUNTS)
@@ -150,7 +152,7 @@ def main():
         1 for e in cleaned_entries
         if re.search(r"\bAgentDB\b|\bagentdb\b", e.get("content", ""), re.IGNORECASE)
     )
-    print(f"\n--- Verification ---")
+    print("\n--- Verification ---")
     print(f"Remaining stale SSD paths:   {remaining_ssd}")
     print(f"Remaining wrong tool counts: {remaining_counts}")
     print(f"Remaining AgentDB refs:      {remaining_agentdb}")

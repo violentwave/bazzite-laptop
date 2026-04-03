@@ -14,6 +14,7 @@ from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pyarrow as pa
+import pytest
 
 # ── Module loading ─────────────────────────────────────────────────────────────
 
@@ -123,6 +124,22 @@ def _run_archive(
 
 
 class TestPruneLanceDB:
+    @pytest.fixture(autouse=True)
+    def _restore_real_lancedb(self):
+        """Prune tests require real lancedb to create and list tables."""
+        import importlib
+        from unittest.mock import MagicMock as _MM
+
+        saved = sys.modules.get("lancedb")
+        if isinstance(saved, _MM):
+            sys.modules.pop("lancedb", None)
+            real = importlib.import_module("lancedb")
+            sys.modules["lancedb"] = real
+            yield
+            sys.modules["lancedb"] = saved
+        else:
+            yield
+
     def test_prune_deletes_old_rows(self, tmp_path):
         """Rows older than retention_days are deleted; recent rows survive."""
         import lancedb  # noqa: PLC0415

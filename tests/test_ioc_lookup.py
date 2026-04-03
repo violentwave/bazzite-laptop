@@ -48,6 +48,13 @@ _TF_HIT = {
 # ── Fixtures ──────────────────────────────────────────────────────────────────
 
 
+@pytest.fixture(autouse=True)
+def clear_ioc_cache():
+    """Prevent disk-based cache from polluting tests."""
+    with patch("ai.threat_intel.ioc_lookup._ioc_cache.get", return_value=None):
+        yield
+
+
 @pytest.fixture()
 def mock_limiter():
     """RateLimiter mock that allows all calls."""

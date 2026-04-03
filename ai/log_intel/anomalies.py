@@ -57,7 +57,9 @@ def _connect():
 
 def _ensure_table(db, name: str, schema):
     """Open or create a table by name."""
-    if name in db.table_names():
+    _r = db.list_tables()
+    _existing = _r.tables if hasattr(_r, "tables") else list(_r)
+    if name in _existing:
         return db.open_table(name)
     return db.create_table(name, schema=schema)
 
@@ -69,7 +71,8 @@ def _recent_health_records(days: int = HISTORY_DAYS) -> list[dict]:
     """Fetch health_records from LanceDB within the last *days* days."""
     try:
         db = _connect()
-        if "health_records" not in db.table_names():
+        _r = db.list_tables()
+        if "health_records" not in (_r.tables if hasattr(_r, "tables") else list(_r)):
             return []
         table = db.open_table("health_records")
         df = table.to_pandas()
@@ -379,7 +382,8 @@ def get_unacknowledged() -> list[dict]:
     """Return all anomaly records where ``acknowledged`` is False."""
     try:
         db = _connect()
-        if "anomalies" not in db.table_names():
+        _r = db.list_tables()
+        if "anomalies" not in (_r.tables if hasattr(_r, "tables") else list(_r)):
             return []
         table = db.open_table("anomalies")
         df = table.to_pandas()
@@ -400,7 +404,8 @@ def acknowledge(anomaly_id: str) -> None:
     """
     try:
         db = _connect()
-        if "anomalies" not in db.table_names():
+        _r = db.list_tables()
+        if "anomalies" not in (_r.tables if hasattr(_r, "tables") else list(_r)):
             logger.warning("No anomalies table to acknowledge id=%s", anomaly_id)
             return
         table = db.open_table("anomalies")

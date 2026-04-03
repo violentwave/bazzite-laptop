@@ -402,7 +402,11 @@ def get_response_plan(
         metadata = {}
 
     if finding_type == "cve":
-        cvss = metadata.get("cvss_score", metadata.get("cvss", 0))
+        cvss_raw = metadata.get("cvss_score", metadata.get("cvss", 0))
+        try:
+            cvss = float(cvss_raw)
+        except (TypeError, ValueError):
+            cvss = 0.0
         in_kev = metadata.get("in_kev", False)
         packages = metadata.get("affected_packages", [])
 
@@ -478,6 +482,9 @@ def main() -> None:
         for step in response.action_steps:
             print(f"  {step.step_number}. [{step.urgency}] {step.action}")
             print(f"     {step.description}")
+
+    import sys  # noqa: PLC0415
+    sys.exit(0)
 
 
 if __name__ == "__main__":

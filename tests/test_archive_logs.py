@@ -191,18 +191,18 @@ class TestUploadFile:
 
         result = upload_file(mock_s3, "bazzite-logs", "system-health", f, archive_log)
 
-        assert result is True
+        assert result[0] is True
         mock_s3.put_object.assert_called_once()
         kwargs = mock_s3.put_object.call_args.kwargs
         assert kwargs["Bucket"] == "bazzite-logs"
         assert kwargs["Key"] == "system-health/health-2026-03-01.log.gz"
         assert gzip.decompress(kwargs["Body"]) == b"log data here"
 
-    def test_local_file_deleted_after_upload(self, tmp_path):
+    def test_local_file_not_deleted_after_upload(self, tmp_path):
         f = tmp_path / "old.log"
         f.write_text("data")
         upload_file(MagicMock(), "bucket", "category", f, tmp_path / "log.txt")
-        assert not f.exists()
+        assert f.exists()
 
     def test_upload_failure_returns_false_keeps_file(self, tmp_path):
         f = tmp_path / "old.log"
@@ -212,7 +212,7 @@ class TestUploadFile:
 
         result = upload_file(mock_s3, "bucket", "category", f, tmp_path / "log.txt")
 
-        assert result is False
+        assert result[0] is False
         assert f.exists()
 
     def test_archive_log_entry_written(self, tmp_path):

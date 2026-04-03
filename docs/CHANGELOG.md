@@ -509,7 +509,7 @@ Cerebras (health-weighted, hot-swappable via `configs/litellm-config.yaml`)
 | Systemd timers | **15** |
 | Cloud providers | **6** (Gemini, Groq, Mistral, OpenRouter, z.ai, Cerebras) |
 | Threat intel APIs | **16** |
-| Unit tests | **~1438** (1438 passed, 80 skipped) |
+| Unit tests | **~1611** (1611 passed, 185 skipped) |
 | AI layer LOC | **~10,000+** |
 | Python packages | **125** in .venv/ (via requirements-ai.txt) |
 | Embedding provider | Gemini Embedding 001 (cloud, free 10M TPM) |

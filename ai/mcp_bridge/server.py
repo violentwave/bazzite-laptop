@@ -109,6 +109,7 @@ def create_app():
         "agents.code_quality": {"readOnlyHint": True, "idempotentHint": True},
         # ── observability ────────────────────────────────────────────────────
         "system.token_report": {"readOnlyHint": True, "idempotentHint": True},
+        "system.pipeline_status": {"readOnlyHint": True, "idempotentHint": True},
         # ── threat intel correlation ─────────────────────────────────────────
         "security.correlate": {"readOnlyHint": True, "openWorldHint": True},
         "security.recommend_action": {"readOnlyHint": True, "idempotentHint": True},

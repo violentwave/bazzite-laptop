@@ -25,9 +25,14 @@ from ai.rag.store import VectorStore, get_store  # noqa: E402
 
 @pytest.fixture(autouse=True)
 def _reset_lancedb_mock():
-    """Reset the lancedb mock between tests."""
-    _mock_lancedb.reset_mock()
+    """Reset the lancedb mock and singleton between tests."""
+    import ai.rag.store as _store_mod
+    _mock_lancedb.reset_mock(side_effect=True)
+    # Replace connect with a fresh mock to clear accumulated calls from other test files.
+    _mock_lancedb.connect = MagicMock(return_value=MagicMock())
+    _store_mod._store_instance = None
     yield
+    _store_mod._store_instance = None
 
 
 @pytest.fixture()
