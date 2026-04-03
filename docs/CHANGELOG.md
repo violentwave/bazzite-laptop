@@ -7,6 +7,69 @@ Bazzite security/gaming system.
 
 ---
 
+## Audit: P22 + P23 (2026-04-03)
+
+### Fixed
+- **SECURITY** `ai/cache_semantic.py`: Added `VALID_TASK_TYPES` allowlist and validation in `SemanticCache.get()` — prevents SQL injection via LanceDB `.where()` clause
+- **CORRECTNESS** `ai/mcp_bridge/server.py`: Updated module docstring (46→52 tools); added `try/except` to `knowledge.task_patterns` handler; returns error dict instead of raising
+- **QUALITY** `ai/router.py`: Fixed `response.usage.get()` anti-pattern in `route_query` and `route_chat` — `usage` is a LiteLLM object, not a dict; actual token counts now correctly passed to `budget.record_spend()`
+- **TESTS** `tests/test_semantic_cache.py`: Added Ollama availability skipif guard to `test_semantic_cache_hit` and `test_semantic_cache_miss`
+- **TESTS** `tests/test_mcp_tools.py`, `tests/test_mcp_server.py`, `tests/test_mcp_drift.py`: Updated stale tool count assertions (50→52) and handler lookup logic
+- **TESTS** `tests/test_task_logger.py`: Replaced live embedding calls with mocks; added `requires_writable_db` guard for CLI integration test
+- **DOCS** `docs/AGENT.md`: Added missing `knowledge.task_patterns` and `system.budget_status` table rows; updated all stale "50 tool" references to 52
+- **DOCS** `docs/newelle-system-prompt.md`: Synced tool count (50→52)
+
+### New Tests Added
+- `test_semantic_cache_rejects_invalid_task_type` — validates ValueError for invalid task_type
+- `test_budget_record_spend_accumulates` — validates record_spend accumulation
+- `test_knowledge_task_patterns_docstring_tool_count` — canary for stale server.py docstring
+
+---
+
+## Phase 23 — Semantic Cache & Token Budget (2026-04-03)
+
+### New Files
+- `ai/cache_semantic.py` — SemanticCache: LanceDB-backed similarity cache with TTL per task_type
+- `ai/budget.py` — TokenBudget: daily token limits with priority tiers (security, scheduled, interactive, coding)
+- `configs/token-budget.json` — Budget allocation config (4 tiers)
+- `tests/test_semantic_cache.py` — 4 new tests
+- `tests/test_budget.py` — 6 new tests
+
+### Changed Files
+- `ai/router.py` — SemanticCache + TokenBudget integrated into LLM call path
+- `configs/mcp-bridge-allowlist.yaml` — added system.budget_status tool
+- `ai/mcp_bridge/server.py` — registered system.budget_status handler (tools 51→52)
+- `docs/AGENT.md` — updated counts (tools 51→52, tables 8→9), documented cache and budget systems
+
+### Metrics
+- MCP tools: 51 → 52
+- LanceDB tables: 8 → 9 (semantic_cache)
+- New tests: 10
+
+---
+
+## Phase 22 — Task Pattern Learning (2026-04-03)
+
+### New Files
+- `ai/learning/__init__.py` — learning package
+- `ai/learning/task_logger.py` — TaskLogger: logs successful task outcomes to LanceDB
+- `ai/learning/task_retriever.py` — retrieve_similar_tasks(): semantic similarity search
+- `scripts/log-task-success.py` — CLI for manually logging task successes
+- `tests/test_task_logger.py` — 6 new tests
+
+### Changed Files
+- `configs/mcp-bridge-allowlist.yaml` — added knowledge.task_patterns tool
+- `ai/mcp_bridge/server.py` — registered knowledge.task_patterns handler (tools 50→51)
+- `docs/AGENT.md` — updated counts and documented task_patterns table
+
+### Metrics
+- MCP tools: 50 → 51
+- LanceDB tables: 7 → 8 (task_patterns)
+- New tests: 6
+- Scripts: 40 → 41
+
+---
+
 ## Phase 20 — Headless Security & Timer Sentinel (2026-04-03)
 
 ### Deliverables
