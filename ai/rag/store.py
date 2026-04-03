@@ -116,7 +116,13 @@ class VectorStore:
             if name in existing:
                 table = db.open_table(name)
             else:
-                table = db.create_table(name, schema=schema)
+                try:
+                    table = db.create_table(name, schema=schema)
+                except Exception as e:
+                    if "already exists" in str(e).lower():
+                        table = db.open_table(name)
+                    else:
+                        raise
 
             # Add FTS index for text columns after table creation/opening
             self._ensure_fts_index(table, name)
@@ -171,6 +177,8 @@ class VectorStore:
             for chunk in chunks:
                 chunk.setdefault("id", str(uuid4()))
                 vec = chunk.get("vector", [])
+                if not isinstance(vec, list):
+                    raise ValueError(f"Vector must be a list, got {type(vec)}")
                 if len(vec) != EMBEDDING_DIM:
                     raise ValueError(
                         f"Vector dimension {len(vec)} != expected {EMBEDDING_DIM}. "
@@ -192,6 +200,8 @@ class VectorStore:
             for chunk in chunks:
                 chunk.setdefault("id", str(uuid4()))
                 vec = chunk.get("vector", [])
+                if not isinstance(vec, list):
+                    raise ValueError(f"Vector must be a list, got {type(vec)}")
                 if len(vec) != EMBEDDING_DIM:
                     raise ValueError(
                         f"Vector dimension {len(vec)} != expected {EMBEDDING_DIM}. "

@@ -7,7 +7,7 @@ After=network.target bazzite-mcp-bridge.service
 Type=oneshot
 User=lch
 WorkingDirectory=/home/lch/projects/bazzite-laptop
-ExecStart=/home/lch/projects/bazzite-laptop/.venv/bin/python -m ai.agents.security_audit
+ExecStart=/usr/bin/python3 -m ai.agents.security_audit
 
 # Timeout: ingestion + RAG query should finish in under 2 minutes
 TimeoutStartSec=120

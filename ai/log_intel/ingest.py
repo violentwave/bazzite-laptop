@@ -526,7 +526,13 @@ def _ensure_table(db, name: str, schema):
     if name in db.list_tables():
         table = db.open_table(name)
     else:
-        table = db.create_table(name, schema=schema)
+        try:
+            table = db.create_table(name, schema=schema)
+        except Exception as e:
+            if "already exists" in str(e).lower():
+                table = db.open_table(name)
+            else:
+                raise
 
     # Add FTS index for text columns after table creation/opening
     _ensure_fts_index(table, name)
@@ -599,10 +605,13 @@ def ingest_health() -> int:
 
     # Embed summaries
     summaries = [r["summary"] for r in records]
+    if not summaries:
+        logger.info("No health log summaries to embed")
+        return 0
     try:
         vectors = embed_texts(summaries)
-    except RuntimeError:
-        logger.error("Embedding providers unavailable, skipping health ingestion")
+    except RuntimeError as e:
+        logger.error("Embedding providers unavailable for health logs: %s", e)
         return 0
 
     for rec, vec in zip(records, vectors, strict=True):
@@ -691,10 +700,13 @@ def ingest_scans() -> int:
         return 0
 
     summaries = [r["summary"] for r in records]
+    if not summaries:
+        logger.info("No scan log summaries to embed")
+        return 0
     try:
         vectors = embed_texts(summaries)
-    except RuntimeError:
-        logger.error("Embedding providers unavailable, skipping scan ingestion")
+    except RuntimeError as e:
+        logger.error("Embedding providers unavailable for scan logs: %s", e)
         return 0
 
     for rec, vec in zip(records, vectors, strict=True):
@@ -764,11 +776,31 @@ def ingest_freshclam() -> int:
 
 
 def ingest_all() -> dict[str, int]:
-    """Run all three ingestion routines.  Returns counts per category."""
+    """Run all three ingestion routines. Returns counts per category."""
+    logger.info("Starting full log ingestion (health + scans + freshclam)")
+
+    health_count = ingest_health()
+    logger.debug("Health ingestion returned: %d", health_count)
+
+    scans_count = ingest_scans()
+    logger.debug("Scan ingestion returned: %d", scans_count)
+
+    freshclam_count = ingest_freshclam()
+    logger.debug("Freshclam ingestion returned: %d", freshclam_count)
+
+    total = health_count + scans_count + freshclam_count
+    logger.info(
+        "Ingestion complete: %d total (%d health, %d scans, %d freshclam)",
+        total,
+        health_count,
+        scans_count,
+        freshclam_count,
+    )
+
     return {
-        "health": ingest_health(),
-        "scans": ingest_scans(),
-        "freshclam": ingest_freshclam(),
+        "health": health_count,
+        "scans": scans_count,
+        "freshclam": freshclam_count,
     }
 
 

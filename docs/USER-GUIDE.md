@@ -108,7 +108,7 @@ All timers run unattended. This is the full daily/weekly timeline:
 | Daily 08:15   | `performance-tuning.timer` | Performance analysis agent          |
 | Daily 08:30   | `security-audit.timer`   | Automated security audit agent        |
 | Daily 09:00   | `rag-embed.timer`        | Re-ingest logs into LanceDB           |
-| Daily 09:15   | `knowledge-storage.timer` | Knowledge base health check          |
+| Daily 09:15   | `knowledge-storage.timer` | Knowledge base health check + auto-repair |
 | Daily 09:45   | `release-watch.timer`    | Upstream release + GHSA check         |
 | Daily 12:00   | `clamav-quick.timer`     | ClamAV quick scan                     |
 | Wed 14:00     | `clamav-healthcheck.timer` | ClamAV daemon health check          |
@@ -531,6 +531,33 @@ bash scripts/ingest-docs.sh
 
 # Re-ingest docs (force, ignores state file)
 bash scripts/ingest-docs.sh --force
+```
+
+### LanceDB Health Check & Auto-Repair
+
+The `knowledge-storage.timer` (daily 09:15) runs a comprehensive health check
+that includes:
+
+- **Corruption Detection**: Scans all LanceDB tables for malformed vectors,
+  missing `.lance` directories, schema corruption, and NaN/Inf values
+- **Automatic Repair**: If corruption is detected, automatically:
+  1. Creates timestamped backup (`~/security/vector-db-backup-YYYYMMDD-HHMMSS/`)
+  2. Preserves uncorrupted rows, drops and recreates corrupted tables
+  3. Auto-prunes oldest backups (keeps last 3)
+- **Permission Handling**: Gracefully handles read-only filesystem errors
+
+Run manually:
+```bash
+# Health check only (no auto-repair)
+python -m ai.agents.knowledge_storage
+
+# With auto-repair enabled (default)
+python -c "from ai.agents.knowledge_storage import run_storage_check; run_storage_check(auto_repair=True)"
+```
+
+View latest report:
+```bash
+ls -lt ~/security/storage-reports/storage-*.json | head -1
 ```
 
 ### Conversation memory (opt-in)
