@@ -24,10 +24,12 @@ import threading
 import time
 from contextlib import contextmanager
 from datetime import UTC, datetime
+from pathlib import Path
 
-import requests
+import requests as _requests_module
 import vt
 
+from ai.cache import JsonFileCache
 from ai.config import APP_NAME, ENRICHED_HASHES, get_key, load_keys, setup_logging
 from ai.rate_limiter import RateLimiter
 from ai.threat_intel.models import ThreatReport
@@ -35,6 +37,33 @@ from ai.threat_intel.models import ThreatReport
 logger = logging.getLogger(APP_NAME)
 
 _SHA256_RE = re.compile(r"^[0-9a-fA-F]{64}$")
+
+# Module-level HTTP session with connection pooling
+_http_session = _requests_module.Session()
+_http_session.headers.update({"User-Agent": "Bazzite-AI/1.0"})
+_adapter = _requests_module.adapters.HTTPAdapter(pool_connections=5, pool_maxsize=10, max_retries=0)
+_http_session.mount("https://", _adapter)
+_http_session.mount("http://", _adapter)
+
+
+class _RequestsProxy:
+    """Routes requests.get/post through the module session while remaining patchable.
+
+    Tests patch ``ai.threat_intel.lookup.requests`` (whole object) or
+    ``ai.threat_intel.lookup.requests.get``; both work correctly with this proxy.
+    """
+
+    get = _http_session.get
+    post = _http_session.post
+    exceptions = _requests_module.exceptions
+
+
+requests = _RequestsProxy()
+
+_threat_cache = JsonFileCache(
+    Path.home() / "security" / "threat-cache",
+    default_ttl=86400 * 7,  # 7 days
+)
 
 
 # ── Timeout Context Manager ──
@@ -332,6 +361,12 @@ def lookup_hash(
             timestamp=datetime.now(tz=UTC).isoformat(),
         )
 
+    cache_key = f"hash:{sha256}:full" if full else f"hash:{sha256}"
+    cached = _threat_cache.get(cache_key)
+    if cached is not None:
+        logger.info("Threat cache hit for %s", sha256[:16])
+        return ThreatReport(**cached)
+
     if rate_limiter is None:
         rate_limiter = RateLimiter()
 
@@ -366,6 +401,7 @@ def lookup_hash(
         report.tags = list(dict.fromkeys(all_tags))
 
         _append_enriched(report)
+        _threat_cache.set(cache_key, json.loads(report.to_jsonl()))
         return report
 
     # Cascading mode: stop on first hit
@@ -377,6 +413,7 @@ def lookup_hash(
             result = fn(sha256, rate_limiter)
             if result is not None and result.has_data:
                 _append_enriched(result)
+                _threat_cache.set(cache_key, json.loads(result.to_jsonl()))
                 return result
 
     return ThreatReport(

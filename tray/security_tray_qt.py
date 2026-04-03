@@ -20,7 +20,7 @@ for _p in (str(_TRAY_DIR), str(_PROJECT_DIR)):
     if _p not in sys.path:
         sys.path.insert(0, _p)
 
-from PySide6.QtCore import QTimer
+from PySide6.QtCore import QFileSystemWatcher, QTimer
 from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import QApplication, QMenu, QSystemTrayIcon
 
@@ -147,7 +147,11 @@ class SecurityTrayQt:
 
         self._poll_timer = QTimer()
         self._poll_timer.timeout.connect(self._poll_status)
-        self._poll_timer.start(POLL_INTERVAL_MS)
+        self._poll_timer.start(30000)  # 30s fallback; inotify handles fast updates
+
+        self._file_watcher = QFileSystemWatcher()
+        self._file_watcher.addPath(str(Path.home() / "security" / ".status"))
+        self._file_watcher.fileChanged.connect(self._on_status_changed)
 
         self._build_menu()
         self._tray.show()
@@ -201,6 +205,16 @@ class SecurityTrayQt:
                     )
         except Exception as exc:
             print(f"[tray] Poll error: {exc}", file=sys.stderr)
+
+    def _on_status_changed(self, path: str) -> None:
+        """Called by QFileSystemWatcher when .status is written.
+
+        Qt removes a watched path after it is modified (some editors replace
+        the file rather than updating in place), so we re-add it here.
+        """
+        self._poll_status()
+        if not self._file_watcher.files():
+            self._file_watcher.addPath(path)
 
     def _set_state(self, new_state: str) -> None:
         if new_state == self._current_state:

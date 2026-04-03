@@ -5,7 +5,7 @@ Auto-generated cross-tool handoff. Updated by save-handoff.sh
 ## Current State
 
 - **Last Tool:** claude-code
-- **Last Updated:** 2026-04-02T19:01:16Z
+- **Last Updated:** 2026-04-03T06:36:31Z
 - **Project:** bazzite-laptop
 - **Branch:** master
 
@@ -15,81 +15,86 @@ Auto-generated cross-tool handoff. Updated by save-handoff.sh
 
 ## Recent Sessions
 
-### 2026-04-02T19:01:16Z — claude-code
+### 2026-04-03T06:36:31Z — claude-code
 [Auto-saved on session end]
 
 
-### 2026-04-02T18:43:29Z — claude-code
+### 2026-04-03T06:36:25Z — claude-code
 [Auto-saved on session end]
 
 
-### 2026-04-02T18:43:27Z — claude-code
+### 2026-04-03T06:36:20Z — claude-code
 [Auto-saved on session end]
 
 
-### 2026-04-02T18:28:49Z — claude-code
+### 2026-04-03T06:28:38Z — claude-code
 [Auto-saved on session end]
 
 
-### 2026-04-02T18:28:49Z — claude-code
+### 2026-04-03T06:28:24Z — claude-code
 [Auto-saved on session end]
 
 
-### 2026-04-02T18:28:28Z — claude-code
+### 2026-04-03T06:26:28Z — claude-code
 [Auto-saved on session end]
 
 
-### 2026-04-02T18:28:14Z — claude-code
+### 2026-04-03T06:24:17Z — claude-code
 [Auto-saved on session end]
 
 
-### 2026-04-02T18:23:43Z — claude-code
+### 2026-04-03T06:08:56Z — claude-code
 [Auto-saved on session end]
 
 
-### 2026-04-02T18:11:50Z — claude-code
+### 2026-04-03T05:38:04Z — claude-code
 [Auto-saved on session end]
 
 
-### 2026-04-02T18:09:22Z — claude-code
+### 2026-04-03T05:30:57Z — claude-code
 [Auto-saved on session end]
 
 
-### 2026-04-02T18:08:13Z — claude-code
+### 2026-04-03T04:08:19Z — claude-code
+Implemented LanceDB corruption recovery and backup retention tests:
+- Added `test_lancedb_auto_repair` in tests/test_rag_e2e.py
+- Added `test_prune_keeps_only_3_recent` in tests/test_knowledge_storage.py
+- Updated docs/CHANGELOG.md with Database Integrity Test Suite entry
+- Updated docs/project_memory.md: moved corruption tests and backup pruning to Confirmed Work
+- Tests pass: 22 passed, 2 pre-existing failures (unrelated)
+
+
+### 2026-04-03T03:27:39Z — claude-code
+Fixed LanceDB unhashable type error, added auto-repair with 3-backup retention, fixed systemd paths, added E2E test, created project_memory.md
+
+
+### 2026-04-03T02:04:40Z — claude-code
 [Auto-saved on session end]
 
 
-### 2026-04-02T18:02:44Z — claude-code
+### 2026-04-03T02:03:28Z — claude-code
 [Auto-saved on session end]
 
 
-### 2026-04-02T18:01:07Z — claude-code
+### 2026-04-03T02:03:28Z — claude-code
 [Auto-saved on session end]
 
 
-### 2026-04-02T17:48:48Z — claude-code
+### 2026-04-03T02:03:25Z — claude-code
 [Auto-saved on session end]
 
 
-### 2026-04-02T17:43:09Z — claude-code
+### 2026-04-03T02:03:12Z — claude-code
 [Auto-saved on session end]
 
 
-### 2026-04-02T17:23:57Z — opencode
-Implemented memory content filtering in ai/rag/memory.py to prevent duplicate prompt injection. Added retry logic with exponential backoff in ai/rag/ingest_docs.py for I/O errors. Added absolute path rules section to docs/newelle-system-prompt.md. Tests added for both features.
-
-
-### 2026-04-01T17:30:17Z — claude-code
+### 2026-04-03T01:55:03Z — claude-code
 [Auto-saved on session end]
 
 
-### 2026-04-01T17:30:16Z — claude-code
+### 2026-04-03T01:55:03Z — claude-code
 [Auto-saved on session end]
 
 
-### 2026-04-01T17:30:16Z — claude-code
-[Auto-saved on session end]
-
-
-### 2026-04-01T17:30:15Z — claude-code
+### 2026-04-03T01:55:03Z — claude-code
 [Auto-saved on session end]

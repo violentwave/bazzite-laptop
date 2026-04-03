@@ -11,6 +11,7 @@ Usage:
 
 import logging
 import time
+from functools import lru_cache
 
 import cohere
 import httpx
@@ -260,8 +261,33 @@ def select_provider() -> str:
     )
 
 
+@lru_cache(maxsize=500)
+def _embed_single_cached(
+    text: str,
+    input_type: str = "search_query",
+    provider: str | None = None,
+) -> list[float]:
+    """LRU-cached inner function for embed_single.
+
+    Only accepts hashable string args so lru_cache can key on them.
+    Batch embed_texts calls (ingestion) bypass this cache entirely.
+    """
+    return embed_texts([text], input_type=input_type, provider=provider)[0]
+
+
 def embed_single(text: str, **kwargs: object) -> list[float]:
-    """Convenience wrapper for embedding a single text."""
+    """Convenience wrapper for embedding a single text.
+
+    Routes through an LRU cache (maxsize=500) when called with only
+    ``input_type`` and/or ``provider`` kwargs — the common query path.
+    Falls back to a direct ``embed_texts`` call for other kwargs (e.g.
+    when a ``rate_limiter`` is passed).
+    """
+    if set(kwargs) <= {"input_type", "provider"}:
+        input_type = str(kwargs.get("input_type", "search_query"))
+        provider_val = kwargs.get("provider")
+        provider = str(provider_val) if provider_val is not None else None
+        return _embed_single_cached(text, input_type, provider)
     return embed_texts([text], **kwargs)[0]
 
 

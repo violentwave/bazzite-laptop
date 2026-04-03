@@ -23,13 +23,43 @@ import logging
 import sys
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
+from pathlib import Path
 
-import requests
+import requests as _requests_module
 
+from ai.cache import JsonFileCache
 from ai.config import APP_NAME, get_key, load_keys, setup_logging
 from ai.rate_limiter import RateLimiter
 
 logger = logging.getLogger(APP_NAME)
+
+# Module-level HTTP session with connection pooling
+_http_session = _requests_module.Session()
+_http_session.headers.update({"User-Agent": "Bazzite-AI/1.0"})
+_adapter = _requests_module.adapters.HTTPAdapter(pool_connections=5, pool_maxsize=10, max_retries=0)
+_http_session.mount("https://", _adapter)
+_http_session.mount("http://", _adapter)
+
+
+class _RequestsProxy:
+    """Routes requests.get/post through the module session while remaining patchable.
+
+    Tests patch ``ai.threat_intel.ip_lookup.requests.get``; assigning the proxy to
+    the name ``requests`` keeps those patch targets intact while the real traffic
+    goes through the pooled session.
+    """
+
+    get = _http_session.get
+    post = _http_session.post
+    exceptions = _requests_module.exceptions
+
+
+requests = _RequestsProxy()
+
+_ip_cache = JsonFileCache(
+    Path.home() / "security" / "ip-cache",
+    default_ttl=86400,  # 24 hours
+)
 
 
 # ── Data Model ────────────────────────────────────────────────────────────────
@@ -242,6 +272,12 @@ def lookup_ip(
             timestamp=datetime.now(tz=UTC).isoformat(),
         )
 
+    cache_key = f"ip:{validated}"
+    cached = _ip_cache.get(cache_key)
+    if cached is not None:
+        logger.info("Threat cache hit for %s", validated)
+        return IPReport(**cached)
+
     if rate_limiter is None:
         rate_limiter = RateLimiter()
 
@@ -279,7 +315,7 @@ def lookup_ip(
     if greynoise_classification:
         description_parts.append(f"GreyNoise: {greynoise_classification}")
 
-    return IPReport(
+    report = IPReport(
         ip=validated,
         source="+".join(sources),
         abuse_score=abuse_score,
@@ -291,6 +327,8 @@ def lookup_ip(
         timestamp=datetime.now(tz=UTC).isoformat(),
         raw_data={"shodan": shodan},
     )
+    _ip_cache.set(cache_key, json.loads(report.to_json()))
+    return report
 
 
 # ── CLI ───────────────────────────────────────────────────────────────────────

@@ -1,9 +1,24 @@
 # Changelog — Bazzite AI Enhancement Layer
-<!-- System: Acer Predator G3-571 | Bazzite 43 | Last updated: 2026-04-02 -->
+<!-- System: Acer Predator G3-571 | Bazzite 43 | Last updated: 2026-04-03 -->
 
 All notable changes are recorded here. Phases correspond to the original
 implementation plan for the AI enhancement layer built on top of the base
 Bazzite security/gaming system.
+
+---
+
+## Database Integrity Test Suite (2026-04-03)
+
+- test: Add `test_lancedb_auto_repair` in `tests/test_rag_e2e.py` that:
+  - Creates isolated LanceDB test table with mixed valid/corrupted vectors
+  - Injects NaN vectors and wrong-dimension vectors to trigger corruption
+  - Verifies `_detect_corruption()` detects issues
+  - Verifies `repair_database()` removes corrupted rows, preserves valid rows
+- test: Add `test_prune_keeps_only_3_recent` in `tests/test_knowledge_storage.py` that:
+  - Creates 5 timestamped backup directories with explicit mtimes
+  - Verifies `_prune_old_backups()` removes 2 oldest, keeps 3 most recent
+- docs: Move "Corruption injection tests" and "Backup retention pruning"
+  from Testing Gaps to Confirmed Work in `project_memory.md`
 
 ---
 

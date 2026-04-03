@@ -6,6 +6,7 @@ consecutive failures. Exponential backoff: 2m -> 4m -> 10m max.
 
 import logging
 import time
+from collections import OrderedDict
 from dataclasses import dataclass, field
 
 logger = logging.getLogger("ai.health")
@@ -74,13 +75,19 @@ class ProviderHealth:
 class HealthTracker:
     """Manages health state for all LLM providers."""
 
+    _MAX_PROVIDERS = 50
+
     def __init__(self) -> None:
-        self._providers: dict[str, ProviderHealth] = {}
+        self._providers: OrderedDict[str, ProviderHealth] = OrderedDict()
 
     def get(self, name: str) -> ProviderHealth:
-        """Get or create a ProviderHealth entry."""
+        """Get or create a ProviderHealth entry. LRU-bounded at _MAX_PROVIDERS."""
         if name not in self._providers:
             self._providers[name] = ProviderHealth(name=name)
+            if len(self._providers) > self._MAX_PROVIDERS:
+                self._providers.popitem(last=False)
+        else:
+            self._providers.move_to_end(name)
         return self._providers[name]
 
     def record_success(self, name: str, latency_ms: float) -> None:

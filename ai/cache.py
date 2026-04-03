@@ -7,15 +7,22 @@ Atomic writes via tempfile + os.replace prevent partial files.
 
 import hashlib
 import json
+import logging
 import os
 import tempfile
 import threading
 import time
+from functools import lru_cache
 from pathlib import Path
+
+logger = logging.getLogger(__name__)
 
 
 class JsonFileCache:
     """Disk-based LLM response cache using JSON files. No pickle. No CVEs."""
+
+    _eviction_running: bool = False
+    _eviction_lock: threading.Lock = threading.Lock()
 
     def __init__(self, cache_dir: str | Path, default_ttl: int = 300):
         self._cache_dir = Path(cache_dir)
@@ -27,8 +34,25 @@ class JsonFileCache:
             self._cache_dir.mkdir(parents=True, exist_ok=True)
         except OSError:
             pass  # best-effort; reads/writes will fail gracefully
+        with JsonFileCache._eviction_lock:
+            if not JsonFileCache._eviction_running:
+                JsonFileCache._eviction_running = True
+                t = threading.Thread(target=self._auto_evict_loop, daemon=True)
+                t.start()
 
-    def _key_hash(self, key: str) -> str:
+    def _auto_evict_loop(self) -> None:
+        while True:
+            time.sleep(3600)
+            try:
+                count = self.evict_expired()
+                if count > 0:
+                    logger.info("Auto-evicted %d expired cache entries", count)
+            except Exception:
+                logger.warning("Auto-eviction failed", exc_info=True)
+
+    @staticmethod
+    @lru_cache(maxsize=10000)
+    def _key_hash(key: str) -> str:
         """SHA256 hex digest of the key string, used as filename."""
         return hashlib.sha256(key.encode()).hexdigest()
 

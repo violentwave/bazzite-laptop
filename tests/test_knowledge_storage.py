@@ -1,6 +1,8 @@
 """Unit tests for ai/agents/knowledge_storage.py."""
 
 import json
+import os
+import time
 from contextlib import ExitStack
 from unittest.mock import MagicMock, patch
 
@@ -75,7 +77,8 @@ class TestReadIngestState:
         from ai.agents.knowledge_storage import _read_ingest_state
 
         result = _read_ingest_state(state_file)
-        assert result["last_ingest"] is None
+        # Falls back to file mtime when no timestamp key is present
+        assert result["last_ingest"] is not None
 
 
 class TestGetVectorDbSize:
@@ -252,9 +255,39 @@ class TestRunStorageCheck:
             "ollama",
             "recommendations",
             "status",
+            "corruption",
+            "repair",
         }
         assert set(result.keys()) == expected_keys
 
     def test_healthy_when_all_nominal(self, tmp_path):
         result = _run_storage_patched(tmp_path)
         assert result["status"] == "healthy"
+
+
+class TestBackupPruning:
+    def test_prune_keeps_only_3_recent(self, tmp_path):
+        """Verify _prune_old_backups() keeps only 3 most recent backups."""
+        from ai.agents.knowledge_storage import _MAX_BACKUPS, _prune_old_backups
+
+        test_security = tmp_path / "security"
+        test_security.mkdir(parents=True, exist_ok=True)
+
+        backups = []
+        for i in range(5):
+            backup_dir = test_security / f"vector-db-backup-2026032{i + 1}-120000"
+            backup_dir.mkdir()
+            old_mtime = time.time() - (5 - i) * 3600
+            os.utime(backup_dir, (old_mtime, old_mtime))
+            backups.append(backup_dir)
+
+        assert len(list(test_security.glob("vector-db-backup-*"))) == 5
+
+        with patch("ai.agents.knowledge_storage.SECURITY_DIR", test_security):
+            deleted = _prune_old_backups()
+
+        remaining = list(test_security.glob("vector-db-backup-*"))
+        assert len(remaining) == _MAX_BACKUPS, (
+            f"Expected {_MAX_BACKUPS} backups, got {len(remaining)}"
+        )
+        assert deleted == 2
