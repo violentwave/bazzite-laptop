@@ -1,6 +1,6 @@
 """FastMCP server for the Newelle MCP bridge.
 
-Exposes 46 tools + 1 health endpoint on localhost.
+Exposes 52 tools + 1 health endpoint on localhost.
 NEVER bind to 0.0.0.0. NEVER import ai.router (it loads all keys unscoped).
 """
 
@@ -8,7 +8,9 @@ import logging
 
 import yaml
 
+from ai.budget import get_budget
 from ai.config import CONFIGS_DIR, load_keys
+from ai.learning import retrieve_similar_tasks
 
 logger = logging.getLogger("ai.mcp_bridge")
 
@@ -16,7 +18,7 @@ DEFAULT_BIND = "127.0.0.1"
 DEFAULT_PORT = int(__import__("os").environ.get("MCP_BRIDGE_PORT", "8766"))
 
 # Number of tools in the allowlist (excludes health endpoint itself)
-_TOOL_COUNT = 50
+_TOOL_COUNT = 52
 
 
 def _assert_localhost(bind: str) -> None:
@@ -111,10 +113,12 @@ def create_app():
         # ── observability ────────────────────────────────────────────────────
         "system.token_report": {"readOnlyHint": True, "idempotentHint": True},
         "system.pipeline_status": {"readOnlyHint": True, "idempotentHint": True},
+        "system.budget_status": {"readOnlyHint": True, "idempotentHint": True},
         # ── threat intel correlation ─────────────────────────────────────────
         "security.correlate": {"readOnlyHint": True, "openWorldHint": True},
         "security.recommend_action": {"readOnlyHint": True, "idempotentHint": True},
         "knowledge.pattern_search": {"readOnlyHint": True},
+        "knowledge.task_patterns": {"readOnlyHint": True},
     }
 
     # Load tool definitions from the allowlist
@@ -220,6 +224,50 @@ def create_app():
                 if len(output) > 4096:
                     output = output[:4096] + "... [truncated]"
                 return output
+
+        elif tool_name == "knowledge.task_patterns":
+
+            @mcp.tool(name=tool_name, description=description, annotations=ann)
+            async def _handler_task_patterns(
+                query: str,
+                top_k: int = 3,
+                _tn=tool_name,
+            ):
+                try:
+                    results = retrieve_similar_tasks(query, top_k=top_k)
+                    if results:
+                        msg = f"Found {len(results)} similar past task(s)"
+                    else:
+                        msg = (
+                            "No similar past tasks found yet. "
+                            "Use log-task-success.py to build the knowledge base."
+                        )
+                    return {
+                        "tasks": results,
+                        "count": len(results),
+                        "message": msg,
+                    }
+                except Exception as e:
+                    return {"error": str(e), "tasks": [], "count": 0}
+
+        elif tool_name == "system.budget_status":
+
+            @mcp.tool(name=tool_name, description=description, annotations=ann)
+            async def _handler_budget_status(_tn=tool_name):
+                try:
+                    status = get_budget().get_status()
+                    warnings = [
+                        f"{tier} at {info['remaining_pct']:.1f}% remaining"
+                        for tier, info in status.items()
+                        if info.get("warn")
+                    ]
+                    return {
+                        "tiers": status,
+                        "warnings": warnings,
+                        "reset": "midnight UTC",
+                    }
+                except Exception as e:
+                    return {"error": str(e), "tiers": {}, "warnings": []}
 
         # Built-in health tool (MCP protocol)
 
