@@ -78,7 +78,7 @@ Key constraints:
 
 Source: `configs/mcp-bridge-allowlist.yaml` (50 entries).
 
-> **Phase 12:** PingMiddleware (25s keepalive) active. All 49 tools carry MCP annotations (readOnly/destructive/openWorld hints).
+> **Phase 12:** PingMiddleware (25s keepalive) active. All 50 tools carry MCP annotations (readOnly/destructive/openWorld hints).
 > **Phase 20:** Added `agents.timer_health` — validates all 16 systemd timers.
 > **Phase 21:** Added `knowledge.pattern_search` — semantic search over curated code patterns.
 
@@ -105,7 +105,7 @@ Source: `configs/mcp-bridge-allowlist.yaml` (50 entries).
 | `system.token_report` | python: `ai.mcp_bridge.tools` | — | Token usage and cost report from LLM proxy |
 | `system.pipeline_status` | python: `ai.system.pipeline_status` | — | Log pipeline ingest/archive/retention status, pending files, table row counts |
 
-### security.* (15 tools)
+### security.* (14 tools)
 
 | Tool | Source | Args | Description |
 |------|--------|------|-------------|
@@ -157,7 +157,7 @@ Source: `configs/mcp-bridge-allowlist.yaml` (50 entries).
 | `code.search` | python: ripgrep | `query` (string, max 128, required) | Pattern search across Python source |
 | `code.rag_query` | python: `ai.rag.code_query` | `question` (string, max 500, required) | Semantic search over indexed code |
 
-### agents.* (4 tools)
+### agents.* (5 tools)
 
 | Tool | Source | Args | Description |
 |------|--------|------|-------------|
@@ -243,7 +243,7 @@ Source: `configs/mcp-bridge-allowlist.yaml` (50 entries).
 11. **No global pip installs** — `uv` + `.venv/` only
 12. **No `/usr` modifications** — immutable OS (Fedora Atomic); use `rpm-ostree install`
 13. **No `--break-system-packages`** — Python packages go in `.venv/` only
-15. **All LLM calls through `ai/router.py`** — all API calls through `ai/rate_limiter.py`
+14. **All LLM calls through `ai/router.py`** — all API calls through `ai/rate_limiter.py`
 15. **`restorecon` after every systemd unit install** — SELinux label restoration required
 
 ---
@@ -261,15 +261,15 @@ Source: `configs/mcp-bridge-allowlist.yaml` (50 entries).
 | `ai/rate_limiter.py` | Cross-script rate limiting with file locking |
 | `ai/key_manager.py` | API key presence checker |
 | `ai/mcp_bridge/server.py` | FastMCP server on :8766, tool registration |
-| `ai/mcp_bridge/tools.py` | Tool dispatch handlers for all 49 tools |
+| `ai/mcp_bridge/tools.py` | Tool dispatch handlers for all 50 tools |
 | `ai/threat_intel/` | VT, OTX, AbuseIPDB, GreyNoise, NVD, URLhaus, etc. (6 API modules) |
 | `ai/rag/` | LanceDB store, embedder, query engine, code query |
 | `ai/log_intel/` | Log ingestion, anomaly detection, semantic search |
-| `ai/agents/` | Automated agents (4): security, perf, knowledge, code quality |
+| `ai/agents/` | Automated agents (5): security, perf, knowledge, code quality, timer sentinel |
 | `ai/gaming/` | MangoHud analysis, ScopeBuddy profiles |
 | `ai/security/inputvalidator.py` | Pre-dispatch input validation + secret redaction |
 | `ai/system/` | release_watch, fedora_updates, pkg_intel |
-| `configs/mcp-bridge-allowlist.yaml` | 49 tool definitions + argument validation |
+| `configs/mcp-bridge-allowlist.yaml` | 50 tool definitions + argument validation |
 | `configs/safety-rules.json` | Input validation rules (max length, patterns, path allowlists) |
 | `configs/litellm-config.yaml` | LiteLLM provider routing config |
 | `configs/ai-rate-limits.json` | Per-provider rate limits |
@@ -277,8 +277,8 @@ Source: `configs/mcp-bridge-allowlist.yaml` (50 entries).
 | `scripts/` | 40 shell/Python scripts (deploy, scan, backup, etc.) |
 | `scripts/lancedb-prune.py` | LanceDB retention pruning (90d logs, 180d threats) + cache cleanup |
 | `scripts/r2-set-lifecycle.py` | One-time R2 bucket lifecycle rule setup (180d auto-expiration) |
-| `systemd/` | 15 timers + associated services |
-| `tests/` | ~1611 pytest tests |
+| `systemd/` | 16 timers + associated services |
+| `tests/` | ~1679 pytest tests |
 | `tray/` | PySide6 system tray app |
 
 ### Runtime paths (not in repo)
@@ -288,7 +288,7 @@ Source: `configs/mcp-bridge-allowlist.yaml` (50 entries).
 | `~/.config/bazzite-ai/keys.env` | Plaintext API keys (chmod 600, never in git) |
 | `~/security/` | Canonical root for all runtime security data |
 | `~/security/.status` | Shared JSON: ClamAV + health state (tray + MCP read this) |
-| `~/security/vector-db/` | LanceDB root (→ `/var/mnt/ext-ssd/bazzite-ai/vector-db`) |
+| `~/security/vector-db/` | LanceDB root (→ `/var/mnt/ext-ssd/bazzite-ai/vector-db`). Tables: `documents` (RAG docs), `code_index` (code embeddings), `log_entries` (system logs), `code_patterns` (curated code patterns — P21) |
 | `~/security/vector-db/.archive-state.json` | R2 archive state (upload records with key, timestamp, size) |
 | `~/security/llm-status.json` | LLM provider health + token usage |
 | `~/security/key-status.json` | API key presence map |
@@ -305,7 +305,7 @@ Source: `configs/mcp-bridge-allowlist.yaml` (50 entries).
 
 ```bash
 source .venv/bin/activate
-python -m pytest tests/ -v          # ~1611 tests
+python -m pytest tests/ -v          # ~1679 tests
 ruff check ai/ tests/               # Lint
 bandit -r ai/ -c pyproject.toml     # Security scan
 uv pip install -r requirements.txt  # Install/update deps

@@ -47,14 +47,6 @@ def read_json_file(path: Path) -> dict:
         return {}
 
 
-def read_json_file_text(path: Path) -> dict:
-    """Read JSON file as text, return {} on any error."""
-    try:
-        with open(path) as f:
-            return f.read()
-    except Exception:
-        return {}
-
 
 def get_output_path(date_str: str) -> Path:
     """Return unique briefing path, appending -2/-3 if today already exists."""

@@ -454,7 +454,20 @@ async def _execute_gpu_status(command: list[str]) -> str:
 
 
 async def execute_tool(tool_name: str, args: dict) -> str:
-    """Execute a tool by name with validated arguments.
+    """Execute a tool and return redacted output safe to send to Newelle.
+
+    Applies secret redaction as a final pass so no API key can leak even
+    if a tool handler accidentally includes one.  ValueError from the
+    allowlist / validation layer propagates unchanged.
+    """
+    result = await _dispatch_tool(tool_name, args)
+    if _VALIDATOR is not None:
+        result = _VALIDATOR.redact_secrets(result)
+    return result
+
+
+async def _dispatch_tool(tool_name: str, args: dict) -> str:
+    """Internal tool dispatch — call execute_tool, not this function directly.
 
     Args:
         tool_name: The tool identifier (e.g. "system.disk_usage").
@@ -874,7 +887,7 @@ async def _execute_python_tool(tool_name: str, tool_def: dict, args: dict) -> st
             from ai.agents.timer_sentinel import check_timers  # noqa: PLC0415
 
             result = check_timers()
-            return json.dumps(result, indent=2)
+            return _truncate(json.dumps(result, indent=2))
 
         elif tool_name == "security.sandbox_submit":
             from ai.threat_intel.sandbox import submit_file  # noqa: PLC0415

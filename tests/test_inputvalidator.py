@@ -287,3 +287,54 @@ class TestEdgeCases:
         v = InputValidator.from_default_config()
         ok = v.validate_path("/home/user/../etc/passwd")
         assert ok is False
+
+    def test_exactly_max_length_passes(self):
+        """Input at exactly 10000 chars (the default limit) must pass."""
+        v = InputValidator.from_default_config()
+        ok, violations = v.validate_input("a" * 10000)
+        assert ok is True
+        assert violations == []
+
+    def test_one_over_max_length_blocked(self):
+        """Input at 10001 chars must be blocked."""
+        v = InputValidator.from_default_config()
+        ok, violations = v.validate_input("a" * 10001)
+        assert ok is False
+        assert any("max_input_length" in v for v in violations)
+
+
+class TestNormalToolInputsPass:
+    """Real tool inputs that must NOT be blocked by the validator."""
+
+    def test_pattern_search_query_passes(self):
+        v = InputValidator.from_default_config()
+        ok, violations = v.validate_input("atomic write crash-safe file")
+        assert ok is True, f"Pattern search query blocked: {violations}"
+
+    def test_sha256_hash_passes(self):
+        v = InputValidator.from_default_config()
+        ok, violations = v.validate_input(
+            "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        )
+        assert ok is True, f"Hash blocked: {violations}"
+
+    def test_rag_query_passes(self):
+        v = InputValidator.from_default_config()
+        ok, violations = v.validate_input("rate limiting examples")
+        assert ok is True, f"RAG query blocked: {violations}"
+
+    def test_language_filter_passes(self):
+        v = InputValidator.from_default_config()
+        ok, violations = v.validate_input("python")
+        assert ok is True, f"Language filter blocked: {violations}"
+
+    def test_domain_filter_passes(self):
+        v = InputValidator.from_default_config()
+        ok, violations = v.validate_input("security")
+        assert ok is True, f"Domain filter blocked: {violations}"
+
+    def test_lancedb_injection_blocked(self):
+        """SQL-style LanceDB injection via language/domain must be blocked."""
+        v = InputValidator.from_default_config()
+        ok, violations = v.validate_input("python' OR '1'='1")
+        assert ok is False, "LanceDB injection not blocked"
