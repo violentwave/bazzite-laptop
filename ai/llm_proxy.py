@@ -35,6 +35,7 @@ try:
         get_cost_stats,
         get_health_snapshot,
         get_usage_stats,
+        reset_health_scores,
         route_chat,
         route_query_stream,
     )
@@ -44,6 +45,7 @@ except Exception:  # noqa: BLE001
         """Sentinel — never raised when import succeeds."""
     route_chat = None  # type: ignore[assignment]
     route_query_stream = None  # type: ignore[assignment]
+    reset_health_scores = None  # type: ignore[assignment]
     get_health_snapshot = None  # type: ignore[assignment]
     get_usage_stats = None  # type: ignore[assignment]
     get_cost_stats = None  # type: ignore[assignment]
@@ -148,6 +150,28 @@ async def _stream_response(task_type: str, messages: list[dict]) -> AsyncGenerat
                 }],
             }
             yield f"data: {json.dumps(data)}\n\n"
+    except AllProvidersExhausted:
+        # No provider could respond — emit a friendly message before [DONE].
+        logger.warning("All providers exhausted for stream task_type=%s", task_type)
+        exhausted_data = {
+            "id": "chatcmpl-error",
+            "object": "chat.completion.chunk",
+            "created": int(time.time()),
+            "model": f"bazzite-router/{task_type}",
+            "choices": [{
+                "index": 0,
+                "delta": {
+                    "content": (
+                        "All providers are temporarily unavailable."
+                        " Please try again in 30 seconds."
+                    ),
+                },
+                "finish_reason": "stop",
+            }],
+        }
+        yield f"data: {json.dumps(exhausted_data)}\n\n"
+        yield "data: [DONE]\n\n"
+        return
     except Exception as e:
         # Post-commit failure — stream already started, can't retry.
         # Send an error chunk so Newelle gets a terminated SSE stream.
@@ -188,6 +212,9 @@ async def _stream_response(task_type: str, messages: list[dict]) -> AsyncGenerat
 
 def create_app():
     """Create the FastAPI/Starlette proxy app."""
+    if reset_health_scores is not None:
+        reset_health_scores()
+
     from starlette.applications import Starlette
     from starlette.requests import Request
     from starlette.responses import JSONResponse, StreamingResponse
@@ -273,18 +300,23 @@ def create_app():
                 "usage": {"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0},
             })
         except AllProvidersExhausted:
-            return JSONResponse(
-                status_code=503,
-                content={
-                    "error": {
-                        "message": f"All providers exhausted for task '{task_type}'. "
-                                   "Try again in 5 minutes.",
-                        "type": "provider_exhaustion",
-                        "retry_after_seconds": 300,
-                    }
-                },
-                headers={"Retry-After": "300"},
-            )
+            return JSONResponse({
+                "id": "chatcmpl-error",
+                "object": "chat.completion",
+                "created": int(time.time()),
+                "model": f"bazzite-router/{task_type}",
+                "choices": [{
+                    "index": 0,
+                    "message": {
+                        "role": "assistant",
+                        "content": (
+                            "All providers are temporarily unavailable."
+                            " Please try again in 30 seconds."
+                        ),
+                    },
+                    "finish_reason": "stop",
+                }],
+            })
         except Exception as e:
             logger.error("Router query failed: %s", e)
             return JSONResponse(

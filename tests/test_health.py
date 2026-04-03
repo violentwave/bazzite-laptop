@@ -137,3 +137,22 @@ class TestHealthTracker:
         names = [h.name for h in tracker.get_sorted(["dead-provider", "live-provider"])]
         assert "dead-provider" not in names
         assert "live-provider" in names
+
+    def test_reset_all_scores(self, tracker):
+        tracker.record_failure("gemini", error="err")
+        tracker.record_failure("gemini", error="err")
+        tracker.record_failure("groq", error="err")
+        tracker.reset_all_scores()
+        assert tracker.get("gemini").score == pytest.approx(1.0)
+        assert tracker.get("groq").score == pytest.approx(1.0)
+
+    def test_reset_clears_cooldowns(self, tracker):
+        for _ in range(5):
+            tracker.record_failure("mistral", error="err")
+        h = tracker.get("mistral")
+        assert h.is_disabled is True
+        tracker.reset_all_scores()
+        h = tracker.get("mistral")
+        assert h.is_disabled is False
+        assert h.disabled_until is None
+        assert h.consecutive_failures == 0

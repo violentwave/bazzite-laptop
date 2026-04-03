@@ -149,6 +149,11 @@ class HealthTracker:
             h.last_probe_time = None
             h._demotion_count = 0
 
+    def reset_all_scores(self) -> None:
+        """Reset all providers to score 1.0 and clear cooldowns. Called on service startup."""
+        self.reset_all()
+        logger.info("Health scores reset on startup")
+
 
 if __name__ == "__main__":
     import argparse

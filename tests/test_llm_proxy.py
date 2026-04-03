@@ -156,6 +156,28 @@ class TestChatCompletions:
         assert response.status_code == 200
         mock_router["route_chat"].assert_called_once()
 
+    def test_exhaustion_returns_graceful_response(self, mock_router):
+        """AllProvidersExhausted returns a valid chat completion with friendly message."""
+        from starlette.testclient import TestClient
+
+        from ai.health import AllProvidersExhausted
+        from ai.llm_proxy import create_app
+
+        with patch("ai.llm_proxy.route_chat", new_callable=AsyncMock) as mock_chat:
+            mock_chat.side_effect = AllProvidersExhausted("fast")
+            app = create_app()
+            client = TestClient(app)
+            response = client.post(
+                "/v1/chat/completions",
+                json={"model": "fast", "messages": [{"role": "user", "content": "Hi"}]},
+            )
+        assert response.status_code == 200
+        data = response.json()
+        assert data["id"] == "chatcmpl-error"
+        assert data["object"] == "chat.completion"
+        assert "temporarily unavailable" in data["choices"][0]["message"]["content"]
+        assert data["choices"][0]["finish_reason"] == "stop"
+
     def test_router_error_returns_500(self, client, mock_router):
         """Router exceptions return 500 with error message."""
         mock_router["route_chat"].side_effect = RuntimeError("Provider unavailable")

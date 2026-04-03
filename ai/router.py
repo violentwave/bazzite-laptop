@@ -620,3 +620,8 @@ def reset_router() -> None:
     _health_tracker = HealthTracker()
     _llm_cache.clear()
     reset_cost_stats()
+
+
+def reset_health_scores() -> None:
+    """Reset all provider health scores to 1.0. Called on service startup."""
+    _health_tracker.reset_all_scores()

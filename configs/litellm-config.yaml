@@ -32,9 +32,9 @@ model_list:
       api_key: os.environ/OPENROUTER_API_KEY
   - model_name: "fast"
     litellm_params:
-      model: openai/GLM-4-32B
+      model: openai/glm-4.7-flash
       api_key: os.environ/ZAI_API_KEY
-      api_base: https://api.z.ai/v1
+      api_base: https://api.z.ai/api/paas/v4
   - model_name: "fast"
     litellm_params:
       model: cerebras/llama-4-scout-17b-16e-instruct
@@ -59,9 +59,9 @@ model_list:
       api_key: os.environ/OPENROUTER_API_KEY
   - model_name: "reason"
     litellm_params:
-      model: openai/GLM-4-32B
+      model: openai/glm-4.7
       api_key: os.environ/ZAI_API_KEY
-      api_base: https://api.z.ai/v1
+      api_base: https://api.z.ai/api/paas/v4
 
   # ── BATCH (volume-first) ──
   - model_name: "batch"
@@ -104,9 +104,9 @@ model_list:
       api_key: os.environ/OPENROUTER_API_KEY
   - model_name: "code"
     litellm_params:
-      model: openai/GLM-4-32B
+      model: openai/glm-4.7
       api_key: os.environ/ZAI_API_KEY
-      api_base: https://api.z.ai/v1
+      api_base: https://api.z.ai/api/paas/v4
 
   # ── EMBEDDINGS (Gemini primary, Mistral fallback) ──
   - model_name: "embed"
