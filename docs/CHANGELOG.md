@@ -7,6 +7,35 @@ Bazzite security/gaming system.
 
 ---
 
+## Phase 20 — Headless Security & Timer Sentinel (2026-04-03)
+
+### Deliverables
+- `scripts/security-briefing.py` — headless daily briefing; reads all
+  security data sources, calls timer_sentinel, writes structured markdown to
+  `~/security/briefings/briefing-YYYY-MM-DD.md`; no LLM required
+- `ai/agents/timer_sentinel.py` — validates all 16 systemd timers against
+  expected firing windows; returns structured JSON (healthy/warning/critical)
+- `systemd/security-briefing.service` + `.timer` — daily 08:45 with
+  `Persistent=true` (fires after overnight/gaming sessions)
+- MCP tool `agents.timer_health` registered; tool count 48 → 49
+- `tests/test_timer_sentinel.py` (9 tests) + `tests/test_security_briefing.py`
+  (7 tests)
+
+### Metrics
+- MCP tools: 48 → 49
+- Systemd timers: 15 → 16
+- Tests: ~1656 → 1672 passed, 191 skipped
+
+### Key design decisions
+- `Persistent=true` on timer: briefings fire after overnight gaming sessions
+- `RandomizedDelaySec=2min`: avoids thundering herd with 8:00/8:15/8:30 timers
+- 100% deterministic output — no LLM calls in briefing script
+- Graceful degradation: each data source individually wrapped; missing files
+  produce placeholder sections rather than aborting
+- `security-briefing.timer` included in sentinel's own registry (self-monitors)
+
+---
+
 ## Phase 19 — Input Validation MCP Safety Layer (2026-04-03)
 
 - **New `ai.security.inputvalidator` module:** Standalone input validation with stdlib-only dependencies (no external deps)
@@ -15,6 +44,7 @@ Bazzite security/gaming system.
 - **Secret redaction:** API keys, tokens, and credentials automatically redacted from logs before output
 - **Detection patterns:** SQL injection (`UNION SELECT`, `DROP TABLE`, `' OR 1=1`), command injection (`;`, `&&`, `||`, `$()`), path traversal (`../`)
 - **Tests:** 51 new tests covering SQL/command injection, path traversal, secret redaction, max length, config loading, high-risk tools
+- **Final test count:** 1656 passed (non-integration suite), 171 skipped
 - Tool count: 48 (unchanged)
 - Timer count: 15 (unchanged)
 

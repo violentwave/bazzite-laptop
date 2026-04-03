@@ -1,0 +1,11 @@
+[Unit]
+Description=Daily Security Briefing at 08:45
+Requires=security-briefing.service
+
+[Timer]
+OnCalendar=*-*-* 08:45:00
+Persistent=true
+RandomizedDelaySec=2min
+
+[Install]
+WantedBy=timers.target

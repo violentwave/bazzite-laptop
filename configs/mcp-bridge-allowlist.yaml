@@ -290,6 +290,13 @@ tools:
     function: "run_code_check"
     args: null
 
+  agents.timer_health:
+    description: "Validate all 16 systemd timers fired within expected windows. Returns per-timer status, stale list, and overall health (healthy/warning/critical)."
+    source: python
+    module: "ai.agents.timer_sentinel"
+    function: "check_timers"
+    args: null
+
   system.key_status:
     description: "API key presence check — which keys are set vs missing (never shows values)"
     source: json_file

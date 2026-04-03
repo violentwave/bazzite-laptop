@@ -16,7 +16,7 @@ DEFAULT_BIND = "127.0.0.1"
 DEFAULT_PORT = int(__import__("os").environ.get("MCP_BRIDGE_PORT", "8766"))
 
 # Number of tools in the allowlist (excludes health endpoint itself)
-_TOOL_COUNT = 48
+_TOOL_COUNT = 49
 
 
 def _assert_localhost(bind: str) -> None:
@@ -107,6 +107,7 @@ def create_app():
         "agents.performance_tuning": {"readOnlyHint": True, "idempotentHint": True},
         "agents.knowledge_storage": {"readOnlyHint": True, "idempotentHint": True},
         "agents.code_quality": {"readOnlyHint": True, "idempotentHint": True},
+        "agents.timer_health": {"readOnlyHint": True, "idempotentHint": True},
         # ── observability ────────────────────────────────────────────────────
         "system.token_report": {"readOnlyHint": True, "idempotentHint": True},
         "system.pipeline_status": {"readOnlyHint": True, "idempotentHint": True},

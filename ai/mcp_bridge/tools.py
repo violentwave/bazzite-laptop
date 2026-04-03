@@ -848,6 +848,12 @@ async def _execute_python_tool(tool_name: str, tool_def: dict, args: dict) -> st
             result = run_code_check()
             return json.dumps(result, indent=2)
 
+        elif tool_name == "agents.timer_health":
+            from ai.agents.timer_sentinel import check_timers  # noqa: PLC0415
+
+            result = check_timers()
+            return json.dumps(result, indent=2)
+
         elif tool_name == "security.sandbox_submit":
             from ai.threat_intel.sandbox import submit_file  # noqa: PLC0415
 

@@ -40,7 +40,7 @@
           ┌──────────────▼──┐ ┌─▼──────────────────┐
            │  MCP Bridge     │ │  LLM Proxy          │
            │  :8766 FastMCP  │ │  :8767 OpenAI-compat│
-           │  48 tools       │ │  6 cloud providers  │
+           │  49 tools       │ │  6 cloud providers  │
           └──┬──┬──┬──┬─────┘ └──┬──────────────────┘
              │  │  │  │          │
     ┌────────┘  │  │  └───┐     │  Health-weighted routing
@@ -74,11 +74,12 @@ Key constraints:
 
 ---
 
-## MCP Tools (48 + health)
+## MCP Tools (49 + health)
 
-Source: `configs/mcp-bridge-allowlist.yaml` (48 entries).
+Source: `configs/mcp-bridge-allowlist.yaml` (49 entries).
 
-> **Phase 12:** PingMiddleware (25s keepalive) active. All 48 tools carry MCP annotations (readOnly/destructive/openWorld hints).
+> **Phase 12:** PingMiddleware (25s keepalive) active. All 49 tools carry MCP annotations (readOnly/destructive/openWorld hints).
+> **Phase 20:** Added `agents.timer_health` — validates all 16 systemd timers.
 
 ### system.* (18 tools)
 
@@ -162,12 +163,13 @@ Source: `configs/mcp-bridge-allowlist.yaml` (48 entries).
 | `agents.performance_tuning` | python: `ai.agents.performance_tuning` | — | Temps, memory, disk, gaming profiles |
 | `agents.knowledge_storage` | python: `ai.agents.knowledge_storage` | — | Vector DB health + embedding provider status |
 | `agents.code_quality` | python: `ai.agents.code_quality_agent` | — | ruff + bandit + git status |
+| `agents.timer_health` | python: `ai.agents.timer_sentinel` | — | Validate all 16 systemd timers fired within expected windows. Returns per-timer status, stale list, and overall health (healthy/warning/critical). |
 
 ### Built-in
 
 | Tool | Description |
 |------|-------------|
-| `health` | Returns `{"status": "ok", "tools": 48}` |
+| `health` | Returns `{"status": "ok", "tools": 49}` |
 
 ---
 
@@ -201,12 +203,13 @@ Source: `configs/mcp-bridge-allowlist.yaml` (48 entries).
 
 ---
 
-## Systemd Timers (15)
+## Systemd Timers (16)
 
 | Timer | Schedule | Purpose |
 |-------|----------|---------|
 | `log-ingest.timer` | Sun 0:30 | Weekly log ingestion before archive |
 | `system-health.timer` | Daily 8:00 | Hardware health snapshot |
+| `security-briefing.timer` | Daily 8:45 | Headless daily security briefing → ~/security/briefings/ |
 | `clamav-quick.timer` | Daily 12:00 | ClamAV quick scan |
 | `clamav-deep.timer` | Fri 23:00 | ClamAV full scan |
 | `clamav-healthcheck.timer` | Wed 14:00 | ClamAV daemon check |
@@ -256,7 +259,7 @@ Source: `configs/mcp-bridge-allowlist.yaml` (48 entries).
 | `ai/rate_limiter.py` | Cross-script rate limiting with file locking |
 | `ai/key_manager.py` | API key presence checker |
 | `ai/mcp_bridge/server.py` | FastMCP server on :8766, tool registration |
-| `ai/mcp_bridge/tools.py` | Tool dispatch handlers for all 48 tools |
+| `ai/mcp_bridge/tools.py` | Tool dispatch handlers for all 49 tools |
 | `ai/threat_intel/` | VT, OTX, AbuseIPDB, GreyNoise, NVD, URLhaus, etc. (6 API modules) |
 | `ai/rag/` | LanceDB store, embedder, query engine, code query |
 | `ai/log_intel/` | Log ingestion, anomaly detection, semantic search |
@@ -264,7 +267,7 @@ Source: `configs/mcp-bridge-allowlist.yaml` (48 entries).
 | `ai/gaming/` | MangoHud analysis, ScopeBuddy profiles |
 | `ai/security/inputvalidator.py` | Pre-dispatch input validation + secret redaction |
 | `ai/system/` | release_watch, fedora_updates, pkg_intel |
-| `configs/mcp-bridge-allowlist.yaml` | 48 tool definitions + argument validation |
+| `configs/mcp-bridge-allowlist.yaml` | 49 tool definitions + argument validation |
 | `configs/safety-rules.json` | Input validation rules (max length, patterns, path allowlists) |
 | `configs/litellm-config.yaml` | LiteLLM provider routing config |
 | `configs/ai-rate-limits.json` | Per-provider rate limits |
@@ -368,7 +371,7 @@ Agents working on this project share context via `HANDOFF.md` in the project roo
 Newelle (Flatpak GTK4) is the AI chat/voice UI for this system.
 
 - **LLM**: `http://127.0.0.1:8767/v1/` (`model="fast"`)
-- **MCP**: `http://127.0.0.1:8766/mcp` (48 tools)
+- **MCP**: `http://127.0.0.1:8766/mcp` (49 tools)
 - **System prompt**: `docs/newelle-system-prompt.md`
 - **Skills**: `docs/newelle-skills/` — 5 bundles: security, system, dev, gaming, agents
 - **Morning briefing**: `docs/morning-briefing-prompt.md` (scheduled 9:30 AM)

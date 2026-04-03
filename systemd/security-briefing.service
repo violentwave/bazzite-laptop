@@ -1,0 +1,17 @@
+[Unit]
+Description=Bazzite AI — Daily Security Briefing
+After=network-online.target bazzite-ai-mcp.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=lch
+WorkingDirectory=/home/lch/projects/bazzite-laptop
+ExecStart=/home/lch/projects/bazzite-laptop/.venv/bin/python /home/lch/projects/bazzite-laptop/scripts/security-briefing.py
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=security-briefing
+Environment=PYTHONPATH=/home/lch/projects/bazzite-laptop
+
+[Install]
+WantedBy=default.target

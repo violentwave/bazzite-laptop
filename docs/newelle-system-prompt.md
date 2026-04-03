@@ -66,6 +66,10 @@ TOOL CALLING RULES
    data from a DIFFERENT tool.
 4. If a tool returns an error, report the error to the user in plain
    language. Do NOT retry the same tool.
+   **Input validation errors**: If you receive "Input validation failed",
+   the MCP bridge blocked the request for safety. Tell the user to
+   rephrase — avoid shell metacharacters (; & | $ `), SQL patterns
+   (UNION SELECT, DROP TABLE, ' OR 1=1), or paths outside allowed roots.
 5. If a tool returns empty results ([] or {}), tell the user "no data
    found" — do NOT retry or call alternate tools hoping for different results.
 6. Maximum tool calls per response: 7 (for morning briefing batches).
@@ -131,11 +135,12 @@ code.* (2):
   code.search (query) — ripgrep pattern search over Python source
   code.rag_query (question) — semantic search over indexed code
 
-agents.* (4):
+agents.* (5):
   agents.security_audit — full audit: scan + health + ingest + RAG summary
   agents.performance_tuning — temps, memory, disk I/O, gaming profile state
   agents.knowledge_storage — vector DB health, embedding provider status
   agents.code_quality — ruff + bandit + git status for ai/ and tests/
+  agents.timer_health — validate all 16 systemd timers fired within expected windows
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 THREAT INTEL CACHING — no rate-limit warnings needed
@@ -187,6 +192,9 @@ Morning briefing — batch all 7 in one call:
 
 Code review:
   agents.code_quality
+
+Timer health check:
+  agents.timer_health
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 MODEL SWITCHING

@@ -4,92 +4,93 @@ Auto-generated cross-tool handoff. Updated by save-handoff.sh
 
 ## Current State
 
-- **Last Tool:** claude-code
-- **Last Updated:** 2026-04-03T16:04:10Z
+- **Last Tool:** opencode
+- **Last Updated:** 2026-04-03T19:09:16Z
 - **Project:** bazzite-laptop
 - **Branch:** master
 
 ## Open Tasks
 
-- No open tasks
+
+- [ ] Phase 21: Code knowledge base expansion — start new chat thread
 
 ## Recent Sessions
 
-### 2026-04-03T16:04:10Z — claude-code
+### 2026-04-03T19:09:16Z — opencode
+[No summary provided]
+
+
+### 2026-04-03T19:09:14Z — opencode
+[No summary provided]
+
+
+### 2026-04-03T19:09:13Z — opencode
+Phase 20 complete: headless security briefing + timer sentinel. scripts/security-briefing.py (headless daily briefing, no LLM), ai/agents/timer_sentinel.py (validates all 16 timers), systemd/security-briefing.service+timer (daily 08:45, Persistent=true), MCP tool agents.timer_health registered (tools 48→49, timers 15→16), 1672 tests passing. Docs synced. Phase B manual steps done — timer live, scheduled 2026-04-04 08:46. Phase 20 fully closed.
+
+
+### 2026-04-03T18:13:40Z — opencode
+Phase 19 complete: input validation MCP safety layer. InputValidator pre-dispatch validation in MCP bridge, secret redaction, safety-rules.json, 51 new tests, ruff clean, docs updated.
+
+
+### 2026-04-03T17:19:45Z — claude-code
 [Auto-saved on session end]
 
 
-### 2026-04-03T16:04:09Z — claude-code
+### 2026-04-03T17:19:43Z — claude-code
 [Auto-saved on session end]
 
 
-### 2026-04-03T16:04:00Z — claude-code
+### 2026-04-03T17:19:43Z — claude-code
 [Auto-saved on session end]
 
 
-### 2026-04-03T16:03:05Z — claude-code
+### 2026-04-03T17:19:43Z — claude-code
 [Auto-saved on session end]
 
 
-### 2026-04-03T16:02:43Z — claude-code
+### 2026-04-03T17:16:26Z — claude-code
 [Auto-saved on session end]
 
 
-### 2026-04-03T16:01:39Z — claude-code
+### 2026-04-03T17:15:18Z — claude-code
 [Auto-saved on session end]
 
 
-### 2026-04-03T16:00:08Z — claude-code
+### 2026-04-03T17:14:47Z — claude-code
 [Auto-saved on session end]
 
 
-### 2026-04-03T15:59:55Z — claude-code
+### 2026-04-03T17:14:42Z — claude-code
 [Auto-saved on session end]
 
 
-### 2026-04-03T15:58:24Z — claude-code
+### 2026-04-03T17:11:39Z — claude-code
 [Auto-saved on session end]
 
 
-### 2026-04-03T15:58:10Z — claude-code
+### 2026-04-03T17:09:45Z — claude-code
 [Auto-saved on session end]
 
 
-### 2026-04-03T15:57:41Z — claude-code
+### 2026-04-03T17:09:45Z — claude-code
 [Auto-saved on session end]
 
 
-### 2026-04-03T15:57:40Z — claude-code
+### 2026-04-03T17:09:43Z — claude-code
 [Auto-saved on session end]
 
 
-### 2026-04-03T15:57:33Z — claude-code
+### 2026-04-03T17:09:43Z — claude-code
 [Auto-saved on session end]
 
 
-### 2026-04-03T15:57:30Z — claude-code
+### 2026-04-03T17:08:50Z — claude-code
 [Auto-saved on session end]
 
 
-### 2026-04-03T15:57:17Z — claude-code
+### 2026-04-03T17:08:24Z — claude-code
 [Auto-saved on session end]
 
 
-### 2026-04-03T15:56:20Z — claude-code
-[Auto-saved on session end]
-
-
-### 2026-04-03T15:56:03Z — claude-code
-[Auto-saved on session end]
-
-
-### 2026-04-03T15:56:02Z — claude-code
-[Auto-saved on session end]
-
-
-### 2026-04-03T15:55:58Z — claude-code
-[Auto-saved on session end]
-
-
-### 2026-04-03T15:55:55Z — claude-code
+### 2026-04-03T17:07:59Z — claude-code
 [Auto-saved on session end]

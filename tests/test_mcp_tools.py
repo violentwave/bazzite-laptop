@@ -17,7 +17,7 @@ def allowlist():
 
 class TestAllowlistIntegrity:
     def test_has_48_tools(self, allowlist):
-        assert len(allowlist["tools"]) == 48
+        assert len(allowlist["tools"]) == 49
 
     def test_all_expected_tools_present(self, allowlist):
         expected = {
@@ -69,6 +69,7 @@ class TestAllowlistIntegrity:
             "agents.performance_tuning",
             "agents.knowledge_storage",
             "agents.code_quality",
+            "agents.timer_health",
         }
         assert set(allowlist["tools"].keys()) == expected
 
