@@ -109,7 +109,11 @@ def prune_table(db, name: str, retention_days: int, *, dry_run: bool) -> dict:
         "skip_reason": "",
     }
 
-    if name not in db.table_names():
+    tables_response = db.list_tables()
+    existing_tables = (
+        tables_response.tables if hasattr(tables_response, "tables") else list(tables_response)
+    )
+    if name not in existing_tables:
         result["skipped"] = True
         result["skip_reason"] = "table not found"
         logger.warning("Table '%s' not found — skipping", name)
@@ -164,7 +168,11 @@ def compact_table(db, name: str, *, dry_run: bool) -> dict:
         "skip_reason": "",
     }
 
-    if name not in db.table_names():
+    tables_response = db.list_tables()
+    existing_tables = (
+        tables_response.tables if hasattr(tables_response, "tables") else list(tables_response)
+    )
+    if name not in existing_tables:
         result["skipped"] = True
         result["skip_reason"] = "table not found"
         logger.warning("Table '%s' not found — skipping", name)

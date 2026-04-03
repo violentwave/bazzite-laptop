@@ -5,91 +5,84 @@ Auto-generated cross-tool handoff. Updated by save-handoff.sh
 ## Current State
 
 - **Last Tool:** claude-code
-- **Last Updated:** 2026-04-03T07:16:58Z
+- **Last Updated:** 2026-04-03T09:58:38Z
 - **Project:** bazzite-laptop
 - **Branch:** master
 
 ## Open Tasks
 
-- No open tasks
+- [x] Train RuFlo agents (hooks intelligence trajectory / pattern-store for this session's work)
+- [ ] Address 2 pre-existing test warnings: utcnow() deprecation in test_phase14_freshness.py, unawaited coroutine in test_router_async.py
 
 ## Recent Sessions
 
-### 2026-04-03T07:16:58Z — claude-code
+### 2026-04-03T09:58:38Z — claude-code
 [Auto-saved on session end]
 
 
-### 2026-04-03T07:16:23Z — claude-code
+### 2026-04-03T09:54:20Z — claude-code
 [Auto-saved on session end]
 
 
-### 2026-04-03T07:15:46Z — claude-code
+### 2026-04-03T09:52:05Z — claude-code
 [Auto-saved on session end]
 
 
-### 2026-04-03T07:08:12Z — claude-code
+### 2026-04-03T09:48:47Z — opencode
+[No summary provided]
+
+
+### 2026-04-03T09:48:47Z — opencode
+[No summary provided]
+
+
+### 2026-04-03T09:48:47Z — opencode
+[No summary provided]
+
+
+### 2026-04-03T09:48:47Z — opencode
+[No summary provided]
+
+
+### 2026-04-03T09:48:47Z — opencode
+[No summary provided]
+
+
+### 2026-04-03T09:48:47Z — opencode
+[No summary provided]
+
+
+### 2026-04-03T09:48:47Z — opencode
+[No summary provided]
+
+
+### 2026-04-03T09:48:43Z — opencode
+Integrated learning hooks into all 4 project agents (security_audit, performance_tuning, knowledge_storage, code_quality) to record task outcomes for SONA learning. Added ai/hooks.py module and enhanced .claude/helpers/session.js to auto-save HANDOFF.md on session end with git status and metrics. RuFlo hooks already handle post-task training, session consolidation, and intelligence feedback loops.
+
+
+### 2026-04-03T08:51:21Z — opencode
+[No summary provided]
+
+
+### 2026-04-03T08:51:12Z — opencode
+Phase 17 completed: implemented log lifecycle pipeline (ingest → archive → prune) with systemd timer chain, LanceDB retention pruning script, R2 archive state tracking, and 12 tests. Fixed LanceDB API bug where list_tables() returns response object not list.
+
+
+### 2026-04-03T08:33:05Z — claude-code
 [Auto-saved on session end]
 
 
-### 2026-04-03T07:08:11Z — claude-code
+### 2026-04-03T07:50:09Z — claude-code
 [Auto-saved on session end]
 
 
-### 2026-04-03T07:08:08Z — claude-code
+### 2026-04-03T07:50:09Z — claude-code
 [Auto-saved on session end]
 
 
-### 2026-04-03T07:07:35Z — claude-code
+### 2026-04-03T07:48:06Z — claude-code
 [Auto-saved on session end]
 
 
-### 2026-04-03T07:07:32Z — claude-code
-[Auto-saved on session end]
-
-
-### 2026-04-03T07:07:21Z — claude-code
-[Auto-saved on session end]
-
-
-### 2026-04-03T07:06:01Z — claude-code
-[Auto-saved on session end]
-
-
-### 2026-04-03T07:05:12Z — claude-code
-[Auto-saved on session end]
-
-
-### 2026-04-03T07:04:29Z — claude-code
-Completed Phase 16 performance optimization (CC Prompts 65-69): HTTP session pooling, disk caching for threat intel/RAG queries, parallel RAG searches via ThreadPoolExecutor, embedding LRU cache, Qt inotify watcher, and cost stats auto-archive — all pushed in 3 commits (3933efd, 17efa0b, 8e6532b). Fixed 12 failing tests with API drift corrections and test isolation fixes, added 13 new test files bringing totals to 1458 passed/81 skipped/0 failed with ruff clean. A code review caught and fixed a real bug where reset_cost_stats() ran unconditionally even when the archive OSError branch fired. Phase 17+ requires a fresh research pass; candidates: structured logging, OpenTelemetry traces, Newelle prompt v3 (47-tool count), test coverage gaps.
-
-
-### 2026-04-03T07:04:23Z — claude-code
-[Auto-saved on session end]
-
-
-### 2026-04-03T07:04:22Z — claude-code
-[Auto-saved on session end]
-
-
-### 2026-04-03T07:04:18Z — claude-code
-[Auto-saved on session end]
-
-
-### 2026-04-03T07:04:11Z — claude-code
-Completed Phase 16 performance optimization (CC Prompts 65-69): HTTP session pooling, disk caching for threat intel/RAG queries, parallel RAG searches via ThreadPoolExecutor, embedding LRU cache, Qt inotify watcher, and cost stats auto-archive — all pushed in 3 commits (3933efd, 17efa0b, 8e6532b). Fixed 12 failing tests with API drift corrections and test isolation fixes, added 13 new test files bringing totals to 1458 passed/81 skipped/0 failed with ruff clean. A code review caught and fixed a real bug where reset_cost_stats() ran unconditionally even when the archive OSError branch fired.
-
-
-### 2026-04-03T07:04:10Z — claude-code
-[Auto-saved on session end]
-
-
-### 2026-04-03T07:04:09Z — claude-code
-[Auto-saved on session end]
-
-
-### 2026-04-03T07:04:07Z — claude-code
-Completed Phase 16 performance optimization (CC Prompts 65-69): HTTP session pooling, disk caching for threat intel/RAG queries, parallel RAG searches via ThreadPoolExecutor, embedding LRU cache, Qt inotify watcher, and cost stats auto-archive — all pushed in 3 commits (3933efd, 17efa0b, 8e6532b). Fixed 12 failing tests with API drift corrections and test isolation fixes, added 13 new test files bringing totals to 1458 passed/81 skipped/0 failed with ruff clean. A code review caught and fixed a real bug where reset_cost_stats() ran unconditionally even when the archive OSError branch fired.
-
-
-### 2026-04-03T07:04:04Z — claude-code
+### 2026-04-03T07:41:11Z — claude-code
 [Auto-saved on session end]

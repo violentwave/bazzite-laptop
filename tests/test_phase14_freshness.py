@@ -144,14 +144,14 @@ class TestTokenReportTool:
     async def test_token_report_stale_data_includes_freshness_warning(self, tmp_path):
         """system.token_report includes freshness warning when data is old."""
         import time
-        from datetime import datetime, timedelta
+        from datetime import UTC, datetime, timedelta
 
         from ai.mcp_bridge import tools
 
         time.sleep(1.1)
 
-        # Create data that's 3 hours old - use UTC timezone properly
-        old_time = (datetime.utcnow() - timedelta(hours=3)).isoformat() + "Z"
+        # Create data that's 3 hours old
+        old_time = (datetime.now(UTC) - timedelta(hours=3)).isoformat()
         status = {
             "generated_at": old_time,
             "usage": {
