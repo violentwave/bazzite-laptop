@@ -7,6 +7,15 @@ Bazzite security/gaming system.
 
 ---
 
+## Phase 18 — Storage Consolidation & Retention (2026-04-03)
+
+- **R2 lifecycle rules:** One-time `scripts/r2-set-lifecycle.py` sets 180-day auto-expiration on R2 bucket — no client-side long-term deletion needed
+- **Journald tuning:** `configs/journald-bazzite.conf` caps journal at 256M / 20 files / 7 days (manual deploy to `/etc/systemd/journald.conf.d/`)
+- **Cache cleanup:** `scripts/lancedb-prune.py` now also cleans stale threat/RAG/IP/IOC cache files and keeps only 5 most recent cost archives
+- **system.pipeline_status MCP tool:** Shows ingest/archive/retention status, pending files, table row counts, staleness warnings (tool count: 47 → 48)
+
+---
+
 ## Phase 17 — Log Lifecycle Pipeline (2026-04-03)
 
 - **LanceDB retention pruning:** New `scripts/lancedb-prune.py` — 90-day retention for log tables (`health_records`, `scan_records`, `security_logs`, `sig_updates`), 180-day for `threat_intel`, compact + cleanup of `.tmp` dirs, `--dry-run` and `--retention-days` flags
@@ -492,15 +501,15 @@ Cerebras (health-weighted, hot-swappable via `configs/litellm-config.yaml`)
 
 **Python venv:** `.venv/` managed by `uv`; never global pip installs
 
-## Final Metrics (Phase 15 complete)
+## Final Metrics (Phase 18 complete)
 
 | Metric | Value |
 |--------|-------|
-| MCP tools | **47** (+ 1 built-in health endpoint) |
-| Systemd timers | **14** |
+| MCP tools | **48** (+ 1 built-in health endpoint) |
+| Systemd timers | **15** |
 | Cloud providers | **6** (Gemini, Groq, Mistral, OpenRouter, z.ai, Cerebras) |
 | Threat intel APIs | **16** |
-| Unit tests | **~1458** (1458 passed, 81 skipped) |
+| Unit tests | **~1438** (1438 passed, 80 skipped) |
 | AI layer LOC | **~10,000+** |
 | Python packages | **125** in .venv/ (via requirements-ai.txt) |
 | Embedding provider | Gemini Embedding 001 (cloud, free 10M TPM) |

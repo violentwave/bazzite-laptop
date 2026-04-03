@@ -16,29 +16,59 @@ def allowlist():
 
 
 class TestAllowlistIntegrity:
-    def test_has_44_tools(self, allowlist):
-        assert len(allowlist["tools"]) == 47
+    def test_has_48_tools(self, allowlist):
+        assert len(allowlist["tools"]) == 48
 
     def test_all_expected_tools_present(self, allowlist):
         expected = {
-            "system.disk_usage", "system.cpu_temps", "system.gpu_status",
-            "system.memory_usage", "system.uptime", "system.service_status",
-            "system.llm_models", "system.mcp_manifest", "system.llm_status",
-            "system.key_status", "system.release_watch", "system.fedora_updates",
-            "system.pkg_intel", "system.gpu_perf", "system.gpu_health",
-            "system.cache_stats", "system.token_report",
-            "security.last_scan", "security.health_snapshot", "security.status",
-            "security.threat_lookup", "security.ip_lookup", "security.url_lookup",
-            "knowledge.rag_query", "knowledge.rag_qa", "knowledge.ingest_docs",
-            "gaming.profiles", "gaming.mangohud_preset",
-            "logs.health_trend", "logs.scan_history", "logs.anomalies",
-            "logs.search", "logs.stats",
-            "security.cve_check", "security.sandbox_submit", "security.threat_summary",
-            "security.run_scan", "security.run_health", "security.run_ingest",
-            "security.correlate", "security.recommend_action",
-            "code.search", "code.rag_query",
-            "agents.security_audit", "agents.performance_tuning",
-            "agents.knowledge_storage", "agents.code_quality",
+            "system.disk_usage",
+            "system.cpu_temps",
+            "system.gpu_status",
+            "system.memory_usage",
+            "system.uptime",
+            "system.service_status",
+            "system.llm_models",
+            "system.mcp_manifest",
+            "system.llm_status",
+            "system.key_status",
+            "system.release_watch",
+            "system.fedora_updates",
+            "system.pkg_intel",
+            "system.gpu_perf",
+            "system.gpu_health",
+            "system.cache_stats",
+            "system.token_report",
+            "system.pipeline_status",
+            "security.last_scan",
+            "security.health_snapshot",
+            "security.status",
+            "security.threat_lookup",
+            "security.ip_lookup",
+            "security.url_lookup",
+            "knowledge.rag_query",
+            "knowledge.rag_qa",
+            "knowledge.ingest_docs",
+            "gaming.profiles",
+            "gaming.mangohud_preset",
+            "logs.health_trend",
+            "logs.scan_history",
+            "logs.anomalies",
+            "logs.search",
+            "logs.stats",
+            "security.cve_check",
+            "security.sandbox_submit",
+            "security.threat_summary",
+            "security.run_scan",
+            "security.run_health",
+            "security.run_ingest",
+            "security.correlate",
+            "security.recommend_action",
+            "code.search",
+            "code.rag_query",
+            "agents.security_audit",
+            "agents.performance_tuning",
+            "agents.knowledge_storage",
+            "agents.code_quality",
         }
         assert set(allowlist["tools"].keys()) == expected
 
@@ -48,7 +78,10 @@ class TestSubprocessTools:
     @patch("ai.mcp_bridge.tools.asyncio.create_subprocess_exec")
     async def test_disk_usage(self, mock_exec):
         proc = AsyncMock()
-        proc.communicate.return_value = (b"Filesystem  Size  Used  Avail  Use%\n/dev/sda1  100G  42G  58G  42%", b"")  # noqa: E501
+        proc.communicate.return_value = (
+            b"Filesystem  Size  Used  Avail  Use%\n/dev/sda1  100G  42G  58G  42%",
+            b"",
+        )  # noqa: E501
         proc.returncode = 0
         mock_exec.return_value = proc
 
@@ -213,6 +246,7 @@ class TestStatusTool:
 class TestRunHealth:
     def setup_method(self):
         import ai.mcp_bridge.tools as t
+
         t._global_call_times.clear()
         t._per_tool_call_times.clear()
 
@@ -237,7 +271,8 @@ class TestRunHealth:
     async def test_run_health_service_not_found(self, mock_exec):
         proc = AsyncMock()
         proc.communicate.return_value = (
-            b"", b"Failed to start system-health.service: Unit not found."
+            b"",
+            b"Failed to start system-health.service: Unit not found.",
         )
         proc.returncode = 5
         mock_exec.return_value = proc
@@ -265,22 +300,27 @@ class TestRunHealth:
         # Make it appear 10 minutes old
         old_time = time.time() - 600
         import os
+
         os.utime(lock_file, (old_time, old_time))
 
         with patch("ai.mcp_bridge.tools.Path") as mock_path_cls:
             # Route only the lock path through our tmp_path
             real_path = Path
+
             def _path_factory(arg):
                 if arg == "/var/log/system-health/.health-snapshot.lock":
                     return lock_file
                 return real_path(arg)
+
             mock_path_cls.side_effect = _path_factory
             # execute_tool imports Path at the top, so patch at usage site
             from ai.mcp_bridge import tools as _tools
+
             orig_path = _tools.Path
             _tools.Path = _path_factory  # type: ignore[assignment]
             try:
                 from ai.mcp_bridge.tools import execute_tool
+
                 result = await execute_tool("security.run_health", {})
             finally:
                 _tools.Path = orig_path
@@ -306,17 +346,22 @@ class TestRunHealth:
         # 60 seconds old — still fresh
         recent = time.time() - 60
         import os
+
         os.utime(lock_file, (recent, recent))
 
         from ai.mcp_bridge import tools as _tools
+
         real_path = _tools.Path
+
         def _path_factory(arg):
             if arg == "/var/log/system-health/.health-snapshot.lock":
                 return lock_file
             return real_path(arg)
+
         _tools.Path = _path_factory  # type: ignore[assignment]
         try:
             from ai.mcp_bridge.tools import execute_tool
+
             result = await execute_tool("security.run_health", {})
         finally:
             _tools.Path = real_path
@@ -338,6 +383,7 @@ class TestConcurrencySemaphore:
 class TestMcpManifest:
     def setup_method(self):
         import ai.mcp_bridge.tools as t
+
         t._global_call_times.clear()
         t._per_tool_call_times.clear()
 
@@ -352,13 +398,16 @@ class TestMcpManifest:
         status_file = tmp_path / "llm-status.json"
         status_file.write_text(json.dumps(status_data))
 
-        with patch("ai.mcp_bridge.tools._load_allowlist", return_value={
-            "system.llm_status": {
-                "source": "json_file",
-                "path": str(status_file),
-                "args": None,
-            }
-        }):
+        with patch(
+            "ai.mcp_bridge.tools._load_allowlist",
+            return_value={
+                "system.llm_status": {
+                    "source": "json_file",
+                    "path": str(status_file),
+                    "args": None,
+                }
+            },
+        ):
             from ai.mcp_bridge.tools import execute_tool
 
             result = await execute_tool("system.llm_status", {})

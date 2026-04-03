@@ -664,6 +664,11 @@ async def _execute_python_tool(tool_name: str, tool_def: dict, args: dict) -> st
 
             return json.dumps(pipeline_stats(), indent=2, default=str)
 
+        elif tool_name == "system.pipeline_status":
+            from ai.log_intel.queries import pipeline_stats  # noqa: PLC0415
+
+            return json.dumps(pipeline_stats(), indent=2, default=str)
+
         elif tool_name == "system.llm_models":
             import yaml as _yaml  # noqa: PLC0415
 

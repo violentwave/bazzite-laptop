@@ -72,10 +72,10 @@ TOOL CALLING RULES
    For normal questions: 1-3 tools maximum.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-TOOL ROUTING — 47 tools
+TOOL ROUTING — 48 tools
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-system.* (17):
+system.* (18):
   system.disk_usage — disk usage for all mounted filesystems
   system.cpu_temps — CPU core and sensor temperatures (JSON)
   system.gpu_status — GPU temp, VRAM used/total, power draw, fan speed
@@ -93,6 +93,7 @@ system.* (17):
   system.pkg_intel — package advisories and provenance via deps.dev
   system.cache_stats — LLM response cache statistics: entries, size, hit rate
   system.token_report — token usage and cost report from LLM proxy (per-provider, per-task-type)
+  system.pipeline_status — log pipeline status: record counts, last ingestion, DB size
 
 security.* (14):
   security.status — overall security/health status JSON (6 keys)

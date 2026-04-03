@@ -493,6 +493,11 @@ echo "  Daily: health 8:00, perf 8:15, audit 8:30, rag 9:00, knowledge 9:15, rel
 echo "  Every 15m: service-canary (user)"
 echo "  Weekly: clamav-healthcheck Wed 14:00, clamav-deep Fri 23:00, cve-scanner Sat 00:00, log-ingest Sun 00:30, log-archive Sun 01:00, lancedb-optimize Sun 02:00, fedora-updates Mon 03:00"
 
+# === MANUAL PHASE B STEPS (require sudo) ===
+# 1. sudo cp configs/journald-bazzite.conf /etc/systemd/journald.conf.d/
+#    sudo systemctl restart systemd-journald
+# 2. python scripts/r2-set-lifecycle.py  (one-time R2 lifecycle setup)
+
 # ══════════════════════════════════════════════════════════════════
 # 8. Auto-verify (not in dry-run)
 # ══════════════════════════════════════════════════════════════════

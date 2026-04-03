@@ -25,7 +25,7 @@ AI chat/voice assistant) as the primary interface.
     ┌─────▼──────┐        ┌──────▼──────────────┐
     │ LLM Proxy  │        │  MCP Bridge         │
     │ :8767      │        │  :8766 (FastMCP)    │
-     │ Starlette  │        │  47 tools           │
+      │ Starlette  │        │  48 tools           │
     └─────┬──────┘        └──────┬──────────────┘
           │                      │
     ┌─────▼──────┐        ┌──────▼──────────────┐
@@ -154,6 +154,7 @@ bash scripts/start-security-tray-qt.sh
 | Say this                          | Newelle calls              |
 |-----------------------------------|----------------------------|
 | "Check my health"                 | 5 system tools → summary   |
+| "What's my pipeline status"      | `system.pipeline_status`  |
 | "Scan for threats"                | `security.run_scan`        |
 | "Look up this hash: abc123..."    | `security.threat_lookup`   |
 | "Is this IP malicious: 1.2.3.4"  | `security.ip_lookup`       |
@@ -168,12 +169,12 @@ bash scripts/start-security-tray-qt.sh
 
 ---
 
-## 4. MCP Tools Reference (47 tools)
+## 4. MCP Tools Reference (48 tools)
 
 All tools are accessible through Newelle via the MCP bridge. They are read-only
 (no system mutations). Output is truncated to 4 KB and paths are redacted.
 
-### system.* (17 tools)
+### system.* (18 tools)
 
 | Tool                    | Args   | What it returns                                    |
 |-------------------------|--------|----------------------------------------------------|
@@ -184,7 +185,7 @@ All tools are accessible through Newelle via the MCP bridge. They are read-only
 | `system.uptime`         | —      | System uptime and load average                     |
 | `system.service_status` | —      | Status of clamav-freshclam, system-health.timer, mcp-bridge, llm-proxy |
 | `system.llm_models`     | —      | Available modes (fast/reason/batch/code/embed), provider chains, proxy URL |
-| `system.mcp_manifest`   | —      | All 47 tools with descriptions and args (8 KB limit) |
+| `system.mcp_manifest`   | —      | All 48 tools with descriptions and args (8 KB limit) |
 | `system.llm_status`     | —      | Provider health scores, token usage, active models |
 | `system.key_status`     | —      | API key presence: "set" or "missing" per key (never values) |
 | `system.release_watch`  | —      | Upstream dependency release updates (GitHub Releases, GHSA) |
@@ -194,6 +195,7 @@ All tools are accessible through Newelle via the MCP bridge. They are read-only
 | `system.gpu_health`     | —      | GPU health diagnostic with throttle bit interpretation and thermal warning |
 | `system.cache_stats`    | —      | LLM cache statistics: entries, size, hit rate |
 | `system.token_report`   | —      | Token usage and cost report from LLM proxy |
+| `system.pipeline_status`| —      | Log pipeline ingest/archive/retention status, pending files, table row counts |
 
 ### security.* (15 tools)
 
@@ -971,7 +973,7 @@ sudo systemctl enable --now system-health.timer
 
 ```bash
 source .venv/bin/activate
-python3 -m pytest tests/ -v              # ~1458 tests
+python3 -m pytest tests/ -v              # ~1438 tests
 python3 -m pytest tests/ -v -k "mcp"     # MCP-related tests only
 python3 -m pytest tests/ -v -k "router"  # Router tests only
 ruff check ai/ tests/                     # Lint

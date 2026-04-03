@@ -17,6 +17,8 @@ import sys
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
+HOME = Path.home()
+
 # Project root on path so ai.config resolves correctly.
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
@@ -47,6 +49,15 @@ COMPACT_ONLY_TABLES = ["docs", "code_files"]
 
 
 # ── Helpers ────────────────────────────────────────────────────────────────────
+
+
+def _format_bytes(num_bytes: int) -> str:
+    """Format bytes as human-readable string (KB, MB, GB)."""
+    for unit in ("B", "KB", "MB", "GB"):
+        if abs(num_bytes) < 1024:
+            return f"{num_bytes:.1f}{unit}"
+        num_bytes /= 1024
+    return f"{num_bytes:.1f}TB"
 
 
 def _cutoff_iso(days: int) -> str:
@@ -210,6 +221,133 @@ def clean_tmp_dirs(db_path: Path, *, dry_run: bool) -> int:
     return removed
 
 
+def clean_llm_cache(cache_dir: Path, *, dry_run: bool) -> int:
+    """Remove expired LLM cache entries. Returns count of removed entries."""
+    removed = 0
+
+    if not cache_dir.exists():
+        return 0
+
+    import json
+    import time
+
+    now = time.time()
+    for shard_dir in cache_dir.iterdir():
+        if not shard_dir.is_dir():
+            continue
+        for json_file in shard_dir.glob("*.json"):
+            try:
+                data = json.loads(json_file.read_text())
+                if now > data.get("expires_at", 0):
+                    if dry_run:
+                        logger.info("[DRY-RUN] Would remove expired cache: %s", json_file)
+                    else:
+                        logger.info("Removing expired cache: %s", json_file)
+                        json_file.unlink()
+                    removed += 1
+            except (OSError, json.JSONDecodeError):
+                pass
+
+    return removed
+
+
+def clean_cost_archives(archive_dir: Path, age_days: int = 90, *, dry_run: bool) -> int:
+    """Remove old cost archive files older than age_days. Returns count removed."""
+    removed = 0
+
+    if not archive_dir.exists():
+        return 0
+
+    import time
+
+    cutoff = time.time() - (age_days * 24 * 3600)
+    for json_file in archive_dir.glob("cost-archive-*.json"):
+        try:
+            if json_file.stat().st_mtime < cutoff:
+                if dry_run:
+                    logger.info("[DRY-RUN] Would remove old cost archive: %s", json_file)
+                else:
+                    logger.info("Removing old cost archive: %s", json_file)
+                    json_file.unlink()
+                removed += 1
+        except OSError:
+            pass
+
+    return removed
+
+
+# Cache TTLs in seconds
+_CACHE_TTL_SECONDS: dict[str, int] = {
+    "threat-cache": 7 * 24 * 3600,  # 7 days
+    "rag-cache": 1 * 24 * 3600,  # 1 day
+    "ip-cache": 1 * 24 * 3600,  # 1 day
+    "ioc-cache": 7 * 24 * 3600,  # 7 days
+}
+
+
+def cleanup_caches(base_dir: Path, *, dry_run: bool) -> tuple[int, int]:
+    """Clean stale cache files by TTL and old cost archives.
+
+    Returns (total_files_cleaned, total_bytes_freed).
+    """
+    import time
+
+    total_removed = 0
+    total_bytes = 0
+    now = time.time()
+
+    # Clean stale cache files by TTL
+    for cache_name, ttl_seconds in _CACHE_TTL_SECONDS.items():
+        cache_dir = base_dir / cache_name
+        if not cache_dir.exists():
+            logger.debug("Cache dir not found, skipping: %s", cache_dir)
+            continue
+
+        cutoff = now - ttl_seconds
+        removed_from_dir = 0
+
+        for json_file in cache_dir.rglob("*.json"):
+            try:
+                if json_file.stat().st_mtime < cutoff:
+                    size = json_file.stat().st_size
+                    if dry_run:
+                        logger.info("[DRY-RUN] Would remove stale cache: %s", json_file)
+                    else:
+                        logger.info("Removing stale cache: %s", json_file)
+                        json_file.unlink()
+                    total_bytes += size
+                    removed_from_dir += 1
+            except OSError:
+                pass
+
+        if removed_from_dir > 0:
+            logger.info("Cleaned %d stale files from %s", removed_from_dir, cache_name)
+        total_removed += removed_from_dir
+
+    # Clean old cost archives: keep only 5 most recent
+    cost_archives = sorted(
+        base_dir.glob("cost-archive-*.json"),
+        key=lambda p: p.stat().st_mtime,
+        reverse=True,
+    )
+    archives_to_delete = cost_archives[5:]  # Keep 5, delete rest
+
+    for archive_file in archives_to_delete:
+        try:
+            size = archive_file.stat().st_size
+            if dry_run:
+                logger.info("[DRY-RUN] Would remove old cost archive: %s", archive_file)
+            else:
+                logger.info("Removing old cost archive: %s", archive_file)
+                archive_file.unlink()
+            total_bytes += size
+            total_removed += 1
+        except OSError:
+            pass
+
+    return total_removed, total_bytes
+
+
 # ── Entry point ────────────────────────────────────────────────────────────────
 
 
@@ -296,6 +434,40 @@ def main() -> int:
         logger.info("Temp/empty dirs %s: %d", verb, removed_count)
     except Exception:
         logger.exception("Error during temp directory cleanup")
+        had_error = True
+
+    # LLM cache cleanup
+    llm_cache_dir = HOME / "security" / "llm-cache"
+    try:
+        cache_removed = clean_llm_cache(llm_cache_dir, dry_run=args.dry_run)
+        verb = "would remove" if args.dry_run else "removed"
+        logger.info("LLM cache entries %s: %d", verb, cache_removed)
+    except Exception:
+        logger.exception("Error during LLM cache cleanup")
+        had_error = True
+
+    # Cost archive cleanup
+    cost_archive_dir = HOME / "security" / "cost-archives"
+    if cost_archive_dir.exists():
+        try:
+            cost_removed = clean_cost_archives(cost_archive_dir, age_days=90, dry_run=args.dry_run)
+            verb = "would remove" if args.dry_run else "removed"
+            logger.info("Cost archives %s: %d", verb, cost_removed)
+        except Exception:
+            logger.exception("Error during cost archive cleanup")
+            had_error = True
+
+    # Disk-level cache cleanup (threat-cache, rag-cache, ip-cache, ioc-cache)
+    security_dir = HOME / "security"
+    try:
+        cache_files_cleaned, cache_bytes_freed = cleanup_caches(security_dir, dry_run=args.dry_run)
+        logger.info(
+            "Disk cache cleanup: %d files, ~%s bytes freed",
+            cache_files_cleaned,
+            _format_bytes(cache_bytes_freed),
+        )
+    except Exception:
+        logger.exception("Error during disk cache cleanup")
         had_error = True
 
     # Summary table

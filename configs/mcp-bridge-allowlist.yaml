@@ -340,6 +340,13 @@ tools:
     module: ai.mcp_bridge.tools
     args: null
 
+  system.pipeline_status:
+    description: "Log pipeline status: ingest/archive/retention health, pending files, table row counts"
+    source: python
+    module: ai.system.pipeline_status
+    function: get_pipeline_status
+    args: null
+
   security.correlate:
     description: "Cross-reference an IOC across all threat intel sources. Pass ioc (the value) and ioc_type (hash|ip|url|cve)"
     source: python

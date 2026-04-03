@@ -38,9 +38,9 @@
               MCP tools  │      │  LLM calls
                          │      │
           ┌──────────────▼──┐ ┌─▼──────────────────┐
-          │  MCP Bridge     │ │  LLM Proxy          │
-          │  :8766 FastMCP  │ │  :8767 OpenAI-compat│
-          │  47 tools       │ │  6 cloud providers  │
+           │  MCP Bridge     │ │  LLM Proxy          │
+           │  :8766 FastMCP  │ │  :8767 OpenAI-compat│
+           │  48 tools       │ │  6 cloud providers  │
           └──┬──┬──┬──┬─────┘ └──┬──────────────────┘
              │  │  │  │          │
     ┌────────┘  │  │  └───┐     │  Health-weighted routing
@@ -74,13 +74,13 @@ Key constraints:
 
 ---
 
-## MCP Tools (47 + health)
+## MCP Tools (48 + health)
 
-Source: `configs/mcp-bridge-allowlist.yaml` (47 entries).
+Source: `configs/mcp-bridge-allowlist.yaml` (48 entries).
 
-> **Phase 12:** PingMiddleware (25s keepalive) active. All 47 tools carry MCP annotations (readOnly/destructive/openWorld hints).
+> **Phase 12:** PingMiddleware (25s keepalive) active. All 48 tools carry MCP annotations (readOnly/destructive/openWorld hints).
 
-### system.* (17 tools)
+### system.* (18 tools)
 
 | Tool | Source | Args | Description |
 |------|--------|------|-------------|
@@ -101,6 +101,7 @@ Source: `configs/mcp-bridge-allowlist.yaml` (47 entries).
 | `system.pkg_intel` | python: `ai.system.pkg_intel` | — | Package advisories via deps.dev |
 | `system.cache_stats` | python: `ai.cache` | — | LLM cache statistics: entries, size, hit rate |
 | `system.token_report` | python: `ai.mcp_bridge.tools` | — | Token usage and cost report from LLM proxy |
+| `system.pipeline_status` | python: `ai.system.pipeline_status` | — | Log pipeline ingest/archive/retention status, pending files, table row counts |
 
 ### security.* (15 tools)
 
@@ -166,7 +167,7 @@ Source: `configs/mcp-bridge-allowlist.yaml` (47 entries).
 
 | Tool | Description |
 |------|-------------|
-| `health` | Returns `{"status": "ok", "tools": 47}` |
+| `health` | Returns `{"status": "ok", "tools": 48}` |
 
 ---
 
@@ -255,7 +256,7 @@ Source: `configs/mcp-bridge-allowlist.yaml` (47 entries).
 | `ai/rate_limiter.py` | Cross-script rate limiting with file locking |
 | `ai/key_manager.py` | API key presence checker |
 | `ai/mcp_bridge/server.py` | FastMCP server on :8766, tool registration |
-| `ai/mcp_bridge/tools.py` | Tool dispatch handlers for all 47 tools |
+| `ai/mcp_bridge/tools.py` | Tool dispatch handlers for all 48 tools |
 | `ai/threat_intel/` | VT, OTX, AbuseIPDB, GreyNoise, NVD, URLhaus, etc. (6 API modules) |
 | `ai/rag/` | LanceDB store, embedder, query engine, code query |
 | `ai/log_intel/` | Log ingestion, anomaly detection, semantic search |
@@ -267,9 +268,10 @@ Source: `configs/mcp-bridge-allowlist.yaml` (47 entries).
 | `configs/ai-rate-limits.json` | Per-provider rate limits |
 | `configs/keys.env.enc` | sops-encrypted API keys (in git, safe) |
 | `scripts/` | 40 shell/Python scripts (deploy, scan, backup, etc.) |
-| `scripts/lancedb-prune.py` | LanceDB retention pruning (90d logs, 180d threats) |
+| `scripts/lancedb-prune.py` | LanceDB retention pruning (90d logs, 180d threats) + cache cleanup |
+| `scripts/r2-set-lifecycle.py` | One-time R2 bucket lifecycle rule setup (180d auto-expiration) |
 | `systemd/` | 15 timers + associated services |
-| `tests/` | ~1458 pytest tests |
+| `tests/` | ~1438 pytest tests |
 | `tray/` | PySide6 system tray app |
 
 ### Runtime paths (not in repo)
@@ -364,7 +366,7 @@ Agents working on this project share context via `HANDOFF.md` in the project roo
 Newelle (Flatpak GTK4) is the AI chat/voice UI for this system.
 
 - **LLM**: `http://127.0.0.1:8767/v1/` (`model="fast"`)
-- **MCP**: `http://127.0.0.1:8766/mcp` (47 tools)
+- **MCP**: `http://127.0.0.1:8766/mcp` (48 tools)
 - **System prompt**: `docs/newelle-system-prompt.md`
 - **Skills**: `docs/newelle-skills/` — 5 bundles: security, system, dev, gaming, agents
 - **Morning briefing**: `docs/morning-briefing-prompt.md` (scheduled 9:30 AM)
