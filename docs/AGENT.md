@@ -102,7 +102,7 @@ Source: `configs/mcp-bridge-allowlist.yaml` (47 entries).
 | `system.cache_stats` | python: `ai.cache` | — | LLM cache statistics: entries, size, hit rate |
 | `system.token_report` | python: `ai.mcp_bridge.tools` | — | Token usage and cost report from LLM proxy |
 
-### security.* (14 tools)
+### security.* (15 tools)
 
 | Tool | Source | Args | Description |
 |------|--------|------|-------------|
@@ -200,10 +200,11 @@ Source: `configs/mcp-bridge-allowlist.yaml` (47 entries).
 
 ---
 
-## Systemd Timers (14)
+## Systemd Timers (15)
 
 | Timer | Schedule | Purpose |
 |-------|----------|---------|
+| `log-ingest.timer` | Sun 0:30 | Weekly log ingestion before archive |
 | `system-health.timer` | Daily 8:00 | Hardware health snapshot |
 | `clamav-quick.timer` | Daily 12:00 | ClamAV quick scan |
 | `clamav-deep.timer` | Fri 23:00 | ClamAV full scan |
@@ -236,7 +237,7 @@ Source: `configs/mcp-bridge-allowlist.yaml` (47 entries).
 11. **No global pip installs** — `uv` + `.venv/` only
 12. **No `/usr` modifications** — immutable OS (Fedora Atomic); use `rpm-ostree install`
 13. **No `--break-system-packages`** — Python packages go in `.venv/` only
-14. **All LLM calls through `ai/router.py`** — all API calls through `ai/rate_limiter.py`
+15. **All LLM calls through `ai/router.py`** — all API calls through `ai/rate_limiter.py`
 15. **`restorecon` after every systemd unit install** — SELinux label restoration required
 
 ---
@@ -266,7 +267,8 @@ Source: `configs/mcp-bridge-allowlist.yaml` (47 entries).
 | `configs/ai-rate-limits.json` | Per-provider rate limits |
 | `configs/keys.env.enc` | sops-encrypted API keys (in git, safe) |
 | `scripts/` | 40 shell/Python scripts (deploy, scan, backup, etc.) |
-| `systemd/` | 14 timers + associated services |
+| `scripts/lancedb-prune.py` | LanceDB retention pruning (90d logs, 180d threats) |
+| `systemd/` | 15 timers + associated services |
 | `tests/` | ~1458 pytest tests |
 | `tray/` | PySide6 system tray app |
 
@@ -278,6 +280,7 @@ Source: `configs/mcp-bridge-allowlist.yaml` (47 entries).
 | `~/security/` | Canonical root for all runtime security data |
 | `~/security/.status` | Shared JSON: ClamAV + health state (tray + MCP read this) |
 | `~/security/vector-db/` | LanceDB root (→ `/var/mnt/ext-ssd/bazzite-ai/vector-db`) |
+| `~/security/vector-db/.archive-state.json` | R2 archive state (upload records with key, timestamp, size) |
 | `~/security/llm-status.json` | LLM provider health + token usage |
 | `~/security/key-status.json` | API key presence map |
 | `~/security/release-watch.json` | Release watch results |

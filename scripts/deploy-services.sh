@@ -241,6 +241,23 @@ if [[ -f "$SRC/cve-scanner.timer" ]]; then
     echo "  Enabled cve-scanner.timer"
 fi
 
+# log-ingest
+for unit in log-ingest.service log-ingest.timer; do
+    if [[ -f "$SRC/$unit" ]]; then
+        sudo install -m 644 "$SRC/$unit" "/etc/systemd/system/$unit"
+        sudo restorecon -v "/etc/systemd/system/$unit"
+        echo "  Installed $unit to /etc/systemd/system/"
+    fi
+done
+
+if [[ -f "$SRC/log-ingest.timer" ]]; then
+    sudo systemctl daemon-reload
+    sudo systemctl enable log-ingest.timer 2>/dev/null || \
+        echo "  WARNING: log-ingest.timer enable failed"
+    sudo systemctl start log-ingest.timer || echo "  WARNING: log-ingest.timer start failed"
+    echo "  Enabled log-ingest.timer"
+fi
+
 # log-archive
 for unit in log-archive.service log-archive.timer; do
     if [[ -f "$SRC/$unit" ]]; then
@@ -429,6 +446,8 @@ printf "  %-35s %s\n" "knowledge-storage.timer" \
     "$(sudo systemctl is-enabled knowledge-storage.timer 2>/dev/null || echo 'not installed')"
 printf "  %-35s %s\n" "cve-scanner.timer" \
     "$(sudo systemctl is-enabled cve-scanner.timer 2>/dev/null || echo 'not installed')"
+printf "  %-35s %s\n" "log-ingest.timer" \
+    "$(sudo systemctl is-enabled log-ingest.timer 2>/dev/null || echo 'not installed')"
 printf "  %-35s %s\n" "log-archive.timer" \
     "$(sudo systemctl is-enabled log-archive.timer 2>/dev/null || echo 'not installed')"
 printf "  %-35s %s\n" "clamav-quick.timer" \
@@ -469,10 +488,10 @@ echo "=== SELinux: blanket restorecon ==="
 sudo restorecon -Rv /usr/local/bin/ /etc/systemd/system/ 2>/dev/null || true
 
 echo ""
-echo "Done. User services auto-start on login. All 13 timers + 2 system services + 5 config files deployed."
+echo "Done. User services auto-start on login. All 15 timers + 2 system services + 5 config files deployed."
 echo "  Daily: health 8:00, perf 8:15, audit 8:30, rag 9:00, knowledge 9:15, release 9:45, clamav-quick 12:00"
 echo "  Every 15m: service-canary (user)"
-echo "  Weekly: clamav-healthcheck Wed 14:00, clamav-deep Fri 23:00, cve-scanner Sat 00:00, log-archive Sun 01:00, fedora-updates Mon 03:00, lancedb-optimize Sun 02:00"
+echo "  Weekly: clamav-healthcheck Wed 14:00, clamav-deep Fri 23:00, cve-scanner Sat 00:00, log-ingest Sun 00:30, log-archive Sun 01:00, lancedb-optimize Sun 02:00, fedora-updates Mon 03:00"
 
 # ══════════════════════════════════════════════════════════════════
 # 8. Auto-verify (not in dry-run)

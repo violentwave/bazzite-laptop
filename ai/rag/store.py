@@ -112,7 +112,7 @@ class VectorStore:
         """Open a table by name, creating it from schema if it does not exist."""
         db = self._connect()
         try:
-            existing = db.list_tables()
+            existing = db.table_names()
             if name in existing:
                 table = db.open_table(name)
             else:

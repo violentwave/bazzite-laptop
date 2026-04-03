@@ -7,6 +7,20 @@ Bazzite security/gaming system.
 
 ---
 
+## Phase 17 — Log Lifecycle Pipeline (2026-04-03)
+
+- **LanceDB retention pruning:** New `scripts/lancedb-prune.py` — 90-day retention for log tables (`health_records`, `scan_records`, `security_logs`, `sig_updates`), 180-day for `threat_intel`, compact + cleanup of `.tmp` dirs, `--dry-run` and `--retention-days` flags
+- **Archive state tracking:** New `.archive-state.json` records every R2 upload with key, timestamp, size bytes. Verify-before-delete gate ensures local logs are NOT deleted until both LanceDB ingest AND R2 archive are confirmed
+- **Stale R2 fix:** Fixed upload_file() returning (success, r2_key, compressed_size) without deleting local file. Deletion now handled separately with own except block. Added ingest verification gate: local deletion only attempted after verifying file appears in .ingest-state.json (lexicographic comparison of filenames)
+- **Systemd pipeline:** Three-stage weekly chain via service dependencies:
+  - Sun 00:30: `log-ingest` (ingests new logs into LanceDB)
+  - Sun 01:00: `log-archive` (After=log-ingest, archives to R2)
+  - Sun 02:00: `lancedb-optimize` (After=log-archive, prunes old rows + compacts)
+- **Pipeline tests:** 12 new tests covering retention, dry-run, archive state, ingest verification gate, and systemd dependency parsing
+- Timer count: 14 → 15
+
+---
+
 ## Phase 16 — Performance Optimization (2026-04-03)
 
 - **HTTP session reuse:** Module-level `requests.Session()` with connection pooling in lookup.py, ip_lookup.py, ioc_lookup.py (30-50% latency reduction per API call)

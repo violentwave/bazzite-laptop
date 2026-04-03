@@ -115,6 +115,7 @@ All timers run unattended. This is the full daily/weekly timeline:
 | Wed 14:00     | `clamav-healthcheck.timer` | ClamAV daemon health check          |
 | Fri 23:00     | `clamav-deep.timer`      | ClamAV full deep scan                 |
 | Sat 00:00     | `cve-scanner.timer`      | CVE scan of installed packages        |
+| Sun 00:30     | `log-ingest.timer`       | Weekly log ingestion before archive   |
 | Sun 01:00     | `log-archive.timer`      | Compress + upload old logs to R2      |
 | Sun 02:00     | `lancedb-optimize.timer` | Compact and optimize LanceDB tables   |
 | Mon 03:00     | `fedora-updates.timer`   | Fedora Bodhi security update check    |
@@ -122,7 +123,7 @@ All timers run unattended. This is the full daily/weekly timeline:
 Check timer status:
 
 ```bash
-systemctl list-timers --all | grep -E "clamav|system-health|rag-embed|security-audit|performance|knowledge|cve|release|fedora|log-archive|service-canary|lancedb-optimize"
+systemctl list-timers --all | grep -E "clamav|system-health|rag-embed|security-audit|performance|knowledge|cve|release|fedora|log-|service-canary|lancedb-optimize"
 ```
 
 ### Morning briefing
@@ -194,7 +195,7 @@ All tools are accessible through Newelle via the MCP bridge. They are read-only
 | `system.cache_stats`    | —      | LLM cache statistics: entries, size, hit rate |
 | `system.token_report`   | —      | Token usage and cost report from LLM proxy |
 
-### security.* (14 tools)
+### security.* (15 tools)
 
 | Tool                         | Args                    | What it returns                             |
 |------------------------------|-------------------------|---------------------------------------------|
@@ -676,8 +677,15 @@ git add configs/keys.env.enc && git commit -m "keys: update encrypted keys"
 
 ### Log archiving
 
-Weekly (Sunday 01:00) via `log-archive.timer`. Compresses logs older than
-7 days and uploads to Cloudflare R2 using `scripts/archive-logs-r2.py`.
+Weekly (Sunday 00:30 → 01:00 → 02:00) via `log-ingest.timer` → `log-archive.timer` → `lancedb-optimize.timer`. The pipeline:
+1. **Ingest** (Sun 00:30): LanceDB ingestion of health/scan logs
+2. **Archive** (Sun 01:00): Compress logs older than 7 days and upload to Cloudflare R2
+3. **Prune** (Sun 02:00): Delete rows older than retention (90d logs, 180d threats)
+
+Check pipeline state:
+```bash
+cat ~/security/vector-db/.archive-state.json | python3 -m json.tool
+```
 
 Configuration: `configs/r2-config.yaml`
 

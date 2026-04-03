@@ -523,7 +523,7 @@ def _connect_db():
 
 def _ensure_table(db, name: str, schema):
     """Open or create a LanceDB table."""
-    if name in db.list_tables():
+    if name in db.table_names():
         table = db.open_table(name)
     else:
         try:

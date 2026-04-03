@@ -1,6 +1,8 @@
 [Unit]
 Description=Archive old logs to Cloudflare R2
 After=network.target
+After=log-ingest.service
+Requires=log-ingest.service
 
 [Service]
 Type=oneshot

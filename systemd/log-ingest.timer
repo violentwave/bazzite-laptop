@@ -1,0 +1,10 @@
+[Unit]
+Description=Weekly log ingestion (runs before archive)
+
+[Timer]
+OnCalendar=Sun 00:30
+Persistent=true
+RandomizedDelaySec=120
+
+[Install]
+WantedBy=timers.target

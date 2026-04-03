@@ -1,0 +1,17 @@
+[Unit]
+Description=Ingest new logs into LanceDB
+After=network-online.target
+
+[Service]
+Type=oneshot
+User=lch
+WorkingDirectory=/home/lch/projects/bazzite-laptop
+ExecStart=/home/lch/projects/bazzite-laptop/.venv/bin/python -m ai.log_intel --all
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=log-ingest
+MemoryMax=200M
+TimeoutStartSec=300
+
+[Install]
+WantedBy=multi-user.target

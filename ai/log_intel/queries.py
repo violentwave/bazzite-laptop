@@ -30,7 +30,7 @@ def _connect(db_path: str | None = None) -> lancedb.DBConnection:
 def _table_exists(db: lancedb.DBConnection, name: str) -> bool:
     """Check whether a table exists in the database."""
     try:
-        return name in db.list_tables()
+        return name in db.table_names()
     except Exception:
         return False
 

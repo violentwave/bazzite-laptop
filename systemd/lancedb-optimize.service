@@ -1,9 +1,13 @@
 [Unit]
 Description=LanceDB weekly compaction
 After=network.target
+After=log-archive.service
+Requires=log-archive.service
 
 [Service]
 Type=oneshot
-ExecStart=/var/home/lch/projects/bazzite-laptop/scripts/lancedb-optimize.sh
+User=lch
+WorkingDirectory=/home/lch/projects/bazzite-laptop
+ExecStart=/home/lch/projects/bazzite-laptop/.venv/bin/python /home/lch/projects/bazzite-laptop/scripts/lancedb-prune.py
 StandardOutput=journal
 StandardError=journal
