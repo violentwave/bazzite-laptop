@@ -4,61 +4,19 @@ Auto-generated cross-tool handoff. Updated by save-handoff.sh
 
 ## Current State
 
-- **Last Tool:** claude-code
-- **Last Updated:** 2026-04-03T20:42:11Z
+- **Last Tool:** opencode
+- **Last Updated:** 2026-04-03T21:00:00Z
 - **Project:** bazzite-laptop
 - **Branch:** master
 
 ## Open Tasks
 
-- [ ] Phase 21-B: MCP tool registration + docs update — complete, needs service restart
-- [ ] Phase 21: Code knowledge base expansion — complete
+- [ ] Phase 22: Task pattern learning — pending (next phase)
 
 ## Recent Sessions
 
-### 2026-04-03T20:42:11Z — claude-code
-[Auto-saved on session end]
-
-
-### 2026-04-03T20:42:10Z — claude-code
-[Auto-saved on session end]
-
-
-### 2026-04-03T20:32:54Z — claude-code
-[Auto-saved on session end]
-
-
-### 2026-04-03T20:32:51Z — claude-code
-[Auto-saved on session end]
-
-
-### 2026-04-03T20:25:11Z — claude-code
-[Auto-saved on session end]
-
-
-### 2026-04-03T20:17:10Z — claude-code
-[Auto-saved on session end]
-
-
-### 2026-04-03T20:16:54Z — claude-code
-[Auto-saved on session end]
-
-
-### 2026-04-03T20:12:08Z — claude-code
-[Auto-saved on session end]
-
-
-### 2026-04-03T20:06:16Z — claude-code
-[Auto-saved on session end]
-
-
-### 2026-04-03T19:56:11Z — claude-code
-[Auto-saved on session end]
-
-
-### 2026-04-03T19:54:23Z — claude-code
-[Auto-saved on session end]
-
+### 2026-04-03T21:00:00Z — opencode
+P21 complete: knowledge.pattern_search tool #50, 28 curated patterns in LanceDB, pattern_store.py, pattern_query.py, ingest-patterns.py, tests passing (1680), ruff clean, all committed.
 
 ### 2026-04-03T19:38:48Z — claude-code
 [Auto-saved on session end]
@@ -69,10 +27,6 @@ Auto-generated cross-tool handoff. Updated by save-handoff.sh
 
 
 ### 2026-04-03T19:28:02Z — claude-code
-[Auto-saved on session end]
-
-
-### 2026-04-03T19:23:52Z — claude-code
 [Auto-saved on session end]
 
 
@@ -94,3 +48,65 @@ Phase 19 complete: input validation MCP safety layer. InputValidator pre-dispatc
 
 ### 2026-04-03T17:19:45Z — claude-code
 [Auto-saved on session end]
+
+
+### 2026-04-03T17:19:43Z — claude-code
+[Auto-saved on session end]
+
+
+### 2026-04-03T17:19:43Z — claude-code
+[Auto-saved on session end]
+
+
+### 2026-04-03T17:19:43Z — claude-code
+[Auto-saved on session end]
+
+
+### 2026-04-03T17:16:26Z — claude-code
+[Auto-saved on session end]
+
+
+### 2026-04-03T17:15:18Z — claude-code
+[Auto-saved on session end]
+
+
+### 2026-04-03T17:14:47Z — claude-code
+[Auto-saved on session end]
+
+
+### 2026-04-03T17:14:42Z — claude-code
+[Auto-saved on session end]
+
+
+### 2026-04-03T17:11:39Z — claude-code
+[Auto-saved on session end]
+
+
+### 2026-04-03T17:09:45Z — claude-code
+[Auto-saved on session end]
+
+
+### 2026-04-03T17:09:45Z — claude-code
+[Auto-saved on session end]
+
+
+### 2026-04-03T17:09:43Z — claude-code
+[Auto-saved on session end]
+
+
+### 2026-04-03T17:09:43Z — claude-code
+[Auto-saved on session end]
+
+
+### 2026-04-03T17:08:50Z — claude-code
+[Auto-saved on session end]
+
+
+### 2026-04-03T17:08:24Z — claude-code
+[Auto-saved on session end]
+
+
+### 2026-04-03T17:07:59Z — claude-code
+[Auto-saved on session end]
+
+(End of file - total 96 lines)
