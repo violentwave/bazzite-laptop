@@ -141,8 +141,8 @@ class TestToolRegistration:
             from ai.mcp_bridge.server import create_app
 
             app = create_app()
-            # 50 allowlisted tools + 1 health tool registered via mcp.tool()
-            assert len(app._tool_manager._tools) == 51
+            # 52 allowlisted tools + 1 health tool registered via mcp.tool()
+            assert len(app._tool_manager._tools) == 53
 
 
 # ---------------------------------------------------------------------------

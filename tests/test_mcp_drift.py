@@ -23,14 +23,16 @@ def _python_tools(allowlist: dict) -> list[str]:
 
 class TestAllowlistVsCode:
     def test_all_python_tools_have_handler(self):
-        """Every source:python tool must have an elif branch in tools.py."""
+        """Every source:python tool must have a handler in tools.py or server.py."""
         allowlist = _load_allowlist()
-        source = TOOLS_PY.read_text()
+        tools_source = TOOLS_PY.read_text()
+        server_source = SERVER_PY.read_text()
+        combined = tools_source + server_source
         missing = [
             name for name in _python_tools(allowlist)
-            if f'tool_name == "{name}"' not in source
+            if f'tool_name == "{name}"' not in combined
         ]
-        assert not missing, f"No handler found in tools.py for: {missing}"
+        assert not missing, f"No handler found in tools.py or server.py for: {missing}"
 
     def test_all_handlers_in_yaml(self):
         """Every tool_name == branch in tools.py must be listed in the allowlist."""

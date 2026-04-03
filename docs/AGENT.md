@@ -285,7 +285,7 @@ Source: `configs/mcp-bridge-allowlist.yaml` (52 entries).
 | `scripts/r2-set-lifecycle.py` | One-time R2 bucket lifecycle rule setup (180d auto-expiration) |
 | `scripts/log-task-success.py` | CLI for logging successful task patterns to LanceDB (P22) |
 | `systemd/` | 16 timers + associated services |
-| `tests/` | ~1695 pytest tests |
+| `tests/` | 1604 pytest tests |
 | `tray/` | PySide6 system tray app |
 
 ### Runtime paths (not in repo)
@@ -312,7 +312,7 @@ Source: `configs/mcp-bridge-allowlist.yaml` (52 entries).
 
 ```bash
 source .venv/bin/activate
-python -m pytest tests/ -v          # ~1695 tests
+python -m pytest tests/ -v          # 1604 tests
 ruff check ai/ tests/               # Lint
 bandit -r ai/ -c pyproject.toml     # Security scan
 uv pip install -r requirements.txt  # Install/update deps

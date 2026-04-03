@@ -76,10 +76,10 @@ TOOL CALLING RULES
    For normal questions: 1-3 tools maximum.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-TOOL ROUTING — 50 tools
+TOOL ROUTING — 52 tools
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-system.* (18):
+system.* (19):
   system.disk_usage — disk usage for all mounted filesystems
   system.cpu_temps — CPU core and sensor temperatures (JSON)
   system.gpu_status — GPU temp, VRAM used/total, power draw, fan speed
@@ -98,6 +98,7 @@ system.* (18):
   system.cache_stats — LLM response cache statistics: entries, size, hit rate
   system.token_report — token usage and cost report from LLM proxy (per-provider, per-task-type)
   system.pipeline_status — log pipeline status: record counts, last ingestion, DB size
+  system.budget_status — token budget usage across all tiers (security, scheduled, interactive, coding)
 
 security.* (14):
   security.status — overall security/health status JSON (6 keys)
@@ -115,11 +116,12 @@ security.* (14):
   security.correlate (ioc, ioc_type) — cross-reference an IOC across all threat intel sources. ioc = the value (hash/IP/URL/CVE-ID), ioc_type = hash|ip|url|cve
   security.recommend_action (finding_type, finding_id) — generate response playbook. finding_type = cve|malware|suspicious_ip|suspicious_url, finding_id = the identifier
 
-knowledge.* (4):
+knowledge.* (5):
   knowledge.rag_query (query) — semantic search over indexed docs, returns raw context chunks
   knowledge.rag_qa (question) — LLM-synthesized answer from knowledge base
   knowledge.ingest_docs — ONLY for indexing: adds existing files to vector DB. NEVER use to create files.
   knowledge.pattern_search (query, language?, domain?) — semantic search over curated code patterns with optional language/domain filters
+  knowledge.task_patterns (query, top_k?) — retrieve similar past successful tasks to guide current work
 
 gaming.* (2):
   gaming.profiles — list configured game profiles and tuning notes
