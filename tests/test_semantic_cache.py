@@ -1,6 +1,7 @@
 """Tests for ai/cache_semantic.py SemanticCache."""
 
 import json
+import socket
 import sys
 from datetime import UTC, datetime
 from pathlib import Path
@@ -13,7 +14,23 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from ai.cache_semantic import SemanticCache
 
 
+def _ollama_running() -> bool:
+    """Check if Ollama is reachable on localhost:11434."""
+    try:
+        with socket.create_connection(("localhost", 11434), timeout=1):
+            return True
+    except OSError:
+        return False
+
+
+requires_ollama = pytest.mark.skipif(
+    not _ollama_running(),
+    reason="Ollama not running on localhost:11434",
+)
+
+
 class TestSemanticCache:
+    @requires_ollama
     def test_semantic_cache_hit(self, tmp_path):
         """Test semantic cache hit with similar query."""
         cache = SemanticCache(similarity_threshold=0.85, db_path=str(tmp_path))
@@ -29,6 +46,7 @@ class TestSemanticCache:
         assert result is not None
         assert result.get("answer") == "none"
 
+    @requires_ollama
     def test_semantic_cache_miss(self, tmp_path):
         """Test semantic cache miss for unrelated query."""
         cache = SemanticCache(db_path=str(tmp_path))
