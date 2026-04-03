@@ -646,6 +646,28 @@ async def _execute_python_tool(tool_name: str, tool_def: dict, args: dict) -> st
             result = ingest_directory(docs_dir)
             return json.dumps(result, indent=2)
 
+        elif tool_name == "knowledge.pattern_search":
+            from ai.rag.pattern_query import search_patterns
+
+            results = search_patterns(
+                query=args.get("query", ""),
+                language=args.get("language"),
+                domain=args.get("domain"),
+                limit=args.get("limit", 5),
+            )
+            formatted = []
+            for r in results:
+                formatted.append(
+                    {
+                        "title": r.get("title", ""),
+                        "language": r.get("language", ""),
+                        "domain": r.get("domain", ""),
+                        "tags": r.get("tags", []),
+                        "content": (r.get("content", "") or "")[:2000],
+                    }
+                )
+            return _truncate(json.dumps(formatted))
+
         elif tool_name == "gaming.profiles":
             from ai.gaming.scopebuddy import list_profiles  # noqa: PLC0415
 

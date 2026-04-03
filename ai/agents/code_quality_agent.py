@@ -69,7 +69,10 @@ def _run_bandit() -> dict:
             timeout=60,
             cwd=str(PROJECT_ROOT),
         )
-        data = json.loads(result.stdout) if result.stdout.strip() else {}
+        try:
+            data = json.loads(result.stdout) if result.stdout.strip() else {}
+        except json.JSONDecodeError:
+            data = {"error": "bandit returned invalid JSON", "results": [], "metrics": {}}
         results = data.get("results", [])
         counts: dict[str, int] = {"LOW": 0, "MEDIUM": 0, "HIGH": 0}
         for issue in results:

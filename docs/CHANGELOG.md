@@ -23,6 +23,23 @@ Bazzite security/gaming system.
 
 ### Metrics
 - MCP tools: 48 → 49
+- Tests: 1658 → 1672
+
+---
+
+## Phase 21 — Code Knowledge Base Expansion (2026-04-03)
+
+### Deliverables
+- `ai/rag/pattern_store.py` — LanceDB table for curated code patterns with
+  HNSW indexing
+- `ai/rag/pattern_query.py` — semantic search with language/domain filtering
+- `scripts/ingest-patterns.py` — batch ingestion of 28 pattern files from
+  `patterns/`
+- `tests/test_pattern_store.py` — 11 tests for pattern store/query
+- MCP tool `knowledge.pattern_search` registered; tool count 49 → 50
+
+### Metrics
+- MCP tools: 49 → 50
 - Systemd timers: 15 → 16
 - Tests: ~1656 → 1672 passed, 191 skipped
 

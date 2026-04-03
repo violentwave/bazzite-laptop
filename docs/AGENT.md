@@ -39,8 +39,8 @@
                          │      │
           ┌──────────────▼──┐ ┌─▼──────────────────┐
            │  MCP Bridge     │ │  LLM Proxy          │
-           │  :8766 FastMCP  │ │  :8767 OpenAI-compat│
-           │  49 tools       │ │  6 cloud providers  │
+            │  :8766 FastMCP  │ │  :8767 OpenAI-compat│
+            │  50 tools       │ │  6 cloud providers  │
           └──┬──┬──┬──┬─────┘ └──┬──────────────────┘
              │  │  │  │          │
     ┌────────┘  │  │  └───┐     │  Health-weighted routing
@@ -74,12 +74,13 @@ Key constraints:
 
 ---
 
-## MCP Tools (49 + health)
+## MCP Tools (50 + health)
 
-Source: `configs/mcp-bridge-allowlist.yaml` (49 entries).
+Source: `configs/mcp-bridge-allowlist.yaml` (50 entries).
 
 > **Phase 12:** PingMiddleware (25s keepalive) active. All 49 tools carry MCP annotations (readOnly/destructive/openWorld hints).
 > **Phase 20:** Added `agents.timer_health` — validates all 16 systemd timers.
+> **Phase 21:** Added `knowledge.pattern_search` — semantic search over curated code patterns.
 
 ### system.* (18 tools)
 
@@ -123,13 +124,14 @@ Source: `configs/mcp-bridge-allowlist.yaml` (49 entries).
 | `security.correlate` | python: `ai.threat_intel.correlator` | `ioc`, `ioc_type` (required) | Correlate IOC across VT/OTX/AbuseIPDB/GreyNoise/URLhaus |
 | `security.recommend_action` | python: `ai.threat_intel.playbooks` | `finding_type`, `finding_id` (required) | Response playbook for threat findings |
 
-### knowledge.* (3 tools)
+### knowledge.* (4 tools)
 
 | Tool | Source | Args | Description |
 |------|--------|------|-------------|
 | `knowledge.rag_query` | python: `ai.rag.query` | `query` (string, max 500, required) | Semantic search — raw context chunks (no LLM) |
 | `knowledge.rag_qa` | python: `ai.rag.query` | `question` (string, max 500, required) | LLM-synthesized answer from knowledge base |
 | `knowledge.ingest_docs` | python: `ai.rag.ingest_docs` | — | Re-embed docs/ into LanceDB |
+| `knowledge.pattern_search` | python: `ai.rag.pattern_query` | `query` (string, max 500, required), `language` (optional), `domain` (optional) | Semantic search over curated code patterns with language/domain filtering |
 
 ### gaming.* (2 tools)
 
@@ -169,7 +171,7 @@ Source: `configs/mcp-bridge-allowlist.yaml` (49 entries).
 
 | Tool | Description |
 |------|-------------|
-| `health` | Returns `{"status": "ok", "tools": 49}` |
+| `health` | Returns `{"status": "ok", "tools": 50}` |
 
 ---
 

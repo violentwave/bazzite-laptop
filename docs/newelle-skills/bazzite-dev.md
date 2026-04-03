@@ -14,6 +14,7 @@ base. Supports both fast embedding-based search and LLM-synthesized answers.
 | `knowledge.rag_query` | Embedding-only search over the security knowledge base (no LLM call) | `query` (string, max 500 chars, required) |
 | `knowledge.rag_qa` | Answer a question using the security knowledge base with LLM synthesis | `question` (string, max 500 chars, required) |
 | `knowledge.ingest_docs` | Re-ingest reference documentation into the RAG vector database | none |
+| `knowledge.pattern_search` | Semantic search over curated code patterns with optional language/domain filters | `query` (string, required), `language` (optional), `domain` (optional) |
 
 ---
 
@@ -28,6 +29,7 @@ base. Supports both fast embedding-based search and LLM-synthesized answers.
 | "Update the knowledge base with new docs" | `knowledge.ingest_docs` |
 | "Find all places that call litellm" | `code.search` with `query="litellm"` |
 | "What is the router task type for fast queries?" | `knowledge.rag_qa` |
+| "Find Python security patterns for atomic file writes" | `knowledge.pattern_search` with `query="atomic write", language="python", domain="security"` |
 
 ---
 
@@ -44,3 +46,9 @@ base. Supports both fast embedding-based search and LLM-synthesized answers.
   files directly.
 - `question` values for `knowledge.rag_qa` and `code.rag_query` must be
   plain natural language — no shell special characters.
+
+## Pattern Search
+
+`knowledge.pattern_search` searches curated code patterns from the vector database. Valid languages: python, rust, javascript, bash, c, yaml. Valid domains: security, networking, systems, data, web, testing.
+
+Example: `knowledge.pattern_search("atomic write", language="python", domain="security")`

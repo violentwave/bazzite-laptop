@@ -16,7 +16,7 @@ DEFAULT_BIND = "127.0.0.1"
 DEFAULT_PORT = int(__import__("os").environ.get("MCP_BRIDGE_PORT", "8766"))
 
 # Number of tools in the allowlist (excludes health endpoint itself)
-_TOOL_COUNT = 49
+_TOOL_COUNT = 50
 
 
 def _assert_localhost(bind: str) -> None:
@@ -114,6 +114,7 @@ def create_app():
         # ── threat intel correlation ─────────────────────────────────────────
         "security.correlate": {"readOnlyHint": True, "openWorldHint": True},
         "security.recommend_action": {"readOnlyHint": True, "idempotentHint": True},
+        "knowledge.pattern_search": {"readOnlyHint": True},
     }
 
     # Load tool definitions from the allowlist
@@ -186,6 +187,39 @@ def create_app():
                 return await execute_tool(
                     _tn, {"finding_type": finding_type, "finding_id": finding_id}
                 )  # noqa: E501
+        elif tool_name == "knowledge.pattern_search":
+
+            @mcp.tool(name=tool_name, description=description, annotations=ann)
+            async def _handler_pattern_search(
+                query: str,
+                language: str | None = None,
+                domain: str | None = None,
+                limit: int = 5,
+                _tn=tool_name,
+            ):
+                from ai.rag.pattern_query import search_patterns
+
+                results = search_patterns(
+                    query=query,
+                    language=language,
+                    domain=domain,
+                    limit=limit,
+                )
+                formatted = []
+                for r in results:
+                    formatted.append(
+                        {
+                            "title": r.get("title", ""),
+                            "language": r.get("language", ""),
+                            "domain": r.get("domain", ""),
+                            "tags": r.get("tags", []),
+                            "content": (r.get("content", "") or "")[:2000],
+                        }
+                    )
+                output = str(formatted)
+                if len(output) > 4096:
+                    output = output[:4096] + "... [truncated]"
+                return output
 
         # Built-in health tool (MCP protocol)
 

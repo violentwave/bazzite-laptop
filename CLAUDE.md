@@ -1,8 +1,8 @@
 # Bazzite AI Layer — Claude Code Instructions
 
-## Current State (P18 complete, 2026-04-03)
-- **48 MCP tools** + 1 health endpoint
-- **1611 tests** (0 failures) · **15 timers** · **6 LLM providers**
+## Current State (P21 complete, 2026-04-03)
+- **50 MCP tools** + 1 health endpoint
+- **1680 tests** (0 failures) · **16 timers** · **6 LLM providers**
 - Repo: `/var/home/lch/projects/bazzite-laptop/` (ai/ directory)
 - Active roadmap: `docs/phase-roadmap-p19-p23.md`
 
@@ -16,7 +16,7 @@
 | Component | Location |
 |-----------|----------|
 | LLM Proxy | `http://127.0.0.1:8767/v1` (OpenAI-compat, all model calls) |
-| MCP Bridge | `http://127.0.0.1:8766` (48 tools, FastMCP streamable-http) |
+| MCP Bridge | `http://127.0.0.1:8766` (50 tools, FastMCP streamable-http) |
 | Python | 3.12, `uv` + `.venv/` only |
 | Vector DB | LanceDB at `~/security/vector-db/` → ext SSD |
 | Keys | `~/.config/bazzite-ai/keys.env` (names only, NEVER read values) |

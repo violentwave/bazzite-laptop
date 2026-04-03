@@ -385,3 +385,25 @@ tools:
         required: true
         max_length: 256
         description: "The identifier — CVE ID, hash, IP, or URL"
+
+  knowledge.pattern_search:
+    description: "Semantic search over code patterns (security, systems, testing) with optional language/domain filters"
+    source: python
+    module: ai.rag.pattern_query
+    args:
+      query:
+        type: string
+        max_length: 500
+        required: true
+      language:
+        type: string
+        pattern: "^(python|rust|javascript|bash|c|yaml)$"
+        required: false
+      domain:
+        type: string
+        pattern: "^(security|networking|systems|data|web|testing)$"
+        required: false
+      limit:
+        type: integer
+        default: 5
+        required: false
