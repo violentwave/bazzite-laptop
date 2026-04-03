@@ -121,8 +121,27 @@ def _track_cost(response: object, task_type: str, provider: str) -> None:
             _cost_stats["by_task_type"].get(task_type, 0.0) + cost
         )
         _cost_stats["call_count"] += 1
+        _maybe_archive_stats()
     except Exception:  # noqa: BLE001, S110
         pass  # Never let cost tracking break the request path
+
+
+def _maybe_archive_stats() -> None:
+    """Archive and reset cost stats when call_count exceeds 100,000."""
+    if _cost_stats["call_count"] <= 100_000:
+        return
+    archive_path = (
+        Path.home()
+        / "security"
+        / f"cost-archive-{datetime.now(UTC).strftime('%Y%m%d-%H%M%S')}.json"
+    )
+    try:
+        with open(archive_path, "w") as f:
+            json.dump(_cost_stats, f, indent=2)
+        logger.info("Archived cost stats to %s", archive_path)
+    except OSError:
+        logger.warning("Failed to archive cost stats", exc_info=True)
+    reset_cost_stats()
 
 
 def get_cost_stats() -> dict:

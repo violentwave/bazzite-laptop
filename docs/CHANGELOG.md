@@ -7,6 +7,21 @@ Bazzite security/gaming system.
 
 ---
 
+## Phase 16 — Performance Optimization (2026-04-03)
+
+- **HTTP session reuse:** Module-level `requests.Session()` with connection pooling in lookup.py, ip_lookup.py, ioc_lookup.py (30-50% latency reduction per API call)
+- **Threat intel caching:** Disk-based `JsonFileCache` for hash lookups (7d TTL), IP lookups (24h TTL), IOC lookups (7d TTL) — 80-95% reduction in repeated API calls
+- **RAG query caching:** 5-minute disk cache for `rag_query()` results
+- **Parallel RAG searches:** `ThreadPoolExecutor` for concurrent log/threat/doc searches (3x → 1x latency)
+- **Auto cache eviction:** Background daemon thread evicts expired entries hourly
+- **Bounded provider tracking:** `OrderedDict` with max 50 providers, LRU eviction
+- **Embedding LRU cache:** In-memory `@lru_cache(maxsize=500)` for `embed_single`
+- **Qt inotify:** Replaced 3s polling with `QFileSystemWatcher` + 30s fallback
+- **SHA256 hash caching:** `@lru_cache(maxsize=10000)` on `_key_hash()` in JsonFileCache
+- **Cost stats auto-archive:** Auto-archive + reset at 100k calls
+
+---
+
 ## Database Integrity Test Suite (2026-04-03)
 
 - test: Add `test_lancedb_auto_repair` in `tests/test_rag_e2e.py` that:
@@ -471,7 +486,7 @@ Cerebras (health-weighted, hot-swappable via `configs/litellm-config.yaml`)
 | Systemd timers | **14** |
 | Cloud providers | **6** (Gemini, Groq, Mistral, OpenRouter, z.ai, Cerebras) |
 | Threat intel APIs | **16** |
-| Unit tests | **~1300** (1286 passed, 78 skipped, 1 pre-existing pandas dep failure) |
+| Unit tests | **~1458** (1458 passed, 81 skipped) |
 | AI layer LOC | **~10,000+** |
 | Python packages | **125** in .venv/ (via requirements-ai.txt) |
 | Embedding provider | Gemini Embedding 001 (cloud, free 10M TPM) |

@@ -12,15 +12,24 @@ CLI:
     python -m ai.rag "What GPU temps were recorded?"
 """
 
+import hashlib
 import json
 import logging
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass, field
+from pathlib import Path
 
+from ai.cache import JsonFileCache
 from ai.config import APP_NAME
 from ai.rate_limiter import RateLimiter
 from ai.router import route_query
 
 logger = logging.getLogger(APP_NAME)
+
+_rag_cache = JsonFileCache(
+    Path.home() / "security" / "rag-cache",
+    default_ttl=300,  # 5 minutes
+)
 
 _SYSTEM_PROMPT = (
     "You are a security analyst for a Bazzite 43 gaming laptop "
@@ -69,6 +78,22 @@ def rag_query(
     if rate_limiter is None:
         rate_limiter = RateLimiter()
 
+    # Cache check
+    cache_key = (
+        f"rag:{hashlib.sha256(question.encode()).hexdigest()}:"
+        f"limit={limit}:llm={use_llm}"
+    )
+    cached = _rag_cache.get(cache_key)
+    if cached is not None:
+        logger.info("RAG cache hit for query: %s", question[:60])
+        return QueryResult(
+            question=cached["question"],
+            context_chunks=cached["context_chunks"],
+            answer=cached["answer"],
+            sources=cached["sources"],
+            model_used=cached["model_used"],
+        )
+
     # Lazy imports to avoid pyarrow/lancedb segfault at collection time
     from ai.rag.embedder import embed_single  # noqa: PLC0415
     from ai.rag.store import get_store  # noqa: PLC0415
@@ -77,11 +102,20 @@ def rag_query(
     logger.info("Embedding query: %s", question[:80])
     query_vector = embed_single(question, input_type="search_query")
 
-    # Step 2: search all tables
+    # Step 2: search all tables in parallel
     store = get_store()
-    log_results = _safe_search(store, "search_logs", query_vector, limit)
-    threat_results = _safe_search(store, "search_threats", query_vector, limit)
-    doc_results = _safe_search(store, "search_docs", query_vector, limit)
+    with ThreadPoolExecutor(max_workers=3) as pool:
+        futures = {
+            pool.submit(_safe_search, store, "search_logs", query_vector, limit): "logs",
+            pool.submit(_safe_search, store, "search_threats", query_vector, limit): "threats",
+            pool.submit(_safe_search, store, "search_docs", query_vector, limit): "docs",
+        }
+        _results: dict[str, list[dict]] = {}
+        for future in as_completed(futures):
+            _results[futures[future]] = future.result()
+    log_results = _results["logs"]
+    threat_results = _results["threats"]
+    doc_results = _results["docs"]
 
     # Step 3: merge and rank by _distance (ascending = most similar)
     all_chunks = log_results + threat_results + doc_results
@@ -107,13 +141,15 @@ def rag_query(
         )
 
     if not use_llm:
-        return QueryResult(
+        result = QueryResult(
             question=question,
             context_chunks=all_chunks,
             answer=context_str,
             sources=sources,
             model_used="context-only",
         )
+        _cache_result(cache_key, result)
+        return result
 
     # Route to LLM
     prompt = _build_prompt(question, context_str)
@@ -123,30 +159,52 @@ def rag_query(
         # Detect scaffold response and fall back to context-only
         if "[SCAFFOLD]" in llm_answer:
             logger.info("Router returned scaffold response, using context-only mode")
-            return QueryResult(
+            result = QueryResult(
                 question=question,
                 context_chunks=all_chunks,
                 answer=context_str,
                 sources=sources,
                 model_used="context-only",
             )
+            _cache_result(cache_key, result)
+            return result
 
-        return QueryResult(
+        result = QueryResult(
             question=question,
             context_chunks=all_chunks,
             answer=llm_answer,
             sources=sources,
             model_used="fast",
         )
+        _cache_result(cache_key, result)
+        return result
     except (RuntimeError, ValueError) as e:
         logger.warning("LLM routing failed: %s — falling back to context-only", e)
-        return QueryResult(
+        result = QueryResult(
             question=question,
             context_chunks=all_chunks,
             answer=context_str,
             sources=sources,
             model_used="context-only",
         )
+        _cache_result(cache_key, result)
+        return result
+
+
+def _cache_result(key: str, result: QueryResult) -> None:
+    """Store a QueryResult in the RAG cache if it has content."""
+    if not result.context_chunks:
+        return
+    try:
+        _rag_cache.set(key, {
+            "question": result.question,
+            "context_chunks": result.context_chunks,
+            "answer": result.answer,
+            "sources": result.sources,
+            "model_used": result.model_used,
+        })
+    except Exception:
+        logger.debug("Failed to cache RAG result", exc_info=True)
 
 
 def _cohere_rerank(

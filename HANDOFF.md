@@ -5,7 +5,7 @@ Auto-generated cross-tool handoff. Updated by save-handoff.sh
 ## Current State
 
 - **Last Tool:** claude-code
-- **Last Updated:** 2026-04-03T06:36:31Z
+- **Last Updated:** 2026-04-03T06:46:40Z
 - **Project:** bazzite-laptop
 - **Branch:** master
 
@@ -14,6 +14,22 @@ Auto-generated cross-tool handoff. Updated by save-handoff.sh
 - No open tasks
 
 ## Recent Sessions
+
+### 2026-04-03T06:46:40Z — claude-code
+[Auto-saved on session end]
+
+
+### 2026-04-03T06:40:38Z — claude-code
+[Auto-saved on session end]
+
+
+### 2026-04-03T06:40:38Z — claude-code
+[Auto-saved on session end]
+
+
+### 2026-04-03T06:40:34Z — claude-code
+[Auto-saved on session end]
+
 
 ### 2026-04-03T06:36:31Z — claude-code
 [Auto-saved on session end]
@@ -81,20 +97,4 @@ Fixed LanceDB unhashable type error, added auto-repair with 3-backup retention, 
 
 
 ### 2026-04-03T02:03:25Z — claude-code
-[Auto-saved on session end]
-
-
-### 2026-04-03T02:03:12Z — claude-code
-[Auto-saved on session end]
-
-
-### 2026-04-03T01:55:03Z — claude-code
-[Auto-saved on session end]
-
-
-### 2026-04-03T01:55:03Z — claude-code
-[Auto-saved on session end]
-
-
-### 2026-04-03T01:55:03Z — claude-code
 [Auto-saved on session end]
