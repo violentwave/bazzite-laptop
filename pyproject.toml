@@ -15,6 +15,8 @@ ignore = ["S603", "S607"]
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = ["S101", "S105", "S108"]
 "tray/**" = ["E402", "I001", "S110"]
+"ai/agents/**" = ["S110"]
+"ai/hooks.py" = ["S110"]
 
 [tool.bandit]
 exclude_dirs = ["tests", ".venv", "tray"]

@@ -14,6 +14,7 @@ import logging
 import os
 import subprocess
 import tempfile
+import time
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -30,6 +31,7 @@ _SCAN_COOLDOWN_S = 3600  # 1 hour
 
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
+
 
 def _latest_mtime(log_dir: Path, pattern: str) -> float | None:
     """Return mtime of the most recently modified file matching pattern, or None."""
@@ -87,6 +89,7 @@ def _do_rag_query(question: str) -> str:
 
 
 # ── Main workflow ─────────────────────────────────────────────────────────────
+
 
 def run_audit() -> dict:
     """Run the automated security audit workflow.
@@ -174,6 +177,22 @@ def run_audit() -> dict:
         raise
 
     logger.info("Audit report written to %s", report_path)
+
+    # Record outcome for learning hooks
+    try:
+        from ai.hooks import record_task_outcome
+
+        quality = 1.0 if status == "clean" else (0.7 if status == "warnings" else 0.3)
+        record_task_outcome(
+            task_id="agents.security_audit",
+            quality=quality,
+            success=status != "issues",
+            duration_seconds=time.time() - now.timestamp(),
+            agent_type="security",
+        )
+    except Exception:
+        pass  # Best-effort, non-blocking
+
     return report
 
 

@@ -16,6 +16,7 @@ import logging
 import os
 import subprocess
 import tempfile
+import time
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -31,6 +32,7 @@ PERF_REPORTS_DIR = SECURITY_DIR / "perf-reports"
 
 
 # ── Metric collectors ─────────────────────────────────────────────────────────
+
 
 def _run(cmd: list[str], timeout: int = 10) -> str | None:
     """Run a command and return stdout, or None on failure."""
@@ -76,11 +78,13 @@ def _collect_cpu_temps() -> tuple[float, float]:
 
 def _collect_gpu_stats() -> dict:
     """Return GPU metrics dict or {'unavailable': True} if nvidia-smi fails."""
-    out = _run([
-        "nvidia-smi",
-        "--query-gpu=temperature.gpu,utilization.gpu,power.draw,memory.used",
-        "--format=csv,noheader,nounits",
-    ])
+    out = _run(
+        [
+            "nvidia-smi",
+            "--query-gpu=temperature.gpu,utilization.gpu,power.draw,memory.used",
+            "--format=csv,noheader,nounits",
+        ]
+    )
     if not out:
         return {"unavailable": True}
     try:
@@ -200,6 +204,7 @@ def _get_gaming_profiles_count() -> int:
 
 # ── Recommendation engine ─────────────────────────────────────────────────────
 
+
 def _build_recommendations(
     cpu_max: float,
     gpu: dict,
@@ -266,9 +271,7 @@ def _build_recommendations(
             recs.append("Home SSD nearly full, consider cleanup")
             hard_warnings += 1
         elif home_pct >= 78:
-            recs.append(
-                f"Home SSD at {home_pct:.0f}% — consider cleanup if above 85%"
-            )
+            recs.append(f"Home SSD at {home_pct:.0f}% — consider cleanup if above 85%")
             minor_warnings += 1
 
     # Steam disk
@@ -278,9 +281,7 @@ def _build_recommendations(
             recs.append("Steam drive nearly full, uninstall unused games")
             hard_warnings += 1
         elif steam_pct >= 80:
-            recs.append(
-                f"Steam drive at {steam_pct:.0f}%, monitor usage"
-            )
+            recs.append(f"Steam drive at {steam_pct:.0f}%, monitor usage")
             minor_warnings += 1
 
     # System load
@@ -304,6 +305,7 @@ def _build_recommendations(
 
 
 # ── Main workflow ─────────────────────────────────────────────────────────────
+
 
 def run_tuning() -> dict:
     """Run the automated performance analysis workflow.
@@ -373,6 +375,22 @@ def run_tuning() -> dict:
         raise
 
     logger.info("Performance report written to %s", report_path)
+
+    # Record outcome for learning hooks
+    try:
+        from ai.hooks import record_task_outcome
+
+        quality = 1.0 if status == "optimal" else (0.7 if status == "good" else 0.4)
+        record_task_outcome(
+            task_id="agents.performance_tuning",
+            quality=quality,
+            success=True,
+            duration_seconds=time.time() - now.timestamp(),
+            agent_type="performance",
+        )
+    except Exception:
+        pass  # Best-effort, non-blocking
+
     return report
 
 

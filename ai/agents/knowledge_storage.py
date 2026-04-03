@@ -19,6 +19,7 @@ import os
 import shutil
 import subprocess
 import tempfile
+import time
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -573,6 +574,7 @@ def run_storage_check(auto_repair: bool = True) -> dict:
     """
     now = datetime.now(UTC)
     timestamp = now.isoformat()
+    start_time = time.time()
 
     # Collect data
     db_info = _check_lancedb()
@@ -657,6 +659,22 @@ def run_storage_check(auto_repair: bool = True) -> dict:
         raise
 
     logger.info("Storage report written to %s", report_path)
+
+    # Record outcome for learning hooks
+    try:
+        from ai.hooks import record_task_outcome
+
+        quality = 1.0 if status == "healthy" else (0.7 if status == "stale" else 0.4)
+        record_task_outcome(
+            task_id="agents.knowledge_storage",
+            quality=quality,
+            success=status in ("healthy", "stale"),
+            duration_seconds=time.time() - start_time,
+            agent_type="knowledge",
+        )
+    except Exception:
+        pass  # Best-effort, non-blocking
+
     return report
 
 

@@ -16,6 +16,7 @@ import logging
 import os
 import subprocess
 import tempfile
+import time
 from datetime import UTC, datetime
 
 from ai.config import APP_NAME, PROJECT_ROOT, SECURITY_DIR
@@ -28,6 +29,7 @@ _VENV_PYTHON = PROJECT_ROOT / ".venv" / "bin" / "python"
 
 
 # ── Collectors ─────────────────────────────────────────────────────────────────
+
 
 def _run_ruff() -> dict:
     """Run ruff check and return parsed results."""
@@ -87,14 +89,22 @@ def _run_bandit() -> dict:
         }
     except subprocess.TimeoutExpired:
         return {
-            "total_issues": 0, "high": 0, "medium": 0, "low": 0,
-            "clean": True, "error": "timeout",
+            "total_issues": 0,
+            "high": 0,
+            "medium": 0,
+            "low": 0,
+            "clean": True,
+            "error": "timeout",
         }
     except Exception as e:
         logger.debug("bandit error: %s", e)
         return {
-            "total_issues": 0, "high": 0, "medium": 0, "low": 0,
-            "clean": True, "error": str(e),
+            "total_issues": 0,
+            "high": 0,
+            "medium": 0,
+            "low": 0,
+            "clean": True,
+            "error": str(e),
         }
 
 
@@ -123,8 +133,11 @@ def _run_git_status() -> dict:
                     staged += 1
         dirty = (modified + untracked + staged) > 0
         return {
-            "untracked": untracked, "modified": modified,
-            "staged": staged, "dirty": dirty, "error": None,
+            "untracked": untracked,
+            "modified": modified,
+            "staged": staged,
+            "dirty": dirty,
+            "error": None,
         }
     except Exception as e:
         logger.debug("git status error: %s", e)
@@ -199,6 +212,7 @@ def _run_dep_check() -> dict:
 
 # ── Recommendation engine ──────────────────────────────────────────────────────
 
+
 def _build_recommendations(
     ruff: dict,
     bandit: dict,
@@ -246,9 +260,7 @@ def _build_recommendations(
         modified = git.get("modified", 0)
         untracked = git.get("untracked", 0)
         if modified > 5:
-            recs.append(
-                f"Many uncommitted changes ({modified} modified) — consider committing"
-            )
+            recs.append(f"Many uncommitted changes ({modified} modified) — consider committing")
             warnings += 1
         if untracked > 3:
             recs.append(
@@ -276,6 +288,7 @@ def _build_recommendations(
 
 # ── Main workflow ──────────────────────────────────────────────────────────────
 
+
 def run_code_check() -> dict:
     """Run code quality and repo health check.
 
@@ -287,6 +300,7 @@ def run_code_check() -> dict:
     """
     now = datetime.now(UTC)
     timestamp = now.isoformat()
+    start_time = time.time()
 
     # Collect data
     ruff = _run_ruff()
@@ -330,6 +344,22 @@ def run_code_check() -> dict:
         raise
 
     logger.info("Code quality report written to %s", report_path)
+
+    # Record outcome for learning hooks
+    try:
+        from ai.hooks import record_task_outcome
+
+        quality = 1.0 if status == "clean" else (0.6 if status == "warnings" else 0.3)
+        record_task_outcome(
+            task_id="agents.code_quality_agent",
+            quality=quality,
+            success=status == "clean",
+            duration_seconds=time.time() - start_time,
+            agent_type="code",
+        )
+    except Exception:
+        pass  # Best-effort, non-blocking
+
     return report
 
 
