@@ -139,9 +139,9 @@ def _maybe_archive_stats() -> None:
         with open(archive_path, "w") as f:
             json.dump(_cost_stats, f, indent=2)
         logger.info("Archived cost stats to %s", archive_path)
+        reset_cost_stats()
     except OSError:
         logger.warning("Failed to archive cost stats", exc_info=True)
-    reset_cost_stats()
 
 
 def get_cost_stats() -> dict:
