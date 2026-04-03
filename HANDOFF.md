@@ -5,16 +5,29 @@ Auto-generated cross-tool handoff. Updated by save-handoff.sh
 ## Current State
 
 - **Last Tool:** claude-code
-- **Last Updated:** 2026-04-03T09:58:38Z
+- **Last Updated:** 2026-04-03T09:59:29Z
 - **Project:** bazzite-laptop
 - **Branch:** master
 
 ## Open Tasks
 
 - [x] Train RuFlo agents (hooks intelligence trajectory / pattern-store for this session's work)
-- [ ] Address 2 pre-existing test warnings: utcnow() deprecation in test_phase14_freshness.py, unawaited coroutine in test_router_async.py
+- [x] Address 2 pre-existing test warnings: utcnow() deprecation in test_phase14_freshness.py, unawaited coroutine in test_router_async.py
+- [ ] Investigate 45 pre-existing test failures (test_store, test_ip_lookup, test_ioc_lookup, test_mcp_server, test_threat_intel, test_log_intel) — test-ordering/mock-pollution, pass in isolation
 
 ## Recent Sessions
+
+### 2026-04-03T09:59:29Z — claude-code
+[Auto-saved on session end]
+
+
+### 2026-04-03T09:59:22Z — claude-code
+Fixed deprecated db.table_names() in lancedb-prune.py (replaced with list_tables() + hasattr extraction) and datetime.utcnow() DeprecationWarning in test_phase14_freshness.py; agent files were already clean. All target tests pass (27/27), ruff clean, pushed to master as b57fc38. 45 pre-existing test failures remain as test-ordering/mock-pollution issues unrelated to this session changes.
+
+
+### 2026-04-03T09:59:18Z — claude-code
+Fixed deprecated db.table_names() in lancedb-prune.py (replaced with list_tables() + hasattr extraction) and datetime.utcnow() DeprecationWarning in test_phase14_freshness.py; agent files were already clean. All target tests pass (27/27), ruff clean, pushed to master as b57fc38. 45 pre-existing test failures remain as test-ordering/mock-pollution issues unrelated to this session's changes.
+
 
 ### 2026-04-03T09:58:38Z — claude-code
 [Auto-saved on session end]
@@ -81,8 +94,4 @@ Phase 17 completed: implemented log lifecycle pipeline (ingest → archive → p
 
 
 ### 2026-04-03T07:48:06Z — claude-code
-[Auto-saved on session end]
-
-
-### 2026-04-03T07:41:11Z — claude-code
 [Auto-saved on session end]
