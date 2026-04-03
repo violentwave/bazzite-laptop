@@ -4,16 +4,33 @@ Auto-generated cross-tool handoff. Updated by save-handoff.sh
 
 ## Current State
 
-- **Last Tool:** opencode
-- **Last Updated:** 2026-04-03T21:00:00Z
+- **Last Tool:** claude-code
+- **Last Updated:** 2026-04-03T21:14:10Z (P19-P21 audit — claude-code)
+- **Last Commit:** cfa4b9e — chore: P19-P21 audit fixes
 - **Project:** bazzite-laptop
 - **Branch:** master
 
+## Session Summary (P19-P21 audit)
+
+P19–P21 full audit completed with Opus 4.6 sign-off: all security hardening, test coverage gaps, and doc accuracy issues identified and fixed. Changes: output redaction applied to all MCP tool output (execute_tool wrapper + _dispatch_tool inner), _truncate() added to agents.timer_health, dead code removed from security-briefing.py, 8 new validator tests (10000/10001 boundary, normal-tool-input pass, LanceDB injection), 9 stale counts fixed in AGENT.md, CHANGELOG.md created. All gates: 1687 passed/196 skipped, ruff clean, bandit 0 high/medium, pattern_store 12/12 isolation — ready for P22.
+
 ## Open Tasks
 
-- [ ] Phase 22: Task pattern learning — pending (next phase)
+- [ ] Phase 22: Task pattern learning — next phase
 
 ## Recent Sessions
+
+### 2026-04-03T21:14:10Z — claude-code
+[No summary provided]
+
+
+### 2026-04-03T21:14:02Z — claude-code
+P19-P21 full audit completed with Opus 4.6 sign-off: all security hardening, test coverage gaps, and doc accuracy issues identified and fixed. Changes: output redaction now applied to all MCP tool output (execute_tool wrapper + _dispatch_tool inner), _truncate() added to agents.timer_health, dead code removed from security-briefing.py, 8 new validator tests (10000/10001 char boundary + 6 normal-tool-input pass tests + LanceDB injection blocked), 9 stale counts fixed in AGENT.md, CHANGELOG.md created with P19/P20/P21 entries. All gates pass: 1687 tests, ruff clean, bandit 0 high/medium, pattern_store 12/12 isolation — ready for P22.
+
+
+### 2026-04-03T20:53:12Z — claude-code
+[Auto-saved on session end]
+
 
 ### 2026-04-03T21:00:00Z — opencode
 P21 complete: knowledge.pattern_search tool #50, 28 curated patterns in LanceDB, pattern_store.py, pattern_query.py, ingest-patterns.py, tests passing (1680), ruff clean, all committed.
@@ -80,33 +97,3 @@ Phase 19 complete: input validation MCP safety layer. InputValidator pre-dispatc
 
 ### 2026-04-03T17:11:39Z — claude-code
 [Auto-saved on session end]
-
-
-### 2026-04-03T17:09:45Z — claude-code
-[Auto-saved on session end]
-
-
-### 2026-04-03T17:09:45Z — claude-code
-[Auto-saved on session end]
-
-
-### 2026-04-03T17:09:43Z — claude-code
-[Auto-saved on session end]
-
-
-### 2026-04-03T17:09:43Z — claude-code
-[Auto-saved on session end]
-
-
-### 2026-04-03T17:08:50Z — claude-code
-[Auto-saved on session end]
-
-
-### 2026-04-03T17:08:24Z — claude-code
-[Auto-saved on session end]
-
-
-### 2026-04-03T17:07:59Z — claude-code
-[Auto-saved on session end]
-
-(End of file - total 96 lines)
