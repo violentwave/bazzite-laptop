@@ -25,7 +25,9 @@ from pathlib import Path
 import litellm
 import yaml
 
+from ai.budget import BudgetExhaustedError, classify_task, get_budget
 from ai.cache import JsonFileCache
+from ai.cache_semantic import SemanticCache
 from ai.config import APP_NAME, LITELLM_CONFIG, load_keys
 from ai.health import AllProvidersExhausted, HealthTracker
 from ai.rate_limiter import RateLimiter
@@ -35,11 +37,11 @@ logger = logging.getLogger(APP_NAME)
 # Per-task-type cache TTLs (seconds). External SSD reduces internal SSD wear.
 # TTL=0 means never cache (embed type).
 _TASK_TTL: dict[str, int] = {
-    "fast": 300,       # 5 min — health checks, quick lookups
-    "code": 3600,      # 1 hour — code generation
-    "reason": 1800,    # 30 min — analysis
-    "batch": 86400,    # 24 hours — bulk operations
-    "embed": 0,        # never cache embeddings
+    "fast": 300,  # 5 min — health checks, quick lookups
+    "code": 3600,  # 1 hour — code generation
+    "reason": 1800,  # 30 min — analysis
+    "batch": 86400,  # 24 hours — bulk operations
+    "embed": 0,  # never cache embeddings
 }
 
 # Prefer external SSD; fall back to ~/security/llm-cache; then tmpdir.
@@ -51,6 +53,7 @@ try:
 except OSError:
     # Fall back to TMPDIR in restricted environments (e.g. test sandboxes)
     import tempfile  # noqa: PLC0415
+
     _CACHE_DIR = Path(tempfile.gettempdir()) / "bazzite-llm-cache"
     _CACHE_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -73,13 +76,42 @@ _STREAM_COMMIT_THRESHOLD = 8192  # 8KB — gives room for provider failover
 
 # Per-task-type timeouts (seconds). reason/batch get more time for deep analysis.
 _DEFAULT_TIMEOUTS: dict[str, int] = {
-    "fast": 30, "code": 30, "reason": 60, "batch": 60, "embed": 30,
+    "fast": 30,
+    "code": 30,
+    "reason": 60,
+    "batch": 60,
+    "embed": 30,
 }
 
 _config: dict | None = None
 _router = None
 _rate_limiter: RateLimiter | None = None
 _health_tracker: HealthTracker = HealthTracker()
+
+# Semantic cache singleton for embedding-based cache hits
+_semantic_cache: SemanticCache | None = None
+
+
+def _get_semantic_cache() -> SemanticCache:
+    """Get or create the semantic cache singleton."""
+    global _semantic_cache
+    if _semantic_cache is None:
+        try:
+            _semantic_cache = SemanticCache()
+        except Exception:  # noqa: S110
+            pass
+    return _semantic_cache
+
+
+def _budget_reset_str() -> str:
+    """Return human-readable budget reset time string."""
+    try:
+        budget = get_budget()
+        reset_h = budget.config.get("reset_hour_utc", 0)
+        return f"{reset_h:02d}:00 UTC"
+    except Exception:  # noqa: S110
+        return "midnight UTC"
+
 
 # Thread-safe usage counters (not embed — no token usage there)
 _usage_counters: dict[str, dict[str, int]] = {
@@ -114,9 +146,7 @@ def _track_cost(response: object, task_type: str, provider: str) -> None:
 
         _cost_stats["total_tokens"] += prompt_tokens + completion_tokens
         _cost_stats["total_cost_usd"] += cost
-        _cost_stats["by_provider"][provider] = (
-            _cost_stats["by_provider"].get(provider, 0.0) + cost
-        )
+        _cost_stats["by_provider"][provider] = _cost_stats["by_provider"].get(provider, 0.0) + cost
         _cost_stats["by_task_type"][task_type] = (
             _cost_stats["by_task_type"].get(task_type, 0.0) + cost
         )
@@ -419,6 +449,40 @@ def route_query(task_type: str, prompt: str, **kwargs: object) -> str:
         except Exception as e:
             raise AllProvidersExhausted(task_type, str(e)) from e
 
+    # Semantic cache + budget checks (skip for embed)
+    query_text = prompt  # used for semantic cache key
+    cacheable = task_type in ("fast", "reason", "code", "batch")
+    task_class = classify_task(task_type, source="")
+
+    # Check semantic cache first
+    if cacheable:
+        try:
+            sc = _get_semantic_cache()
+            if sc is not None:
+                cached_response = sc.get(query_text, task_type=task_type)
+                if cached_response is not None:
+                    logger.debug("Semantic cache hit for task_type=%s", task_type)
+                    return cached_response.get("content", str(cached_response))
+        except Exception:  # noqa: S110
+            pass  # cache failure must not break LLM path
+
+    # Check token budget
+    try:
+        budget = get_budget()
+        estimated_tokens = len(query_text.split()) * 2
+        if not budget.can_spend(task_class, estimated_tokens):
+            tier_priority = budget.config["tiers"].get(task_class, {}).get("priority", 3)
+            if tier_priority >= 2:
+                raise BudgetExhaustedError(
+                    f"Daily token budget exhausted for '{task_class}'. "
+                    f"Try again after {_budget_reset_str()}"
+                )
+            logger.warning("Budget exceeded for %s, proceeding (priority tier)", task_class)
+    except BudgetExhaustedError:
+        raise
+    except Exception:  # noqa: S110
+        pass  # budget check failure should not break LLM path
+
     # Health-weighted provider ordering
     providers = _get_provider_order(config, task_type)
 
@@ -441,6 +505,26 @@ def route_query(task_type: str, prompt: str, **kwargs: object) -> str:
             ttl = _TASK_TTL.get(task_type, 300)
             if ttl > 0:
                 _llm_cache.set(cache_key, {"content": content}, ttl=ttl)
+
+            # Record spend and cache response (best-effort)
+            try:
+                budget = get_budget()
+                _usage = getattr(response, "usage", None)
+                actual_tokens = getattr(_usage, "total_tokens", None) or estimated_tokens
+                cost = float(getattr(_usage, "cost", None) or 0.0)
+                budget.record_spend(task_class, actual_tokens, cost)
+
+                if cacheable:
+                    sc = _get_semantic_cache()
+                    if sc is not None:
+                        sc.put(
+                            query_text,
+                            {"content": content},
+                            task_type=task_type,
+                        )
+            except Exception:  # noqa: S110
+                pass  # recording failure must not break response
+
             return content
         except Exception as e:
             last_error = e
@@ -478,6 +562,46 @@ async def route_chat(task_type: str, messages: list[dict], **kwargs: object) -> 
 
     config = _load_config()
     _check_rate_limits(config, task_type)
+
+    # Extract query text for semantic cache from last user message
+    query_text = ""
+    for msg in reversed(messages):
+        if msg.get("role") == "user":
+            query_text = msg.get("content", "")
+            break
+
+    cacheable = task_type in ("fast", "reason", "code", "batch")
+    task_class = classify_task(task_type, source="")
+
+    # Check semantic cache first
+    if cacheable and query_text:
+        try:
+            sc = _get_semantic_cache()
+            if sc is not None:
+                cached_response = sc.get(query_text, task_type=task_type)
+                if cached_response is not None:
+                    logger.debug("Semantic cache hit for task_type=%s", task_type)
+                    return cached_response.get("content", str(cached_response))
+        except Exception:  # noqa: S110
+            pass  # cache failure must not break LLM path
+
+    # Check token budget
+    try:
+        budget = get_budget()
+        estimated_tokens = len(query_text.split()) * 2 if query_text else 100
+        if not budget.can_spend(task_class, estimated_tokens):
+            tier_priority = budget.config["tiers"].get(task_class, {}).get("priority", 3)
+            if tier_priority >= 2:
+                raise BudgetExhaustedError(
+                    f"Daily token budget exhausted for '{task_class}'. "
+                    f"Try again after {_budget_reset_str()}"
+                )
+            logger.warning("Budget exceeded for %s, proceeding (priority tier)", task_class)
+    except BudgetExhaustedError:
+        raise
+    except Exception:  # noqa: S110
+        pass  # budget check failure should not break LLM path
+
     providers = _get_provider_order(config, task_type)
 
     if not providers:
@@ -511,6 +635,26 @@ async def route_chat(task_type: str, messages: list[dict], **kwargs: object) -> 
             ttl = _TASK_TTL.get(task_type, 300)
             if ttl > 0:
                 _llm_cache.set(cache_key, {"content": content}, ttl=ttl)
+
+            # Record spend and cache response (best-effort)
+            try:
+                budget = get_budget()
+                _usage = getattr(response, "usage", None)
+                actual_tokens = getattr(_usage, "total_tokens", None) or estimated_tokens
+                cost = float(getattr(_usage, "cost", None) or 0.0)
+                budget.record_spend(task_class, actual_tokens, cost)
+
+                if cacheable and query_text:
+                    sc = _get_semantic_cache()
+                    if sc is not None:
+                        sc.put(
+                            query_text,
+                            {"content": content},
+                            task_type=task_type,
+                        )
+            except Exception:  # noqa: S110
+                pass  # recording failure must not break response
+
             return content
         except Exception as e:
             status_code = getattr(e, "status_code", None)
@@ -546,9 +690,7 @@ async def route_query_stream(
     """
     valid_stream_types = {"fast", "reason", "batch", "code"}
     if task_type not in valid_stream_types:
-        raise ValueError(
-            f"task_type must be one of {valid_stream_types}, got '{task_type}'"
-        )
+        raise ValueError(f"task_type must be one of {valid_stream_types}, got '{task_type}'")
 
     config = _load_config()
     _check_rate_limits(config, task_type)
@@ -596,7 +738,8 @@ async def route_query_stream(
             last_error = e
             logger.warning(
                 "Stream from '%s' failed pre-commit, retrying next provider: %s",
-                provider, e,
+                provider,
+                e,
             )
             continue
 
