@@ -7,6 +7,19 @@ Bazzite security/gaming system.
 
 ---
 
+## Phase 19 — Input Validation MCP Safety Layer (2026-04-03)
+
+- **New `ai.security.inputvalidator` module:** Standalone input validation with stdlib-only dependencies (no external deps)
+- **New `configs/safety-rules.json`:** Max input length (10k), forbidden patterns, path allowlists, high-risk tool flags
+- **MCP bridge pre-dispatch validation:** All tool arguments validated before execution in `ai/mcp_bridge/tools.py`
+- **Secret redaction:** API keys, tokens, and credentials automatically redacted from logs before output
+- **Detection patterns:** SQL injection (`UNION SELECT`, `DROP TABLE`, `' OR 1=1`), command injection (`;`, `&&`, `||`, `$()`), path traversal (`../`)
+- **Tests:** 51 new tests covering SQL/command injection, path traversal, secret redaction, max length, config loading, high-risk tools
+- Tool count: 48 (unchanged)
+- Timer count: 15 (unchanged)
+
+---
+
 ## Phase 18 — Storage Consolidation & Retention (2026-04-03)
 
 - **R2 lifecycle rules:** One-time `scripts/r2-set-lifecycle.py` sets 180-day auto-expiration on R2 bucket — no client-side long-term deletion needed

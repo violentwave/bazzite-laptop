@@ -174,6 +174,11 @@ bash scripts/start-security-tray-qt.sh
 All tools are accessible through Newelle via the MCP bridge. They are read-only
 (no system mutations). Output is truncated to 4 KB and paths are redacted.
 
+> **Input Validation**: The MCP bridge validates all tool arguments before execution.
+> Malicious inputs (SQL injection, command injection, path traversal) are blocked.
+> If you see "Input validation failed", adjust your query to avoid risky patterns.
+> API keys and tokens are automatically redacted from logs.
+
 ### system.* (18 tools)
 
 | Tool                    | Args   | What it returns                                    |

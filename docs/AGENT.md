@@ -262,8 +262,10 @@ Source: `configs/mcp-bridge-allowlist.yaml` (48 entries).
 | `ai/log_intel/` | Log ingestion, anomaly detection, semantic search |
 | `ai/agents/` | Automated agents (4): security, perf, knowledge, code quality |
 | `ai/gaming/` | MangoHud analysis, ScopeBuddy profiles |
+| `ai/security/inputvalidator.py` | Pre-dispatch input validation + secret redaction |
 | `ai/system/` | release_watch, fedora_updates, pkg_intel |
 | `configs/mcp-bridge-allowlist.yaml` | 48 tool definitions + argument validation |
+| `configs/safety-rules.json` | Input validation rules (max length, patterns, path allowlists) |
 | `configs/litellm-config.yaml` | LiteLLM provider routing config |
 | `configs/ai-rate-limits.json` | Per-provider rate limits |
 | `configs/keys.env.enc` | sops-encrypted API keys (in git, safe) |

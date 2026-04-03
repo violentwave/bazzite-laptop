@@ -1,0 +1,23 @@
+{
+  "max_input_length": 10000,
+  "forbidden_patterns": [
+    "rm -rf",
+    "mkfs",
+    "dd if=",
+    "chmod 777"
+  ],
+  "path_allowed_roots": [
+    "/var/home/lch/projects/bazzite-laptop",
+    "/home/lch/security",
+    "/var/log/system-health",
+    "/var/log/clamav-scans"
+  ],
+  "high_risk_tools": [
+    "security.sandbox_submit",
+    "security.run_scan",
+    "security.run_ingest"
+  ],
+  "read_only_tools_skip_validation": false,
+  "log_violations": true,
+  "block_on_violation": true
+}

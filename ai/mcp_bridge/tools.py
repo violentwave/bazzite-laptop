@@ -14,6 +14,7 @@ from pathlib import Path
 import yaml
 
 from ai.config import CONFIGS_DIR, PROJECT_ROOT, STATUS_FILE
+from ai.security.inputvalidator import InputValidator
 from ai.utils.freshness import format_freshness_age
 
 logger = logging.getLogger("ai.mcp_bridge")
@@ -44,6 +45,13 @@ _HOME_PATTERN = re.compile(r"/home/lch")
 # Allowlist loaded once at module import
 _ALLOWLIST_PATH = CONFIGS_DIR / "mcp-bridge-allowlist.yaml"
 _allowlist: dict | None = None
+
+# Input validator singleton (loaded once, thread-safe)
+try:
+    _VALIDATOR = InputValidator.from_default_config()
+except Exception as e:
+    logger.warning(f"InputValidator init failed: {e}, validation disabled")
+    _VALIDATOR = None
 
 
 def _check_bridge_rate(tool_name: str) -> None:
@@ -465,6 +473,15 @@ async def execute_tool(tool_name: str, args: dict) -> str:
     tool_def = allowlist[tool_name]
     _check_bridge_rate(tool_name)
     _validate_args(tool_def, args)
+
+    if _VALIDATOR is not None:
+        ok, violations = _VALIDATOR.validate_tool_args(tool_name, args)
+        if not ok:
+            sample = _VALIDATOR.redact_secrets(str(args)[:200])
+            logger.warning(
+                f"Input validation failed for {tool_name}: {violations} | args: {sample}"
+            )
+            raise ValueError("Input validation failed")
 
     # system.gpu_status: parse CSV into labeled human-readable output
     if tool_name == "system.gpu_status":
