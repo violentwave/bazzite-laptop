@@ -25,7 +25,12 @@ skips = ["B603", "B607"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["."]
+timeout = 60
+timeout_method = "thread"
 markers = [
     "integration: marks tests as integration tests (deselect with '-m \"not integration\"')",
-    "slow: marks tests as slow (deselect with '-m \"not slow\"')"
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "quarantined: flaky test excluded from main suite",
+    "requires_embedding: needs real embedding provider",
+    "requires_writable_db: needs writable LanceDB",
 ]

@@ -91,3 +91,6 @@ def sample_enriched_jsonl():
 def mock_embedding():
     """A 768-dim zero vector for embedding tests (matches nomic-embed-text-v2-moe)."""
     return [0.0] * 768
+
+
+pytest_plugins = ["ai.testing.pytest_plugin"]
