@@ -8,6 +8,25 @@
 >
 > When ending a session, run `/save-handoff` to record what you did.
 
+### OpenCode Autonomous Mode
+
+> If you are OpenCode executing a P24–P28 phase prompt from `docs/phase-playbook-p24-p28.md`:
+> 1. Read `HANDOFF.md` first — check which phase was last completed
+> 2. Run the pre-flight prompt (OC-01, OC-10, OC-15, OC-19, or OC-23)
+> 3. Execute prompts sequentially — do NOT skip ahead
+> 4. After each file creation: run `ruff check` on the file immediately
+> 5. If ruff reports E111/E117 indentation errors, fix with the Python replace
+>    script documented in the playbook header
+> 6. After each phase: run the full test suite and commit
+> 7. End with `/save-handoff --tool opencode --summary "P2X complete: [details]"`
+>
+> **OpenCode constraints:**
+> - You frequently introduce 5-space indentation — always verify with ruff
+> - Use `.venv/bin/python`, never system Python 3.14
+> - TUI mode only — `opencode run` fails with custom providers
+> - No /feature-dev or /code-review plugins — prompts are self-contained
+> - Manual handoff only — no SessionEnd hook
+
 ---
 
 ## System Identity
@@ -40,7 +59,7 @@
           ┌──────────────▼──┐ ┌─▼──────────────────┐
            │  MCP Bridge     │ │  LLM Proxy          │
             │  :8766 FastMCP  │ │  :8767 OpenAI-compat│
-            │  50 tools       │ │  6 cloud providers  │
+            │  52 tools       │ │  6 cloud providers  │
           └──┬──┬──┬──┬─────┘ └──┬──────────────────┘
              │  │  │  │          │
     ┌────────┘  │  │  └───┐     │  Health-weighted routing
@@ -74,17 +93,18 @@ Key constraints:
 
 ---
 
-## MCP Tools (52 + health)
+## MCP Tools (53 + health)
 
-Source: `configs/mcp-bridge-allowlist.yaml` (52 entries).
+Source: `configs/mcp-bridge-allowlist.yaml` (53 entries).
 
 > **Phase 12:** PingMiddleware (25s keepalive) active. All 50 tools carry MCP annotations (readOnly/destructive/openWorld hints).
 > **Phase 20:** Added `agents.timer_health` — validates all 16 systemd timers.
 > **Phase 21:** Added `knowledge.pattern_search` — semantic search over curated code patterns.
 > **Phase 22:** Added `knowledge.task_patterns` — retrieve similar past successful tasks.
 > **Phase 23:** Added `system.budget_status` — token budget usage across tiers.
+> **Phase 24:** Added `system.metrics_summary` — aggregate metrics for last 24h.
 
-### system.* (19 tools)
+### system.* (20 tools)
 
 | Tool | Source | Args | Description |
 |------|--------|------|-------------|
@@ -107,6 +127,7 @@ Source: `configs/mcp-bridge-allowlist.yaml` (52 entries).
 | `system.token_report` | python: `ai.mcp_bridge.tools` | — | Token usage and cost report from LLM proxy |
 | `system.pipeline_status` | python: `ai.system.pipeline_status` | — | Log pipeline ingest/archive/retention status, pending files, table row counts |
 | `system.budget_status` | python: `ai.mcp_bridge.server` | — | Daily token budget usage and warnings across priority tiers |
+| `system.metrics_summary` | python: `ai.metrics` | `hours`, `metric_type` | Aggregate metrics for last 24h: cache hit rates, provider latencies, budget usage, tool errors |
 
 ### security.* (14 tools)
 
@@ -179,6 +200,55 @@ Source: `configs/mcp-bridge-allowlist.yaml` (52 entries).
 
 ---
 
+## P24–P28 Roadmap (Active Development)
+
+> **Execution agent:** OpenCode (z.ai GLM models, TUI mode)
+> **Playbook:** `docs/phase-playbook-p24-p28.md` (30 numbered prompts: OC-01 through OC-30)
+> **Execution order:** P24 → P25 → P26 → P27 → P28 (sequential, P24 is foundational)
+
+| Phase | Name | New Tool | New Timer | New LanceDB Table | Key Module |
+|-------|------|----------|-----------|-------------------|------------|
+| **P24** | Observability & Metrics | `system.metrics_summary` | `metrics-compact.timer` (Sun 03:00) | `metrics` | `ai/metrics.py` |
+| **P25** | Conversation Memory | `memory.search` | — | `conversation_memory` | `ai/memory.py` |
+| **P25** | Conversation Memory | `memory.search` | — | `conversation_memory` | `ai/memory.py` |
+| **P26** | Provider Intelligence | `system.provider_status` | — | — | `ai/provider_intel.py` |
+| **P27** | Security Alerting | `security.alert_summary` | `security-alert.timer` (every 6h) | — | `ai/security/alerts.py` |
+| **P28** | Self-Improvement Loop | `system.weekly_insights` | `weekly-insights.timer` (Mon 09:00) | `system_insights` | `ai/insights.py` |
+
+### Target State After P28
+
+| Metric | Current (P23) | Target (P24) | Target (P28) |
+|--------|---------------|--------------|--------------|
+| MCP tools | 52 | 53 (+1) | 57 (+5) |
+| Timers | 16 | 17 (+1) | 19 (+3) |
+| LanceDB tables | 10 | 11 (+1) | 13 (+3) |
+| Tests | ~1604 | ~1610 | ~1650+ |
+
+### Dependency Graph
+
+```
+P24 (Observability) ← foundational — P26 and P28 read its data
+P25 (Memory) ← independent, extends RAG embeddings
+P26 (Provider Intel) ← requires P24 metrics
+P27 (Security Alerts) ← independent, uses existing threat intel
+P28 (Self-Improvement) ← aggregates P24 + P25 + P26 + P27
+```
+
+### Phase Implementation Rules (OpenCode)
+
+1. **One phase at a time** — complete and commit before starting the next
+2. **Pre-flight every phase** — verify git clean, tests passing, ruff clean
+3. **Context7 before LanceDB code** — API patterns change between versions
+4. **ruff check after every file** — catch 5-space indentation immediately
+5. **Never modify ai/router.py and ai/mcp_bridge/ in the same prompt**
+6. **Always run full test suite** at end of phase, not just new tests
+7. **Update AGENT.md + CHANGELOG.md** counts at the end of every phase
+8. **Wrap metric/memory calls in try/except** — observability must never break core flow
+9. **Atomic writes** for all JSON output files (tmp + os.rename)
+10. **Secret redaction** via ai.security.inputvalidator before storing user text
+
+---
+
 ## LLM Provider Chain
 
 | Type | Use Case | Provider Chain |
@@ -209,7 +279,7 @@ Source: `configs/mcp-bridge-allowlist.yaml` (52 entries).
 
 ---
 
-## Systemd Timers (16)
+## Systemd Timers (17)
 
 | Timer | Schedule | Purpose |
 |-------|----------|---------|
@@ -229,6 +299,7 @@ Source: `configs/mcp-bridge-allowlist.yaml` (52 entries).
 | `log-archive.timer` | Sun 1:00 | Upload old logs to Cloudflare R2 |
 | `service-canary.timer` | Every 15m | AI service health check + auto-restart |
 | `lancedb-optimize.timer` | Sun 2:00 | Compact and optimize LanceDB tables |
+| `metrics-compact.timer` | Sun 3:00 | Compact and prune old metrics data |
 
 ---
 
@@ -273,20 +344,23 @@ Source: `configs/mcp-bridge-allowlist.yaml` (52 entries).
 | `ai/gaming/` | MangoHud analysis, ScopeBuddy profiles |
 | `ai/cache_semantic.py` | SemanticCache: LanceDB-backed similarity cache with TTL (P23) |
 | `ai/budget.py` | TokenBudget: daily token limits with priority tiers (P23) |
+| `ai/metrics.py` | MetricsRecorder: time-series observability with buffered writes (P24) |
 | `ai/security/inputvalidator.py` | Pre-dispatch input validation + secret redaction |
 | `ai/system/` | release_watch, fedora_updates, pkg_intel |
-| `configs/mcp-bridge-allowlist.yaml` | 52 tool definitions + argument validation |
+| `configs/mcp-bridge-allowlist.yaml` | 53 tool definitions + argument validation |
 | `configs/safety-rules.json` | Input validation rules (max length, patterns, path allowlists) |
 | `configs/litellm-config.yaml` | LiteLLM provider routing config |
 | `configs/ai-rate-limits.json` | Per-provider rate limits |
 | `configs/keys.env.enc` | sops-encrypted API keys (in git, safe) |
-| `scripts/` | 41 shell/Python scripts (deploy, scan, backup, etc.) |
+| `scripts/` | 42 shell/Python scripts (deploy, scan, backup, etc.) |
 | `scripts/lancedb-prune.py` | LanceDB retention pruning (90d logs, 180d threats) + cache cleanup |
+| `scripts/metrics-compact.py` | Metrics compaction (P24) |
 | `scripts/r2-set-lifecycle.py` | One-time R2 bucket lifecycle rule setup (180d auto-expiration) |
 | `scripts/log-task-success.py` | CLI for logging successful task patterns to LanceDB (P22) |
 | `systemd/` | 16 timers + associated services |
 | `tests/` | 1604 pytest tests |
 | `tray/` | PySide6 system tray app |
+| `docs/phase-playbook-p24-p28.md` | OpenCode autonomous execution playbook (OC-01 through OC-30) |
 
 ### Runtime paths (not in repo)
 
@@ -295,7 +369,7 @@ Source: `configs/mcp-bridge-allowlist.yaml` (52 entries).
 | `~/.config/bazzite-ai/keys.env` | Plaintext API keys (chmod 600, never in git) |
 | `~/security/` | Canonical root for all runtime security data |
 | `~/security/.status` | Shared JSON: ClamAV + health state (tray + MCP read this) |
-| `~/security/vector-db/` | LanceDB root (→ `/var/mnt/ext-ssd/bazzite-ai/vector-db`). Tables: `documents` (RAG docs), `code_index` (code embeddings), `log_entries` (system logs), `code_patterns` (curated code patterns — P21), `task_patterns` (task outcomes — P22), `semantic_cache` (LLM response cache — P23) |
+| `~/security/vector-db/` | LanceDB root (→ `/var/mnt/ext-ssd/bazzite-ai/vector-db`). Tables: `documents` (RAG docs), `code_index` (code embeddings), `log_entries` (system logs), `code_patterns` (curated code patterns — P21), `task_patterns` (task outcomes — P22), `semantic_cache` (LLM response cache — P23), `metrics` (observability time-series — P24) |
 | `~/security/vector-db/.archive-state.json` | R2 archive state (upload records with key, timestamp, size) |
 | `~/security/llm-status.json` | LLM provider health + token usage |
 | `~/security/key-status.json` | API key presence map |
@@ -305,6 +379,21 @@ Source: `configs/mcp-bridge-allowlist.yaml` (52 entries).
 | `/var/log/system-health/` | Health snapshot logs |
 | `/var/log/clamav-scans/` | ClamAV scan logs |
 | `/var/mnt/ext-ssd/bazzite-ai/llm-cache` | LiteLLM disk cache |
+
+### P24–P28 planned paths (created during implementation)
+
+| Path | Phase | Purpose |
+|------|-------|---------|
+| `ai/metrics.py` | P24 | MetricsRecorder with buffered LanceDB writes |
+| `ai/memory.py` | P25 | ConversationMemory with semantic retrieval |
+| `ai/provider_intel.py` | P26 | ProviderIntel scoring for dynamic routing |
+| `ai/security/alerts.py` | P27 | SecurityAlertEvaluator for proactive alerting |
+| `ai/insights.py` | P28 | InsightGenerator for weekly self-assessment |
+| `scripts/metrics-compact.py` | P24 | Weekly metrics compaction |
+| `scripts/security-alert-eval.py` | P27 | Security alert evaluation |
+| `scripts/generate-weekly-insights.py` | P28 | Weekly insights generation |
+| `~/security/alerts.json` | P27 | Active security alerts (runtime) |
+| `~/security/.alert-dedup.json` | P27 | Alert deduplication state (runtime) |
 
 ---
 
@@ -343,12 +432,15 @@ uv pip install -r requirements.txt  # Install/update deps
 - Plugins: code-review, context7, code-simplifier, coderabbit, huggingface-skills
 - RuFlo MCP: global scope in `~/.claude/settings.json`
 
-### OpenCode (audits, targeted edits)
+### OpenCode (audits, targeted edits, P24–P28 autonomous execution)
 
 - Provider: z.ai GLM models (direct, not through local proxy)
 - Config: `~/.config/opencode/opencode.jsonc` (not in git)
 - Instructions: `.opencode/AGENTS.md`
 - RuFlo MCP: global scope, `/home/linuxbrew/.linuxbrew/bin/ruflo`
+- **P24–P28 playbook**: `docs/phase-playbook-p24-p28.md`
+- **Known issue**: 5-space indentation in multi-line Python edits — always run `ruff check` after edits
+- **Known issue**: May install to system Python 3.14 — always use `.venv/bin/python`
 
 ### Two-phase workflow (system-level changes only)
 
@@ -412,6 +504,9 @@ The base security/gaming system is managed in the "Bazzite Laptop" Claude.ai pro
 | **DuckDuckGo AI wrappers** | Reverse-engineered unofficial APIs. |
 | **SonarQube** | 2-4 GB RAM + Elasticsearch. Too heavy. |
 | **Wazuh** | Full SIEM needing 4-8 GB RAM. |
+| **n8n** | Docker overhead on gaming laptop; systemd timers handle all scheduling. |
+| **Qdrant** | Already have LanceDB; third data store increases maintenance. |
+| **LangChain/LangGraph** | 50MB deps for patterns implementable in 100 LOC. |
 
 ---
 

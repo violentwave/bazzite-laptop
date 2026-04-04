@@ -99,6 +99,7 @@ system.* (19):
   system.token_report — token usage and cost report from LLM proxy (per-provider, per-task-type)
   system.pipeline_status — log pipeline status: record counts, last ingestion, DB size
   system.budget_status — token budget usage across all tiers (security, scheduled, interactive, coding)
+  system.metrics_summary ([hours], [metric_type]) — aggregate metrics for last 24h: cache hit rates, provider latencies, budget usage, tool errors
 
 security.* (14):
   security.status — overall security/health status JSON (6 keys)

@@ -18,7 +18,7 @@ DEFAULT_BIND = "127.0.0.1"
 DEFAULT_PORT = int(__import__("os").environ.get("MCP_BRIDGE_PORT", "8766"))
 
 # Number of tools in the allowlist (excludes health endpoint itself)
-_TOOL_COUNT = 52
+_TOOL_COUNT = 53
 
 
 def _assert_localhost(bind: str) -> None:
@@ -114,6 +114,7 @@ def create_app():
         "system.token_report": {"readOnlyHint": True, "idempotentHint": True},
         "system.pipeline_status": {"readOnlyHint": True, "idempotentHint": True},
         "system.budget_status": {"readOnlyHint": True, "idempotentHint": True},
+        "system.metrics_summary": {"readOnlyHint": True, "idempotentHint": True},
         # ── threat intel correlation ─────────────────────────────────────────
         "security.correlate": {"readOnlyHint": True, "openWorldHint": True},
         "security.recommend_action": {"readOnlyHint": True, "idempotentHint": True},
@@ -268,6 +269,23 @@ def create_app():
                     }
                 except Exception as e:
                     return {"error": str(e), "tiers": {}, "warnings": []}
+
+        elif tool_name == "system.metrics_summary":
+
+            @mcp.tool(name=tool_name, description=description, annotations=ann)
+            async def _handler_metrics_summary(
+                hours: int = 24,
+                metric_type: str | None = None,
+                _tn=tool_name,
+            ):
+                try:
+                    from ai.metrics import get_recorder
+
+                    recorder = get_recorder()
+                    result = recorder.query_summary(hours=hours, metric_type=metric_type)
+                    return result
+                except Exception as e:
+                    return {"error": str(e), "count": 0, "mean": 0.0}
 
         # Built-in health tool (MCP protocol)
 

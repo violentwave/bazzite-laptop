@@ -22,6 +22,7 @@ import lancedb
 import pyarrow as pa
 
 from ai.config import VECTOR_DB_DIR
+from ai.metrics import record_metric
 from ai.rag.constants import EMBEDDING_DIM
 from ai.rag.embedder import embed_single
 
@@ -140,6 +141,12 @@ class SemanticCache:
             return None
 
         if not results:
+            record_metric(
+                "cache",
+                "semantic_cache_lookup",
+                0.0,
+                tags={"task_type": task_type, "hit": False, "reason": "no_results"},
+            )
             return None
 
         result = results[0]
@@ -147,23 +154,53 @@ class SemanticCache:
         distance = result.get("_distance", 1.0)
 
         if distance >= distance_threshold:
+            record_metric(
+                "cache",
+                "semantic_cache_lookup",
+                0.0,
+                tags={"task_type": task_type, "hit": False, "reason": "distance"},
+            )
             return None
 
         try:
             cached_at = datetime.fromisoformat(result["cached_at"])
         except Exception:
+            record_metric(
+                "cache",
+                "semantic_cache_lookup",
+                0.0,
+                tags={"task_type": task_type, "hit": False, "reason": "parse_error"},
+            )
             return None
 
         ttl = _TTL_MAP.get(task_type, _DEFAULT_TTL)
         age = (datetime.now(UTC) - cached_at).total_seconds()
 
         if age >= ttl:
+            record_metric(
+                "cache",
+                "semantic_cache_lookup",
+                0.0,
+                tags={"task_type": task_type, "hit": False, "reason": "expired"},
+            )
             return None
 
         try:
+            record_metric(
+                "cache",
+                "semantic_cache_lookup",
+                1.0,
+                tags={"task_type": task_type, "hit": True},
+            )
             return json.loads(result["response"])
         except (json.JSONDecodeError, TypeError) as e:
             logger.debug("Failed to parse cached response: %s", e)
+            record_metric(
+                "cache",
+                "semantic_cache_lookup",
+                0.0,
+                tags={"task_type": task_type, "hit": False, "reason": "json_error"},
+            )
             return None
 
     def put(self, query: str, response: dict, task_type: str = "fast") -> None:

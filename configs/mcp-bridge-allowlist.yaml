@@ -354,6 +354,29 @@ tools:
     function: get_pipeline_status
     args: null
 
+  system.budget_status:
+    description: "Token budget usage across all tiers (security, scheduled, interactive, coding)"
+    source: python
+    module: ai.mcp_bridge.server
+    function: handle_system_budget_status
+    args: null
+
+  system.metrics_summary:
+    description: "Aggregate metrics for last 24h: cache hit rates, provider latencies, budget usage, tool errors"
+    source: python
+    module: ai.metrics
+    function: query_summary
+    args:
+      hours:
+        type: integer
+        required: false
+        default: 24
+        description: "Hours of metrics to summarize (default: 24)"
+      metric_type:
+        type: string
+        required: false
+        description: "Filter by metric type: cache, budget, provider, tool, timer"
+
   security.correlate:
     description: "Cross-reference an IOC across all threat intel sources. Pass ioc (the value) and ioc_type (hash|ip|url|cve)"
     source: python
@@ -407,3 +430,19 @@ tools:
         type: integer
         default: 5
         required: false
+
+  knowledge.task_patterns:
+    description: "Retrieve similar past successful tasks to guide current work"
+    source: python
+    module: ai.mcp_bridge.server
+    function: handle_knowledge_task_patterns
+    args:
+      query:
+        type: string
+        max_length: 500
+        required: true
+      top_k:
+        type: integer
+        default: 3
+        required: false
+

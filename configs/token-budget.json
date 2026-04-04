@@ -1,0 +1,27 @@
+{
+  "tiers": {
+    "security": {
+      "priority": 0,
+      "daily_token_limit": 500000,
+      "description": "Security scans, threat intel, CVE checks — always runs"
+    },
+    "scheduled": {
+      "priority": 1,
+      "daily_token_limit": 200000,
+      "description": "Scheduled agents, RAG ingestion, health checks"
+    },
+    "interactive": {
+      "priority": 2,
+      "daily_token_limit": 300000,
+      "description": "Newelle chat, manual queries"
+    },
+    "coding": {
+      "priority": 3,
+      "daily_token_limit": 100000,
+      "description": "Code generation, RAG QA — lowest priority"
+    }
+  },
+  "reset_hour_utc": 0,
+  "halt_all_at_pct": 95,
+  "warn_at_pct": 80
+}

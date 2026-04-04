@@ -30,6 +30,7 @@ from ai.cache import JsonFileCache
 from ai.cache_semantic import SemanticCache
 from ai.config import APP_NAME, LITELLM_CONFIG, load_keys
 from ai.health import AllProvidersExhausted, HealthTracker
+from ai.metrics import record_metric
 from ai.rate_limiter import RateLimiter
 
 logger = logging.getLogger(APP_NAME)
@@ -332,11 +333,23 @@ def _try_provider(provider_name: str, task_type: str, prompt: str, **kwargs) -> 
         _health_tracker.record_success(actual_provider, latency_ms)
         limiter = _get_rate_limiter()
         limiter.record_call(actual_provider)
+        record_metric(
+            "provider",
+            "provider_latency",
+            latency_ms / 1000.0,
+            tags={"provider": actual_provider, "task_type": task_type},
+        )
         return response
     except Exception as e:
         latency_ms = (time.time() - start) * 1000
         status_code = getattr(e, "status_code", None)
         _health_tracker.record_failure(provider_name, "call failed", status_code=status_code)
+        record_metric(
+            "provider",
+            "provider_error",
+            1.0,
+            tags={"provider": provider_name, "task_type": task_type, "error": str(e)[:100]},
+        )
         raise
 
 

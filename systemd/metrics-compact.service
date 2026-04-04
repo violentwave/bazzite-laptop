@@ -1,0 +1,9 @@
+[Unit]
+Description=Bazzite AI Metrics Compaction
+
+[Service]
+Type=oneshot
+User=lch
+WorkingDirectory=/home/lch/projects/bazzite-laptop
+ExecStart=/home/lch/projects/bazzite-laptop/.venv/bin/python scripts/metrics-compact.py
+Environment=PYTHONPATH=/home/lch/projects/bazzite-laptop

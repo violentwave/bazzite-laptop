@@ -21,7 +21,9 @@ import pytest
 # ---------------------------------------------------------------------------
 # Use setdefault so we share the same mock if another test file already
 # installed one (e.g. test_store.py), avoiding cross-file interference.
-_mock_lancedb = sys.modules.setdefault("lancedb", MagicMock())
+# Create a fresh MagicMock to avoid issues with the real lancedb module
+_mock_lancedb = MagicMock(name="lancedb")
+sys.modules["lancedb"] = _mock_lancedb
 _mock_pyarrow = sys.modules.setdefault("pyarrow", MagicMock())
 
 
@@ -127,10 +129,11 @@ End Date:   2026:03:21 10:00:00
 # Fixtures
 # ---------------------------------------------------------------------------
 
+
 @pytest.fixture(autouse=True)
 def _reset_lancedb_mock():
     """Reset the lancedb mock between tests."""
-    _mock_lancedb.reset_mock()
+    _mock_lancedb.reset_mock(return_value=True, side_effect=True)
     yield
 
 
@@ -145,6 +148,7 @@ def mock_db():
 @pytest.fixture()
 def mock_embed():
     """Patch embed_texts to return deterministic 768-dim vectors."""
+
     def _fake_embed(texts):
         return [[0.1] * 768 for _ in texts]
 
@@ -246,9 +250,7 @@ class TestParseHealthLog:
         """A log with SMART FAILED should set smart_status accordingly."""
         from ai.log_intel.ingest import parse_health_log
 
-        log_with_failure = SAMPLE_HEALTH_LOG.replace(
-            "/dev/sda: PASSED", "/dev/sda: FAILED"
-        )
+        log_with_failure = SAMPLE_HEALTH_LOG.replace("/dev/sda: PASSED", "/dev/sda: FAILED")
         record = parse_health_log(log_with_failure, source_file="/var/log/health.log")
         assert record["smart_status"] == "FAILED"
 
@@ -740,8 +742,10 @@ class TestIngestHealthLogrotate:
         with (
             patch("ai.log_intel.ingest.HEALTH_LOG_DIR", log_dir),
             patch("ai.log_intel.ingest.get_ingest_state", return_value={}),
-            patch("ai.log_intel.ingest.save_ingest_state",
-                  side_effect=lambda state, state_dir=None: saved_state.update(state)),
+            patch(
+                "ai.log_intel.ingest.save_ingest_state",
+                side_effect=lambda state, state_dir=None: saved_state.update(state),
+            ),
             patch("ai.log_intel.ingest.VECTOR_DB_DIR", tmp_path / "vector-db"),
             patch(
                 "ai.rag.embedder.embed_texts",
@@ -821,6 +825,7 @@ class TestIngestScansPopulatesSecurityLogs:
 # ═══════════════════════════════════════════════════════════════════════════
 # 7. ingest_health → security_logs
 # ═══════════════════════════════════════════════════════════════════════════
+
 
 class TestIngestHealthPopulatesSecurityLogs:
     """Verify health logs are chunked and written to security_logs via the RAG store."""

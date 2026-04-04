@@ -17,7 +17,7 @@ def allowlist():
 
 class TestAllowlistIntegrity:
     def test_has_48_tools(self, allowlist):
-        assert len(allowlist["tools"]) == 52
+        assert len(allowlist["tools"]) == 53
 
     def test_all_expected_tools_present(self, allowlist):
         expected = {
@@ -40,6 +40,7 @@ class TestAllowlistIntegrity:
             "system.token_report",
             "system.pipeline_status",
             "system.budget_status",
+            "system.metrics_summary",
             "security.last_scan",
             "security.health_snapshot",
             "security.status",

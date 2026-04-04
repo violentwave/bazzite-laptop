@@ -5,7 +5,7 @@ Auto-generated cross-tool handoff. Updated by save-handoff.sh
 ## Current State
 
 - **Last Tool:** claude-code
-- **Last Updated:** 2026-04-03T22:30:00Z
+- **Last Updated:** 2026-04-03T23:56:58Z
 - **Project:** bazzite-laptop
 - **Branch:** master
 
@@ -15,6 +15,10 @@ Auto-generated cross-tool handoff. Updated by save-handoff.sh
 - [x] P22 + P23 audit — COMPLETE (all 10 issues found and fixed, sign-off 2026-04-03)
 
 ## Recent Sessions
+
+### 2026-04-03T23:56:58Z — claude-code
+[Auto-saved on session end]
+
 
 ### 2026-04-03T23:00:00Z — claude-code
 [P22 + P23 Audit Complete]
@@ -52,7 +56,6 @@ Auto-generated cross-tool handoff. Updated by save-handoff.sh
 - Updated docs/CHANGELOG.md (added Phase 22 entry)
 - All verification: ruff clean, tests pass
 
-## Recent Sessions
 
 ### 2026-04-03T21:15:43Z — claude-code
 [Auto-saved on session end]
@@ -114,20 +117,4 @@ Phase 19 complete: input validation MCP safety layer. InputValidator pre-dispatc
 
 
 ### 2026-04-03T17:19:43Z — claude-code
-[Auto-saved on session end]
-
-
-### 2026-04-03T17:16:26Z — claude-code
-[Auto-saved on session end]
-
-
-### 2026-04-03T17:15:18Z — claude-code
-[Auto-saved on session end]
-
-
-### 2026-04-03T17:14:47Z — claude-code
-[Auto-saved on session end]
-
-
-### 2026-04-03T17:14:42Z — claude-code
 [Auto-saved on session end]

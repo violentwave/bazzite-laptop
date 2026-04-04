@@ -32,9 +32,18 @@ from ai.config import (
 class TestPathConstants:
     def test_all_are_path_objects(self):
         paths = [
-            PROJECT_ROOT, AI_DIR, VENV_DIR, CONFIGS_DIR, KEYS_ENV,
-            RATE_LIMITS_DEF, RATE_LIMITS_STATE, LITELLM_CONFIG,
-            SECURITY_DIR, VECTOR_DB_DIR, STATUS_FILE, ENRICHED_HASHES,
+            PROJECT_ROOT,
+            AI_DIR,
+            VENV_DIR,
+            CONFIGS_DIR,
+            KEYS_ENV,
+            RATE_LIMITS_DEF,
+            RATE_LIMITS_STATE,
+            LITELLM_CONFIG,
+            SECURITY_DIR,
+            VECTOR_DB_DIR,
+            STATUS_FILE,
+            ENRICHED_HASHES,
         ]
         for p in paths:
             assert isinstance(p, Path), f"{p} is not a Path"
@@ -53,6 +62,27 @@ class TestPathConstants:
 
 
 class TestKeyLoading:
+    @pytest.fixture(autouse=True)
+    def _reset_keys_loaded(self):
+        """Reset the _keys_loaded flag and clean env keys before/after each test."""
+        import os
+
+        import ai.config as cfg
+
+        # Save original state
+        original_keys_loaded = cfg._keys_loaded
+        original_env = os.environ.copy()
+
+        cfg._keys_loaded = False
+        yield
+
+        # Restore env to original state (remove any keys added by this test)
+        cfg._keys_loaded = original_keys_loaded
+        current_env = os.environ
+        for key in current_env:
+            if key not in original_env:
+                os.environ.pop(key, None)
+
     def test_load_keys_missing_file(self, tmp_path):
         fake_path = tmp_path / "nonexistent" / "keys.env"
         with patch("ai.config.KEYS_ENV", fake_path):
@@ -92,21 +122,34 @@ class TestScopedKeyLoading:
 
     @pytest.fixture(autouse=True)
     def _reset_keys_loaded(self):
-        """Reset the _keys_loaded flag before each test for isolation."""
+        """Reset the _keys_loaded flag and clean env keys before/after each test."""
+        import os
+
         import ai.config as cfg
-        original = cfg._keys_loaded
+
+        # Save original state
+        original_keys_loaded = cfg._keys_loaded
+        original_env = os.environ.copy()
+
         cfg._keys_loaded = False
         yield
-        cfg._keys_loaded = original
+
+        # Restore env to original state (remove any keys added by this test)
+        cfg._keys_loaded = original_keys_loaded
+        current_env = os.environ
+        for key in current_env:
+            if key not in original_env:
+                os.environ.pop(key, None)
 
     def test_load_keys_no_scope_loads_all(self, tmp_path):
         """Default (no scope) loads ALL keys — backward compatible."""
+        # Clear any existing key first (tests may have polluted env)
+        os.environ.pop("GROQ_API_KEY", None)
+        os.environ.pop("VT_API_KEY", None)
+        os.environ.pop("UNRELATED_KEY", None)
+
         fake_env = tmp_path / "keys.env"
-        fake_env.write_text(
-            "GROQ_API_KEY=groq123\n"
-            "VT_API_KEY=vt456\n"
-            "UNRELATED_KEY=other789\n"
-        )
+        fake_env.write_text("GROQ_API_KEY=groq123\nVT_API_KEY=vt456\nUNRELATED_KEY=other789\n")
         try:
             with patch("ai.config.KEYS_ENV", fake_env):
                 result = load_keys()
@@ -121,12 +164,15 @@ class TestScopedKeyLoading:
 
     def test_load_keys_scope_llm(self, tmp_path):
         """scope='llm' only loads LLM provider keys."""
+        # Clear any existing key first
+        os.environ.pop("GROQ_API_KEY", None)
+        os.environ.pop("ZAI_API_KEY", None)
+        os.environ.pop("VT_API_KEY", None)
+        os.environ.pop("OTX_API_KEY", None)
+
         fake_env = tmp_path / "keys.env"
         fake_env.write_text(
-            "GROQ_API_KEY=groq123\n"
-            "ZAI_API_KEY=zai456\n"
-            "VT_API_KEY=vt789\n"
-            "OTX_API_KEY=otx000\n"
+            "GROQ_API_KEY=groq123\nZAI_API_KEY=zai456\nVT_API_KEY=vt789\nOTX_API_KEY=otx000\n"
         )
         try:
             with patch("ai.config.KEYS_ENV", fake_env):
@@ -145,6 +191,13 @@ class TestScopedKeyLoading:
 
     def test_load_keys_scope_threat_intel(self, tmp_path):
         """scope='threat_intel' only loads threat intel keys."""
+        # Clear any existing key first
+        os.environ.pop("VT_API_KEY", None)
+        os.environ.pop("OTX_API_KEY", None)
+        os.environ.pop("ABUSEIPDB_KEY", None)
+        os.environ.pop("GROQ_API_KEY", None)
+        os.environ.pop("GEMINI_API_KEY", None)
+
         fake_env = tmp_path / "keys.env"
         fake_env.write_text(
             "VT_API_KEY=vt123\n"
@@ -192,9 +245,13 @@ class TestScopedKeyLoading:
     def test_key_scopes_llm_contains_expected_keys(self):
         """LLM scope includes all expected provider keys."""
         expected = {
-            "GROQ_API_KEY", "ZAI_API_KEY", "GEMINI_API_KEY",
-            "OPENROUTER_API_KEY", "MISTRAL_API_KEY",
-            "CEREBRAS_API_KEY", "CLOUDFLARE_API_KEY",
+            "GROQ_API_KEY",
+            "ZAI_API_KEY",
+            "GEMINI_API_KEY",
+            "OPENROUTER_API_KEY",
+            "MISTRAL_API_KEY",
+            "CEREBRAS_API_KEY",
+            "CLOUDFLARE_API_KEY",
         }
         assert expected == KEY_SCOPES["llm"]
 
