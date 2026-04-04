@@ -5,7 +5,7 @@ from unittest.mock import patch
 
 import pytest
 
-from ai.memory import ConversationMemory, get_memory, summarize_session  # noqa: E402
+from ai.memory import ConversationMemory, summarize_session  # noqa: E402
 
 
 def mock_embed_single(text: str, **kwargs):
@@ -110,6 +110,14 @@ class TestSummarizeSession:
 
 class TestSingleton:
     def test_singleton_returns_same_instance(self):
-        m1 = get_memory()
-        m2 = get_memory()
-        assert m1 is m2
+        import ai.memory as mem_mod
+
+        with patch.object(mem_mod.ConversationMemory, "__init__", lambda self, **kw: None):
+            saved = mem_mod._memory
+            try:
+                mem_mod._memory = None
+                m1 = mem_mod.get_memory()
+                m2 = mem_mod.get_memory()
+                assert m1 is m2
+            finally:
+                mem_mod._memory = saved
