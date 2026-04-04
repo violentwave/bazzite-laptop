@@ -1,5 +1,5 @@
 import json
-from datetime import datetime, timedelta
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 
@@ -21,11 +21,7 @@ class InsightsEngine:
         schema = pa.schema(
             [
                 pa.field("timestamp", pa.string()),
-                pa.field("insight_type", pa.string()),
-                pa.field("description", pa.string()),
-                pa.field("confidence", pa.float32()),
-                pa.field("metrics_snapshot", pa.string()),
-                pa.field("recommendations", pa.string()),
+                pa.field("data", pa.string()),
             ]
         )
         try:
@@ -34,10 +30,9 @@ class InsightsEngine:
             lance.write_dataset([], self.path, schema=schema)
 
     def generate_weekly_insights(self) -> dict[str, Any]:
-        week_ago = (datetime.now() - timedelta(days=7)).isoformat()
-        metrics = self.metrics.query_timeseries(
-            "cache_hit", since=week_ago
-        ) + self.metrics.query_timeseries("budget_usage", since=week_ago)
+        metrics = self.metrics.get_raw(
+            hours=168, metric_type="cache_hit"
+        ) + self.metrics.get_raw(hours=168, metric_type="budget_spend")
 
         insights = []
         recommendations = []
@@ -94,12 +89,14 @@ class InsightsEngine:
         self._store_insight(result)
         return result
 
-    def _store_insight(self, data: dict[str, Any]):
-        table = lance.dataset(self.path).to_table()
-        batch = pa.record_batch(
-            [[datetime.now().isoformat()], [json.dumps(data)]], schema=table.schema
+    def _store_insight(self, data: dict[str, Any]) -> None:
+        row = pa.table(
+            {
+                "timestamp": pa.array([datetime.now().isoformat()]),
+                "data": pa.array([json.dumps(data)]),
+            }
         )
-        lance.write_dataset(batch, self.path, mode="append")
+        lance.write_dataset(row, self.path, mode="append")
 
     def get_latest_insights(self, limit: int = 4) -> list[dict[str, Any]]:
         ds = lance.dataset(self.path)
