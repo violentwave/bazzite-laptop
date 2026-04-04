@@ -2,6 +2,12 @@
 
 Exposes 52 tools + 1 health endpoint on localhost.
 NEVER bind to 0.0.0.0. NEVER import ai.router (it loads all keys unscoped).
+
+Tool Filtering:
+    This server supports server-side tool filtering via ai.mcp_bridge.tool_filter.
+    The ToolFilter class provides namespace-based and semantic filtering to reduce
+    tool selection overhead as the tool count grows. Use get_filter() to obtain
+    filtered tool lists for specific contexts.
 """
 
 import logging
