@@ -93,9 +93,9 @@ Key constraints:
 
 ---
 
-## MCP Tools (55 + health)
+## MCP Tools (56 + health)
 
-Source: `configs/mcp-bridge-allowlist.yaml` (55 entries).
+Source: `configs/mcp-bridge-allowlist.yaml` (56 entries).
 
 > **Phase 12:** PingMiddleware (25s keepalive) active. All 50 tools carry MCP annotations (readOnly/destructive/openWorld hints).
 > **Phase 20:** Added `agents.timer_health` — validates all 16 systemd timers.
@@ -105,6 +105,7 @@ Source: `configs/mcp-bridge-allowlist.yaml` (55 entries).
 > **Phase 24:** Added `system.metrics_summary` — aggregate metrics for last 24h.
 > **Phase 25:** Added `memory.search` — cross-session conversation memory retrieval.
 > **Phase 26:** Added `system.provider_status` — per-provider health, latency, error rates.
+> **Phase 27:** Added `security.alert_summary` — proactive security alerts (CVEs, stale scans, release advisories).
 
 ### system.* (21 tools)
 
@@ -131,7 +132,7 @@ Source: `configs/mcp-bridge-allowlist.yaml` (55 entries).
 | `system.budget_status` | python: `ai.mcp_bridge.server` | — | Daily token budget usage and warnings across priority tiers |
 | `system.metrics_summary` | python: `ai.metrics` | `hours`, `metric_type` | Aggregate metrics for last 24h: cache hit rates, provider latencies, budget usage, tool errors |
 
-### security.* (14 tools)
+### security.* (15 tools)
 
 | Tool | Source | Args | Description |
 |------|--------|------|-------------|
@@ -219,19 +220,17 @@ Source: `configs/mcp-bridge-allowlist.yaml` (55 entries).
 | **P24** | Observability & Metrics | `system.metrics_summary` | `metrics-compact.timer` (Sun 03:00) | `metrics` | `ai/metrics.py` |
 | **P25** | Conversation Memory | `memory.search` | — | `conversation_memory` | `ai/memory.py` |
 | **P26** | Provider Intelligence | `system.provider_status` | — | — | `ai/provider_intel.py` |
-| **P25** | Conversation Memory | `memory.search` | — | `conversation_memory` | `ai/memory.py` |
-| **P26** | Provider Intelligence | `system.provider_status` | — | — | `ai/provider_intel.py` |
 | **P27** | Security Alerting | `security.alert_summary` | `security-alert.timer` (every 6h) | — | `ai/security/alerts.py` |
 | **P28** | Self-Improvement Loop | `system.weekly_insights` | `weekly-insights.timer` (Mon 09:00) | `system_insights` | `ai/insights.py` |
 
 ### Target State After P28
 
-| Metric | Current (P23) | Target (P24) | Target (P25) | Target (P28) |
-|--------|---------------|--------------|--------------|--------------|
-| MCP tools | 52 | 53 (+1) | 54 (+1) | 57 (+5) |
-| Timers | 16 | 17 (+1) | 17 | 19 (+3) |
-| LanceDB tables | 10 | 11 (+1) | 12 (+1) | 13 (+3) |
-| Tests | ~1604 | ~1610 | ~1620 | ~1650+ |
+| Metric | Current (P23) | Target (P24) | Target (P25) | Target (P26) | Target (P27) | Target (P28) |
+|--------|---------------|--------------|--------------|--------------|--------------|--------------|
+| MCP tools | 52 | 53 (+1) | 54 (+1) | 55 (+1) | 56 (+1) | 57 (+5) |
+| Timers | 16 | 17 (+1) | 17 | 17 | 18 (+1) | 19 (+3) |
+| LanceDB tables | 10 | 11 (+1) | 12 (+1) | 12 | 12 | 13 (+3) |
+| Tests | ~1604 | ~1610 | ~1620 | ~1630 | ~1640 | ~1650+ |
 
 ### Dependency Graph
 
@@ -288,7 +287,7 @@ P28 (Self-Improvement) ← aggregates P24 + P25 + P26 + P27
 
 ---
 
-## Systemd Timers (17)
+## Systemd Timers (18)
 
 | Timer | Schedule | Purpose |
 |-------|----------|---------|
@@ -309,6 +308,7 @@ P28 (Self-Improvement) ← aggregates P24 + P25 + P26 + P27
 | `service-canary.timer` | Every 15m | AI service health check + auto-restart |
 | `lancedb-optimize.timer` | Sun 2:00 | Compact and optimize LanceDB tables |
 | `metrics-compact.timer` | Sun 3:00 | Compact and prune old metrics data |
+| `security-alert.timer` | Every 6h | Security alert evaluation (CVEs, stale scans, release advisories) |
 
 ---
 
@@ -356,9 +356,11 @@ P28 (Self-Improvement) ← aggregates P24 + P25 + P26 + P27
 | `ai/metrics.py` | MetricsRecorder: time-series observability with buffered writes (P24) |
 | `ai/memory.py` | ConversationMemory: persistent memory with semantic retrieval (P25) |
 | `ai/provider_intel.py` | ProviderIntel: dynamic routing based on latency/error/cost (P26) |
+| `ai/security/alerts.py` | SecurityAlertEvaluator: CVE matching, scan freshness, deduplication (P27) |
 | `ai/security/inputvalidator.py` | Pre-dispatch input validation + secret redaction |
 | `ai/system/` | release_watch, fedora_updates, pkg_intel |
-| `configs/mcp-bridge-allowlist.yaml` | 55 tool definitions + argument validation |
+| `scripts/security-alert-eval.py` | Security alert evaluation script (P27) |
+| `configs/mcp-bridge-allowlist.yaml` | 56 tool definitions + argument validation |
 | `configs/safety-rules.json` | Input validation rules (max length, patterns, path allowlists) |
 | `configs/litellm-config.yaml` | LiteLLM provider routing config |
 | `configs/ai-rate-limits.json` | Per-provider rate limits |

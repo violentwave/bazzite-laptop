@@ -1,0 +1,10 @@
+[Unit]
+Description=Bazzite AI Security Alert Evaluation
+After=network.target
+
+[Service]
+Type=oneshot
+User=lch
+WorkingDirectory=/home/lch/projects/bazzite-laptop
+ExecStart=/home/lch/projects/bazzite-laptop/.venv/bin/python scripts/security-alert-eval.py
+Environment=PYTHONPATH=/home/lch/projects/bazzite-laptop

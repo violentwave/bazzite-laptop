@@ -117,6 +117,7 @@ security.* (14):
   security.run_ingest — trigger log pipeline re-ingestion
   security.correlate (ioc, ioc_type) — cross-reference an IOC across all threat intel sources. ioc = the value (hash/IP/URL/CVE-ID), ioc_type = hash|ip|url|cve
   security.recommend_action (finding_type, finding_id) — generate response playbook. finding_type = cve|malware|suspicious_ip|suspicious_url, finding_id = the identifier
+  security.alert_summary — active security alerts: CVEs matching installed packages, stale scans, release advisories
 
 knowledge.* (5):
   knowledge.rag_query (query) — semantic search over indexed docs, returns raw context chunks

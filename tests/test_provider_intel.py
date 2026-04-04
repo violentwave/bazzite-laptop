@@ -1,6 +1,5 @@
 """Unit tests for ai/provider_intel.py ProviderIntel."""
 
-import pytest
 
 from ai.provider_intel import (
     PROVIDER_COSTS,

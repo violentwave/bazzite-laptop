@@ -18,7 +18,7 @@ DEFAULT_BIND = "127.0.0.1"
 DEFAULT_PORT = int(__import__("os").environ.get("MCP_BRIDGE_PORT", "8766"))
 
 # Number of tools in the allowlist (excludes health endpoint itself)
-_TOOL_COUNT = 55
+_TOOL_COUNT = 56
 
 
 def _assert_localhost(bind: str) -> None:
@@ -80,6 +80,7 @@ def create_app():
         "security.last_scan": {"readOnlyHint": True, "idempotentHint": True},
         "security.health_snapshot": {"readOnlyHint": True, "idempotentHint": True},
         "security.threat_summary": {"readOnlyHint": True, "idempotentHint": True},
+        "security.alert_summary": {"readOnlyHint": True, "idempotentHint": True},
         "logs.health_trend": {"readOnlyHint": True, "idempotentHint": True},
         "logs.scan_history": {"readOnlyHint": True, "idempotentHint": True},
         "logs.anomalies": {"readOnlyHint": True, "idempotentHint": True},

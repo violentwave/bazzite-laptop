@@ -222,6 +222,12 @@ tools:
     module: "ai.threat_intel.summary"
     args: null
 
+  security.alert_summary:
+    description: "Active security alerts: CVEs matching installed packages, stale scans, release advisories"
+    source: json_file
+    path: ~/security/alerts.json
+    readOnly: true
+
   security.run_ingest:
     description: "Trigger log ingestion to update the intelligence database"
     source: python
