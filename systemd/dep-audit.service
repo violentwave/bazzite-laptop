@@ -1,0 +1,23 @@
+[Unit]
+Description=Bazzite Dependency Vulnerability Scanner
+Documentation=file:///home/lch/projects/bazzite-laptop/docs/ai-operational-playbook.md
+After=network.target
+
+[Service]
+Type=oneshot
+User=lch
+WorkingDirectory=/home/lch/projects/bazzite-laptop
+ExecStart=/home/lch/projects/bazzite-laptop/.venv/bin/python -m ai.system.depaudit
+
+TimeoutStartSec=300
+
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=dep-audit
+
+NoNewPrivileges=yes
+PrivateTmp=yes
+ReadWritePaths=/home/lch/security
+
+[Install]
+WantedBy=multi-user.target

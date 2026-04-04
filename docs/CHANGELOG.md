@@ -1,9 +1,197 @@
 # Changelog — Bazzite AI Enhancement Layer
-<!-- System: Acer Predator G3-571 | Bazzite 43 | Last updated: 2026-04-03 -->
+<!-- System: Acer Predator G3-571 | Bazzite 43 | Last updated: 2026-04-04 -->
 
 All notable changes are recorded here. Phases correspond to the original
 implementation plan for the AI enhancement layer built on top of the base
 Bazzite security/gaming system.
+
+---
+
+## Phase P39 Complete (2026-04-04)
+
+### Summary
+| Phase | Name | ΔTools | Target Modules |
+|-------|------|--------|----------------|
+| P39 | Supply Chain Security | +2 | `ai/system/depaudit.py`, `systemd/dep-audit.timer` |
+
+### Details
+
+**P39 — Supply Chain Security Hardening:**
+- Created `ai/system/depaudit.py`: pip-audit wrapper with SBOM generation
+  - `run_dep_audit()`: runs pip-audit, returns structured results
+  - `write_report()`: atomic JSON write + P37 alert dispatch
+  - `generate_sbom()`: CycloneDX-lite SBOM from pip list
+  - `get_latest_report()` / `get_report_history()`: MCP tool helpers
+- Created `systemd/dep-audit.timer` (Sunday 03:00) + `.service` (oneshot)
+- Added alert rule `dep_vuln_found` in `ai/alerts/rules.py` (critical, 24hr cooldown)
+- Added MCP tools: `system.dep_audit`, `system.dep_audit_history` (tools 73 → 75)
+- Created `.secrets.baseline` for detect-secrets pre-commit hook
+- Added pytest-cov to CI with 70% threshold, pip-audit step (non-blocking)
+- `tests/test_dep_audit.py`: 11 tests
+
+---
+
+## Phase P38 Complete (2026-04-04)
+
+### Summary
+| Phase | Name | ΔTools | Target Modules |
+|-------|------|--------|----------------|
+| P38 | HANDOFF Auto-Capture | +1 | `ai/learning/handoff_parser.py` |
+
+### Details
+
+**P38 — HANDOFF Auto-Capture:**
+- Created `ai/learning/handoff_parser.py`: HandoffEntry dataclass + parse functions
+- Created `scripts/parse-handoff.py`: CLI with `--dry-run` and `--since-date` flags
+- Added MCP tool: `knowledge.session_history` (tools 72 → 73)
+- `tests/test_handoff_parser.py`: 9 tests covering parsing, filtering, conversion
+
+---
+
+## Phase P37 Complete (2026-04-04)
+
+### Summary
+| Phase | Name | ΔTools | Target Modules |
+|-------|------|--------|----------------|
+| P37 | Adaptive Desktop Alerting | +2 | `ai/alerts/` |
+
+### Details
+
+**P37 — Adaptive Desktop Alerting:**
+- Created `ai/alerts/` package with rules, dispatcher, history modules
+- `ai/alerts/rules.py`: SQLite-backed alert rules with cooldown tracking
+- `ai/alerts/dispatcher.py`: notify-send integration via subprocess
+- `ai/alerts/history.py`: Alert history with acknowledge support
+- Added 2 MCP tools: `system.alert_history`, `system.alert_rules`
+- Updated tool count: 70 → 72
+
+---
+
+## Phase P36 Complete (2026-04-04)
+
+### Summary
+| Phase | Name | ΔTests | Target Modules |
+|-------|------|--------|----------------|
+| P36 | Mutation & Property Hardening | +9 | input_validator, cache, ratelimiter, health |
+
+### Details
+
+**P36 — Mutation & Property Hardening:**
+- `tests/test_properties.py`: 9 property-based tests using hypothesis
+- Tests cover: input_validator, cache, ratelimiter, health modules
+- Settings: max_examples=200 (security), deadline=500ms
+- mutmut requires setup.cfg configuration (deferred for now)
+
+---
+
+## Phase P35 Complete (2026-04-04)
+
+### Summary
+| Phase | Name | ΔTests | Covered Modules |
+|-------|------|--------|----------------|
+| P35 | Test Coverage Blitz | 0 | MCP bridge, log intel, threat intel already covered |
+
+### Details
+
+**P35 — Test Coverage Blitz:**
+- Verified existing test coverage for critical modules:
+  - `tests/test_mcp_bridge_server.py`: MCP bridge server tests (8 tests)
+  - `tests/test_mcp_bridge_tools.py`: Tool dispatch tests (31 tests)
+  - `tests/test_log_intel_ingest.py`: Log ingestion tests (23 tests)
+  - `tests/test_threat_intel.py`: Threat lookup tests (41 tests)
+  - `tests/test_threat_summary.py`: Threat summary tests (17 tests)
+  - `tests/test_playbooks.py`: Playbook tests (24 tests)
+- Total tests: **1965 collected** (already exceeds ~1834 target from playbook)
+
+---
+
+## Phase P34 Complete (2026-04-04)
+
+### Summary
+| Phase | Name | ΔTools | ΔTimers | ΔTables | ΔTests | Key Module |
+|-------|------|--------|---------|---------|--------|-------------|
+| P34 | Performance Hardening | 0 | 0 | 0 | +14 | `ai/rag/embedder.py`, `ai/rate_limiter.py`, `ai/health.py`, `ai/router.py` |
+
+### Final State After P34
+- **MCP tools:** 70
+- **Timers:** 20
+- **LanceDB tables:** 23
+- **Tests:** ~1684 (+12)
+
+### Details
+
+**P34 — Performance Hardening:**
+- `ai/rag/embedder.py`: Added `embed_texts_async()` with `asyncio.gather` + `Semaphore(5)` concurrency limit
+- `ai/rag/query.py`: Verified parallel search using `ThreadPoolExecutor(max_workers=3)` (already existed)
+- `ai/rate_limiter.py`: In-memory cache with background flush daemon (60s), `threading.RLock`, `atexit` flush on shutdown
+- `ai/health.py`: Added `_cached_score` + `_score_cache_time` fields on `ProviderHealth`, `invalidate_cache()` called from `record_success()`/`record_failure()`
+- `ai/router.py`: Added `_config_mtime` tracking to avoid unnecessary file reads; added `httpx.Client` with connection pooling (max_keepalive=20, max_connections=100)
+- `tests/test_performance.py`: 14 regression tests covering all performance fixes
+
+---
+
+## Phase P29–P33 Complete (2026-04-04)
+
+### Summary
+
+| Phase | Name | ΔTools | ΔTimers | ΔTables | Key Module |
+|-------|------|--------|---------|---------|-------------|
+| Prereq | MCP Tool Filtering | 0 | 0 | +1 | `ai/mcp_bridge/tool_filter.py` |
+| P32 | Testing Intelligence | 0 | 0 | +1 | `ai/testing/` |
+| P29 | Structural Code Intel | +6 | +1 | +4 | `ai/code_intel/` |
+| P31 | Agent Collaboration | +3 | 0 | +2 | `ai/collab/` |
+| P30 | Workflow Engine | +2 | 0 | +1 | `ai/workflows/` |
+| P33 | Plugin Factory | +2 | 0 | +1 | `ai/tools/` |
+| **Total** | | **+13** | **+1** | **+10** | |
+
+### Final State After P33
+- **MCP tools:** 57 → 70
+- **Timers:** 19 → 20
+- **LanceDB tables:** 13 → 23
+- **Tests:** ~1672 → ~1800+
+
+### Details
+
+**Prereq — MCP Tool Filtering:**
+- `ai/mcp_bridge/tool_filter.py`: namespace + semantic tool filtering
+- LanceDB `tool_metadata` table for semantic tool search
+- Core tools always included (health, disk, memory, services, manifest)
+- Max 15 tools per context window
+- `tests/test_tool_filter.py`: 10 test cases
+
+**P32 — Testing Intelligence:**
+- `ai/testing/test_intelligence.py`: `TestStabilityTracker` with SQLite stability tracking
+- `ai/testing/pytest_plugin.py`: auto-record test results via pytest hook
+- `ai/testing/traceability.py`: LanceDB `test_mappings` table
+- `scripts/test-smart.sh`: smart/full/flaky test runner modes
+- `pyproject.toml`: timeout, quarantine marker configuration
+- `tests/test_testing_intelligence.py`: 6 test cases
+
+**P29 — Structural Code Intelligence:**
+- `ai/code_intel/parser.py`: AST-based parser + grimp import graph
+- `ai/code_intel/store.py`: 4 LanceDB tables for code knowledge graph
+- 6 new MCP tools: `code.impact_analysis`, `code.dependency_graph`, `code.find_callers`, `code.suggest_tests`, `code.complexity_report`, `code.class_hierarchy`
+- `code-index.timer`: daily code re-indexing (06:00)
+- PyDriller co-change mining for historical analysis
+
+**P31 — Agent Collaboration:**
+- `ai/collab/task_queue.py`: SQLite task queue with agent routing
+- `ai/collab/shared_context.py`: LanceDB `shared_context` for decisions/findings
+- `ai/collab/knowledge_base.py`: cross-agent learning with confidence decay
+- `ai/collab/file_claims.py`: file-level claim system with auto-expiry
+- 3 MCP tools: `collab.queue_status`, `collab.add_task`, `collab.search_knowledge`
+
+**P30 — Workflow Engine:**
+- `ai/workflows/runner.py`: multi-tool composition with ReAct loop
+- `ai/workflows/definitions.py`: LanceDB `workflows` table
+- `ai/workflows/triggers.py`: watchdog file watcher + asyncio event bus
+- 2 MCP tools: `workflow.run`, `workflow.list`
+
+**P33 — Plugin Factory:**
+- `ai/tools/builder.py`: `SafetyValidator` + `ToolBuilder` with LanceDB persistence
+- `ai/tools/composites.py`: composite tool patterns with parallel execution
+- 2 MCP tools: `system.create_tool`, `system.list_dynamic_tools`
+- AST-based safety: blocks `os`, `subprocess`, `eval`, `__import__`
 
 ---
 

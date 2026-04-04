@@ -24,7 +24,7 @@ DEFAULT_BIND = "127.0.0.1"
 DEFAULT_PORT = int(__import__("os").environ.get("MCP_BRIDGE_PORT", "8766"))
 
 # Number of tools in the allowlist (excludes health endpoint itself)
-_TOOL_COUNT = 57
+_TOOL_COUNT = 75
 
 
 def _assert_localhost(bind: str) -> None:
@@ -341,11 +341,114 @@ def create_app():
                 except Exception as e:
                     return {"error": str(e), "insights": [], "count": 0}
 
+        elif tool_name == "system.alert_history":
+
+            @mcp.tool(name=tool_name, description=description, annotations=ann)
+            async def _handler_alert_history(
+                limit: int = 20,
+                _tn=tool_name,
+            ):
+                try:
+                    from ai.alerts.history import get_recent
+
+                    alerts = get_recent(limit=limit)
+                    return {"alerts": alerts, "count": len(alerts)}
+                except Exception as e:
+                    return {"error": str(e), "alerts": [], "count": 0}
+
+        elif tool_name == "system.alert_rules":
+
+            @mcp.tool(name=tool_name, description=description, annotations=ann)
+            async def _handler_alert_rules(_tn=tool_name):
+                try:
+                    from ai.alerts.rules import get_rules_engine
+
+                    rules = get_rules_engine().get_all_rules()
+                    return {
+                        "rules": [
+                            {
+                                "rule_id": r.rule_id,
+                                "event_type": r.event_type,
+                                "title": r.title,
+                                "urgency": r.urgency,
+                                "cooldown_seconds": r.cooldown_seconds,
+                                "enabled": r.enabled,
+                            }
+                            for r in rules
+                        ],
+                        "count": len(rules),
+                    }
+                except Exception as e:
+                    return {"error": str(e), "rules": [], "count": 0}
+
+        elif tool_name == "knowledge.session_history":
+
+            @mcp.tool(name=tool_name, description=description, annotations=ann)
+            async def _handler_session_history(
+                query: str,
+                limit: int = 5,
+                _tn=tool_name,
+            ):
+                try:
+                    from ai.config import PROJECT_ROOT
+                    from ai.learning.handoff_parser import parse_handoff
+                    from ai.rag.embedder import embed_single
+                    from ai.rag.store import get_store
+
+                    entries = parse_handoff(PROJECT_ROOT / "HANDOFF.md")
+
+                    if not entries:
+                        return {"sessions": [], "count": 0}
+
+                    query_vec = embed_single(query, input_type="search_query")
+                    store = get_store()
+
+                    results = store.search_task_patterns(query_vec, limit=limit)
+
+                    return {"sessions": results, "count": len(results)}
+                except Exception as e:
+                    return {"error": str(e), "sessions": [], "count": 0}
+
         # Built-in health tool (MCP protocol)
 
     @mcp.tool(name="health", description="Bridge health check")
     async def _health():
         return await health_check()
+
+    # Dependency audit tools
+    @mcp.tool(name="system.dep_audit", description="Get latest dependency audit results")
+    async def _dep_audit():
+        try:
+            from ai.system.depaudit import get_latest_report
+
+            result = get_latest_report()
+            if result:
+                return {
+                    "vulnerable": result.vulnerable,
+                    "fixed": result.fixed,
+                    "packages": [
+                        {
+                            "name": p.name,
+                            "version": p.version,
+                            "vulns": [{"id": v.id, "severity": v.severity} for v in p.vulns],
+                        }
+                        for p in result.packages
+                    ],
+                    "generated_at": result.generated_at,
+                }
+            return {"error": "No audit report found", "vulnerable": 0}
+        except Exception as e:
+            return {"error": str(e), "vulnerable": 0}
+
+    @mcp.tool(name="system.dep_audit_history", description="List dependency audit history")
+    async def _dep_audit_history(limit: int = 30):
+        try:
+            from ai.system.depaudit import get_report_history
+
+            history = get_report_history(limit=limit)
+            return {"reports": history, "count": len(history)}
+        except Exception as e:
+            return {"error": str(e), "reports": [], "count": 0}
 
     # Plain HTTP health endpoint (for curl/monitoring)
     @mcp.custom_route("/health", methods=["GET"])

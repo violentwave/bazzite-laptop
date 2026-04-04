@@ -52,6 +52,17 @@ These are the packages actively used by `ai/`, `tray/`, and `tests/`.
 | ruff | 0.15.6 | Linter + formatter (also system tool) |
 | bandit | 1.9.4 | Security scanner (also system tool) |
 | pandas | 3.0.2 | `tests/` — anomaly query tests (optional; tests skip if unavailable) |
+| grimp | 3.14 | `ai/code_intel/parser.py` — Import graph analysis |
+| radon | 6.0.1 | `ai/code_intel/parser.py` — McCabe complexity scoring |
+| pydriller | 2.9 | `ai/code_intel/store.py` — Co-change mining from git history |
+| pytest-testmon | 2.2.0 | `tests/` — Selective test execution |
+| pytest-xdist | 3.8.0 | `tests/` — Parallel test execution (`-n 4`) |
+| pytest-timeout | — | `tests/` — 60s per-test timeout |
+| pytest-rerunfailures | — | `tests/` — Flaky test reruns (`--reruns 3`) |
+| mutmut | 3.5.0 | `tests/` — Mutation testing |
+| hypothesis | — | `tests/` — Property-based test generation |
+| watchdog | — | `ai/workflows/triggers.py` — inotify file watching |
+| pip-audit | — | `ai/system/depaudit.py` — Python dependency vulnerability scanning |
 
 ---
 

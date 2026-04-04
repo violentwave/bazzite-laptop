@@ -462,19 +462,37 @@ tools:
         required: false
 
   knowledge.task_patterns:
-    description: "Retrieve similar past successful tasks to guide current work"
+    description: "Retrieve similar past successful tasks"
     source: python
-    module: ai.mcp_bridge.server
-    function: handle_knowledge_task_patterns
+    module: ai.learning.task_logger
+    function: retrieve_similar_tasks
     args:
       query:
         type: string
         max_length: 500
         required: true
       top_k:
-        type: integer
-        default: 3
+        type: int
+        default: 5
+        max: 20
         required: false
+
+  knowledge.session_history:
+    description: "Search session history from HANDOFF.md entries"
+    source: python
+    module: ai.learning.handoff_parser
+    function: parse_handoff
+    args:
+      query:
+        type: string
+        max_length: 500
+        required: true
+      limit:
+        type: int
+        default: 5
+        max: 20
+        required: false
+
 
   system.weekly_insights:
     description: "Get AI-generated weekly insights and recommendations based on system performance"
@@ -675,5 +693,41 @@ tools:
     module: ai.tools.builder
     function: list_dynamic_tools
     args: null
+
+  system.alert_history:
+    description: "Recent alert history"
+    source: python
+    module: ai.alerts.history
+    function: get_recent
+    args:
+      limit:
+        type: int
+        default: 20
+        max: 100
+
+  system.alert_rules:
+    description: "List all alert rules with enabled/cooldown status"
+    source: python
+    module: ai.alerts.rules
+    function: get_all_rules
+    args: null
+
+  system.dep_audit:
+    description: "Run dependency vulnerability audit or read latest cached result"
+    source: python
+    module: ai.system.depaudit
+    function: get_latest_report
+    args: null
+
+  system.dep_audit_history:
+    description: "List last 30 days of dependency audit reports"
+    source: python
+    module: ai.system.depaudit
+    function: get_report_history
+    args:
+      limit:
+        type: int
+        default: 30
+        max: 30
 
 

@@ -1,0 +1,10 @@
+[Unit]
+Description=Bazzite Dependency Audit Timer (weekly Sunday 03:00)
+Documentation=file:///home/lch/projects/bazzite-laptop/docs/ai-operational-playbook.md
+
+[Timer]
+OnCalendar=Sun *-*-* 03:00:00
+Persistent=true
+
+[Install]
+WantedBy=timers.target

@@ -56,11 +56,11 @@
                          │      │
               MCP tools  │      │  LLM calls
                          │      │
-          ┌──────────────▼──┐ ┌─▼──────────────────┐
-           │  MCP Bridge     │ │  LLM Proxy          │
-            │  :8766 FastMCP  │ │  :8767 OpenAI-compat│
-            │  52 tools       │ │  6 cloud providers  │
-          └──┬──┬──┬──┬─────┘ └──┬──────────────────┘
+            ┌───────────▼──┐ ┌─▼──────────────────┐
+             │  MCP Bridge  │ │  LLM Proxy          │
+              │  :8766 FastMCP  │ │  :8767 OpenAI-compat│
+              │  70 tools       │ │  6 cloud providers  │
+            └──┬──┬──┬──┬─────┘ └──┬──────────────────┘
              │  │  │  │          │
     ┌────────┘  │  │  └───┐     │  Health-weighted routing
     │           │  │      │     │
@@ -106,6 +106,13 @@ Source: `configs/mcp-bridge-allowlist.yaml` (56 entries).
 > **Phase 25:** Added `memory.search` — cross-session conversation memory retrieval.
 > **Phase 26:** Added `system.provider_status` — per-provider health, latency, error rates.
 > **Phase 27:** Added `security.alert_summary` — proactive security alerts (CVEs, stale scans, release advisories).
+> **Phase 28:** Added `system.weekly_insights` — AI-generated weekly insights.
+> **Phase 29:** Added `code.impact_analysis`, `code.dependency_graph`, `code.find_callers`, `code.suggest_tests`, `code.complexity_report`, `code.class_hierarchy` — structural code intelligence with AST parsing and grimp import graphs.
+> **Phase 30:** Added `workflow.run`, `workflow.list` — workflow engine with ReAct loop and event triggers.
+> **Phase 31:** Added `collab.queue_status`, `collab.add_task`, `collab.search_knowledge` — agent collaboration with task queue and knowledge base.
+> **Phase 32:** Added test intelligence with flaky detection, selective execution (testmon), and test traceability.
+> **Phase 33:** Added `system.create_tool`, `system.list_dynamic_tools` — dynamic tool creation with safety validation.
+> **Phase 39:** Added `system.dep_audit`, `system.dep_audit_history` — pip-audit vulnerability scanning + SBOM generation.
 
 ### system.* (21 tools)
 
@@ -131,6 +138,8 @@ Source: `configs/mcp-bridge-allowlist.yaml` (56 entries).
 | `system.pipeline_status` | python: `ai.system.pipeline_status` | — | Log pipeline ingest/archive/retention status, pending files, table row counts |
 | `system.budget_status` | python: `ai.mcp_bridge.server` | — | Daily token budget usage and warnings across priority tiers |
 | `system.metrics_summary` | python: `ai.metrics` | `hours`, `metric_type` | Aggregate metrics for last 24h: cache hit rates, provider latencies, budget usage, tool errors |
+| `system.create_tool` | python: `ai.tools.builder` | `name`, `description`, `handler_code`, `parameters`, `created_by` | Create a dynamic tool with safety validation |
+| `system.list_dynamic_tools` | python: `ai.tools.builder` | — | List all persisted dynamic tools |
 
 ### security.* (15 tools)
 
@@ -184,12 +193,33 @@ Source: `configs/mcp-bridge-allowlist.yaml` (56 entries).
 | `logs.search` | python: `ai.log_intel` | `query` (string, max 500, required) | Semantic search across system logs |
 | `logs.stats` | python: `ai.log_intel` | — | Log pipeline statistics |
 
-### code.* (2 tools)
+### code.* (8 tools)
 
 | Tool | Source | Args | Description |
 |------|--------|------|-------------|
 | `code.search` | python: ripgrep | `query` (string, max 128, required) | Pattern search across Python source |
 | `code.rag_query` | python: `ai.rag.code_query` | `question` (string, max 500, required) | Semantic search over indexed code |
+| `code.impact_analysis` | python: `ai.code_intel.store` | `changed_files`, `include_tests`, `max_depth` | Analyze impact of code changes on dependent modules and tests |
+| `code.dependency_graph` | python: `ai.code_intel.store` | `module`, `direction` | Get dependency graph for a module |
+| `code.find_callers` | python: `ai.code_intel.store` | `function_name`, `include_indirect` | Find all functions that call a given function |
+| `code.suggest_tests` | python: `ai.code_intel.store` | `changed_files` | Suggest tests that cover the given changed files |
+| `code.complexity_report` | python: `ai.code_intel.store` | `target`, `threshold` | Get complexity report for code files or functions |
+| `code.class_hierarchy` | python: `ai.code_intel.store` | `class_name` | Get the class hierarchy for a given class |
+
+### collab.* (3 tools)
+
+| Tool | Source | Args | Description |
+|------|--------|------|-------------|
+| `collab.queue_status` | python: `ai.collab.task_queue` | — | Get task queue status summary |
+| `collab.add_task` | python: `ai.collab.task_queue` | `title`, `task_type`, `description`, `priority` | Add a task to the collaborative queue |
+| `collab.search_knowledge` | python: `ai.collab.knowledge_base` | `query`, `top_k` | Search the agent knowledge base |
+
+### workflow.* (2 tools)
+
+| Tool | Source | Args | Description |
+|------|--------|------|-------------|
+| `workflow.run` | python: `ai.workflows.runner` | `workflow_id`, `steps` | Execute a saved workflow or ad-hoc steps |
+| `workflow.list` | python: `ai.workflows.definitions` | — | List available workflows |
 
 ### agents.* (5 tools)
 
@@ -205,32 +235,33 @@ Source: `configs/mcp-bridge-allowlist.yaml` (56 entries).
 
 | Tool | Description |
 |------|-------------|
-| `health` | Returns `{"status": "ok", "tools": 52}` |
+| `health` | Returns `{"status": "ok", "tools": 70}` |
 
 ---
 
-## P24–P28 Roadmap (Active Development)
+## P24–P33 Roadmap (Completed)
 
 > **Execution agent:** OpenCode (z.ai GLM models, TUI mode)
-> **Playbook:** `docs/phase-playbook-p24-p28.md` (30 numbered prompts: OC-01 through OC-30)
-> **Execution order:** P24 → P25 → P26 → P27 → P28 (sequential, P24 is foundational)
+> **Playbook:** `docs/phase-roadmap-p29-p33.md` (30 numbered prompts: OC-31 through OC-60)
+> **Execution order:** Prereq → P32 → P29 → P31 → P30 → P33 (optimal sequence for dependencies)
 
-| Phase | Name | New Tool | New Timer | New LanceDB Table | Key Module |
-|-------|------|----------|-----------|-------------------|------------|
-| **P24** | Observability & Metrics | `system.metrics_summary` | `metrics-compact.timer` (Sun 03:00) | `metrics` | `ai/metrics.py` |
-| **P25** | Conversation Memory | `memory.search` | — | `conversation_memory` | `ai/memory.py` |
-| **P26** | Provider Intelligence | `system.provider_status` | — | — | `ai/provider_intel.py` |
-| **P27** | Security Alerting | `security.alert_summary` | `security-alert.timer` (every 6h) | — | `ai/security/alerts.py` |
-| **P28** | Self-Improvement Loop | `system.weekly_insights` | `weekly-insights.timer` (Mon 09:00) | `system_insights` | `ai/insights.py` |
+| Phase | Name | New Tools | New Timer | New LanceDB Table | Key Module |
+|-------|------|-----------|-----------|-------------------|------------|
+| **Prereq** | MCP Tool Filtering | — | — | `tool_metadata` | `ai/mcp_bridge/tool_filter.py` |
+| **P32** | Testing Intelligence | — | — | `test_mappings` | `ai/testing/` |
+| **P29** | Structural Code Intel | +6 | `code-index.timer` (Daily 6:00) | `code_nodes`, `relationships`, `import_graph`, `change_history` | `ai/code_intel/` |
+| **P31** | Agent Collaboration | +3 | — | `shared_context`, `agent_knowledge` | `ai/collab/` |
+| **P30** | Workflow Engine | +2 | — | `workflows` | `ai/workflows/` |
+| **P33** | Plugin Factory | +2 | — | `persisted_tools` | `ai/tools/` |
 
-### Target State After P28
+### Final State After P39
 
-| Metric | Current (P23) | Target (P24) | Target (P25) | Target (P26) | Target (P27) | Target (P28) |
-|--------|---------------|--------------|--------------|--------------|--------------|--------------|
-| MCP tools | 52 | 53 (+1) | 54 (+1) | 55 (+1) | 56 (+1) | 57 (+5) |
-| Timers | 16 | 17 (+1) | 17 | 17 | 18 (+1) | 19 (+3) |
-| LanceDB tables | 10 | 11 (+1) | 12 (+1) | 12 | 12 | 13 (+3) |
-| Tests | 1929 (P28 actual) | — | — | — | — | — |
+| Metric | P28 (start) | P39 (target) |
+|--------|---------------|---------------|
+| MCP tools | 57 | 75 (+18) |
+| Timers | 19 | 21 (+2) |
+| LanceDB tables | 13 | 23 (+10) |
+| Tests | ~1672 | ~1800+ |
 
 ### Dependency Graph
 
@@ -309,6 +340,7 @@ P28 (Self-Improvement) ← aggregates P24 + P25 + P26 + P27
 | `lancedb-optimize.timer` | Sun 2:00 | Compact and optimize LanceDB tables |
 | `metrics-compact.timer` | Sun 3:00 | Compact and prune old metrics data |
 | `security-alert.timer` | Every 6h | Security alert evaluation (CVEs, stale scans, release advisories) |
+| `code-index.timer` | Daily 6:00 | Code intelligence index rebuild (AST, grimp import graph, co-change mining) |
 
 ---
 
@@ -345,7 +377,8 @@ P28 (Self-Improvement) ← aggregates P24 + P25 + P26 + P27
 | `ai/rate_limiter.py` | Cross-script rate limiting with file locking |
 | `ai/key_manager.py` | API key presence checker |
 | `ai/mcp_bridge/server.py` | FastMCP server on :8766, tool registration |
-| `ai/mcp_bridge/tools.py` | Tool dispatch handlers for all 52 tools |
+| `ai/mcp_bridge/tools.py` | Tool dispatch handlers for all 70 tools |
+| `ai/mcp_bridge/tool_filter.py` | Server-side namespace/semantic tool filtering (P29-Prereq) |
 | `ai/threat_intel/` | VT, OTX, AbuseIPDB, GreyNoise, NVD, URLhaus, etc. (6 API modules) |
 | `ai/rag/` | LanceDB store, embedder, query engine, code query |
 | `ai/log_intel/` | Log ingestion, anomaly detection, semantic search |
@@ -359,8 +392,16 @@ P28 (Self-Improvement) ← aggregates P24 + P25 + P26 + P27
 | `ai/security/alerts.py` | SecurityAlertEvaluator: CVE matching, scan freshness, deduplication (P27) |
 | `ai/security/inputvalidator.py` | Pre-dispatch input validation + secret redaction |
 | `ai/system/` | release_watch, fedora_updates, pkg_intel |
+| `ai/testing/` | TestStabilityTracker, pytest_plugin, traceability (P32) |
+| `ai/code_intel/` | AST parser, grimp import graph, code knowledge graph (P29) |
+| `ai/collab/` | Task queue, shared context, knowledge base, file claims (P31) |
+| `ai/workflows/` | ReAct runner, workflow store, event triggers (P30) |
+| `ai/tools/` | Dynamic tool builder with safety validation (P33) |
+| `ai/skills/` | Pluggable skill loading (P30) |
+| `scripts/index-code.py` | Rebuild code intelligence index (P29) |
+| `scripts/test-smart.sh` | Smart/full/flaky test runner wrapper (P32) |
 | `scripts/security-alert-eval.py` | Security alert evaluation script (P27) |
-| `configs/mcp-bridge-allowlist.yaml` | 56 tool definitions + argument validation |
+| `configs/mcp-bridge-allowlist.yaml` | 70 tool definitions + argument validation |
 | `configs/safety-rules.json` | Input validation rules (max length, patterns, path allowlists) |
 | `configs/litellm-config.yaml` | LiteLLM provider routing config |
 | `configs/ai-rate-limits.json` | Per-provider rate limits |
@@ -370,10 +411,11 @@ P28 (Self-Improvement) ← aggregates P24 + P25 + P26 + P27
 | `scripts/metrics-compact.py` | Metrics compaction (P24) |
 | `scripts/r2-set-lifecycle.py` | One-time R2 bucket lifecycle rule setup (180d auto-expiration) |
 | `scripts/log-task-success.py` | CLI for logging successful task patterns to LanceDB (P22) |
+| `scripts/parse-handoff.py` | Parse HANDOFF.md to task_patterns table (P38) |
 | `systemd/` | 16 timers + associated services |
-| `tests/` | 1929 pytest tests |
+| `tests/` | 1951 pytest tests |
 | `tray/` | PySide6 system tray app |
-| `docs/phase-playbook-p24-p28.md` | OpenCode autonomous execution playbook (OC-01 through OC-30) |
+| `docs/phase-roadmap-p29-p33.md` | OpenCode autonomous execution playbook (OC-31 through OC-60) |
 
 ### Runtime paths (not in repo)
 
@@ -382,7 +424,7 @@ P28 (Self-Improvement) ← aggregates P24 + P25 + P26 + P27
 | `~/.config/bazzite-ai/keys.env` | Plaintext API keys (chmod 600, never in git) |
 | `~/security/` | Canonical root for all runtime security data |
 | `~/security/.status` | Shared JSON: ClamAV + health state (tray + MCP read this) |
-| `~/security/vector-db/` | LanceDB root (→ `/var/mnt/ext-ssd/bazzite-ai/vector-db`). Tables: `documents` (RAG docs), `code_index` (code embeddings), `log_entries` (system logs), `code_patterns` (curated code patterns — P21), `task_patterns` (task outcomes — P22), `semantic_cache` (LLM response cache — P23), `metrics` (observability time-series — P24), `conversation_memory` (cross-session memory — P25), `system_insights` (weekly insight snapshots — P28) |
+| `~/security/vector-db/` | LanceDB root (→ `/var/mnt/ext-ssd/bazzite-ai/vector-db`). Tables: `documents` (RAG docs), `code_index` (code embeddings), `log_entries` (system logs), `code_patterns` (curated code patterns — P21), `task_patterns` (task outcomes — P22), `semantic_cache` (LLM response cache — P23), `metrics` (observability time-series — P24), `conversation_memory` (cross-session memory — P25), `system_insights` (weekly insight snapshots — P28), `tool_metadata` (P29-Prereq), `test_mappings` (P32), `code_nodes`, `relationships`, `import_graph`, `change_history` (P29), `shared_context`, `agent_knowledge` (P31), `workflows` (P30), `persisted_tools` (P33) |
 | `~/security/vector-db/.archive-state.json` | R2 archive state (upload records with key, timestamp, size) |
 | `~/security/llm-status.json` | LLM provider health + token usage |
 | `~/security/key-status.json` | API key presence map |
@@ -485,7 +527,7 @@ Agents working on this project share context via `HANDOFF.md` in the project roo
 Newelle (Flatpak GTK4) is the AI chat/voice UI for this system.
 
 - **LLM**: `http://127.0.0.1:8767/v1/` (`model="fast"`)
-- **MCP**: `http://127.0.0.1:8766/mcp` (49 tools)
+- **MCP**: `http://127.0.0.1:8766/mcp` (75 tools)
 - **System prompt**: `docs/newelle-system-prompt.md`
 - **Skills**: `docs/newelle-skills/` — 5 bundles: security, system, dev, gaming, agents
 - **Morning briefing**: `docs/morning-briefing-prompt.md` (scheduled 9:30 AM)
