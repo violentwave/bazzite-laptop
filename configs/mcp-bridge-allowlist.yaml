@@ -574,4 +574,49 @@ tools:
         max_length: 100
         required: true
 
+  collab.queue_status:
+    description: "Get task queue status summary"
+    source: python
+    module: ai.collab.task_queue
+    function: get_queue_status
+    args: null
+
+  collab.add_task:
+    description: "Add a task to the collaborative queue"
+    source: python
+    module: ai.collab.task_queue
+    function: add_task
+    args:
+      title:
+        type: string
+        max_length: 200
+        required: true
+      task_type:
+        type: string
+        pattern: "^(implement_feature|implement_mcp_tool|refactor_module|write_tests|fix_bug|audit_code|review_pr|update_docs|security_audit)$"
+        required: true
+      description:
+        type: string
+        max_length: 1000
+        required: false
+      priority:
+        type: integer
+        default: 3
+        required: false
+
+  collab.search_knowledge:
+    description: "Search the agent knowledge base"
+    source: python
+    module: ai.collab.knowledge_base
+    function: search_knowledge
+    args:
+      query:
+        type: string
+        max_length: 500
+        required: true
+      top_k:
+        type: integer
+        default: 5
+        required: false
+
 
