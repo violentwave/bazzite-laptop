@@ -1,5 +1,5 @@
 # Bazzite AI Layer — Agent Reference
-<!-- System: Acer Predator G3-571 | Bazzite 43 | Updated: 2026-04-03 -->
+<!-- System: Acer Predator G3-571 | Bazzite 43 | Updated: 2026-04-04 -->
 
 ## Session Start
 
@@ -382,7 +382,7 @@ P28 (Self-Improvement) ← aggregates P24 + P25 + P26 + P27
 | `~/.config/bazzite-ai/keys.env` | Plaintext API keys (chmod 600, never in git) |
 | `~/security/` | Canonical root for all runtime security data |
 | `~/security/.status` | Shared JSON: ClamAV + health state (tray + MCP read this) |
-| `~/security/vector-db/` | LanceDB root (→ `/var/mnt/ext-ssd/bazzite-ai/vector-db`). Tables: `documents` (RAG docs), `code_index` (code embeddings), `log_entries` (system logs), `code_patterns` (curated code patterns — P21), `task_patterns` (task outcomes — P22), `semantic_cache` (LLM response cache — P23), `metrics` (observability time-series — P24), `conversation_memory` (cross-session memory — P25) |
+| `~/security/vector-db/` | LanceDB root (→ `/var/mnt/ext-ssd/bazzite-ai/vector-db`). Tables: `documents` (RAG docs), `code_index` (code embeddings), `log_entries` (system logs), `code_patterns` (curated code patterns — P21), `task_patterns` (task outcomes — P22), `semantic_cache` (LLM response cache — P23), `metrics` (observability time-series — P24), `conversation_memory` (cross-session memory — P25), `system_insights` (weekly insight snapshots — P28) |
 | `~/security/vector-db/.archive-state.json` | R2 archive state (upload records with key, timestamp, size) |
 | `~/security/llm-status.json` | LLM provider health + token usage |
 | `~/security/key-status.json` | API key presence map |
