@@ -476,3 +476,14 @@ tools:
         default: 3
         required: false
 
+  system.weekly_insights:
+    description: "Get AI-generated weekly insights and recommendations based on system performance"
+    source: python
+    module: ai.insights
+    function: get_latest_insights
+    args:
+      limit:
+        type: integer
+        default: 4
+        required: false
+

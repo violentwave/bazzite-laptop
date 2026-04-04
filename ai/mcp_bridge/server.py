@@ -18,7 +18,7 @@ DEFAULT_BIND = "127.0.0.1"
 DEFAULT_PORT = int(__import__("os").environ.get("MCP_BRIDGE_PORT", "8766"))
 
 # Number of tools in the allowlist (excludes health endpoint itself)
-_TOOL_COUNT = 56
+_TOOL_COUNT = 57
 
 
 def _assert_localhost(bind: str) -> None:
@@ -123,6 +123,7 @@ def create_app():
         "knowledge.task_patterns": {"readOnlyHint": True},
         "memory.search": {"readOnlyHint": True},
         "system.provider_status": {"readOnlyHint": True, "idempotentHint": True},
+        "system.weekly_insights": {"readOnlyHint": True, "idempotentHint": True},
     }
 
     # Load tool definitions from the allowlist
@@ -317,6 +318,22 @@ def create_app():
                     return result
                 except Exception as e:
                     return {"error": str(e), "providers": {}}
+
+        elif tool_name == "system.weekly_insights":
+
+            @mcp.tool(name=tool_name, description=description, annotations=ann)
+            async def _handler_weekly_insights(
+                limit: int = 4,
+                _tn=tool_name,
+            ):
+                try:
+                    from ai.insights import InsightsEngine
+
+                    engine = InsightsEngine()
+                    insights = engine.get_latest_insights(limit=limit)
+                    return {"insights": insights, "count": len(insights)}
+                except Exception as e:
+                    return {"error": str(e), "insights": [], "count": 0}
 
         # Built-in health tool (MCP protocol)
 
