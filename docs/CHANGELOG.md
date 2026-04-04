@@ -7,6 +7,116 @@ Bazzite security/gaming system.
 
 ---
 
+## Audit: P24–P28 (2026-04-04)
+
+### Fixed
+- **REGRESSION** `tests/test_memory.py`: Mocked `ConversationMemory.__init__` in `TestSingleton::test_singleton_returns_same_instance` — was calling real LanceDB on read-only filesystem
+- **BUG** `ai/insights.py`: `generate_weekly_insights()` called non-existent `query_timeseries()` → replaced with `get_raw(hours=168, metric_type=...)`; corrected metric key `budget_usage` → `budget_spend`
+- **BUG** `ai/insights.py`: `_ensure_schema()` declared 6-field schema but `_store_insight()` wrote 2 columns and `get_latest_insights()` read `row["data"]` — schema corrected to 2 fields: `timestamp` + `data`
+- **BUG** `ai/insights.py`: `_store_insight()` created `pa.record_batch` with mismatched arrays/schema — replaced with `pa.table({...})` using correct column names
+- **MISSING** `tests/test_alerts.py`: Added 15 tests for `SecurityAlertEvaluator` (CVE severity mapping, release alert filtering, deduplication, atomic writes)
+- **MISSING** `tests/test_insights.py`: Added 9 tests for `InsightsEngine` (init, generate, get_latest, store)
+- **MISSING** `scripts/lancedb-prune.py`: Added `task_patterns` (90d), `semantic_cache` (30d), `metrics` (30d), `conversation_memory` (90d), `system_insights` (365d) to `RETENTION_TABLES`
+- **DOCS** `docs/AGENT.md`: Added `system_insights` to LanceDB tables list; updated last-updated date
+
+### Verified Clean
+- Ruff: zero violations across all P24–P28 source and test files
+- `ai.router` import: absent from `ai/mcp_bridge/` (confirmed)
+- LanceDB `.where()` predicates: all safe (int params or VALID_TASK_TYPES allowlist)
+- MCP handlers: all 5 new tools have `try/except`; `security.alert_summary` dispatches via no-arg/json_file path
+- Atomic writes in `ai/security/alerts.py`: tmp + rename pattern confirmed
+- Secret redaction in `ai/memory.py`: `InputValidator.redact_secrets()` called before embedding
+- No LLM calls in `ai/insights.py`: heuristic-only (confirmed)
+- Tool count: 57 allowlist + 1 health = 58 total; test assertions correct
+- Timer count: 19 (correct)
+
+---
+
+## Phase 28 — Self-Improvement Loop (2026-04-04)
+
+### New Files
+- `ai/insights.py` — InsightsEngine: weekly heuristic analysis of cache/budget metrics stored as lance dataset
+- `systemd/weekly-insights.service` / `systemd/weekly-insights.timer` — Mon 09:00 weekly trigger
+
+### Changed Files
+- `configs/mcp-bridge-allowlist.yaml` — added `system.weekly_insights` tool
+- `ai/mcp_bridge/server.py` — registered `system.weekly_insights` handler (tools 56→57)
+- `docs/AGENT.md` — updated counts (tools 56→57, timers 18→19)
+
+### Metrics
+- MCP tools: 56 → 57
+- Timers: 18 → 19 (weekly-insights.timer)
+- New LanceDB table: `system_insights`
+
+---
+
+## Phase 27 — Proactive Security Alerting (2026-04-04)
+
+### New Files
+- `ai/security/alerts.py` — SecurityAlertEvaluator: CVE results, scan freshness, release advisory alerts with 7-day deduplication
+- `systemd/security-alert.service` / `systemd/security-alert.timer` — every 6h trigger
+
+### Changed Files
+- `configs/mcp-bridge-allowlist.yaml` — added `security.alert_summary` (json_file source)
+- `ai/mcp_bridge/server.py` — added `security.alert_summary` annotation; dispatches via no-arg/json_file path (tools 55→56)
+- `docs/AGENT.md` — updated counts (tools 55→56, timers 17→18)
+
+### Metrics
+- MCP tools: 55 → 56
+- Timers: 17 → 18 (security-alert.timer)
+
+---
+
+## Phase 26 — Provider Intelligence & Dynamic Routing (2026-04-04)
+
+### New Files
+- `ai/provider_intel.py` — ProviderIntelligence: reads health scores + metrics to produce per-provider status
+
+### Changed Files
+- `configs/mcp-bridge-allowlist.yaml` — added `system.provider_status` tool
+- `ai/mcp_bridge/server.py` — registered `system.provider_status` handler (tools 54→55)
+- `docs/AGENT.md` — updated counts (tools 54→55)
+
+### Metrics
+- MCP tools: 54 → 55
+
+---
+
+## Phase 25 — Cross-Session Conversation Memory (2026-04-04)
+
+### New Files
+- `ai/memory.py` — ConversationMemory: LanceDB-backed cross-session memory with embedding, redaction, dedup
+
+### Changed Files
+- `configs/mcp-bridge-allowlist.yaml` — added `memory.search` tool
+- `ai/mcp_bridge/server.py` — registered `memory.search` handler (tools 53→54)
+- `docs/AGENT.md` — updated counts (tools 53→54, LanceDB tables 11→12: conversation_memory)
+
+### Metrics
+- MCP tools: 53 → 54
+- LanceDB tables: 11 → 12 (conversation_memory)
+
+---
+
+## Phase 24 — Observability & Metrics Pipeline (2026-04-04)
+
+### New Files
+- `ai/metrics.py` — MetricsRecorder: buffered LanceDB time-series with query_summary/get_raw
+- `scripts/metrics-compact.py` — weekly metrics compaction
+- `systemd/metrics-compact.service` / `systemd/metrics-compact.timer` — Sun 03:00 trigger
+
+### Changed Files
+- `configs/mcp-bridge-allowlist.yaml` — added `system.metrics_summary` tool
+- `ai/mcp_bridge/server.py` — registered `system.metrics_summary` handler (tools 52→53)
+- `docs/AGENT.md` — updated counts (tools 52→53, timers 16→17, LanceDB tables 10→11: metrics)
+
+### Metrics
+- MCP tools: 52 → 53
+- Timers: 16 → 17 (metrics-compact.timer)
+- LanceDB tables: 10 → 11 (metrics)
+
+---
+
 ## Audit: P22 + P23 (2026-04-03)
 
 ### Fixed
