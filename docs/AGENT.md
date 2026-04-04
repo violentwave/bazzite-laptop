@@ -254,14 +254,14 @@ Source: `configs/mcp-bridge-allowlist.yaml` (56 entries).
 | **P30** | Workflow Engine | +2 | — | `workflows` | `ai/workflows/` |
 | **P33** | Plugin Factory | +2 | — | `persisted_tools` | `ai/tools/` |
 
-### Final State After P39
+### Final State After P40
 
-| Metric | P28 (start) | P39 (target) |
+| Metric | P28 (start) | P40 (target) |
 |--------|---------------|---------------|
-| MCP tools | 57 | 75 (+18) |
+| MCP tools | 57 | 76 (+19) |
 | Timers | 19 | 21 (+2) |
 | LanceDB tables | 13 | 23 (+10) |
-| Tests | ~1672 | ~1800+ |
+| Tests | ~1672 | ~1819+ |
 
 ### Dependency Graph
 

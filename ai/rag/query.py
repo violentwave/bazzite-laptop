@@ -21,6 +21,7 @@ from pathlib import Path
 
 from ai.cache import JsonFileCache
 from ai.config import APP_NAME
+from ai.metrics import track_performance
 from ai.rate_limiter import RateLimiter
 from ai.router import route_query
 
@@ -51,6 +52,7 @@ class QueryResult:
     model_used: str = "context-only"
 
 
+@track_performance
 def rag_query(
     question: str,
     limit: int = 5,
@@ -79,10 +81,7 @@ def rag_query(
         rate_limiter = RateLimiter()
 
     # Cache check
-    cache_key = (
-        f"rag:{hashlib.sha256(question.encode()).hexdigest()}:"
-        f"limit={limit}:llm={use_llm}"
-    )
+    cache_key = f"rag:{hashlib.sha256(question.encode()).hexdigest()}:limit={limit}:llm={use_llm}"
     cached = _rag_cache.get(cache_key)
     if cached is not None:
         logger.info("RAG cache hit for query: %s", question[:60])
@@ -196,13 +195,16 @@ def _cache_result(key: str, result: QueryResult) -> None:
     if not result.context_chunks:
         return
     try:
-        _rag_cache.set(key, {
-            "question": result.question,
-            "context_chunks": result.context_chunks,
-            "answer": result.answer,
-            "sources": result.sources,
-            "model_used": result.model_used,
-        })
+        _rag_cache.set(
+            key,
+            {
+                "question": result.question,
+                "context_chunks": result.context_chunks,
+                "answer": result.answer,
+                "sources": result.sources,
+                "model_used": result.model_used,
+            },
+        )
     except Exception:
         logger.debug("Failed to cache RAG result", exc_info=True)
 
@@ -246,9 +248,7 @@ def _cohere_rerank(
         return chunks
 
 
-def _safe_search(
-    store: object, method_name: str, vector: list[float], limit: int
-) -> list[dict]:
+def _safe_search(store: object, method_name: str, vector: list[float], limit: int) -> list[dict]:
     """Call a store search method, returning empty list on failure."""
     try:
         fn = getattr(store, method_name)

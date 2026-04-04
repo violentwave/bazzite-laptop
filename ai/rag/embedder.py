@@ -7,10 +7,16 @@ Emergency: Ollama nomic-embed-text (local, no VRAM budget for routine use)
 Usage:
     from ai.rag.embedder import embed_texts
     vectors = embed_texts(["text1", "text2"])
+
+Async usage:
+    from ai.rag.embedder import embed_texts_async
+    vectors = await embed_texts_async(["text1", "text2"])
 """
 
+import asyncio
 import logging
 import time
+from concurrent.futures import ThreadPoolExecutor
 from functools import lru_cache
 
 import cohere
@@ -19,6 +25,7 @@ import litellm
 import ollama
 
 from ai.config import APP_NAME, get_key, load_keys
+from ai.metrics import track_performance
 from ai.rag.constants import EMBEDDING_DIM
 from ai.rate_limiter import RateLimiter
 
@@ -28,10 +35,12 @@ GEMINI_EMBED_MODEL = "gemini/gemini-embedding-001"
 COHERE_MODEL = "embed-english-v3.0"
 OLLAMA_MODEL = "nomic-embed-text"
 
-# Gemini Embedding 001: single input per call limitation
-_GEMINI_BATCH_DELAY_S = 0.1  # 100 ms between calls during bulk ingestion
-_GEMINI_RETRY_WAIT_S = 2.0   # 2 s wait on 429 before retry
+_GEMINI_BATCH_DELAY_S = 0.1
+_GEMINI_RETRY_WAIT_S = 2.0
 _GEMINI_MAX_RETRIES = 3
+
+_EMBED_SEMAPHORE_LIMIT = 5
+_embed_executor = ThreadPoolExecutor(max_workers=_EMBED_SEMAPHORE_LIMIT, thread_name_prefix="embed")
 
 _INPUT_TYPE_TO_GEMINI_TASK = {
     "search_document": "RETRIEVAL_DOCUMENT",
@@ -140,8 +149,7 @@ def is_ollama_available() -> bool:
         models_response = ollama.list()
         available = [m.model for m in models_response.models]
         return any(
-            name == OLLAMA_MODEL or name.startswith(f"{OLLAMA_MODEL}:")
-            for name in available
+            name == OLLAMA_MODEL or name.startswith(f"{OLLAMA_MODEL}:") for name in available
         )
     except (ConnectionError, httpx.ConnectError, Exception):  # noqa: BLE001
         return False
@@ -240,8 +248,9 @@ def select_provider() -> str:
     if get_key("GEMINI_API_KEY"):
         test = _embed_gemini(["dimension test"])
         if test is not None:
-            logger.info("Selected embedding provider: Gemini (%s, %d-dim)",
-                        GEMINI_EMBED_MODEL, len(test[0]))
+            logger.info(
+                "Selected embedding provider: Gemini (%s, %d-dim)", GEMINI_EMBED_MODEL, len(test[0])
+            )
             return "gemini"
 
     if get_key("COHERE_API_KEY"):
@@ -251,13 +260,15 @@ def select_provider() -> str:
     if is_ollama_available():
         test = _embed_ollama(["dimension test"])
         if test is not None:
-            logger.info("Selected embedding provider: Ollama (%s, %d-dim) [emergency]",
-                        OLLAMA_MODEL, len(test[0]))
+            logger.info(
+                "Selected embedding provider: Ollama (%s, %d-dim) [emergency]",
+                OLLAMA_MODEL,
+                len(test[0]),
+            )
             return "ollama"
 
     raise RuntimeError(
-        "No embedding provider available. "
-        "Set GEMINI_API_KEY or COHERE_API_KEY, or start Ollama."
+        "No embedding provider available. Set GEMINI_API_KEY or COHERE_API_KEY, or start Ollama."
     )
 
 
@@ -275,6 +286,7 @@ def _embed_single_cached(
     return embed_texts([text], input_type=input_type, provider=provider)[0]
 
 
+@track_performance
 def embed_single(text: str, **kwargs: object) -> list[float]:
     """Convenience wrapper for embedding a single text.
 
@@ -297,5 +309,124 @@ def _validate_dimensions(vectors: list[list[float]]) -> None:
         if len(vec) != EMBEDDING_DIM:
             logger.warning(
                 "Vector %d has dimension %d, expected %d",
-                i, len(vec), EMBEDDING_DIM,
+                i,
+                len(vec),
+                EMBEDDING_DIM,
             )
+
+
+async def embed_texts_async(
+    texts: list[str],
+    rate_limiter: RateLimiter | None = None,
+    input_type: str = "search_document",
+    provider: str | None = None,
+) -> list[list[float]]:
+    """Async batch embedding using asyncio.gather with concurrency limit.
+
+    Uses litellm.aembedding for Gemini, parallel Cohere/Ollama calls.
+    Maintains backward compatibility via sync wrapper.
+
+    Args:
+        texts: Strings to embed.
+        rate_limiter: Optional rate limiter.
+        input_type: "search_document" for indexing, "search_query" for queries.
+        provider: Force "gemini", "cohere", or "ollama".
+
+    Returns:
+        List of 768-dim float vectors.
+    """
+    if not texts:
+        return []
+
+    if provider == "gemini" or provider is None:
+        return await _embed_gemini_async(texts, rate_limiter, input_type)
+
+    if provider == "cohere":
+        vectors = _embed_cohere(texts, rate_limiter=rate_limiter, input_type=input_type)
+        if vectors is not None:
+            _validate_dimensions(vectors)
+            return vectors
+        raise RuntimeError("Cohere embedding failed")
+
+    if provider == "ollama":
+        vectors = _embed_ollama(texts)
+        if vectors is not None:
+            _validate_dimensions(vectors)
+            return vectors
+        raise RuntimeError(f"Ollama embedding failed — is '{OLLAMA_MODEL}' running?")
+
+    return await embed_texts_async(texts, rate_limiter, input_type, None)
+
+
+async def _embed_gemini_async(
+    texts: list[str],
+    rate_limiter: RateLimiter | None = None,
+    input_type: str = "search_document",
+) -> list[list[float]]:
+    """Async Gemini embedding using asyncio.gather with semaphore."""
+    load_keys()
+    api_key = get_key("GEMINI_API_KEY")
+    if api_key is None:
+        logger.debug("GEMINI_API_KEY not set, skipping Gemini embed")
+        return await _embed_cohere_async(texts, rate_limiter, input_type)
+
+    if rate_limiter is not None and not rate_limiter.can_call("gemini_embed"):
+        logger.warning("Gemini embed rate limit reached, skipping primary")
+        return await _embed_cohere_async(texts, rate_limiter, input_type)
+
+    task_type = _INPUT_TYPE_TO_GEMINI_TASK.get(input_type, "RETRIEVAL_DOCUMENT")
+    semaphore = asyncio.Semaphore(_EMBED_SEMAPHORE_LIMIT)
+
+    async def _embed_single(text: str, idx: int) -> list[float] | None:
+        async with semaphore:
+            last_exc: Exception | None = None
+            for attempt in range(_GEMINI_MAX_RETRIES):
+                try:
+                    response = await litellm.aembedding(
+                        model=GEMINI_EMBED_MODEL,
+                        input=[text],
+                        dimensions=EMBEDDING_DIM,
+                        task_type=task_type,
+                    )
+                    if rate_limiter is not None:
+                        rate_limiter.record_call("gemini_embed")
+                    return response.data[0]["embedding"]
+                except litellm.RateLimitError:
+                    wait = _GEMINI_RETRY_WAIT_S * (attempt + 1)
+                    logger.warning(
+                        "Gemini embed 429, waiting %.1fs (attempt %d)", wait, attempt + 1
+                    )
+                    await asyncio.sleep(wait)
+                except Exception as exc:  # noqa: BLE001
+                    logger.error("Gemini embed failed for text %d: %s", idx, exc)
+                    last_exc = exc
+                    break
+            logger.error("Gemini embed gave up on text %d after retries: %s", idx, last_exc)
+            return None
+
+    tasks = [_embed_single(text, i) for i, text in enumerate(texts)]
+    results = await asyncio.gather(*tasks)
+
+    vectors: list[list[float]] = []
+    for i, result in enumerate(results):
+        if result is not None:
+            vectors.append(result)
+        else:
+            logger.error("Gemini async embed failed for text %d", i)
+
+    if not vectors:
+        return await _embed_cohere_async(texts, rate_limiter, input_type)
+
+    logger.info("Embedded %d text(s) via async Gemini (%s)", len(texts), GEMINI_EMBED_MODEL)
+    _validate_dimensions(vectors)
+    return vectors
+
+
+async def _embed_cohere_async(
+    texts: list[str],
+    rate_limiter: RateLimiter | None = None,
+    input_type: str = "search_document",
+) -> list[list[float]]:
+    """Async Cohere fallback (runs sync in executor since cohere SDK is sync)."""
+    loop = asyncio.get_event_loop()
+    return await loop.run_in_executor(None, lambda: _embed_cohere(texts, rate_limiter, input_type))

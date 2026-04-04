@@ -7,6 +7,39 @@ Bazzite security/gaming system.
 
 ---
 
+## Phase P40 Complete (2026-04-04)
+
+### Summary
+| Phase | Name | ΔTools | Target Modules |
+|-------|------|--------|----------------|
+| P40 | Performance Round 2 + Observability | +1 | `ai/metrics.py`, `ai/rate_limiter.py`, `ai/threat_intel/lookup.py`, `ai/mcp_bridge/server.py` |
+
+### Details
+
+**P40 — Performance Round 2 + Observability:**
+- **`ai/metrics.py`** (new): Lightweight performance metrics module
+  - `@track_performance` decorator: records call counts, latencies, errors
+  - `get_metrics()` / `reset_metrics()`: thread-safe snapshot and clear
+  - `record_metric()`: arbitrary metric recording (token counts, cache hits)
+  - Uses `defaultdict` + `threading.Lock` for safety
+- **`ai/rate_limiter.py`**: Added `prune_stale_entries()` method
+  - Removes provider entries with all-zero counters and expired minute windows
+  - Atomic write with file locking
+- **`ai/threat_intel/lookup.py`**: Restored full cascading lookup logic
+  - VT/OTX client caching via `@lru_cache(maxsize=1)`
+  - Async parallel execution (`_parallel_lookup_all` + `asyncio.gather`)
+  - `parallel=True/False` flag on `lookup_hash()` / `lookup_hashes()`
+  - Cascade order: MalwareBazaar → OTX → VT (cheapest first)
+- **`ai/threat_intel/models.py`**: Added `cached_ratio` field + `detection_ratio_float` property
+- **Decorated 4 high-value call sites** with `@track_performance`:
+  - `rag_query`, `embed_single`, `route_query`, `lookup_hash`
+- **Added MCP tool**: `system.perf_metrics` (tools 75 → 76)
+  - Query metrics by function name or get all
+  - `reset=True` clears recorded data
+- **19 new tests** in `tests/test_perf_round2.py`
+
+---
+
 ## Phase P39 Complete (2026-04-04)
 
 ### Summary

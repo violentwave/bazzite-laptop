@@ -25,6 +25,7 @@ class ThreatReport:
     vt_link: str = ""
     timestamp: str = ""
     raw_data: dict = field(default_factory=dict)
+    cached_ratio: float | None = field(default=None, repr=False, init=False)
 
     def to_jsonl(self) -> str:
         """Serialize to a JSON string for quarantine-hashes-enriched.jsonl.
@@ -50,3 +51,18 @@ class ThreatReport:
     def has_data(self) -> bool:
         """True if this report contains actual threat intelligence data."""
         return bool(self.source) and self.source != "none"
+
+    @property
+    def detection_ratio_float(self) -> float:
+        if self.cached_ratio is not None:
+            return self.cached_ratio
+        if self.detection_ratio:
+            parts = self.detection_ratio.split("/")
+            if len(parts) == 2:
+                try:
+                    self.cached_ratio = int(parts[0]) / int(parts[1])
+                    return self.cached_ratio
+                except (ValueError, ZeroDivisionError):
+                    self.cached_ratio = 0.0
+        self.cached_ratio = 0.0
+        return 0.0

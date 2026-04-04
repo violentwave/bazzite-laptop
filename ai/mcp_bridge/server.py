@@ -457,4 +457,23 @@ def create_app():
 
         return JSONResponse({"status": "ok", "tools": _TOOL_COUNT, "service": "bazzite-mcp-bridge"})
 
+    # Performance metrics tool
+    @mcp.tool(
+        name="system.perf_metrics",
+        description="Get performance metrics for tracked functions (calls, latency, errors)",
+    )
+    async def _handler_perf_metrics(function: str | None = None, reset: bool = False):
+        try:
+            from ai.metrics import get_metrics, reset_metrics
+
+            if reset:
+                reset_metrics(function)
+                return {"status": "reset", "function": function}
+
+            if function:
+                return {function: get_metrics(function)}
+            return get_metrics()
+        except Exception as e:
+            return {"error": str(e)}
+
     return mcp

@@ -161,6 +161,10 @@ class HealthTracker:
         self.reset_all()
         logger.info("Health scores reset on startup")
 
+    def cleanup(self) -> None:
+        """Clear all tracked providers and reset state."""
+        self._providers.clear()
+
 
 if __name__ == "__main__":
     import argparse

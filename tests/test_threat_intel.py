@@ -17,8 +17,13 @@ from ai.threat_intel.models import ThreatReport
 
 @pytest.fixture(autouse=True)
 def clear_threat_cache():
-    """Prevent disk-based cache from polluting tests."""
-    with patch("ai.threat_intel.lookup._threat_cache.get", return_value=None):
+    """Prevent LRU client caches from polluting tests."""
+    import ai.threat_intel.lookup  # noqa: F401
+
+    with (
+        patch("ai.threat_intel.lookup._get_vt_client", return_value=None),
+        patch("ai.threat_intel.lookup._get_otx_client", return_value=None),
+    ):
         yield
 
 
@@ -333,7 +338,9 @@ class TestCascadingLogic:
     @patch("ai.threat_intel.lookup._lookup_virustotal")
     @patch("ai.threat_intel.lookup._lookup_otx")
     @patch("ai.threat_intel.lookup._lookup_malwarebazaar")
-    def test_mb_otx_miss_vt_hit(self, mock_mb, mock_otx, mock_vt, mock_limiter, sample_report, tmp_path):  # noqa: E501
+    def test_mb_otx_miss_vt_hit(
+        self, mock_mb, mock_otx, mock_vt, mock_limiter, sample_report, tmp_path
+    ):  # noqa: E501
         """MB and OTX miss should fall through to VT (last resort)."""
         from ai.threat_intel.lookup import lookup_hash
 
@@ -412,9 +419,7 @@ class TestHTMLFormatter:
 
     def test_risk_badge_colors(self):
         for level, colors in RISK_COLORS.items():
-            report = ThreatReport(
-                hash="a" * 64, source="virustotal", risk_level=level
-            )
+            report = ThreatReport(hash="a" * 64, source="virustotal", risk_level=level)
             row = format_single_row(report)
             assert colors["bg"] in row
             assert colors["text"] in row
@@ -473,9 +478,7 @@ class TestHTMLFormatter:
         assert "virustotal" in row
 
     def test_no_vt_link_shows_source_text(self):
-        report = ThreatReport(
-            hash="a" * 64, source="otx", risk_level="medium"
-        )
+        report = ThreatReport(hash="a" * 64, source="otx", risk_level="medium")
         row = format_single_row(report)
         assert "href=" not in row
         assert "otx" in row

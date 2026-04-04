@@ -8,6 +8,8 @@ V2 changes from V1:
 - litellm.Router num_retries=0 -- our code handles retries
 - Stream recovery with 2KB buffer commit threshold
 - route_query(), route_query_stream(), reset_router() backward compat preserved
+- Config mtime tracking to avoid unnecessary file reads
+- httpx.Client with connection pooling passed to litellm.Router
 
 Usage:
     from ai.router import route_query
@@ -31,11 +33,13 @@ sentry_sdk.init(
 import hashlib
 import json
 import logging
+import os
 import time
 from collections.abc import AsyncGenerator
 from datetime import UTC, datetime
 from pathlib import Path
 
+import httpx
 import litellm
 import yaml
 
@@ -44,10 +48,13 @@ from ai.cache import JsonFileCache
 from ai.cache_semantic import SemanticCache
 from ai.config import APP_NAME, LITELLM_CONFIG, load_keys
 from ai.health import AllProvidersExhausted, HealthTracker
-from ai.metrics import record_metric
+from ai.metrics import record_metric, track_performance
 from ai.rate_limiter import RateLimiter
 
 logger = logging.getLogger(APP_NAME)
+
+_config_mtime: float | None = None
+_httpx_client: httpx.Client | None = None
 
 # Per-task-type cache TTLs (seconds). External SSD reduces internal SSD wear.
 # TTL=0 means never cache (embed type).
@@ -237,17 +244,27 @@ def reset_usage_stats() -> None:
 
 
 def _load_config() -> dict:
-    """Load the LiteLLM routing config from YAML."""
-    global _config  # noqa: PLW0603
-    if _config is not None:
-        return _config
+    """Load the LiteLLM routing config from YAML with mtime-based caching."""
+    global _config, _config_mtime  # noqa: PLW0603
     try:
-        with open(LITELLM_CONFIG) as f:
-            _config = yaml.safe_load(f) or {}
-    except (FileNotFoundError, yaml.YAMLError) as e:
-        logger.warning("Could not load LiteLLM config: %s", e)
-        _config = {}
-    return _config
+        current_mtime = os.path.getmtime(LITELLM_CONFIG)
+    except OSError:
+        return _config or {}
+
+    if _config_mtime != current_mtime:
+        logger.info(
+            "LiteLLM config file changed (mtime %.0f -> %.0f), reloading",
+            _config_mtime,
+            current_mtime,
+        )
+        _config_mtime = current_mtime
+        try:
+            with open(LITELLM_CONFIG) as f:
+                _config = yaml.safe_load(f) or {}
+        except (FileNotFoundError, yaml.YAMLError) as e:
+            logger.warning("Could not load LiteLLM config: %s", e)
+            _config = {}
+    return _config or {}
 
 
 def _extract_provider(model_str: str) -> str:
@@ -272,8 +289,8 @@ def _get_timeout(task_type: str) -> int:
 
 
 def _get_router():
-    """Lazily build and cache the litellm.Router from YAML config."""
-    global _router  # noqa: PLW0603
+    """Lazily build and cache the litellm.Router from YAML config with connection pooling."""
+    global _router, _httpx_client  # noqa: PLW0603
     if _router is not None:
         return _router
 
@@ -285,13 +302,20 @@ def _get_router():
     if not model_list:
         raise RuntimeError("LiteLLM config has no model_list -- cannot initialize Router")
 
+    if _httpx_client is None:
+        _httpx_client = httpx.Client(
+            timeout=httpx.Timeout(30.0, connect=10.0),
+            limits=httpx.Limits(max_keepalive_connections=20, max_connections=100),
+        )
+
     router_settings = config.get("router_settings", {})
     _router = litellm.Router(
         model_list=model_list,
         routing_strategy=router_settings.get("routing_strategy", "simple-shuffle"),
-        num_retries=0,  # V2: our code handles retries, not litellm
+        num_retries=0,
         timeout=router_settings.get("timeout", 30),
         allowed_fails=router_settings.get("allowed_fails", 1),
+        http_client=_httpx_client,
     )
     return _router
 
@@ -449,6 +473,7 @@ async def _stream_provider(
         raise
 
 
+@track_performance
 def route_query(task_type: str, prompt: str, **kwargs: object) -> str:
     """Route a query to the best available LLM provider via LiteLLM.
 

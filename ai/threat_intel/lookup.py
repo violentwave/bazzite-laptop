@@ -1,8 +1,8 @@
 """Core threat intelligence lookup engine.
 
-Implements cascading hash lookups across MalwareBazaar, OTX AlienVault, and
-VirusTotal (cheapest-first order). Designed for testability: all provider
-functions accept an injectable rate_limiter parameter.
+Implements cascading hash lookups across VirusTotal, OTX AlienVault, and
+MalwareBazaar. Designed for testability: all provider functions accept an
+injectable rate_limiter parameter.
 
 Usage:
     from ai.threat_intel.lookup import lookup_hash, lookup_hashes
@@ -15,22 +15,20 @@ CLI:
 """
 
 import argparse
-import functools
+import asyncio
 import json
 import logging
 import re
 import sys
-import threading
-import time
-from contextlib import contextmanager
 from datetime import UTC, datetime
-from pathlib import Path
+from functools import lru_cache
 
-import requests as _requests_module
+import requests
 import vt
+from OTXv2 import OTXv2
 
-from ai.cache import JsonFileCache
 from ai.config import APP_NAME, ENRICHED_HASHES, get_key, load_keys, setup_logging
+from ai.metrics import track_performance
 from ai.rate_limiter import RateLimiter
 from ai.threat_intel.models import ThreatReport
 
@@ -38,78 +36,20 @@ logger = logging.getLogger(APP_NAME)
 
 _SHA256_RE = re.compile(r"^[0-9a-fA-F]{64}$")
 
-# Module-level HTTP session with connection pooling
-_http_session = _requests_module.Session()
-_http_session.headers.update({"User-Agent": "Bazzite-AI/1.0"})
-_adapter = _requests_module.adapters.HTTPAdapter(pool_connections=5, pool_maxsize=10, max_retries=0)
-_http_session.mount("https://", _adapter)
-_http_session.mount("http://", _adapter)
+
+# ── Client Caching ────────────────────────────────────────────────────────────
 
 
-class _RequestsProxy:
-    """Routes requests.get/post through the module session while remaining patchable.
-
-    Tests patch ``ai.threat_intel.lookup.requests`` (whole object) or
-    ``ai.threat_intel.lookup.requests.get``; both work correctly with this proxy.
-    """
-
-    get = _http_session.get
-    post = _http_session.post
-    exceptions = _requests_module.exceptions
+@lru_cache(maxsize=1)
+def _get_vt_client():
+    api_key = get_key("VT_API_KEY")
+    return vt.Client(api_key, timeout=10) if api_key else None
 
 
-requests = _RequestsProxy()
-
-_threat_cache = JsonFileCache(
-    Path.home() / "security" / "threat-cache",
-    default_ttl=86400 * 7,  # 7 days
-)
-
-
-# ── Timeout Context Manager ──
-
-
-class LookupTimeoutError(Exception):
-    """Raised when the overall lookup cascade exceeds the time limit."""
-
-
-@contextmanager
-def _lookup_timeout(seconds: int = 30):
-    """Context manager that sets a timed_out event after `seconds`.
-
-    Yields a threading.Event that provider loops should check between calls.
-    If the timer fires, the event is set and callers should stop early.
-    """
-    timed_out = threading.Event()
-    timer = threading.Timer(seconds, timed_out.set)
-    timer.daemon = True
-    timer.start()
-    try:
-        yield timed_out
-    finally:
-        timer.cancel()
-
-
-# ── Retry Decorator (available but not applied) ──
-
-
-def _retry_on_failure(max_retries: int = 1, backoff: float = 2.0):
-    """Decorator that retries provider functions on transient failures."""
-    def decorator(fn):
-        @functools.wraps(fn)
-        def wrapper(sha256: str, rate_limiter: RateLimiter) -> ThreatReport | None:
-            for attempt in range(max_retries + 1):
-                result = fn(sha256, rate_limiter)
-                if result is not None:
-                    return result
-                if attempt < max_retries:
-                    wait = backoff * (attempt + 1)
-                    logger.info("Retrying %s in %.1fs (attempt %d/%d)",
-                                fn.__name__, wait, attempt + 2, max_retries + 1)
-                    time.sleep(wait)
-            return None
-        return wrapper
-    return decorator
+@lru_cache(maxsize=1)
+def _get_otx_client():
+    api_key = get_key("OTX_API_KEY")
+    return OTXv2(api_key) if api_key else None
 
 
 # ── Provider Functions (private) ──
@@ -128,19 +68,7 @@ def _lookup_virustotal(sha256: str, rate_limiter: RateLimiter) -> ThreatReport |
 
     try:
         with vt.Client(api_key, timeout=10) as client:
-            try:
-                file_obj = client.get_object(f"/files/{sha256}")
-            except vt.error.APIError as e:
-                if "NotFoundError" in str(e):
-                    raise
-                # Single retry on transient VT API errors
-                logger.info("VT API error, retrying once...")
-                time.sleep(1)
-                try:
-                    file_obj = client.get_object(f"/files/{sha256}")
-                except vt.error.APIError as retry_e:
-                    logger.warning("VT retry failed for %s: %s", sha256[:16], retry_e)
-                    return None
+            file_obj = client.get_object(f"/files/{sha256}")
 
         rate_limiter.record_call("virustotal")
 
@@ -206,24 +134,10 @@ def _lookup_otx(sha256: str, rate_limiter: RateLimiter) -> ThreatReport | None:
     try:
         url = f"https://otx.alienvault.com/api/v1/indicators/file/{sha256}/general"
         headers = {"X-OTX-API-KEY": api_key}
-        try:
-            resp = requests.get(url, headers=headers, timeout=5)
-        except requests.exceptions.ConnectionError:
-            # Single retry on connection error
-            logger.info("OTX connection error, retrying once...")
-            time.sleep(1)
-            try:
-                resp = requests.get(url, headers=headers, timeout=5)
-            except requests.exceptions.RequestException as e:
-                logger.warning("OTX retry failed for %s: %s", sha256[:16], e)
-                return None
-        rate_limiter.record_call("otx")  # count the call even if status is error
+        resp = requests.get(url, headers=headers, timeout=5)
+        rate_limiter.record_call("otx")
         resp.raise_for_status()
         data = resp.json()
-
-        if not isinstance(data, dict):
-            logger.warning("OTX returned non-dict response for %s", sha256[:16])
-            return None
 
         pulse_info = data.get("pulse_info", {})
         pulse_count = pulse_info.get("count", 0)
@@ -240,7 +154,7 @@ def _lookup_otx(sha256: str, rate_limiter: RateLimiter) -> ThreatReport | None:
                     family = families[0].get("display_name", "") or ""
             tags.extend(pulse.get("tags", []))
 
-        tags = list(dict.fromkeys(tags))  # deduplicate preserving order
+        tags = list(dict.fromkeys(tags))
 
         if pulse_count <= 2:
             risk_level = "low"
@@ -282,33 +196,17 @@ def _lookup_malwarebazaar(sha256: str, rate_limiter: RateLimiter) -> ThreatRepor
     try:
         url = "https://mb-api.abuse.ch/api/v1/"
         post_data = {"query": "get_info", "hash": sha256}
-        try:
-            resp = requests.post(url, data=post_data, timeout=5)  # data= NOT json=
-        except requests.exceptions.ConnectionError:
-            # Single retry on connection error
-            logger.info("MalwareBazaar connection error, retrying once...")
-            time.sleep(1)
-            try:
-                resp = requests.post(url, data=post_data, timeout=5)
-            except requests.exceptions.RequestException as e:
-                logger.warning("MalwareBazaar retry failed for %s: %s", sha256[:16], e)
-                return None
-        rate_limiter.record_call("malwarebazaar")  # count the call even if status is error
+        resp = requests.post(url, data=post_data, timeout=5)
+        rate_limiter.record_call("malwarebazaar")
         resp.raise_for_status()
         data = resp.json()
-
-        if not isinstance(data, dict):
-            logger.warning("MalwareBazaar returned non-dict response for %s", sha256[:16])
-            return None
 
         status = data.get("query_status", "")
         if status in ("hash_not_found", "no_results"):
             return None
 
         entries = data.get("data", [])
-        if not isinstance(entries, list) or not entries:
-            return None
-        entry = entries[0]
+        entry = entries[0] if entries else {}
 
         family = entry.get("signature", "") or ""
         filename = entry.get("file_name", "") or ""
@@ -321,11 +219,11 @@ def _lookup_malwarebazaar(sha256: str, rate_limiter: RateLimiter) -> ThreatRepor
             source="malwarebazaar",
             family=family,
             category=file_type,
-            risk_level="high",  # present in MalwareBazaar = known malware
-            description=f"MalwareBazaar: {family or 'unknown family'}"[:200],
+            risk_level="high" if family else "low",
+            description=f"MalwareBazaar: {family or 'unknown malware'}"[:200],
             tags=list(tags),
             timestamp=datetime.now(tz=UTC).isoformat(),
-            raw_data=data,
+            raw_data=entry,
         )
     except requests.exceptions.RequestException as e:
         logger.warning("MalwareBazaar request error for %s: %s", sha256[:16], e)
@@ -335,24 +233,88 @@ def _lookup_malwarebazaar(sha256: str, rate_limiter: RateLimiter) -> ThreatRepor
         return None
 
 
-# ── Orchestration Functions (public) ──
+# ── Async Parallel Lookup ────────────────────────────────────────────────────
 
 
+def _run_in_executor(func, *args):
+    """Run a synchronous function in the default executor."""
+    loop = asyncio.get_event_loop()
+    return loop.run_in_executor(None, func, *args)
+
+
+async def _parallel_lookup_all(sha256: str, rate_limiter: RateLimiter) -> list[ThreatReport | None]:
+    """Run all provider lookups in parallel using asyncio.gather.
+
+    Returns a list of (vt_result, otx_result, mb_result) in that order.
+    """
+    vt_task = _run_in_executor(_lookup_virustotal, sha256, rate_limiter)
+    otx_task = _run_in_executor(_lookup_otx, sha256, rate_limiter)
+    mb_task = _run_in_executor(_lookup_malwarebazaar, sha256, rate_limiter)
+
+    return await asyncio.gather(vt_task, otx_task, mb_task)
+
+
+def _append_enriched(report: ThreatReport) -> None:
+    """Append a report to the enriched hashes JSONL file."""
+    try:
+        ENRICHED_HASHES.parent.mkdir(parents=True, exist_ok=True)
+        with open(ENRICHED_HASHES, "a") as f:
+            f.write(report.to_jsonl() + "\n")
+    except OSError as e:
+        logger.warning("Could not write to enriched hashes file: %s", e)
+
+
+def _merge_reports(reports: list[ThreatReport | None], sha256: str) -> ThreatReport:
+    """Merge multiple provider results into a single ThreatReport.
+
+    Priority: VirusTotal > OTX > MalwareBazaar > none
+    """
+    vt_result, otx_result, mb_result = reports
+
+    if vt_result and vt_result.has_data:
+        return vt_result
+    if otx_result and otx_result.has_data:
+        return otx_result
+    if mb_result and mb_result.has_data:
+        return mb_result
+
+    return ThreatReport(
+        hash=sha256,
+        source="none",
+        description="No threat intelligence data found",
+        timestamp=datetime.now(tz=UTC).isoformat(),
+    )
+
+
+# ── Public API ────────────────────────────────────────────────────────────────
+
+
+@track_performance
 def lookup_hash(
     sha256: str,
-    full: bool = False,
     rate_limiter: RateLimiter | None = None,
+    parallel: bool = False,
 ) -> ThreatReport:
-    """Look up a single hash across threat intel providers.
+    """Perform a cascading hash threat lookup.
+
+    Cascade order:
+      1. VirusTotal — primary (detection ratio, family, tags)
+      2. OTX AlienVault — fallback (pulse count, community intel)
+      3. MalwareBazaar — tertiary (signature, file type)
+
+    When parallel=True (default), all three providers are queried
+    concurrently using asyncio.gather for faster response times.
 
     Args:
-        sha256: The SHA256 hash to look up (64 hex chars).
-        full: If True, query all providers (sequential stub; parallel later).
+        sha256: The SHA256 hash to look up.
         rate_limiter: Injectable RateLimiter instance for testability.
+        parallel: Run provider lookups in parallel (default True).
 
     Returns:
-        A ThreatReport with results, or source="none" if no data found.
+        ThreatReport with results. source="none" if hash is invalid or all
+        providers return no data.
     """
+    sha256 = sha256.strip().lower()
     if not _SHA256_RE.match(sha256):
         return ThreatReport(
             hash=sha256,
@@ -361,79 +323,106 @@ def lookup_hash(
             timestamp=datetime.now(tz=UTC).isoformat(),
         )
 
-    cache_key = f"hash:{sha256}:full" if full else f"hash:{sha256}"
-    cached = _threat_cache.get(cache_key)
-    if cached is not None:
-        logger.info("Threat cache hit for %s", sha256[:16])
-        return ThreatReport(**cached)
-
     if rate_limiter is None:
         rate_limiter = RateLimiter()
 
-    # Cascade order: cheapest/most-generous first, most-limited last.
-    # MalwareBazaar (free, no limit) → OTX (10k/hr) → VT (500/day)
-    providers = [_lookup_malwarebazaar, _lookup_otx, _lookup_virustotal]
+    if parallel:
+        try:
+            loop = asyncio.get_event_loop()
+            if loop.is_running():
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+                reports = loop.run_until_complete(_parallel_lookup_all(sha256, rate_limiter))
+                loop.close()
+            else:
+                reports = loop.run_until_complete(_parallel_lookup_all(sha256, rate_limiter))
+        except RuntimeError:
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            try:
+                reports = loop.run_until_complete(_parallel_lookup_all(sha256, rate_limiter))
+            finally:
+                loop.close()
 
-    if full:
-        # Full mode: call all providers, prefer first with data, merge tags
-        results: list[ThreatReport | None] = []
-        with _lookup_timeout(30) as timed_out:
-            for fn in providers:
-                if timed_out.is_set():
-                    logger.warning("Lookup cascade timed out for %s (full mode)", sha256[:16])
-                    break
-                results.append(fn(sha256, rate_limiter))
-        valid = [r for r in results if r is not None and r.has_data]
+        return _merge_reports(reports, sha256)
 
-        if not valid:
-            return ThreatReport(
-                hash=sha256,
-                source="none",
-                timestamp=datetime.now(tz=UTC).isoformat(),
-            )
+    # Cascading mode: MB → OTX → VT (cheapest first, stop on hit)
+    mb_result = _lookup_malwarebazaar(sha256, rate_limiter)
+    if mb_result and mb_result.has_data:
+        _append_enriched(mb_result)
+        return mb_result
 
-        # Prefer VT, then OTX, then MB as the base report
-        report = valid[0]
-        # Merge tags from all providers
-        all_tags: list[str] = []
-        for r in valid:
-            all_tags.extend(r.tags)
-        report.tags = list(dict.fromkeys(all_tags))
+    otx_result = _lookup_otx(sha256, rate_limiter)
+    if otx_result and otx_result.has_data:
+        _append_enriched(otx_result)
+        return otx_result
 
-        _append_enriched(report)
-        _threat_cache.set(cache_key, json.loads(report.to_jsonl()))
-        return report
-
-    # Cascading mode: stop on first hit
-    with _lookup_timeout(30) as timed_out:
-        for fn in providers:
-            if timed_out.is_set():
-                logger.warning("Lookup cascade timed out for %s", sha256[:16])
-                break
-            result = fn(sha256, rate_limiter)
-            if result is not None and result.has_data:
-                _append_enriched(result)
-                _threat_cache.set(cache_key, json.loads(result.to_jsonl()))
-                return result
+    vt_result = _lookup_virustotal(sha256, rate_limiter)
+    if vt_result and vt_result.has_data:
+        _append_enriched(vt_result)
+        return vt_result
 
     return ThreatReport(
         hash=sha256,
         source="none",
+        description="No threat intelligence data found",
+        timestamp=datetime.now(tz=UTC).isoformat(),
+    )
+
+    if rate_limiter is None:
+        rate_limiter = RateLimiter()
+
+    if parallel:
+        try:
+            loop = asyncio.get_event_loop()
+            if loop.is_running():
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+                reports = loop.run_until_complete(_parallel_lookup_all(sha256, rate_limiter))
+                loop.close()
+            else:
+                reports = loop.run_until_complete(_parallel_lookup_all(sha256, rate_limiter))
+        except RuntimeError:
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            try:
+                reports = loop.run_until_complete(_parallel_lookup_all(sha256, rate_limiter))
+            finally:
+                loop.close()
+
+        return _merge_reports(reports, sha256)
+
+    vt_result = _lookup_virustotal(sha256, rate_limiter)
+    if vt_result and vt_result.has_data:
+        return vt_result
+
+    otx_result = _lookup_otx(sha256, rate_limiter)
+    if otx_result and otx_result.has_data:
+        return otx_result
+
+    mb_result = _lookup_malwarebazaar(sha256, rate_limiter)
+    if mb_result and mb_result.has_data:
+        return mb_result
+
+    return ThreatReport(
+        hash=sha256,
+        source="none",
+        description="No threat intelligence data found",
         timestamp=datetime.now(tz=UTC).isoformat(),
     )
 
 
 def lookup_hashes(
     hashes: list[str],
-    full: bool = False,
     rate_limiter: RateLimiter | None = None,
+    parallel: bool = False,
 ) -> list[ThreatReport]:
-    """Look up multiple hashes, respecting rate limits between calls.
+    """Perform lookups for multiple hashes.
 
     Args:
         hashes: List of SHA256 hashes to look up.
-        full: If True, query all providers for each hash.
-        rate_limiter: Injectable RateLimiter instance for testability.
+        rate_limiter: Injectable RateLimiter instance.
+        parallel: Run provider lookups in parallel for each hash.
 
     Returns:
         List of ThreatReport objects, one per input hash.
@@ -441,74 +430,53 @@ def lookup_hashes(
     if rate_limiter is None:
         rate_limiter = RateLimiter()
 
-    reports: list[ThreatReport] = []
-    for sha256 in hashes:
-        # Check if we need to wait for any provider's rate limits
-        wait = max(
-            rate_limiter.wait_time("virustotal"),
-            rate_limiter.wait_time("otx"),
-            rate_limiter.wait_time("malwarebazaar"),
-        )
-        if wait > 0:
-            logger.info("Rate limited, waiting %.1fs before next lookup", wait)
-            time.sleep(wait)
-
-        reports.append(lookup_hash(sha256, full=full, rate_limiter=rate_limiter))
-
-    return reports
+    return [lookup_hash(h, rate_limiter=rate_limiter, parallel=parallel) for h in hashes]
 
 
-def _append_enriched(report: ThreatReport) -> None:
-    """Append a report to the enriched hashes JSONL file."""
-    try:
-        ENRICHED_HASHES.parent.mkdir(parents=True, exist_ok=True)
-        with open(ENRICHED_HASHES, "a", encoding="utf-8") as f:
-            f.write(report.to_jsonl() + "\n")
-    except OSError as e:
-        logger.warning("Could not write to enriched hashes file: %s", e)
+def log_enriched_report(report: ThreatReport) -> None:
+    """Append a report to the enriched hashes JSONL log."""
+    if not report.has_data:
+        return
+
+    ENRICHED_HASHES.parent.mkdir(parents=True, exist_ok=True)
+    with open(ENRICHED_HASHES, "a") as f:
+        f.write(report.to_jsonl() + "\n")
 
 
-# ── CLI Entry Point ──
+# ── CLI ───────────────────────────────────────────────────────────────────────
 
 
 def main() -> None:
-    """CLI entry point for threat intelligence hash lookups."""
-    parser = argparse.ArgumentParser(description="Threat intelligence hash lookup")
+    """CLI entry point for hash threat lookups."""
+    parser = argparse.ArgumentParser(
+        description="Threat intelligence lookup (VT + OTX + MalwareBazaar)"
+    )
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument("--hash", help="Single SHA256 hash to look up")
-    group.add_argument(
-        "--batch", action="store_true", help="Read hashes from stdin (one per line)"
-    )
+    group.add_argument("--batch", action="store_true", help="Read hashes from stdin (one per line)")
     parser.add_argument(
-        "--format", choices=["html", "json"], default="json", help="Output format"
-    )
-    parser.add_argument(
-        "--full", action="store_true", help="Query all providers (not just first match)"
+        "--no-parallel", action="store_true", help="Run lookups sequentially (default: parallel)"
     )
     args = parser.parse_args()
 
     load_keys()
     setup_logging()
 
-    if args.hash:
-        hashes = [args.hash.strip()]
-    else:
+    if args.batch:
         hashes = [line.strip() for line in sys.stdin if line.strip()]
-
-    reports = lookup_hashes(hashes, full=args.full)
-
-    if args.format == "json":
-        output = json.dumps([json.loads(r.to_jsonl()) for r in reports], indent=2)
-        print(output)  # noqa: T201
-    elif args.format == "html":
-        from ai.threat_intel.formatters import format_html_section  # noqa: PLC0415
-
-        print(format_html_section(reports))  # noqa: T201
-
-    if any(r.has_data for r in reports):
-        sys.exit(0)
+        reports = lookup_hashes(hashes, parallel=not args.no_parallel)
+        for report in reports:
+            print(json.dumps(json.loads(report.to_jsonl()), indent=2))
+            if report.has_data:
+                log_enriched_report(report)
     else:
-        sys.exit(1)
+        report = lookup_hash(args.hash, parallel=not args.no_parallel)
+        print(json.dumps(json.loads(report.to_jsonl()), indent=2))
+        if report.has_data:
+            log_enriched_report(report)
+
+        if report.risk_level in ("high", "medium"):
+            sys.exit(1)
 
 
 if __name__ == "__main__":
