@@ -619,4 +619,26 @@ tools:
         default: 5
         required: false
 
+  workflow.run:
+    description: "Execute a saved workflow or ad-hoc steps"
+    source: python
+    module: ai.workflows.runner
+    function: execute_workflow
+    args:
+      workflow_id:
+        type: string
+        max_length: 100
+        required: false
+      steps:
+        type: string
+        max_length: 2000
+        required: false
+
+  workflow.list:
+    description: "List available workflows"
+    source: python
+    module: ai.workflows.definitions
+    function: list_workflows
+    args: null
+
 
