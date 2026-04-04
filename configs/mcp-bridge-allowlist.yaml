@@ -487,3 +487,91 @@ tools:
         default: 4
         required: false
 
+  code.impact_analysis:
+    description: "Analyze the impact of code changes on dependent modules and tests"
+    source: python
+    module: ai.mcp_bridge.server
+    function: handle_code_impact_analysis
+    args:
+      changed_files:
+        type: string
+        max_length: 1000
+        required: true
+      include_tests:
+        type: boolean
+        default: true
+        required: false
+      max_depth:
+        type: integer
+        default: 3
+        required: false
+
+  code.dependency_graph:
+    description: "Get the dependency graph for a module"
+    source: python
+    module: ai.mcp_bridge.server
+    function: handle_code_dependency_graph
+    args:
+      module:
+        type: string
+        max_length: 100
+        required: true
+      direction:
+        type: string
+        pattern: "^(up|down|both)$"
+        default: "both"
+        required: false
+
+  code.find_callers:
+    description: "Find all functions that call a given function"
+    source: python
+    module: ai.mcp_bridge.server
+    function: handle_code_find_callers
+    args:
+      function_name:
+        type: string
+        max_length: 100
+        required: true
+      include_indirect:
+        type: boolean
+        default: true
+        required: false
+
+  code.suggest_tests:
+    description: "Suggest tests that cover the given changed files"
+    source: python
+    module: ai.mcp_bridge.server
+    function: handle_code_suggest_tests
+    args:
+      changed_files:
+        type: string
+        max_length: 1000
+        required: true
+
+  code.complexity_report:
+    description: "Get complexity report for code files or functions"
+    source: python
+    module: ai.mcp_bridge.server
+    function: handle_code_complexity_report
+    args:
+      target:
+        type: string
+        max_length: 100
+        required: false
+      threshold:
+        type: integer
+        default: 10
+        required: false
+
+  code.class_hierarchy:
+    description: "Get the class hierarchy for a given class"
+    source: python
+    module: ai.mcp_bridge.server
+    function: handle_code_class_hierarchy
+    args:
+      class_name:
+        type: string
+        max_length: 100
+        required: true
+
+

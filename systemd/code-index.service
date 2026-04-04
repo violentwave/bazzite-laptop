@@ -1,0 +1,10 @@
+[Unit]
+Description=Code Intelligence Indexer
+
+[Service]
+Type=oneshot
+User=%u
+WorkingDirectory=/var/home/lch/projects/bazzite-laptop
+ExecStart=/var/home/lch/projects/bazzite-laptop/.venv/bin/python /var/home/lch/projects/bazzite-laptop/scripts/index-code.py
+StandardOutput=journal
+StandardError=journal
