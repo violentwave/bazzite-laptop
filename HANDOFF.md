@@ -5,16 +5,35 @@ Auto-generated cross-tool handoff. Updated by save-handoff.sh
 ## Current State
 
 - **Last Tool:** claude-code
-- **Last Updated:** 2026-04-03T23:56:58Z
+- **Last Updated:** 2026-04-04T04:10:33Z
 - **Project:** bazzite-laptop
 - **Branch:** master
 
 ## Open Tasks
 
 - [x] Phase 23: Semantic Cache & Token Budget — COMPLETE
-- [x] P22 + P23 audit — COMPLETE (all 10 issues found and fixed, sign-off 2026-04-03)
+- [x] P22 + P23 audit — COMPLETE
+- [x] Phase 24-28: All 5 phases COMPLETE
+- [x] P24-P28 audit — COMPLETE (2026-04-04)
+- [ ] Define P29+ roadmap (next planning session)
 
 ## Recent Sessions
+
+### 2026-04-04T04:10:33Z — claude-code
+Audited and fixed all issues from OpenCode's P24-P28 implementation: 3 bugs in ai/insights.py (non-existent query_timeseries, wrong 6-field schema, broken pa.record_batch store), 1 test regression in test_memory.py (TestSingleton calling real LanceDB without mock), and added 24 missing tests (15 for SecurityAlertEvaluator, 9 for InsightsEngine). Updated scripts/lancedb-prune.py to cover 5 new P22-P28 LanceDB tables, added P24-P28 entries to CHANGELOG.md, and fixed AGENT.md (added system_insights table, updated date and test count to 1929 collected). All 47 P24-P28 tests pass; ruff clean across ai/, tests/, scripts/; 8 audit commits on master (beda40a through 548f715).
+
+
+### 2026-04-04T00:15:00Z — claude-code
+[P24-P28 Complete]
+- P24: Created ai/metrics.py, system.metrics_summary tool (53→54), metrics-compact.timer (16→17)
+- P25: Created ai/memory.py, memory.search tool (54→55)
+- P26: Created ai/provider_intel.py, system.provider_status tool (55→56)
+- P27: Created ai/security/alerts.py, security.alert_summary tool (56→57), security-alert.timer
+- P28: Created ai/insights.py, system.weekly_insights tool (57), weekly-insights.timer
+- RuFlo: Pretrained 84 files, 30 patterns, 16 strategies
+- Tests: 38 passed, 1 skipped
+- Commits: e2d6389, 3a1beab, 1307ef8, 1d5046e, 8b5e5d0
+
 
 ### 2026-04-03T23:56:58Z — claude-code
 [Auto-saved on session end]
@@ -56,7 +75,6 @@ Auto-generated cross-tool handoff. Updated by save-handoff.sh
 - Updated docs/CHANGELOG.md (added Phase 22 entry)
 - All verification: ruff clean, tests pass
 
-
 ### 2026-04-03T21:15:43Z — claude-code
 [Auto-saved on session end]
 
@@ -75,6 +93,7 @@ P19-P21 full audit completed with Opus 4.6 sign-off: all security hardening, tes
 
 ### 2026-04-03T21:00:00Z — opencode
 P21 complete: knowledge.pattern_search tool #50, 28 curated patterns in LanceDB, pattern_store.py, pattern_query.py, ingest-patterns.py, tests passing (1680), ruff clean, all committed.
+
 
 ### 2026-04-03T19:38:48Z — claude-code
 [Auto-saved on session end]
@@ -105,14 +124,6 @@ Phase 19 complete: input validation MCP safety layer. InputValidator pre-dispatc
 
 
 ### 2026-04-03T17:19:45Z — claude-code
-[Auto-saved on session end]
-
-
-### 2026-04-03T17:19:43Z — claude-code
-[Auto-saved on session end]
-
-
-### 2026-04-03T17:19:43Z — claude-code
 [Auto-saved on session end]
 
 
