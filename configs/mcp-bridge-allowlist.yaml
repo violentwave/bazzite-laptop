@@ -641,4 +641,39 @@ tools:
     function: list_workflows
     args: null
 
+  system.create_tool:
+    description: "Create a dynamic tool with safety validation"
+    source: python
+    module: ai.tools.builder
+    function: create_tool
+    args:
+      name:
+        type: string
+        max_length: 100
+        required: true
+      description:
+        type: string
+        max_length: 500
+        required: true
+      handler_code:
+        type: string
+        max_length: 5000
+        required: true
+      parameters:
+        type: string
+        max_length: 1000
+        required: false
+      created_by:
+        type: string
+        max_length: 50
+        default: "system"
+        required: false
+
+  system.list_dynamic_tools:
+    description: "List all persisted dynamic tools"
+    source: python
+    module: ai.tools.builder
+    function: list_dynamic_tools
+    args: null
+
 
