@@ -42,6 +42,12 @@ RETENTION_TABLES: dict[str, int | None] = {
     "sig_updates": None,  # 90-day default
     "security_logs": None,  # 90-day default
     "threat_intel": 180,  # threats kept longer for historical lookups
+    # P22-P28 tables
+    "task_patterns": None,  # 90-day default; task learning outcomes (P22)
+    "semantic_cache": 30,  # LLM response cache — high churn, short retention (P23)
+    "metrics": 30,  # observability time-series — high volume (P24)
+    "conversation_memory": None,  # 90-day default; importance >= 4 pruned by ai/memory.py (P25)
+    "system_insights": 365,  # weekly insight snapshots — keep 1 year (P28)
 }
 
 # Tables that only get compact + cleanup — no retention deletes.
