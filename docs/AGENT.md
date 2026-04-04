@@ -59,7 +59,7 @@
             ┌───────────▼──┐ ┌─▼──────────────────┐
              │  MCP Bridge  │ │  LLM Proxy          │
               │  :8766 FastMCP  │ │  :8767 OpenAI-compat│
-              │  70 tools       │ │  6 cloud providers  │
+               │  76 tools       │ │  6 cloud providers  │
             └──┬──┬──┬──┬─────┘ └──┬──────────────────┘
              │  │  │  │          │
     ┌────────┘  │  │  └───┐     │  Health-weighted routing
@@ -93,12 +93,12 @@ Key constraints:
 
 ---
 
-## MCP Tools (56 + health)
+## MCP Tools (76)
 
-Source: `configs/mcp-bridge-allowlist.yaml` (56 entries).
+Source: `configs/mcp-bridge-allowlist.yaml` (75 entries) + `system.perf_metrics` (registered in server.py).
 
-> **Phase 12:** PingMiddleware (25s keepalive) active. All 50 tools carry MCP annotations (readOnly/destructive/openWorld hints).
-> **Phase 20:** Added `agents.timer_health` — validates all 16 systemd timers.
+> **Phase 12:** PingMiddleware (25s keepalive) active. All tools carry MCP annotations (readOnly/destructive/openWorld hints).
+> **Phase 20:** Added `agents.timer_health` — validates all 21 systemd timers.
 > **Phase 21:** Added `knowledge.pattern_search` — semantic search over curated code patterns.
 > **Phase 22:** Added `knowledge.task_patterns` — retrieve similar past successful tasks.
 > **Phase 23:** Added `system.budget_status` — token budget usage across tiers.
@@ -235,7 +235,7 @@ Source: `configs/mcp-bridge-allowlist.yaml` (56 entries).
 
 | Tool | Description |
 |------|-------------|
-| `health` | Returns `{"status": "ok", "tools": 70}` |
+| `health` | Returns `{"status": "ok", "tools": 76}` |
 
 ---
 
@@ -377,7 +377,7 @@ P28 (Self-Improvement) ← aggregates P24 + P25 + P26 + P27
 | `ai/rate_limiter.py` | Cross-script rate limiting with file locking |
 | `ai/key_manager.py` | API key presence checker |
 | `ai/mcp_bridge/server.py` | FastMCP server on :8766, tool registration |
-| `ai/mcp_bridge/tools.py` | Tool dispatch handlers for all 70 tools |
+| `ai/mcp_bridge/tools.py` | Tool dispatch handlers for all 76 tools |
 | `ai/mcp_bridge/tool_filter.py` | Server-side namespace/semantic tool filtering (P29-Prereq) |
 | `ai/threat_intel/` | VT, OTX, AbuseIPDB, GreyNoise, NVD, URLhaus, etc. (6 API modules) |
 | `ai/rag/` | LanceDB store, embedder, query engine, code query |
@@ -412,7 +412,7 @@ P28 (Self-Improvement) ← aggregates P24 + P25 + P26 + P27
 | `scripts/r2-set-lifecycle.py` | One-time R2 bucket lifecycle rule setup (180d auto-expiration) |
 | `scripts/log-task-success.py` | CLI for logging successful task patterns to LanceDB (P22) |
 | `scripts/parse-handoff.py` | Parse HANDOFF.md to task_patterns table (P38) |
-| `systemd/` | 16 timers + associated services |
+| `systemd/` | 21 timers + associated services |
 | `tests/` | 1951 pytest tests |
 | `tray/` | PySide6 system tray app |
 | `docs/phase-roadmap-p29-p33.md` | OpenCode autonomous execution playbook (OC-31 through OC-60) |
@@ -527,7 +527,7 @@ Agents working on this project share context via `HANDOFF.md` in the project roo
 Newelle (Flatpak GTK4) is the AI chat/voice UI for this system.
 
 - **LLM**: `http://127.0.0.1:8767/v1/` (`model="fast"`)
-- **MCP**: `http://127.0.0.1:8766/mcp` (75 tools)
+- **MCP**: `http://127.0.0.1:8766/mcp` (76 tools)
 - **System prompt**: `docs/newelle-system-prompt.md`
 - **Skills**: `docs/newelle-skills/` — 5 bundles: security, system, dev, gaming, agents
 - **Morning briefing**: `docs/morning-briefing-prompt.md` (scheduled 9:30 AM)

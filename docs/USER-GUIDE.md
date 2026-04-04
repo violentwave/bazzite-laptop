@@ -1,5 +1,5 @@
 # Bazzite AI Layer — User Guide
-<!-- System: Acer Predator G3-571 | Bazzite 43 | Last updated: 2026-04-03 -->
+<!-- System: Acer Predator G3-571 | Bazzite 43 | Last updated: 2026-04-04 -->
 
 Complete reference for operating, maintaining, and troubleshooting the AI
 enhancement layer on this Bazzite gaming laptop.
@@ -75,7 +75,7 @@ systemctl --user start bazzite-llm-proxy.service bazzite-mcp-bridge.service
 ```bash
 # MCP bridge health
 curl -s http://127.0.0.1:8766/health
-# Expected: {"status": "ok", "tools": 48}
+# Expected: {"status": "ok", "tools": 76}
 
 # LLM proxy health
 curl -s http://127.0.0.1:8767/health
@@ -266,7 +266,7 @@ All tools are accessible through Newelle via the MCP bridge. They are read-only
 
 | Tool     | Returns                           |
 |----------|-----------------------------------|
-| `health` | `{"status": "ok", "tools": 48}`   |
+| `health` | `{"status": "ok", "tools": 76}`   |
 
 ---
 
