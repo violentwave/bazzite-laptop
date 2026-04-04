@@ -230,7 +230,7 @@ Source: `configs/mcp-bridge-allowlist.yaml` (56 entries).
 | MCP tools | 52 | 53 (+1) | 54 (+1) | 55 (+1) | 56 (+1) | 57 (+5) |
 | Timers | 16 | 17 (+1) | 17 | 17 | 18 (+1) | 19 (+3) |
 | LanceDB tables | 10 | 11 (+1) | 12 (+1) | 12 | 12 | 13 (+3) |
-| Tests | ~1604 | ~1610 | ~1620 | ~1630 | ~1640 | ~1650+ |
+| Tests | 1929 (P28 actual) | — | — | — | — | — |
 
 ### Dependency Graph
 
@@ -371,7 +371,7 @@ P28 (Self-Improvement) ← aggregates P24 + P25 + P26 + P27
 | `scripts/r2-set-lifecycle.py` | One-time R2 bucket lifecycle rule setup (180d auto-expiration) |
 | `scripts/log-task-success.py` | CLI for logging successful task patterns to LanceDB (P22) |
 | `systemd/` | 16 timers + associated services |
-| `tests/` | 1604 pytest tests |
+| `tests/` | 1929 pytest tests |
 | `tray/` | PySide6 system tray app |
 | `docs/phase-playbook-p24-p28.md` | OpenCode autonomous execution playbook (OC-01 through OC-30) |
 
@@ -414,7 +414,7 @@ P28 (Self-Improvement) ← aggregates P24 + P25 + P26 + P27
 
 ```bash
 source .venv/bin/activate
-python -m pytest tests/ -v          # 1604 tests
+python -m pytest tests/ -v          # 1929 tests
 ruff check ai/ tests/               # Lint
 bandit -r ai/ -c pyproject.toml     # Security scan
 uv pip install -r requirements.txt  # Install/update deps
