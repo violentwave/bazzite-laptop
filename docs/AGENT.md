@@ -93,9 +93,9 @@ Key constraints:
 
 ---
 
-## MCP Tools (53 + health)
+## MCP Tools (54 + health)
 
-Source: `configs/mcp-bridge-allowlist.yaml` (53 entries).
+Source: `configs/mcp-bridge-allowlist.yaml` (54 entries).
 
 > **Phase 12:** PingMiddleware (25s keepalive) active. All 50 tools carry MCP annotations (readOnly/destructive/openWorld hints).
 > **Phase 20:** Added `agents.timer_health` — validates all 16 systemd timers.
@@ -103,6 +103,7 @@ Source: `configs/mcp-bridge-allowlist.yaml` (53 entries).
 > **Phase 22:** Added `knowledge.task_patterns` — retrieve similar past successful tasks.
 > **Phase 23:** Added `system.budget_status` — token budget usage across tiers.
 > **Phase 24:** Added `system.metrics_summary` — aggregate metrics for last 24h.
+> **Phase 25:** Added `memory.search` — cross-session conversation memory retrieval.
 
 ### system.* (20 tools)
 
@@ -158,6 +159,12 @@ Source: `configs/mcp-bridge-allowlist.yaml` (53 entries).
 | `knowledge.pattern_search` | python: `ai.rag.pattern_query` | `query` (string, max 500, required), `language` (optional), `domain` (optional) | Semantic search over curated code patterns with language/domain filtering |
 | `knowledge.task_patterns` | python: `ai.mcp_bridge.server` | `query` (string, max 500, required), `top_k` (int, default 3) | Retrieve similar past successful tasks by semantic similarity |
 
+### memory.* (1 tool)
+
+| Tool | Source | Args | Description |
+|------|--------|------|-------------|
+| `memory.search` | python: `ai.memory` | `query` (string, max 500, required), `top_k` (int, default 5) | Search conversation memories by semantic similarity |
+
 ### gaming.* (2 tools)
 
 | Tool | Source | Args | Description |
@@ -210,6 +217,7 @@ Source: `configs/mcp-bridge-allowlist.yaml` (53 entries).
 |-------|------|----------|-----------|-------------------|------------|
 | **P24** | Observability & Metrics | `system.metrics_summary` | `metrics-compact.timer` (Sun 03:00) | `metrics` | `ai/metrics.py` |
 | **P25** | Conversation Memory | `memory.search` | — | `conversation_memory` | `ai/memory.py` |
+| **P26** | Provider Intelligence | `system.provider_status` | — | — | `ai/provider_intel.py` |
 | **P25** | Conversation Memory | `memory.search` | — | `conversation_memory` | `ai/memory.py` |
 | **P26** | Provider Intelligence | `system.provider_status` | — | — | `ai/provider_intel.py` |
 | **P27** | Security Alerting | `security.alert_summary` | `security-alert.timer` (every 6h) | — | `ai/security/alerts.py` |
@@ -217,12 +225,12 @@ Source: `configs/mcp-bridge-allowlist.yaml` (53 entries).
 
 ### Target State After P28
 
-| Metric | Current (P23) | Target (P24) | Target (P28) |
-|--------|---------------|--------------|--------------|
-| MCP tools | 52 | 53 (+1) | 57 (+5) |
-| Timers | 16 | 17 (+1) | 19 (+3) |
-| LanceDB tables | 10 | 11 (+1) | 13 (+3) |
-| Tests | ~1604 | ~1610 | ~1650+ |
+| Metric | Current (P23) | Target (P24) | Target (P25) | Target (P28) |
+|--------|---------------|--------------|--------------|--------------|
+| MCP tools | 52 | 53 (+1) | 54 (+1) | 57 (+5) |
+| Timers | 16 | 17 (+1) | 17 | 19 (+3) |
+| LanceDB tables | 10 | 11 (+1) | 12 (+1) | 13 (+3) |
+| Tests | ~1604 | ~1610 | ~1620 | ~1650+ |
 
 ### Dependency Graph
 
@@ -369,7 +377,7 @@ P28 (Self-Improvement) ← aggregates P24 + P25 + P26 + P27
 | `~/.config/bazzite-ai/keys.env` | Plaintext API keys (chmod 600, never in git) |
 | `~/security/` | Canonical root for all runtime security data |
 | `~/security/.status` | Shared JSON: ClamAV + health state (tray + MCP read this) |
-| `~/security/vector-db/` | LanceDB root (→ `/var/mnt/ext-ssd/bazzite-ai/vector-db`). Tables: `documents` (RAG docs), `code_index` (code embeddings), `log_entries` (system logs), `code_patterns` (curated code patterns — P21), `task_patterns` (task outcomes — P22), `semantic_cache` (LLM response cache — P23), `metrics` (observability time-series — P24) |
+| `~/security/vector-db/` | LanceDB root (→ `/var/mnt/ext-ssd/bazzite-ai/vector-db`). Tables: `documents` (RAG docs), `code_index` (code embeddings), `log_entries` (system logs), `code_patterns` (curated code patterns — P21), `task_patterns` (task outcomes — P22), `semantic_cache` (LLM response cache — P23), `metrics` (observability time-series — P24), `conversation_memory` (cross-session memory — P25) |
 | `~/security/vector-db/.archive-state.json` | R2 archive state (upload records with key, timestamp, size) |
 | `~/security/llm-status.json` | LLM provider health + token usage |
 | `~/security/key-status.json` | API key presence map |

@@ -377,6 +377,23 @@ tools:
         required: false
         description: "Filter by metric type: cache, budget, provider, tool, timer"
 
+  memory.search:
+    description: "Search conversation memories by semantic similarity"
+    source: python
+    module: ai.memory
+    function: search_memories
+    args:
+      query:
+        type: string
+        required: true
+        max_length: 500
+        description: "Search query for memory retrieval"
+      top_k:
+        type: integer
+        required: false
+        default: 5
+        description: "Number of memories to return"
+
   security.correlate:
     description: "Cross-reference an IOC across all threat intel sources. Pass ioc (the value) and ioc_type (hash|ip|url|cve)"
     source: python

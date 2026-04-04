@@ -18,7 +18,7 @@ DEFAULT_BIND = "127.0.0.1"
 DEFAULT_PORT = int(__import__("os").environ.get("MCP_BRIDGE_PORT", "8766"))
 
 # Number of tools in the allowlist (excludes health endpoint itself)
-_TOOL_COUNT = 53
+_TOOL_COUNT = 54
 
 
 def _assert_localhost(bind: str) -> None:
@@ -120,6 +120,7 @@ def create_app():
         "security.recommend_action": {"readOnlyHint": True, "idempotentHint": True},
         "knowledge.pattern_search": {"readOnlyHint": True},
         "knowledge.task_patterns": {"readOnlyHint": True},
+        "memory.search": {"readOnlyHint": True},
     }
 
     # Load tool definitions from the allowlist
@@ -250,6 +251,22 @@ def create_app():
                     }
                 except Exception as e:
                     return {"error": str(e), "tasks": [], "count": 0}
+
+        elif tool_name == "memory.search":
+
+            @mcp.tool(name=tool_name, description=description, annotations=ann)
+            async def _handler_memory_search(
+                query: str,
+                top_k: int = 5,
+                _tn=tool_name,
+            ):
+                try:
+                    from ai.memory import get_memory
+
+                    result = get_memory().search_memories(query=query, top_k=top_k)
+                    return {"results": result, "query": query}
+                except Exception as e:
+                    return {"error": str(e), "results": "[]"}
 
         elif tool_name == "system.budget_status":
 

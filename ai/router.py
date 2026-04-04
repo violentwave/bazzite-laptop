@@ -508,6 +508,17 @@ def route_query(task_type: str, prompt: str, **kwargs: object) -> str:
     if cached is not None:
         return cached["content"]
 
+    # Memory retrieval for context enrichment
+    try:
+        from ai.memory import get_memory
+
+        memories = get_memory().retrieve_memories(query=prompt, top_k=3)
+        if memories:
+            memory_context = "\n".join(f"- {m['summary']}" for m in memories)
+            prompt = f"Previous relevant context:\n{memory_context}\n\nCurrent query: {prompt}"
+    except Exception:  # noqa: S110
+        pass  # memory retrieval should not break LLM path
+
     last_error = None
     for provider in providers:
         try:

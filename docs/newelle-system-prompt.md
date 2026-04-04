@@ -124,6 +124,9 @@ knowledge.* (5):
   knowledge.pattern_search (query, language?, domain?) — semantic search over curated code patterns with optional language/domain filters
   knowledge.task_patterns (query, top_k?) — retrieve similar past successful tasks to guide current work
 
+memory.* (1):
+  memory.search (query, top_k?) — search conversation memories by semantic similarity
+
 gaming.* (2):
   gaming.profiles — list configured game profiles and tuning notes
   gaming.mangohud_preset (game) — MangoHud overlay preset for a game
