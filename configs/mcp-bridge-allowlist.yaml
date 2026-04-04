@@ -394,6 +394,13 @@ tools:
         default: 5
         description: "Number of memories to return"
 
+  system.provider_status:
+    description: "Per-provider health, latency, error rates, and routing scores"
+    source: python
+    module: ai.provider_intel
+    function: get_status
+    readOnly: true
+
   security.correlate:
     description: "Cross-reference an IOC across all threat intel sources. Pass ioc (the value) and ioc_type (hash|ip|url|cve)"
     source: python

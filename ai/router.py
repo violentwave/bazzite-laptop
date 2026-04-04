@@ -499,6 +499,18 @@ def route_query(task_type: str, prompt: str, **kwargs: object) -> str:
     # Health-weighted provider ordering
     providers = _get_provider_order(config, task_type)
 
+    # Provider intelligence optimization
+    try:
+        from ai.provider_intel import get_intel
+
+        excluded = []
+        intel = get_intel()
+        best = intel.choose_best(task_type, exclude=excluded)
+        if best and best in providers:
+            providers = [best] + [p for p in providers if p != best]
+    except Exception:  # noqa: S110
+        pass  # intel failure should not break routing
+
     if not providers:
         raise AllProvidersExhausted(task_type, "no available providers")
 

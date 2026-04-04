@@ -93,9 +93,9 @@ Key constraints:
 
 ---
 
-## MCP Tools (54 + health)
+## MCP Tools (55 + health)
 
-Source: `configs/mcp-bridge-allowlist.yaml` (54 entries).
+Source: `configs/mcp-bridge-allowlist.yaml` (55 entries).
 
 > **Phase 12:** PingMiddleware (25s keepalive) active. All 50 tools carry MCP annotations (readOnly/destructive/openWorld hints).
 > **Phase 20:** Added `agents.timer_health` — validates all 16 systemd timers.
@@ -104,8 +104,9 @@ Source: `configs/mcp-bridge-allowlist.yaml` (54 entries).
 > **Phase 23:** Added `system.budget_status` — token budget usage across tiers.
 > **Phase 24:** Added `system.metrics_summary` — aggregate metrics for last 24h.
 > **Phase 25:** Added `memory.search` — cross-session conversation memory retrieval.
+> **Phase 26:** Added `system.provider_status` — per-provider health, latency, error rates.
 
-### system.* (20 tools)
+### system.* (21 tools)
 
 | Tool | Source | Args | Description |
 |------|--------|------|-------------|
@@ -353,9 +354,11 @@ P28 (Self-Improvement) ← aggregates P24 + P25 + P26 + P27
 | `ai/cache_semantic.py` | SemanticCache: LanceDB-backed similarity cache with TTL (P23) |
 | `ai/budget.py` | TokenBudget: daily token limits with priority tiers (P23) |
 | `ai/metrics.py` | MetricsRecorder: time-series observability with buffered writes (P24) |
+| `ai/memory.py` | ConversationMemory: persistent memory with semantic retrieval (P25) |
+| `ai/provider_intel.py` | ProviderIntel: dynamic routing based on latency/error/cost (P26) |
 | `ai/security/inputvalidator.py` | Pre-dispatch input validation + secret redaction |
 | `ai/system/` | release_watch, fedora_updates, pkg_intel |
-| `configs/mcp-bridge-allowlist.yaml` | 53 tool definitions + argument validation |
+| `configs/mcp-bridge-allowlist.yaml` | 55 tool definitions + argument validation |
 | `configs/safety-rules.json` | Input validation rules (max length, patterns, path allowlists) |
 | `configs/litellm-config.yaml` | LiteLLM provider routing config |
 | `configs/ai-rate-limits.json` | Per-provider rate limits |
