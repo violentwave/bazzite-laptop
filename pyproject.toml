@@ -10,17 +10,24 @@ line-length = 100
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "S", "B", "UP"]
-ignore = ["S603", "S607"]
+# S603/S607 only suppressed where subprocess is intentionally used without shell
+# Do NOT suppress globally — moved to per-file-ignores below
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = ["S101", "S105", "S108"]
 "tray/**" = ["E402", "I001", "S110"]
 "ai/agents/**" = ["S110"]
 "ai/hooks.py" = ["S110"]
+# Scripts intentionally call subprocesses with partial paths (systemctl, clamscan etc.)
+"scripts/**" = ["S603", "S607"]
+"ai/system/**" = ["S603", "S607"]
+"ai/agents/**" = ["S603", "S607", "S110"]
 
 [tool.bandit]
 exclude_dirs = ["tests", ".venv", "tray"]
-skips = ["B603", "B607"]
+# B603/B607: subprocess without shell / partial executable path
+# Only skip in scripts and system modules, not project-wide
+skips = []
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -33,4 +40,6 @@ markers = [
     "quarantined: flaky test excluded from main suite",
     "requires_embedding: needs real embedding provider",
     "requires_writable_db: needs writable LanceDB",
+    "requires_network: needs live network/API access",
+    "unit: fast isolated unit tests",
 ]
