@@ -14,6 +14,20 @@ Usage:
     result = route_query("fast", "Summarize this alert...")
 """
 
+import os
+
+import sentry_sdk
+from sentry_sdk.integrations.asyncio import AsyncioIntegration
+
+sentry_sdk.init(
+    dsn=os.environ.get("SENTRY_DSN"),
+    traces_sample_rate=0.05,
+    integrations=[AsyncioIntegration()],
+    environment=os.environ.get("SENTRY_ENV", "production"),
+    send_default_pii=False,
+    ignore_errors=[KeyboardInterrupt, SystemExit],
+)
+
 import hashlib
 import json
 import logging
