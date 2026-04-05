@@ -14,7 +14,6 @@ on:
       - 'desktop/**'
       - 'systemd/**'
   schedule:
-    # random HH:MM to avoid a load spike on GitHub Actions at 00:00
     - cron: '50 12 * * *'
 
 jobs:

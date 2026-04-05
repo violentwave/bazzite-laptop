@@ -28,7 +28,7 @@ jobs:
         run: |
           shfiles=$(find scripts/ -name '*.sh' 2>/dev/null)
           if [ -z "$shfiles" ]; then
-            echo "No .sh files found — skipping"
+            echo "No .sh files found - skipping"
             exit 0
           fi
           echo "$shfiles" | xargs shellcheck
@@ -43,7 +43,7 @@ jobs:
           FAIL=0
           shfiles=$(find scripts/ -name '*.sh' 2>/dev/null)
           if [ -z "$shfiles" ]; then
-            echo "No .sh files found — skipping"
+            echo "No .sh files found - skipping"
             exit 0
           fi
           for f in $shfiles; do
@@ -63,7 +63,6 @@ jobs:
         run: |
           FAIL=0
           for f in systemd/*.service systemd/*.timer; do
-            # Skip if glob matched no files (nullglob not set)
             [ -e "$f" ] || continue
             echo "Checking $f..."
             if [[ "$f" == *.service ]]; then
@@ -142,4 +141,4 @@ jobs:
           exit $FAIL
       - name: No desktop files found
         if: steps.check.outputs.count == '0'
-        run: echo "No .desktop files present — skipping validation"
+        run: echo "No .desktop files present - skipping validation"
