@@ -95,3 +95,4 @@ opencode.json
 llm-cache/
 *.cache
 bazzite-llm-cache/
+.hypothesis/

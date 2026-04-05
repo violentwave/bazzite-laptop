@@ -6,9 +6,14 @@ Tables:
 
 All table operations use LanceDB's native Python API. The store is
 initialized lazily on first access to avoid import-time side effects.
+
+Performance optimization: in-memory LRU cache keyed on vector hash.
 """
 
+import hashlib
+import json
 import logging
+import time
 from pathlib import Path
 from uuid import uuid4
 
@@ -16,6 +21,11 @@ from ai.config import APP_NAME, VECTOR_DB_DIR
 from ai.rag.constants import CODE_TABLE, EMBEDDING_DIM
 
 logger = logging.getLogger(APP_NAME)
+
+
+def _vector_hash(vector: list[float]) -> str:
+    """Generate a stable hash key for a query vector."""
+    return hashlib.sha256(json.dumps(vector, sort_keys=True).encode()).hexdigest()[:16]
 
 
 def _get_schemas() -> dict:
@@ -93,6 +103,20 @@ class VectorStore:
     def __init__(self, db_path: Path | None = None) -> None:
         self._db_path = db_path or VECTOR_DB_DIR
         self._db = None
+        self._search_cache: dict[str, tuple[list[dict], float]] = {}
+        self._cache_ttl: float = 300.0
+        self._cache_max: int = 100
+
+    def __enter__(self) -> "VectorStore":
+        return self
+
+    def __exit__(self, *args) -> None:
+        self.close()
+
+    def close(self) -> None:
+        """Close the LanceDB connection."""
+        if self._db is not None:
+            self._db = None
 
     def _connect(self):
         """Return a lazy-initialized LanceDB connection, creating the dir if needed."""
@@ -258,14 +282,23 @@ class VectorStore:
         query_vector: list[float],
         limit: int,
     ) -> list[dict]:
-        """Run a vector similarity search on the given table."""
+        """Run a vector similarity search on the given table with LRU cache."""
+        cache_key = f"{table_name}:{_vector_hash(query_vector)}:{limit}"
+        if cache_key in self._search_cache:
+            results, cached_at = self._search_cache[cache_key]
+            if time.time() - cached_at < self._cache_ttl:
+                return results
         try:
             table = self._ensure_table(table_name, schema)
             results = table.search(query_vector).limit(limit).to_list()
-            return results
         except Exception:
             logger.exception("Vector search failed on table '%s'", table_name)
             return []
+        if len(self._search_cache) >= self._cache_max:
+            oldest = min(self._search_cache, key=lambda k: self._search_cache[k][1])
+            del self._search_cache[oldest]
+        self._search_cache[cache_key] = (results, time.time())
+        return results
 
     def count(self, table_name: str) -> int:
         """Return row count for a table. Returns 0 if table doesn't exist."""
@@ -291,3 +324,11 @@ def get_store(db_path: Path | None = None) -> VectorStore:
     if _store_instance is None:
         _store_instance = VectorStore(db_path=db_path)
     return _store_instance
+
+
+def reset_store() -> None:
+    """Reset singleton for test isolation. Production never calls this."""
+    global _store_instance  # noqa: PLW0603
+    if _store_instance:
+        _store_instance.close()
+    _store_instance = None

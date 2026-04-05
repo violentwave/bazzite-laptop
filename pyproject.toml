@@ -3,6 +3,9 @@ name = "bazzite-ai"
 version = "0.1.0"
 description = "AI enhancement layer for bazzite-laptop security monitoring"
 requires-python = ">=3.12"
+dependencies = [
+    "sentry-sdk>=2.57.0",
+]
 
 [tool.ruff]
 target-version = "py312"
@@ -16,11 +19,11 @@ select = ["E", "F", "W", "I", "S", "B", "UP"]
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = ["S101", "S105", "S108"]
 "tray/**" = ["E402", "I001", "S110"]
-"ai/agents/**" = ["S110"]
 "ai/hooks.py" = ["S110"]
 # Scripts intentionally call subprocesses with partial paths (systemctl, clamscan etc.)
 "scripts/**" = ["S603", "S607"]
 "ai/system/**" = ["S603", "S607"]
+"ai/alerts/**" = ["S603", "S607", "S110"]
 "ai/agents/**" = ["S603", "S607", "S110"]
 
 [tool.bandit]

@@ -98,6 +98,11 @@ jobs:
         run: |
           source .venv/bin/activate
           bandit -r ai/ -c pyproject.toml
+      - name: Safety dependency check
+        run: |
+          source .venv/bin/activate
+          pip install safety
+          safety check --full-report
       - name: Run tests with coverage
         run: |
           source .venv/bin/activate
