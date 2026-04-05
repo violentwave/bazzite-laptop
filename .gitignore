@@ -96,3 +96,4 @@ llm-cache/
 *.cache
 bazzite-llm-cache/
 .hypothesis/
+uv.lock
