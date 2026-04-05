@@ -3,8 +3,18 @@ name: Lint & Validate
 on:
   push:
     branches: [master]
+    paths-ignore:
+      - 'docs/**'
+      - '*.md'
+      - 'HANDOFF.md'
+      - 'CHANGELOG.md'
   pull_request:
     branches: [master]
+    paths-ignore:
+      - 'docs/**'
+      - '*.md'
+      - 'HANDOFF.md'
+      - 'CHANGELOG.md'
 
 jobs:
   shellcheck:
@@ -15,7 +25,13 @@ jobs:
       - name: Install ShellCheck
         run: sudo apt-get install -y shellcheck
       - name: Run ShellCheck on all scripts
-        run: shellcheck scripts/*.sh
+        run: |
+          shfiles=$(find scripts/ -name '*.sh' 2>/dev/null)
+          if [ -z "$shfiles" ]; then
+            echo "No .sh files found — skipping"
+            exit 0
+          fi
+          echo "$shfiles" | xargs shellcheck
 
   syntax:
     name: Bash Syntax Check
@@ -25,7 +41,12 @@ jobs:
       - name: Check bash -n on all .sh files
         run: |
           FAIL=0
-          for f in scripts/*.sh; do
+          shfiles=$(find scripts/ -name '*.sh' 2>/dev/null)
+          if [ -z "$shfiles" ]; then
+            echo "No .sh files found — skipping"
+            exit 0
+          fi
+          for f in $shfiles; do
             if ! bash -n "$f" 2>&1; then
               echo "FAIL: $f"
               FAIL=1
@@ -42,8 +63,9 @@ jobs:
         run: |
           FAIL=0
           for f in systemd/*.service systemd/*.timer; do
+            # Skip if glob matched no files (nullglob not set)
+            [ -e "$f" ] || continue
             echo "Checking $f..."
-            # Verify required sections exist
             if [[ "$f" == *.service ]]; then
               grep -q '\[Service\]' "$f" || { echo "FAIL: $f missing [Service]"; FAIL=1; }
             fi
@@ -68,7 +90,7 @@ jobs:
         run: |
           uv venv .venv
           source .venv/bin/activate
-          uv pip install -r requirements.txt
+          uv pip install -r requirements-ai.txt
       - name: Ruff lint
         run: |
           source .venv/bin/activate
@@ -98,15 +120,26 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Check for desktop files
+        id: check
+        run: |
+          count=$(find desktop/ -name '*.desktop' 2>/dev/null | wc -l)
+          echo "count=$count" >> "$GITHUB_OUTPUT"
       - name: Install desktop-file-utils
+        if: steps.check.outputs.count != '0'
         run: sudo apt-get install -y desktop-file-utils
       - name: Validate .desktop files
+        if: steps.check.outputs.count != '0'
         run: |
           FAIL=0
           for f in desktop/*.desktop; do
+            [ -e "$f" ] || continue
             echo "Checking $f..."
             if ! desktop-file-validate "$f" 2>&1; then
               FAIL=1
             fi
           done
           exit $FAIL
+      - name: No desktop files found
+        if: steps.check.outputs.count == '0'
+        run: echo "No .desktop files present — skipping validation"
