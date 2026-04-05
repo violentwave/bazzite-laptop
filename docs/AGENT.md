@@ -1,5 +1,5 @@
 # Bazzite AI Layer — Agent Reference
-<!-- System: Acer Predator G3-571 | Bazzite 43 | Updated: 2026-04-04 -->
+<!-- System: Acer Predator G3-571 | Bazzite 43 | Updated: 2026-04-05 -->
 
 ## Session Start
 
@@ -59,7 +59,7 @@
             ┌───────────▼──┐ ┌─▼──────────────────┐
              │  MCP Bridge  │ │  LLM Proxy          │
               │  :8766 FastMCP  │ │  :8767 OpenAI-compat│
-               │  76 tools       │ │  6 cloud providers  │
+               │  79 tools       │ │  6 cloud providers  │
             └──┬──┬──┬──┬─────┘ └──┬──────────────────┘
              │  │  │  │          │
     ┌────────┘  │  │  └───┐     │  Health-weighted routing
@@ -75,6 +75,7 @@
 System Layer:
   ClamAV (3 timers) | Health (1 timer) | Agents (3 timers)
   RAG embed (1 timer) | CVE/Release/Fedora (3 timers) | R2 archive (1 timer) | Canary (1 timer)
+  Dep audit (1 timer) | Insights (1 timer) | Code index (1 timer)
   LanceDB → ext-ssd | Disk cache → ext-ssd | Tray app (PySide6)
 ```
 
@@ -93,9 +94,9 @@ Key constraints:
 
 ---
 
-## MCP Tools (76)
+## MCP Tools (79)
 
-Source: `configs/mcp-bridge-allowlist.yaml` (75 entries) + `system.perf_metrics` (registered in server.py).
+Source: `configs/mcp-bridge-allowlist.yaml` + tools registered directly in server.py.
 
 > **Phase 12:** PingMiddleware (25s keepalive) active. All tools carry MCP annotations (readOnly/destructive/openWorld hints).
 > **Phase 20:** Added `agents.timer_health` — validates all 21 systemd timers.
@@ -113,8 +114,9 @@ Source: `configs/mcp-bridge-allowlist.yaml` (75 entries) + `system.perf_metrics`
 > **Phase 32:** Added test intelligence with flaky detection, selective execution (testmon), and test traceability.
 > **Phase 33:** Added `system.create_tool`, `system.list_dynamic_tools` — dynamic tool creation with safety validation.
 > **Phase 39:** Added `system.dep_audit`, `system.dep_audit_history` — pip-audit vulnerability scanning + SBOM generation.
+> **Phase 40:** Added `system.perf_metrics` — real-time performance metrics snapshot.
 
-### system.* (21 tools)
+### system.* (24 tools)
 
 | Tool | Source | Args | Description |
 |------|--------|------|-------------|
@@ -138,10 +140,13 @@ Source: `configs/mcp-bridge-allowlist.yaml` (75 entries) + `system.perf_metrics`
 | `system.pipeline_status` | python: `ai.system.pipeline_status` | — | Log pipeline ingest/archive/retention status, pending files, table row counts |
 | `system.budget_status` | python: `ai.mcp_bridge.server` | — | Daily token budget usage and warnings across priority tiers |
 | `system.metrics_summary` | python: `ai.metrics` | `hours`, `metric_type` | Aggregate metrics for last 24h: cache hit rates, provider latencies, budget usage, tool errors |
+| `system.perf_metrics` | python: `ai.metrics` | — | Real-time performance metrics snapshot (latencies, error rates, cache stats) |
+| `system.dep_audit` | python: `ai.system.dep_audit` | — | Run pip-audit vulnerability scan and return findings |
+| `system.dep_audit_history` | python: `ai.system.dep_audit` | `limit` (int, default 10) | Retrieve historical dep-audit scan results |
 | `system.create_tool` | python: `ai.tools.builder` | `name`, `description`, `handler_code`, `parameters`, `created_by` | Create a dynamic tool with safety validation |
 | `system.list_dynamic_tools` | python: `ai.tools.builder` | — | List all persisted dynamic tools |
 
-### security.* (15 tools)
+### security.* (16 tools)
 
 | Tool | Source | Args | Description |
 |------|--------|------|-------------|
@@ -159,6 +164,8 @@ Source: `configs/mcp-bridge-allowlist.yaml` (75 entries) + `system.perf_metrics`
 | `security.run_ingest` | python | — | Trigger log pipeline re-ingestion |
 | `security.correlate` | python: `ai.threat_intel.correlator` | `ioc`, `ioc_type` (required) | Correlate IOC across VT/OTX/AbuseIPDB/GreyNoise/URLhaus |
 | `security.recommend_action` | python: `ai.threat_intel.playbooks` | `finding_type`, `finding_id` (required) | Response playbook for threat findings |
+| `security.alert_summary` | python: `ai.security.alerts` | — | Proactive security alerts: active CVEs, stale scans, release advisories, deduplication state |
+| `security.provider_status` | python: `ai.provider_intel` | — | Per-provider health, latency, error rates, and cost |
 
 ### knowledge.* (5 tools)
 
@@ -229,17 +236,17 @@ Source: `configs/mcp-bridge-allowlist.yaml` (75 entries) + `system.perf_metrics`
 | `agents.performance_tuning` | python: `ai.agents.performance_tuning` | — | Temps, memory, disk, gaming profiles |
 | `agents.knowledge_storage` | python: `ai.agents.knowledge_storage` | — | Vector DB health + embedding provider status |
 | `agents.code_quality` | python: `ai.agents.code_quality_agent` | — | ruff + bandit + git status |
-| `agents.timer_health` | python: `ai.agents.timer_sentinel` | — | Validate all 16 systemd timers fired within expected windows. Returns per-timer status, stale list, and overall health (healthy/warning/critical). |
+| `agents.timer_health` | python: `ai.agents.timer_sentinel` | — | Validate all 21 systemd timers fired within expected windows. Returns per-timer status, stale list, and overall health (healthy/warning/critical). |
 
 ### Built-in
 
 | Tool | Description |
 |------|-------------|
-| `health` | Returns `{"status": "ok", "tools": 76}` |
+| `health` | Returns `{"status": "ok", "tools": 79}` |
 
 ---
 
-## P24–P33 Roadmap (Completed)
+## P24–P40 Roadmap (All Complete)
 
 > **Execution agent:** OpenCode (z.ai GLM models, TUI mode)
 > **Playbook:** `docs/phase-roadmap-p29-p33.md` (30 numbered prompts: OC-31 through OC-60)
@@ -253,15 +260,19 @@ Source: `configs/mcp-bridge-allowlist.yaml` (75 entries) + `system.perf_metrics`
 | **P31** | Agent Collaboration | +3 | — | `shared_context`, `agent_knowledge` | `ai/collab/` |
 | **P30** | Workflow Engine | +2 | — | `workflows` | `ai/workflows/` |
 | **P33** | Plugin Factory | +2 | — | `persisted_tools` | `ai/tools/` |
+| **P39** | Dependency Audit | +2 | `dep-audit.timer` (Weekly) | — | `ai/system/dep_audit.py` |
+| **P40** | Performance Round 2 + Observability | +1 | `metrics-compact.timer` | — | `ai/metrics.py` |
 
-### Final State After P40
+### Current State (Post-P40)
 
-| Metric | P28 (start) | P40 (target) |
-|--------|---------------|---------------|
-| MCP tools | 57 | 76 (+19) |
-| Timers | 19 | 21 (+2) |
-| LanceDB tables | 13 | 23 (+10) |
-| Tests | ~1672 | ~1819+ |
+| Metric | Value |
+|--------|-------|
+| MCP tools | 79 (+ 1 health endpoint) |
+| Systemd timers | 21 |
+| LanceDB tables | 23 |
+| Tests | ~1951 |
+| Cloud LLM providers | 6 |
+| Threat intel APIs | 16 |
 
 ### Dependency Graph
 
@@ -271,6 +282,13 @@ P25 (Memory) ← independent, extends RAG embeddings
 P26 (Provider Intel) ← requires P24 metrics
 P27 (Security Alerts) ← independent, uses existing threat intel
 P28 (Self-Improvement) ← aggregates P24 + P25 + P26 + P27
+P29 (Code Intel) ← independent, AST + grimp
+P30 (Workflows) ← requires P29 event system
+P31 (Collab) ← independent
+P32 (Test Intel) ← requires P29 traceability
+P33 (Plugin Factory) ← independent
+P39 (Dep Audit) ← independent
+P40 (Perf Round 2) ← extends P24
 ```
 
 ### Phase Implementation Rules (OpenCode)
@@ -304,6 +322,8 @@ P28 (Self-Improvement) ← aggregates P24 + P25 + P26 + P27
 
 **Stream recovery**: 2 KB commit threshold. Pre-commit failure → retry next provider. Post-commit → fatal (partial output already sent).
 
+**Sentry error tracking**: `sentry-sdk` initialized in `ai/router.py` on startup. DSN loaded from `SENTRY_DSN` env var (`~/.config/environment.d/bazzite-ai.conf`). `traces_sample_rate=0.05`, `send_default_pii=False`.
+
 **Cloud providers (6)**:
 
 | Provider | Key Var | Task Types |
@@ -318,7 +338,7 @@ P28 (Self-Improvement) ← aggregates P24 + P25 + P26 + P27
 
 ---
 
-## Systemd Timers (18)
+## Systemd Timers (21)
 
 | Timer | Schedule | Purpose |
 |-------|----------|---------|
@@ -341,6 +361,8 @@ P28 (Self-Improvement) ← aggregates P24 + P25 + P26 + P27
 | `metrics-compact.timer` | Sun 3:00 | Compact and prune old metrics data |
 | `security-alert.timer` | Every 6h | Security alert evaluation (CVEs, stale scans, release advisories) |
 | `code-index.timer` | Daily 6:00 | Code intelligence index rebuild (AST, grimp import graph, co-change mining) |
+| `dep-audit.timer` | Weekly | pip-audit vulnerability scan + SBOM generation |
+| `weekly-insights.timer` | Weekly | AI-generated weekly system insights |
 
 ---
 
@@ -371,13 +393,13 @@ P28 (Self-Improvement) ← aggregates P24 + P25 + P26 + P27
 | Path | Purpose |
 |------|---------|
 | `ai/config.py` | Paths, constants, scoped key loading |
-| `ai/router.py` | LiteLLM V2 router, health-weighted provider selection |
+| `ai/router.py` | LiteLLM V2 router, health-weighted provider selection + Sentry init |
 | `ai/health.py` | Provider health scoring + auto-demotion |
 | `ai/llm_proxy.py` | OpenAI-compatible proxy on :8767 |
 | `ai/rate_limiter.py` | Cross-script rate limiting with file locking |
 | `ai/key_manager.py` | API key presence checker |
 | `ai/mcp_bridge/server.py` | FastMCP server on :8766, tool registration |
-| `ai/mcp_bridge/tools.py` | Tool dispatch handlers for all 76 tools |
+| `ai/mcp_bridge/tools.py` | Tool dispatch handlers for all 79 tools |
 | `ai/mcp_bridge/tool_filter.py` | Server-side namespace/semantic tool filtering (P29-Prereq) |
 | `ai/threat_intel/` | VT, OTX, AbuseIPDB, GreyNoise, NVD, URLhaus, etc. (6 API modules) |
 | `ai/rag/` | LanceDB store, embedder, query engine, code query |
@@ -386,34 +408,35 @@ P28 (Self-Improvement) ← aggregates P24 + P25 + P26 + P27
 | `ai/gaming/` | MangoHud analysis, ScopeBuddy profiles |
 | `ai/cache_semantic.py` | SemanticCache: LanceDB-backed similarity cache with TTL (P23) |
 | `ai/budget.py` | TokenBudget: daily token limits with priority tiers (P23) |
-| `ai/metrics.py` | MetricsRecorder: time-series observability with buffered writes (P24) |
+| `ai/metrics.py` | MetricsRecorder: time-series observability with buffered writes (P24/P40) |
 | `ai/memory.py` | ConversationMemory: persistent memory with semantic retrieval (P25) |
 | `ai/provider_intel.py` | ProviderIntel: dynamic routing based on latency/error/cost (P26) |
 | `ai/security/alerts.py` | SecurityAlertEvaluator: CVE matching, scan freshness, deduplication (P27) |
 | `ai/security/inputvalidator.py` | Pre-dispatch input validation + secret redaction |
-| `ai/system/` | release_watch, fedora_updates, pkg_intel |
+| `ai/system/` | release_watch, fedora_updates, pkg_intel, dep_audit |
 | `ai/testing/` | TestStabilityTracker, pytest_plugin, traceability (P32) |
 | `ai/code_intel/` | AST parser, grimp import graph, code knowledge graph (P29) |
 | `ai/collab/` | Task queue, shared context, knowledge base, file claims (P31) |
 | `ai/workflows/` | ReAct runner, workflow store, event triggers (P30) |
 | `ai/tools/` | Dynamic tool builder with safety validation (P33) |
 | `ai/skills/` | Pluggable skill loading (P30) |
+| `ai/insights.py` | InsightGenerator for weekly self-assessment (P28) |
 | `scripts/index-code.py` | Rebuild code intelligence index (P29) |
 | `scripts/test-smart.sh` | Smart/full/flaky test runner wrapper (P32) |
 | `scripts/security-alert-eval.py` | Security alert evaluation script (P27) |
-| `configs/mcp-bridge-allowlist.yaml` | 70 tool definitions + argument validation |
+| `scripts/parse-handoff.py` | Parse HANDOFF.md to task_patterns table (P38) |
+| `configs/mcp-bridge-allowlist.yaml` | Tool definitions + argument validation |
 | `configs/safety-rules.json` | Input validation rules (max length, patterns, path allowlists) |
 | `configs/litellm-config.yaml` | LiteLLM provider routing config |
 | `configs/ai-rate-limits.json` | Per-provider rate limits |
 | `configs/keys.env.enc` | sops-encrypted API keys (in git, safe) |
-| `scripts/` | 42 shell/Python scripts (deploy, scan, backup, etc.) |
+| `scripts/` | Shell/Python scripts (deploy, scan, backup, etc.) |
 | `scripts/lancedb-prune.py` | LanceDB retention pruning (90d logs, 180d threats) + cache cleanup |
 | `scripts/metrics-compact.py` | Metrics compaction (P24) |
 | `scripts/r2-set-lifecycle.py` | One-time R2 bucket lifecycle rule setup (180d auto-expiration) |
 | `scripts/log-task-success.py` | CLI for logging successful task patterns to LanceDB (P22) |
-| `scripts/parse-handoff.py` | Parse HANDOFF.md to task_patterns table (P38) |
 | `systemd/` | 21 timers + associated services |
-| `tests/` | 1951 pytest tests |
+| `tests/` | ~1951 pytest tests |
 | `tray/` | PySide6 system tray app |
 | `docs/phase-roadmap-p29-p33.md` | OpenCode autonomous execution playbook (OC-31 through OC-60) |
 
@@ -422,6 +445,7 @@ P28 (Self-Improvement) ← aggregates P24 + P25 + P26 + P27
 | Path | Purpose |
 |------|---------|
 | `~/.config/bazzite-ai/keys.env` | Plaintext API keys (chmod 600, never in git) |
+| `~/.config/environment.d/bazzite-ai.conf` | Systemd user env vars (SENTRY_DSN, SENTRY_ENV) |
 | `~/security/` | Canonical root for all runtime security data |
 | `~/security/.status` | Shared JSON: ClamAV + health state (tray + MCP read this) |
 | `~/security/vector-db/` | LanceDB root (→ `/var/mnt/ext-ssd/bazzite-ai/vector-db`). Tables: `documents` (RAG docs), `code_index` (code embeddings), `log_entries` (system logs), `code_patterns` (curated code patterns — P21), `task_patterns` (task outcomes — P22), `semantic_cache` (LLM response cache — P23), `metrics` (observability time-series — P24), `conversation_memory` (cross-session memory — P25), `system_insights` (weekly insight snapshots — P28), `tool_metadata` (P29-Prereq), `test_mappings` (P32), `code_nodes`, `relationships`, `import_graph`, `change_history` (P29), `shared_context`, `agent_knowledge` (P31), `workflows` (P30), `persisted_tools` (P33) |
@@ -430,25 +454,12 @@ P28 (Self-Improvement) ← aggregates P24 + P25 + P26 + P27
 | `~/security/key-status.json` | API key presence map |
 | `~/security/release-watch.json` | Release watch results |
 | `~/security/fedora-updates.json` | Fedora update check results |
+| `~/security/alerts.json` | Active security alerts (P27 runtime) |
+| `~/security/.alert-dedup.json` | Alert deduplication state (P27 runtime) |
 | `~/security/quarantine/` | ClamAV quarantine directory |
 | `/var/log/system-health/` | Health snapshot logs |
 | `/var/log/clamav-scans/` | ClamAV scan logs |
 | `/var/mnt/ext-ssd/bazzite-ai/llm-cache` | LiteLLM disk cache |
-
-### P24–P28 planned paths (created during implementation)
-
-| Path | Phase | Purpose |
-|------|-------|---------|
-| `ai/metrics.py` | P24 | MetricsRecorder with buffered LanceDB writes |
-| `ai/memory.py` | P25 | ConversationMemory with semantic retrieval |
-| `ai/provider_intel.py` | P26 | ProviderIntel scoring for dynamic routing |
-| `ai/security/alerts.py` | P27 | SecurityAlertEvaluator for proactive alerting |
-| `ai/insights.py` | P28 | InsightGenerator for weekly self-assessment |
-| `scripts/metrics-compact.py` | P24 | Weekly metrics compaction |
-| `scripts/security-alert-eval.py` | P27 | Security alert evaluation |
-| `scripts/generate-weekly-insights.py` | P28 | Weekly insights generation |
-| `~/security/alerts.json` | P27 | Active security alerts (runtime) |
-| `~/security/.alert-dedup.json` | P27 | Alert deduplication state (runtime) |
 
 ---
 
@@ -456,10 +467,10 @@ P28 (Self-Improvement) ← aggregates P24 + P25 + P26 + P27
 
 ```bash
 source .venv/bin/activate
-python -m pytest tests/ -v          # 1929 tests
+python -m pytest tests/ -v          # ~1951 tests
 ruff check ai/ tests/               # Lint
 bandit -r ai/ -c pyproject.toml     # Security scan
-uv pip install -r requirements.txt  # Install/update deps
+uv pip install -r requirements-ai.txt  # Install/update deps
 ```
 
 ---
@@ -468,7 +479,7 @@ uv pip install -r requirements.txt  # Install/update deps
 
 > Full version details: see `docs/verified-deps.md`
 
-**Python 3.12** in `.venv/` managed by `uv`. Key packages: litellm (multi-provider routing), lancedb (vector DB), fastmcp (MCP server), pydantic, httpx, requests, cohere (rerank), boto3 (R2 archiving), pillow. LLM response cache: `ai/cache.py` (JsonFileCache, zero-dep, no pickle).
+**Python 3.12** in `.venv/` managed by `uv`. Key packages: litellm (multi-provider routing), lancedb (vector DB), fastmcp (MCP server), pydantic, httpx, requests, cohere (rerank), boto3 (R2 archiving), pillow, sentry-sdk (error tracking). LLM response cache: `ai/cache.py` (JsonFileCache, zero-dep, no pickle).
 
 **Node.js v25** for RuFlo orchestration CLI (`@claude-flow/cli` v3.5.15) + 2 plugins (code-intelligence, test-intelligence).
 
@@ -487,7 +498,7 @@ uv pip install -r requirements.txt  # Install/update deps
 - Plugins: code-review, context7, code-simplifier, coderabbit, huggingface-skills
 - RuFlo MCP: global scope in `~/.claude/settings.json`
 
-### OpenCode (audits, targeted edits, P24–P28 autonomous execution)
+### OpenCode (audits, targeted edits, P24–P40 autonomous execution)
 
 - Provider: z.ai GLM models (direct, not through local proxy)
 - Config: `~/.config/opencode/opencode.jsonc` (not in git)
@@ -527,7 +538,7 @@ Agents working on this project share context via `HANDOFF.md` in the project roo
 Newelle (Flatpak GTK4) is the AI chat/voice UI for this system.
 
 - **LLM**: `http://127.0.0.1:8767/v1/` (`model="fast"`)
-- **MCP**: `http://127.0.0.1:8766/mcp` (76 tools)
+- **MCP**: `http://127.0.0.1:8766/mcp` (79 tools)
 - **System prompt**: `docs/newelle-system-prompt.md`
 - **Skills**: `docs/newelle-skills/` — 5 bundles: security, system, dev, gaming, agents
 - **Morning briefing**: `docs/morning-briefing-prompt.md` (scheduled 9:30 AM)
@@ -572,3 +583,4 @@ The base security/gaming system is managed in the "Bazzite Laptop" Claude.ai pro
 3. **CPU 87°C idle** — needs repaste with Kryonaut Extreme (thermal compound degradation)
 4. **Legacy AgentDB skill dirs** — `.claude/skills/agentdb-*` and `.claude/skills/reasoningbank-agentdb` are read-only in sandbox; delete manually outside Claude Code
 5. **requirements.txt contains system packages** — Brlapi, cockpit, etc. break venv rebuilds; use `requirements-ai.txt` instead (`uv pip install -r requirements-ai.txt`)
+6. **17 Dependabot vulnerability PRs open** — cryptography, filelock, pillow, pip, protobuf, requests and others; merge from github.com/violentwave/bazzite-laptop/pulls
