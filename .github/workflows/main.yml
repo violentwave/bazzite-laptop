@@ -21,7 +21,7 @@ jobs:
     name: ShellCheck
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Install ShellCheck
         run: sudo apt-get install -y shellcheck
       - name: Run ShellCheck on all scripts
@@ -37,7 +37,7 @@ jobs:
     name: Bash Syntax Check
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Check bash -n on all .sh files
         run: |
           FAIL=0
@@ -58,7 +58,7 @@ jobs:
     name: Systemd Unit Validation
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Validate systemd units
         run: |
           FAIL=0
@@ -78,7 +78,7 @@ jobs:
     name: Python Lint & Test
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Set up Python 3.12
         uses: actions/setup-python@v5
         with:
@@ -123,7 +123,7 @@ jobs:
     name: Desktop Entry Validation
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Install desktop-file-utils
         run: sudo apt-get install -y desktop-file-utils
       - name: Validate .desktop files
