@@ -119,18 +119,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Check for desktop files
-        id: check
-        run: |
-          count=$(find desktop/ -name '*.desktop' 2>/dev/null | wc -l)
-          echo "count=$count" >> "$GITHUB_OUTPUT"
       - name: Install desktop-file-utils
-        if: steps.check.outputs.count != '0'
         run: sudo apt-get install -y desktop-file-utils
       - name: Validate .desktop files
-        if: steps.check.outputs.count != '0'
         run: |
           FAIL=0
+          count=$(find desktop/ -name '*.desktop' 2>/dev/null | wc -l)
+          if [ "$count" -eq 0 ]; then
+            echo "No .desktop files found - skipping"
+            exit 0
+          fi
           for f in desktop/*.desktop; do
             [ -e "$f" ] || continue
             echo "Checking $f..."
@@ -139,6 +137,3 @@ jobs:
             fi
           done
           exit $FAIL
-      - name: No desktop files found
-        if: steps.check.outputs.count == '0'
-        run: echo "No .desktop files present - skipping validation"
