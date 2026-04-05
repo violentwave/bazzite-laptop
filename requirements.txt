@@ -61,7 +61,7 @@ pillow==11.3.0
 pip==25.1.1
 pip-autoremove==0.10.0
 ply==3.11
-protobuf==3.19.6
+protobuf==5.29.6
 psutil==7.0.0
 ptyprocess==0.7.0
 PyAudio==0.2.13
