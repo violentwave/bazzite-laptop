@@ -73,7 +73,7 @@ pydantic_core==2.41.5
 pydbus==0.6.0
 pyenchant==3.2.2
 pygdbmi==0.11.0.0
-PyGObject==3.54.5
+PyGObject==3.56.2
 pyinotify==0.9.6
 pyparsing==3.1.2
 pypresence==4.3.0
