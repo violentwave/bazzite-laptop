@@ -1,256 +1,136 @@
-"""Tests for ai.insights.InsightsEngine.
-
-lance is not installed in this environment.  Inject a module-level mock
-into sys.modules BEFORE importing ai.insights so the top-level
-``import lance`` succeeds without a real native extension.
-"""
+"""Tests for ai/insights.py — InsightsEngine."""
+from __future__ import annotations
 
 import json
-import sys
-from unittest.mock import MagicMock, patch
+from datetime import UTC, datetime, timedelta
+from unittest.mock import patch
 
-import pyarrow as pa
+import pytest
 
-# ── Module-level mock for lance ──────────────────────────────────────────────
-# Must be done before any import that touches ai.insights.
-_mock_lance = sys.modules.setdefault("lance", MagicMock())
+import ai.insights as _ins_mod
 
-# ai/__init__.py is empty — inject LANCE_PATH so ai.insights can import it.
-import ai as _ai_pkg  # noqa: E402
+# Pre-load modules so patch("ai.metrics.get_recorder") / patch("ai.memory.get_memory")
+# can resolve them via sys.modules before any test runs.
+import ai.memory  # noqa: F401
+import ai.metrics  # noqa: F401
+from ai.insights import InsightsEngine, get_engine, run_insights_generation
 
-if not hasattr(_ai_pkg, "LANCE_PATH"):
-    _ai_pkg.LANCE_PATH = "/tmp/test-lance"
+_MOCK_STATS = {"count": 10, "mean": 0.5, "min": 0.1, "max": 1.0, "p95": 0.9}
 
-import ai.insights as ins_mod  # noqa: E402
 
-# ── Helpers ──────────────────────────────────────────────────────────────────
+@pytest.fixture()
+def engine(tmp_path):
+    return InsightsEngine(db_path=str(tmp_path / "test_insights_db"))
 
-def _empty_mock_ds():
-    """Return a mock lance dataset whose to_table() yields an empty PA table."""
-    mock_ds = MagicMock()
-    mock_ds.to_table.return_value = pa.table(
-        {
-            "timestamp": pa.array([], type=pa.string()),
-            "data": pa.array([], type=pa.string()),
+
+# ── generate_weekly ──────────────────────────────────────────────────────────
+
+
+def test_generate_weekly_returns_dict(engine):
+    with patch("ai.metrics.get_recorder") as mock_rec, \
+         patch("ai.memory.get_memory") as mock_mem:
+        mock_rec.return_value.query_summary.return_value = _MOCK_STATS
+        mock_mem.return_value.get_recent.return_value = []
+        result = engine.generate_weekly()
+    assert result["kind"] == "weekly"
+    assert "generated_at" in result
+
+
+def test_generate_on_demand_returns_dict(engine):
+    with patch("ai.metrics.get_recorder") as mock_rec, \
+         patch("ai.memory.get_memory") as mock_mem:
+        mock_rec.return_value.query_summary.return_value = _MOCK_STATS
+        mock_mem.return_value.get_recent.return_value = []
+        result = engine.generate_on_demand()
+    assert result["kind"] == "on_demand"
+
+
+# ── get_cached_insights ──────────────────────────────────────────────────────
+
+
+def test_get_cached_insights_empty(engine):
+    results = engine.get_cached_insights()
+    assert results == []
+
+
+def test_get_cached_insights_after_generate(engine):
+    with patch("ai.metrics.get_recorder") as mock_rec, \
+         patch("ai.memory.get_memory") as mock_mem:
+        mock_rec.return_value.query_summary.return_value = _MOCK_STATS
+        mock_mem.return_value.get_recent.return_value = []
+        engine.generate_weekly()
+    cached = engine.get_cached_insights()
+    assert len(cached) >= 1
+    assert cached[0]["kind"] == "weekly"
+
+
+def test_get_cached_insights_kind_filter(engine):
+    with patch("ai.metrics.get_recorder") as mock_rec, \
+         patch("ai.memory.get_memory") as mock_mem:
+        mock_rec.return_value.query_summary.return_value = _MOCK_STATS
+        mock_mem.return_value.get_recent.return_value = []
+        engine.generate_weekly()
+        engine.generate_on_demand()
+    weekly = engine.get_cached_insights(kind="weekly")
+    on_demand = engine.get_cached_insights(kind="on_demand")
+    assert all(i["kind"] == "weekly" for i in weekly)
+    assert all(i["kind"] == "on_demand" for i in on_demand)
+
+
+# ── format_for_newelle ───────────────────────────────────────────────────────
+
+
+def test_format_for_newelle_no_data(engine):
+    result = engine.format_for_newelle()
+    assert "No insights" in result
+
+
+def test_format_for_newelle_with_data(engine):
+    with patch("ai.metrics.get_recorder") as mock_rec, \
+         patch("ai.memory.get_memory") as mock_mem:
+        mock_rec.return_value.query_summary.return_value = {
+            "count": 42, "mean": 0.25, "min": 0.1, "max": 1.0, "p95": 0.8
         }
-    )
-    return mock_ds
-
-
-def _make_cache_metric(event: str) -> dict:
-    return {"event": event, "ts": "2026-01-01T00:00:00"}
-
-
-# ── Test classes ──────────────────────────────────────────────────────────────
-
-class TestInsightsInit:
-    def test_init_accepts_custom_path(self, tmp_path):
-        custom = str(tmp_path / "custom_insights")
-        mock_ds = _empty_mock_ds()
-
-        with (
-            patch.object(_mock_lance, "dataset", return_value=mock_ds),
-            patch.object(_mock_lance, "write_dataset"),
-            patch.object(ins_mod.MetricsRecorder, "__init__", return_value=None),
-            patch.object(ins_mod.MetricsRecorder, "get_raw", return_value=[]),
-            patch.object(ins_mod.MetricsRecorder, "flush", return_value=None),
-            patch.object(ins_mod.MetricsRecorder, "_ensure_table", return_value=None),
-        ):
-            engine = ins_mod.InsightsEngine(path=custom)
-
-        assert engine.path == custom
-
-
-class TestGenerateWeeklyInsights:
-    def test_returns_expected_keys(self, tmp_path):
-        mock_ds = _empty_mock_ds()
-
-        with (
-            patch.object(_mock_lance, "dataset", return_value=mock_ds),
-            patch.object(_mock_lance, "write_dataset"),
-            patch.object(ins_mod.MetricsRecorder, "__init__", return_value=None),
-            patch.object(ins_mod.MetricsRecorder, "get_raw", return_value=[]),
-            patch.object(ins_mod.MetricsRecorder, "flush", return_value=None),
-            patch.object(ins_mod.MetricsRecorder, "_ensure_table", return_value=None),
-        ):
-            engine = ins_mod.InsightsEngine(path=str(tmp_path / "ins"))
-            result = engine.generate_weekly_insights()
-
-        assert set(result.keys()) >= {
-            "generated_at",
-            "period",
-            "insights",
-            "recommendations",
-            "metrics_summary",
-        }
-
-    def test_period_is_7d(self, tmp_path):
-        mock_ds = _empty_mock_ds()
-
-        with (
-            patch.object(_mock_lance, "dataset", return_value=mock_ds),
-            patch.object(_mock_lance, "write_dataset"),
-            patch.object(ins_mod.MetricsRecorder, "__init__", return_value=None),
-            patch.object(ins_mod.MetricsRecorder, "get_raw", return_value=[]),
-            patch.object(ins_mod.MetricsRecorder, "flush", return_value=None),
-            patch.object(ins_mod.MetricsRecorder, "_ensure_table", return_value=None),
-        ):
-            engine = ins_mod.InsightsEngine(path=str(tmp_path / "ins"))
-            result = engine.generate_weekly_insights()
-
-        assert result["period"] == "7d"
-
-    def test_healthy_system_insight(self, tmp_path):
-        # 8 hits + 2 misses → 80% hit rate → above 70% threshold → system_healthy
-        raw_cache = [_make_cache_metric("cache_hit")] * 8 + [
-            _make_cache_metric("cache_miss")
-        ] * 2
-        mock_ds = _empty_mock_ds()
-
-        def fake_get_raw(self_m, hours=24, metric_type=None, limit=1000):
-            if metric_type == "cache_hit":
-                return raw_cache
-            return []
-
-        with (
-            patch.object(_mock_lance, "dataset", return_value=mock_ds),
-            patch.object(_mock_lance, "write_dataset"),
-            patch.object(ins_mod.MetricsRecorder, "__init__", return_value=None),
-            patch.object(ins_mod.MetricsRecorder, "get_raw", fake_get_raw),
-            patch.object(ins_mod.MetricsRecorder, "flush", return_value=None),
-            patch.object(ins_mod.MetricsRecorder, "_ensure_table", return_value=None),
-        ):
-            engine = ins_mod.InsightsEngine(path=str(tmp_path / "ins"))
-            result = engine.generate_weekly_insights()
-
-        types = [i["type"] for i in result["insights"]]
-        assert "system_healthy" in types
-
-    def test_low_cache_hit_rate_insight(self, tmp_path):
-        # 3 hits + 7 misses → 30% hit rate → below 70% threshold
-        raw_cache = [_make_cache_metric("cache_hit")] * 3 + [
-            _make_cache_metric("cache_miss")
-        ] * 7
-        mock_ds = _empty_mock_ds()
-
-        def fake_get_raw(self_m, hours=24, metric_type=None, limit=1000):
-            if metric_type == "cache_hit":
-                return raw_cache
-            return []
-
-        with (
-            patch.object(_mock_lance, "dataset", return_value=mock_ds),
-            patch.object(_mock_lance, "write_dataset"),
-            patch.object(ins_mod.MetricsRecorder, "__init__", return_value=None),
-            patch.object(ins_mod.MetricsRecorder, "get_raw", fake_get_raw),
-            patch.object(ins_mod.MetricsRecorder, "flush", return_value=None),
-            patch.object(ins_mod.MetricsRecorder, "_ensure_table", return_value=None),
-        ):
-            engine = ins_mod.InsightsEngine(path=str(tmp_path / "ins"))
-            result = engine.generate_weekly_insights()
-
-        types = [i["type"] for i in result["insights"]]
-        assert "cache_performance" in types
-
-
-class TestGetLatestInsights:
-    def test_empty_table_returns_empty_list(self, tmp_path):
-        mock_ds = _empty_mock_ds()
-
-        with (
-            patch.object(_mock_lance, "dataset", return_value=mock_ds),
-            patch.object(_mock_lance, "write_dataset"),
-            patch.object(ins_mod.MetricsRecorder, "__init__", return_value=None),
-            patch.object(ins_mod.MetricsRecorder, "get_raw", return_value=[]),
-            patch.object(ins_mod.MetricsRecorder, "flush", return_value=None),
-            patch.object(ins_mod.MetricsRecorder, "_ensure_table", return_value=None),
-        ):
-            engine = ins_mod.InsightsEngine(path=str(tmp_path / "ins"))
-            result = engine.get_latest_insights()
-
-        assert result == []
-
-    def test_stored_insight_returned(self, tmp_path):
-        payload = json.dumps({"period": "7d", "insights": []})
-
-        # get_latest_insights calls lance.dataset(self.path) then .to_table()
-        # .to_table().num_rows > 0 → .sort_by("timestamp").tail(limit)
-        # The tail() result is iterated and each row["data"] is json-decoded.
-        table_mock = MagicMock()
-        table_mock.num_rows = 1
-        table_mock.sort_by.return_value.tail.return_value = [
-            {"timestamp": "2026-01-01T00:00:00", "data": payload}
+        mock_mem.return_value.get_recent.return_value = [
+            {"summary": "User prefers dark mode"}
         ]
-
-        populated_ds = MagicMock()
-        populated_ds.to_table.return_value = table_mock
-
-        # During __init__ lance.dataset raises so write_dataset creates the schema.
-        # During get_latest_insights we want lance.dataset to return populated_ds.
-        # Use side_effect: first call (init) raises, second call (get_latest) returns.
-        _mock_lance.dataset.side_effect = [Exception("not found"), populated_ds]
-
-        with (
-            patch.object(_mock_lance, "write_dataset"),
-            patch.object(ins_mod.MetricsRecorder, "__init__", return_value=None),
-            patch.object(ins_mod.MetricsRecorder, "get_raw", return_value=[]),
-            patch.object(ins_mod.MetricsRecorder, "flush", return_value=None),
-            patch.object(ins_mod.MetricsRecorder, "_ensure_table", return_value=None),
-        ):
-            engine = ins_mod.InsightsEngine(path=str(tmp_path / "ins"))
-            result = engine.get_latest_insights()
-
-        # Restore side_effect so other tests aren't affected
-        _mock_lance.dataset.side_effect = None
-
-        assert len(result) == 1
-        assert "data" in result[0]
+        engine.generate_weekly()
+    result = engine.format_for_newelle()
+    assert "AI Layer Insights" in result
+    assert "42" in result
 
 
-class TestStoreInsight:
-    def test_store_calls_write_dataset(self, tmp_path):
-        mock_ds = _empty_mock_ds()
-        mock_write = MagicMock()
+# ── TTL expiry ───────────────────────────────────────────────────────────────
 
-        with (
-            patch.object(_mock_lance, "dataset", return_value=mock_ds),
-            patch.object(_mock_lance, "write_dataset", mock_write),
-            patch.object(ins_mod.MetricsRecorder, "__init__", return_value=None),
-            patch.object(ins_mod.MetricsRecorder, "get_raw", return_value=[]),
-            patch.object(ins_mod.MetricsRecorder, "flush", return_value=None),
-            patch.object(ins_mod.MetricsRecorder, "_ensure_table", return_value=None),
-        ):
-            engine = ins_mod.InsightsEngine(path=str(tmp_path / "ins"))
-            mock_write.reset_mock()
-            engine._store_insight({"test": "data"})
 
-        mock_write.assert_called_once()
-        _, kwargs = mock_write.call_args
-        assert kwargs.get("mode") == "append"
+def test_ttl_expiry_prunes_old(tmp_path):
+    eng = InsightsEngine(db_path=str(tmp_path / "ttl_db"))
+    expired_ts = (datetime.now(UTC) - timedelta(hours=200)).isoformat()
+    eng._table.add([{
+        "id": "test-expired",
+        "ts": expired_ts,
+        "kind": "weekly",
+        "summary": json.dumps({"kind": "weekly", "generated_at": expired_ts}),
+        "expires_at": expired_ts,
+    }])
+    cached = eng.get_cached_insights()
+    assert not any(i.get("generated_at") == expired_ts for i in cached)
 
-    def test_stored_data_is_json(self, tmp_path):
-        mock_ds = _empty_mock_ds()
-        captured_tables: list = []
 
-        def capture_write(table, path, **kwargs):
-            captured_tables.append(table)
+# ── singletons & helpers ─────────────────────────────────────────────────────
 
-        with (
-            patch.object(_mock_lance, "dataset", return_value=mock_ds),
-            patch.object(_mock_lance, "write_dataset", side_effect=capture_write),
-            patch.object(ins_mod.MetricsRecorder, "__init__", return_value=None),
-            patch.object(ins_mod.MetricsRecorder, "get_raw", return_value=[]),
-            patch.object(ins_mod.MetricsRecorder, "flush", return_value=None),
-            patch.object(ins_mod.MetricsRecorder, "_ensure_table", return_value=None),
-        ):
-            engine = ins_mod.InsightsEngine(path=str(tmp_path / "ins"))
-            captured_tables.clear()
-            engine._store_insight({"key": "value", "num": 42})
 
-        assert len(captured_tables) == 1
-        written_table = captured_tables[0]
-        data_col = written_table.column("data")
-        raw_str = data_col[0].as_py()
-        parsed = json.loads(raw_str)
-        assert parsed["key"] == "value"
-        assert parsed["num"] == 42
+def test_singleton_same_instance(engine, monkeypatch):
+    # Pre-seed singleton with fixture engine so get_engine() skips DB creation
+    monkeypatch.setattr(_ins_mod, "_engine", engine)
+    a = get_engine()
+    b = get_engine()
+    assert a is b
+    assert a is engine
+
+
+def test_run_insights_generation():
+    with patch("ai.insights.get_engine") as mock_engine:
+        mock_engine.return_value.generate_weekly.return_value = {"kind": "weekly"}
+        result = run_insights_generation()
+    assert result["kind"] == "weekly"

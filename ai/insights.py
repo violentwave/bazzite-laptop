@@ -1,106 +1,153 @@
+"""Insights engine — summarises AI layer activity without LLM calls."""
+from __future__ import annotations
+
 import json
-from datetime import datetime
-from pathlib import Path
+import logging
+import time
+import uuid
+from datetime import UTC, datetime
 from typing import Any
 
-import lance
+import lancedb
 import pyarrow as pa
 
-from ai import LANCE_PATH
-from ai.metrics import MetricsRecorder
+from ai.config import VECTOR_DB_DIR
+
+logger = logging.getLogger(__name__)
+
+TABLE_NAME = "insights_cache"
+DEFAULT_TTL_HOURS = 168  # 7 days
+
+_SCHEMA = pa.schema([
+    pa.field("id", pa.string()),
+    pa.field("ts", pa.string()),
+    pa.field("kind", pa.string()),        # "weekly" | "on_demand"
+    pa.field("summary", pa.string()),     # JSON-encoded dict
+    pa.field("expires_at", pa.string()), # ISO8601 UTC
+])
 
 
 class InsightsEngine:
-    def __init__(self, path: str | None = None):
-        self.path = path or f"{LANCE_PATH}/insights"
-        self.metrics = MetricsRecorder()
-        self._ensure_schema()
+    def __init__(self, db_path: str | None = None) -> None:
+        path = db_path or str(VECTOR_DB_DIR)
+        self._db = lancedb.connect(path)
+        self._table = self._ensure_table()
 
-    def _ensure_schema(self):
-        Path(self.path).mkdir(parents=True, exist_ok=True)
-        schema = pa.schema(
-            [
-                pa.field("timestamp", pa.string()),
-                pa.field("data", pa.string()),
-            ]
-        )
+    def _ensure_table(self):
         try:
-            lance.dataset(self.path)
+            return self._db.open_table(TABLE_NAME)
         except Exception:
-            lance.write_dataset([], self.path, schema=schema)
+            return self._db.create_table(TABLE_NAME, schema=_SCHEMA)
 
-    def generate_weekly_insights(self) -> dict[str, Any]:
-        metrics = self.metrics.get_raw(
-            hours=168, metric_type="cache_hit"
-        ) + self.metrics.get_raw(hours=168, metric_type="budget_spend")
+    def _build_summary(self, kind: str) -> dict[str, Any]:
+        summary: dict[str, Any] = {"kind": kind, "generated_at": datetime.now(UTC).isoformat()}
 
-        insights = []
-        recommendations = []
+        # Metrics snapshot
+        try:
+            from ai.metrics import get_recorder
+            rec = get_recorder()
+            summary["cache_stats"] = rec.query_summary(hours=168, metric_type="cache")
+            summary["provider_stats"] = rec.query_summary(hours=168, metric_type="provider")
+            summary["budget_stats"] = rec.query_summary(hours=168, metric_type="budget")
+        except Exception:
+            logger.debug("insights: metrics unavailable", exc_info=True)
 
-        cache_hits = sum(1 for m in metrics if m.get("event") == "cache_hit")
-        cache_misses = sum(1 for m in metrics if m.get("event") == "cache_miss")
-        total = cache_hits + cache_misses
-        hit_rate = cache_hits / total if total > 0 else 0
+        # Recent memories
+        try:
+            from ai.memory import get_memory
+            recent = get_memory().get_recent(n=5)
+            summary["recent_memories"] = [m.get("summary", "") for m in recent]
+        except Exception:
+            logger.debug("insights: memory unavailable", exc_info=True)
 
-        if hit_rate < 0.7:
-            insights.append(
-                {
-                    "type": "cache_performance",
-                    "description": f"Cache hit rate {hit_rate:.1%} below 70% threshold",
-                    "confidence": 0.85,
-                    "recommendation": "Expand semantic cache TTL or improve embedding similarity",
-                }
-            )
-            recommendations.append("Increase cache_ttl_minutes in config")
-            recommendations.append("Review embedding model for semantic drift")
+        return summary
 
-        budget_spends = [m for m in metrics if m.get("event") == "budget_spend"]
-        if budget_spends:
-            total_spend = sum(m.get("tokens", 0) for m in budget_spends)
-            avg_daily = total_spend / 7
-            if avg_daily > 50000:
-                recommendations.append(
-                    f"High daily spend: ~{avg_daily:.0f} tokens/day - review provider优先级"
-                )
+    def _store(self, kind: str, summary: dict[str, Any]) -> str:
+        row_id = str(uuid.uuid4())
+        expires_at = datetime.fromtimestamp(
+            time.time() + DEFAULT_TTL_HOURS * 3600, tz=UTC
+        ).isoformat()
+        self._table.add([{
+            "id": row_id,
+            "ts": datetime.now(UTC).isoformat(),
+            "kind": kind,
+            "summary": json.dumps(summary),
+            "expires_at": expires_at,
+        }])
+        return row_id
 
-        if len(recommendations) == 0:
-            insights.append(
-                {
-                    "type": "system_healthy",
-                    "description": "All systems operating within normal parameters",
-                    "confidence": 0.95,
-                    "recommendation": "Continue current configuration",
-                }
-            )
-            recommendations.append("No changes recommended")
+    def _prune_expired(self) -> None:
+        try:
+            now = datetime.now(UTC).isoformat()
+            self._table.delete(f"expires_at < '{now}'")
+        except Exception:
+            logger.debug("insights: prune failed", exc_info=True)
 
-        result = {
-            "generated_at": datetime.now().isoformat(),
-            "period": "7d",
-            "insights": insights,
-            "recommendations": recommendations,
-            "metrics_summary": {
-                "cache_hit_rate": hit_rate,
-                "total_requests": total,
-                "avg_daily_tokens": avg_daily if budget_spends else 0,
-            },
-        }
+    def generate_weekly(self) -> dict[str, Any]:
+        self._prune_expired()
+        summary = self._build_summary("weekly")
+        self._store("weekly", summary)
+        return summary
 
-        self._store_insight(result)
-        return result
+    def generate_on_demand(self) -> dict[str, Any]:
+        summary = self._build_summary("on_demand")
+        self._store("on_demand", summary)
+        return summary
 
-    def _store_insight(self, data: dict[str, Any]) -> None:
-        row = pa.table(
-            {
-                "timestamp": pa.array([datetime.now().isoformat()]),
-                "data": pa.array([json.dumps(data)]),
-            }
-        )
-        lance.write_dataset(row, self.path, mode="append")
-
-    def get_latest_insights(self, limit: int = 4) -> list[dict[str, Any]]:
-        ds = lance.dataset(self.path)
-        table = ds.to_table()
-        if table.num_rows == 0:
+    def get_cached_insights(self, kind: str | None = None) -> list[dict[str, Any]]:
+        try:
+            self._prune_expired()
+            df = self._table.to_pandas()
+            now = datetime.now(UTC).isoformat()
+            df = df[df["expires_at"] >= now]
+            if kind:
+                df = df[df["kind"] == kind]
+            df = df.sort_values("ts", ascending=False)
+            results = []
+            for _, row in df.iterrows():
+                try:
+                    results.append(json.loads(row["summary"]))
+                except Exception:  # noqa: BLE001
+                    logger.debug("insights: failed to parse row", exc_info=True)
+            return results
+        except Exception:
+            logger.exception("get_cached_insights failed")
             return []
-        return [{"data": json.loads(row["data"])} for row in table.sort_by("timestamp").tail(limit)]
+
+    def format_for_newelle(self) -> str:
+        cached = self.get_cached_insights()
+        if not cached:
+            return "No insights available yet. Run generate_weekly() to populate."
+        latest = cached[0]
+        lines = [f"# AI Layer Insights ({latest.get('generated_at', 'unknown')})"]
+        if "cache_stats" in latest:
+            cs = latest["cache_stats"]
+            lines.append(f"Cache: {cs.get('count', 0)} lookups, mean={cs.get('mean', 0):.2f}")
+        if "provider_stats" in latest:
+            ps = latest["provider_stats"]
+            lines.append(
+                f"Provider latency p95: {ps.get('p95', 0):.3f}s over {ps.get('count', 0)} calls"
+            )
+        if "budget_stats" in latest:
+            bs = latest["budget_stats"]
+            total = bs.get("mean", 0) * bs.get("count", 1)
+            lines.append(f"Budget: {bs.get('count', 0)} spend events, total={total:.0f} tokens")
+        if "recent_memories" in latest:
+            lines.append("Recent memories:")
+            for m in latest["recent_memories"][:3]:
+                lines.append(f"  - {m}")
+        return "\n".join(lines)
+
+
+_engine: InsightsEngine | None = None
+
+
+def get_engine() -> InsightsEngine:
+    global _engine
+    if _engine is None:
+        _engine = InsightsEngine()
+    return _engine
+
+
+def run_insights_generation() -> dict[str, Any]:
+    return get_engine().generate_weekly()
