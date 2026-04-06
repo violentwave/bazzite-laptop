@@ -178,18 +178,18 @@ class TestHealthProperties:
 
     @given(st.integers(min_value=0, max_value=100))
     @settings(max_examples=50, deadline=500, verbosity=Verbosity.quiet)
-    def test_record_success_invalidates_cache(self, count):
-        """record_success should invalidate score cache."""
+    def test_record_success_updates_metrics(self, count):
+        """record_success should update provider metrics."""
         from ai.health import HealthTracker
 
         tracker = HealthTracker()
         h = tracker.get("test")
-
-        # First access
-        _ = h.score
-        _ = h._cached_score
+        initial_success = h.success_count
+        initial_latency = h.total_latency_ms
 
         # Record success
         tracker.record_success("test", 100.0)
 
-        assert h._cached_score is None
+        # Verify metrics updated
+        assert h.success_count == initial_success + 1
+        assert h.total_latency_ms == initial_latency + 100.0

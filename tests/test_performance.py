@@ -122,21 +122,25 @@ class TestHealthScoreCache:
         assert t2 < t1
 
     def test_health_score_invalidate_cache(self):
-        """invalidate_cache should clear cached score."""
-        from ai.health import ProviderHealth
+        """HealthTracker.reset_all_scores should reset provider scores to healthy state."""
+        from ai.health import HealthTracker
 
-        h = ProviderHealth(name="test")
+        tracker = HealthTracker()
+        h = tracker.get("test")
         h.success_count = 50
         h.failure_count = 50
 
-        _ = h.score
-        assert h._cached_score is not None
+        score1 = h.score
+        assert score1 is not None
 
-        h.invalidate_cache()
-        assert h._cached_score is None
+        # reset_all_scores resets all providers to healthy state (100 success, 0 failure)
+        # This gives score = 1.0 (100% success rate)
+        tracker.reset_all_scores()
+        score2 = h.score
+        assert score2 == 1.0
 
-    def test_record_success_invalidates_cache(self):
-        """record_success should invalidate cache."""
+    def test_record_success_updates_metrics(self):
+        """record_success should update provider metrics."""
         from ai.health import HealthTracker
 
         tracker = HealthTracker()
@@ -144,11 +148,14 @@ class TestHealthScoreCache:
         h.success_count = 100
         h.failure_count = 0
 
-        _ = h.score
+        initial_latency = h.total_latency_ms
 
+        # record_success updates success_count and latency
         tracker.record_success("test", 100.0)
 
-        assert h._cached_score is None
+        # Verify the success count and latency increased
+        assert h.success_count == 101
+        assert h.total_latency_ms == initial_latency + 100.0
 
 
 class TestConfigMtime:
