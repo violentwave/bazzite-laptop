@@ -173,3 +173,33 @@ Keys stored in `~/.config/bazzite-ai/keys.env`.
 | `ai/router.py` import in MCP bridge | Importing `ai.router` in the MCP bridge process loads all API keys unscoped | The bridge (`ai/mcp_bridge/`) must never import `ai.router` |
 | `socksio` | Required for httpx SOCKS proxy support used by litellm inside bubblewrap sandbox | Installed explicitly; not auto-pulled by litellm |
 | composefs (100% disk) | Shows as 100% full on `df`; this is normal for the Fedora Atomic immutable OS overlay | Not a real disk issue |
+
+---
+
+## Dependabot PR Triage (2026-04-06)
+
+`gh` CLI unavailable at triage time — PRs require manual merge via GitHub web UI.
+Current `requirements-ai.txt` already reflects these merged updates:
+
+| Package | Old → New | Category | Notes |
+|---------|-----------|----------|-------|
+| `requests` | 2.32.5 → 2.33.0 | **MERGED** | CVE-2026-25645 fix; already in `requirements-ai.txt` |
+| `cryptography` | 45.x → 46.0.6 | SAFE TO MERGE | Patch; already in `requirements-ai.txt` |
+| `filelock` | 3.24.x → 3.25.2 | SAFE TO MERGE | Patch; already in `requirements-ai.txt` |
+| `pillow` | 11.x → 12.1.1 | REVIEW NEEDED | Minor bump; already in `requirements-ai.txt` and tests pass |
+| `aiohttp` | 3.12.x → 3.13.5 | REVIEW NEEDED | Minor bump; transitive dep |
+| `certifi` | 2025.x → 2026.2.25 | SAFE TO MERGE | CA bundle update |
+| `urllib3` | 2.5.x → 2.6.3 | REVIEW NEEDED | Minor bump; already in `requirements-ai.txt` |
+| `charset-normalizer` | 3.3.x → 3.4.7 | SAFE TO MERGE | Patch; transitive |
+| `idna` | 3.10 → 3.11 | SAFE TO MERGE | Patch |
+
+Remaining ~8 PRs (protobuf, boto3, cohere, litellm, lancedb, pydantic, etc.):
+- **protobuf**: REVIEW NEEDED — check breaking API changes before merging
+- **boto3/botocore**: SAFE TO MERGE — patch bumps are always safe
+- **cohere**: REVIEW NEEDED — minor bumps may change embedding behavior
+- **litellm**: DEFER — litellm evolves fast; verify router API compatibility first
+- **lancedb**: DEFER — API changes between versions; verify with Context7 before upgrading
+- **pydantic**: SAFE TO MERGE — patch bumps only
+
+**Action required**: Merge SAFE and MERGED PRs via GitHub web UI. Run tests after each batch.
+`python -m pytest tests/ -x -q --tb=short` must pass (1872 tests) before pushing.

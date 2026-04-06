@@ -23,6 +23,19 @@ from ai.rag.store import VectorStore, get_store  # noqa: E402
 # ── Fixtures ──
 
 
+@pytest.fixture(autouse=True, scope="module")
+def _cleanup_lancedb_mock_after_module():
+    """Remove lancedb mock from sys.modules after this test module completes.
+
+    test_store.py installs a MagicMock for lancedb at module level to prevent
+    real LanceDB connections (which segfault in VS Code Flatpak). This fixture
+    removes that mock after all tests in this module finish, so subsequent test
+    modules (e.g. test_task_logger.py) can import the real lancedb.
+    """
+    yield
+    sys.modules.pop("lancedb", None)
+
+
 @pytest.fixture(autouse=True)
 def _reset_lancedb_mock():
     """Reset the lancedb mock and singleton between tests."""

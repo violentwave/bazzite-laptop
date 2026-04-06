@@ -39,8 +39,8 @@ class TestAlertDispatcher:
             from ai.alerts.rules import RulesEngine
 
             engine = RulesEngine(db_path=Path(tmpdir) / "rules.db")
-            dispatcher = AlertDispatcher()
-            dispatcher.rules_engine = engine
+            with patch("ai.alerts.dispatcher.get_rules_engine", return_value=engine):
+                dispatcher = AlertDispatcher()
 
             with patch("subprocess.run") as mock:
                 mock.return_value = MagicMock(returncode=0)
@@ -50,10 +50,16 @@ class TestAlertDispatcher:
 
     def test_get_dispatcher_singleton(self):
         """get_dispatcher should return singleton."""
-        from ai.alerts.dispatcher import get_dispatcher
+        import ai.alerts.dispatcher as disp_mod
+        from ai.alerts.rules import RulesEngine
 
-        d1 = get_dispatcher()
-        d2 = get_dispatcher()
+        with tempfile.TemporaryDirectory() as tmpdir:
+            engine = RulesEngine(db_path=Path(tmpdir) / "rules.db")
+            disp_mod._dispatcher = None  # reset singleton
+            with patch("ai.alerts.dispatcher.get_rules_engine", return_value=engine):
+                d1 = disp_mod.get_dispatcher()
+                d2 = disp_mod.get_dispatcher()
+        disp_mod._dispatcher = None  # cleanup
 
         assert d1 is d2
 

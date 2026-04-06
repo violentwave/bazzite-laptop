@@ -253,7 +253,7 @@ def _load_config() -> dict:
 
     if _config_mtime != current_mtime:
         logger.info(
-            "LiteLLM config file changed (mtime %.0f -> %.0f), reloading",
+            "LiteLLM config file changed (mtime %s -> %.0f), reloading",
             _config_mtime,
             current_mtime,
         )

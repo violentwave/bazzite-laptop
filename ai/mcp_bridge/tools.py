@@ -994,6 +994,256 @@ async def _execute_python_tool(tool_name: str, tool_def: dict, args: dict) -> st
             stdout, _ = await asyncio.wait_for(proc.communicate(), timeout=60)
             return _truncate(stdout.decode("utf-8", errors="replace"))
 
+        elif tool_name == "intel.scrape_now":
+            result = await handle_intel_scrape_now(args)
+            return _truncate(json.dumps(result, indent=2))
+
+        elif tool_name == "intel.ingest_pending":
+            result = await handle_intel_ingest_pending(args)
+            return _truncate(json.dumps(result, indent=2))
+
+        elif tool_name == "system.dep_scan":
+            result = await handle_dep_scan(args)
+            return _truncate(json.dumps(result, indent=2))
+
+        elif tool_name == "system.test_analysis":
+            result = await handle_test_analysis(args)
+            return _truncate(json.dumps(result, indent=2))
+
+        elif tool_name == "system.perf_profile":
+            result = await handle_perf_profile(args)
+            return _truncate(json.dumps(result, indent=2))
+
+        elif tool_name == "system.mcp_audit":
+            result = await handle_mcp_audit(args)
+            return _truncate(json.dumps(result, indent=2))
+
+        elif tool_name == "system.alert_history":
+            from ai.alerts.history import get_recent  # noqa: PLC0415
+
+            result = get_recent(limit=int(args.get("limit", 20)))
+            return _truncate(json.dumps(result, indent=2, default=str))
+
+        elif tool_name == "system.alert_rules":
+            import dataclasses as _dc  # noqa: PLC0415
+
+            from ai.alerts.rules import RulesEngine  # noqa: PLC0415
+
+            engine = RulesEngine()
+            rules = engine.get_all_rules()
+            serializable = [
+                _dc.asdict(r) if _dc.is_dataclass(r) else r.__dict__ for r in rules
+            ]
+            return _truncate(json.dumps(serializable, indent=2, default=str))
+
+        elif tool_name == "system.dep_audit":
+            import dataclasses as _dc  # noqa: PLC0415
+
+            from ai.system.depaudit import get_latest_report  # noqa: PLC0415
+
+            report = get_latest_report()
+            if report is None:
+                return json.dumps({"status": "no_data", "message": "No audit reports found"})
+            data = _dc.asdict(report) if _dc.is_dataclass(report) else report.__dict__
+            return _truncate(json.dumps(data, indent=2, default=str))
+
+        elif tool_name == "system.dep_audit_history":
+            from ai.system.depaudit import get_report_history  # noqa: PLC0415
+
+            result = get_report_history(limit=int(args.get("limit", 30)))
+            return _truncate(json.dumps(result, indent=2, default=str))
+
+        elif tool_name == "knowledge.task_patterns":
+            from ai.learning.task_retriever import retrieve_similar_tasks  # noqa: PLC0415
+
+            result = retrieve_similar_tasks(
+                query=args.get("query", ""),
+                top_k=int(args.get("top_k", 5)),
+            )
+            return _truncate(json.dumps(result, indent=2))
+
+        elif tool_name == "knowledge.session_history":
+            import dataclasses as _dc  # noqa: PLC0415
+
+            from ai.learning.handoff_parser import parse_handoff  # noqa: PLC0415
+
+            handoff_path = Path(__file__).parent.parent.parent / "HANDOFF.md"
+            entries = parse_handoff(handoff_path)
+            query = args.get("query", "").lower()
+            limit = int(args.get("limit", 5))
+            if query:
+                entries = [
+                    e for e in entries
+                    if query in (getattr(e, "description", "") or "").lower()
+                    or query in (getattr(e, "summary", "") or "").lower()
+                ]
+            entries = entries[:limit]
+            serializable = [
+                _dc.asdict(e) if _dc.is_dataclass(e) else e.__dict__ for e in entries
+            ]
+            return _truncate(json.dumps(serializable, indent=2, default=str))
+
+        elif tool_name == "system.budget_status":
+            from ai.budget import get_budget  # noqa: PLC0415
+
+            budget = get_budget()
+            return _truncate(json.dumps(budget.get_status(), indent=2))
+
+        elif tool_name == "system.metrics_summary":
+            from ai.metrics import get_metrics  # noqa: PLC0415
+
+            result = get_metrics()
+            return _truncate(json.dumps(result, indent=2, default=str))
+
+        elif tool_name == "memory.search":
+            from ai.memory import get_memory  # noqa: PLC0415
+
+            mem = get_memory()
+            result = mem.search_memories(
+                query=args.get("query", ""),
+                top_k=int(args.get("top_k", 5)),
+            )
+            return _truncate(result)
+
+        elif tool_name == "system.provider_status":
+            from ai.provider_intel import get_intel  # noqa: PLC0415
+
+            intel = get_intel()
+            return _truncate(json.dumps(intel.get_status(), indent=2))
+
+        elif tool_name == "system.weekly_insights":
+            from ai.insights import get_engine  # noqa: PLC0415
+
+            engine = get_engine()
+            limit = int(args.get("limit", 4))
+            result = engine.get_cached_insights()[:limit]
+            return _truncate(json.dumps(result, indent=2, default=str))
+
+        elif tool_name == "collab.queue_status":
+            from ai.collab.task_queue import get_queue  # noqa: PLC0415
+
+            queue = get_queue()
+            return _truncate(json.dumps(queue.get_queue_status(), indent=2))
+
+        elif tool_name == "collab.add_task":
+            from ai.collab.task_queue import TaskType, get_queue  # noqa: PLC0415
+
+            queue = get_queue()
+            try:
+                task_type_val = TaskType(args.get("task_type", "implement_feature"))
+            except ValueError:
+                task_type_val = TaskType.IMPLEMENT_FEATURE
+            task_id = queue.add_task(
+                title=args.get("title", ""),
+                task_type=task_type_val,
+                description=args.get("description", ""),
+                priority=int(args.get("priority", 3)),
+            )
+            return json.dumps({"task_id": task_id, "status": "created"})
+
+        elif tool_name == "collab.search_knowledge":
+            from ai.collab.knowledge_base import get_agent_knowledge  # noqa: PLC0415
+
+            kb = get_agent_knowledge()
+            result = kb.query_knowledge(
+                query=args.get("query", ""),
+                top_k=int(args.get("top_k", 5)),
+            )
+            return _truncate(json.dumps(result, indent=2, default=str))
+
+        elif tool_name == "workflow.run":
+            from ai.workflows.runner import execute_workflow  # noqa: PLC0415
+
+            message = args.get("workflow_id") or args.get("steps") or ""
+            result = await execute_workflow(user_message=message, task_type="fast")
+            return _truncate(json.dumps(result, indent=2, default=str))
+
+        elif tool_name == "workflow.list":
+            from ai.workflows.definitions import get_workflow_store  # noqa: PLC0415
+
+            store = get_workflow_store()
+            result = store.list_workflows()
+            return _truncate(json.dumps(result, indent=2, default=str))
+
+        elif tool_name == "system.create_tool":
+            from ai.tools.builder import get_builder  # noqa: PLC0415
+
+            params_raw = args.get("parameters")
+            params = json.loads(params_raw) if isinstance(params_raw, str) else params_raw
+            builder = get_builder()
+            result = builder.create_tool(
+                name=args.get("name", ""),
+                description=args.get("description", ""),
+                handler_code=args.get("handler_code", ""),
+                parameters=params,
+                created_by=args.get("created_by", "system"),
+            )
+            return json.dumps(result, indent=2, default=str)
+
+        elif tool_name == "system.list_dynamic_tools":
+            from ai.tools.builder import get_builder  # noqa: PLC0415
+
+            builder = get_builder()
+            result = builder.list_dynamic_tools()
+            return _truncate(json.dumps(result, indent=2, default=str))
+
+        elif tool_name == "code.impact_analysis":
+            from ai.code_intel.store import get_code_store  # noqa: PLC0415
+
+            store = get_code_store()
+            changed = [f.strip() for f in args.get("changed_files", "").split(",") if f.strip()]
+            result = store.query_impact(changed)
+            return _truncate(json.dumps(result, indent=2, default=str))
+
+        elif tool_name == "code.dependency_graph":
+            from ai.code_intel.store import get_code_store  # noqa: PLC0415
+
+            store = get_code_store()
+            module = args.get("module", "")
+            depth = int(args.get("max_depth", 3))
+            result = store.query_dependents(module, max_depth=depth)
+            return _truncate(json.dumps(result, indent=2, default=str))
+
+        elif tool_name == "code.find_callers":
+            from ai.code_intel.store import get_code_store  # noqa: PLC0415
+
+            store = get_code_store()
+            result = store.search_nodes(
+                query=args.get("function_name", ""),
+                node_type="function",
+                top_k=20,
+            )
+            return _truncate(json.dumps(result, indent=2, default=str))
+
+        elif tool_name == "code.suggest_tests":
+            from ai.code_intel.store import get_code_store  # noqa: PLC0415
+
+            store = get_code_store()
+            changed = [f.strip() for f in args.get("changed_files", "").split(",") if f.strip()]
+            impact = store.query_impact(changed)
+            return _truncate(json.dumps(impact, indent=2, default=str))
+
+        elif tool_name == "code.complexity_report":
+            target = args.get("target", "ai/")
+            threshold = int(args.get("threshold", 10))
+            output = await _run_subprocess(
+                ["rg", "--no-heading", "-c", r"def |class ", str(PROJECT_ROOT / target)]
+            )
+            return _truncate(_redact_paths(
+                f"[complexity report: {target}, threshold={threshold}]\n{output}"
+            ))
+
+        elif tool_name == "code.class_hierarchy":
+            from ai.code_intel.store import get_code_store  # noqa: PLC0415
+
+            store = get_code_store()
+            result = store.search_nodes(
+                query=args.get("class_name", ""),
+                node_type="class",
+                top_k=20,
+            )
+            return _truncate(json.dumps(result, indent=2, default=str))
+
         else:
             return f"[Tool '{tool_name}' not implemented]"
 

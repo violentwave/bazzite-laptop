@@ -1,5 +1,5 @@
 # Bazzite AI Layer — Agent Reference
-<!-- System: Acer Predator G3-571 | Bazzite 43 | Updated: 2026-04-05 -->
+<!-- System: Acer Predator G3-571 | Bazzite 43 | Updated: 2026-04-06 -->
 
 ## Session Start
 
@@ -138,13 +138,21 @@ Source: `configs/mcp-bridge-allowlist.yaml` + tools registered directly in serve
 | `system.cache_stats` | python: `ai.cache` | — | LLM cache statistics: entries, size, hit rate |
 | `system.token_report` | python: `ai.mcp_bridge.tools` | — | Token usage and cost report from LLM proxy |
 | `system.pipeline_status` | python: `ai.system.pipeline_status` | — | Log pipeline ingest/archive/retention status, pending files, table row counts |
-| `system.budget_status` | python: `ai.mcp_bridge.server` | — | Daily token budget usage and warnings across priority tiers |
+| `system.budget_status` | python: `ai.budget` | — | Daily token budget usage and warnings across priority tiers |
 | `system.metrics_summary` | python: `ai.metrics` | `hours`, `metric_type` | Aggregate metrics for last 24h: cache hit rates, provider latencies, budget usage, tool errors |
-| `system.perf_metrics` | python: `ai.metrics` | — | Real-time performance metrics snapshot (latencies, error rates, cache stats) |
-| `system.dep_audit` | python: `ai.system.dep_audit` | — | Run pip-audit vulnerability scan and return findings |
-| `system.dep_audit_history` | python: `ai.system.dep_audit` | `limit` (int, default 10) | Retrieve historical dep-audit scan results |
+| `system.weekly_insights` | python: `ai.insights` | `limit` (int, default 4) | Cached AI-generated weekly insights and system recommendations |
+| `system.insights` | python: `ai.insights` | — | Generate on-demand AI layer insights |
+| `system.provider_status` | python: `ai.provider_intel` | — | Per-provider health, latency, error rates, and routing scores |
+| `system.dep_audit` | python: `ai.system.depaudit` | — | Run pip-audit vulnerability scan and return findings |
+| `system.dep_audit_history` | python: `ai.system.depaudit` | `limit` (int, default 30) | Retrieve historical dep-audit scan results |
 | `system.create_tool` | python: `ai.tools.builder` | `name`, `description`, `handler_code`, `parameters`, `created_by` | Create a dynamic tool with safety validation |
 | `system.list_dynamic_tools` | python: `ai.tools.builder` | — | List all persisted dynamic tools |
+| `system.alert_history` | python: `ai.alerts.history` | `limit` (int, default 20) | Recent desktop alert dispatch history |
+| `system.alert_rules` | python: `ai.alerts.rules` | — | List all alert rules with enabled/cooldown status |
+| `system.dep_scan` | python: `ai.system.dep_scanner` | — | Scan .venv Python dependencies for known vulnerabilities via OSV API |
+| `system.test_analysis` | python: `ai.system.test_analyzer` | `input` (pytest output or JSON path) | Analyze pytest output for failure patterns and actionable fix hints |
+| `system.perf_profile` | python: `ai.system.perf_profiler` | `skip` (comma-separated components) | Run performance profiler for LLM, MCP, file I/O, LanceDB, and system |
+| `system.mcp_audit` | python: `ai.system.mcp_generator` | `tool_name` (optional) | Audit MCP bridge allowlist for missing handlers and validation issues |
 
 ### security.* (15 tools)
 
@@ -164,8 +172,7 @@ Source: `configs/mcp-bridge-allowlist.yaml` + tools registered directly in serve
 | `security.run_ingest` | python | — | Trigger log pipeline re-ingestion |
 | `security.correlate` | python: `ai.threat_intel.correlator` | `ioc`, `ioc_type` (required) | Correlate IOC across VT/OTX/AbuseIPDB/GreyNoise/URLhaus |
 | `security.recommend_action` | python: `ai.threat_intel.playbooks` | `finding_type`, `finding_id` (required) | Response playbook for threat findings |
-| `security.alert_summary` | python: `ai.security.alerts` | — | Proactive security alerts: active CVEs, stale scans, release advisories, deduplication state |
-| `security.provider_status` | python: `ai.provider_intel` | — | Per-provider health, latency, error rates, and cost |
+| `security.alert_summary` | json_file: `~/security/alerts.json` | — | Proactive security alerts: active CVEs, stale scans, release advisories |
 
 ### knowledge.* (6 tools)
 
@@ -175,7 +182,8 @@ Source: `configs/mcp-bridge-allowlist.yaml` + tools registered directly in serve
 | `knowledge.rag_qa` | python: `ai.rag.query` | `question` (string, max 500, required) | LLM-synthesized answer from knowledge base |
 | `knowledge.ingest_docs` | python: `ai.rag.ingest_docs` | — | Re-embed docs/ into LanceDB |
 | `knowledge.pattern_search` | python: `ai.rag.pattern_query` | `query` (string, max 500, required), `language` (optional), `domain` (optional) | Semantic search over curated code patterns with language/domain filtering |
-| `knowledge.task_patterns` | python: `ai.mcp_bridge.server` | `query` (string, max 500, required), `top_k` (int, default 3) | Retrieve similar past successful tasks by semantic similarity |
+| `knowledge.task_patterns` | python: `ai.learning.task_retriever` | `query` (string, max 500, required), `top_k` (int, default 5) | Retrieve similar past successful tasks by semantic similarity |
+| `knowledge.session_history` | python: `ai.learning.handoff_parser` | `query` (string, max 500, required), `limit` (int, default 5) | Search session history from HANDOFF.md entries |
 
 ### memory.* (1 tool)
 
@@ -236,13 +244,20 @@ Source: `configs/mcp-bridge-allowlist.yaml` + tools registered directly in serve
 | `agents.performance_tuning` | python: `ai.agents.performance_tuning` | — | Temps, memory, disk, gaming profiles |
 | `agents.knowledge_storage` | python: `ai.agents.knowledge_storage` | — | Vector DB health + embedding provider status |
 | `agents.code_quality` | python: `ai.agents.code_quality_agent` | — | ruff + bandit + git status |
-| `agents.timer_health` | python: `ai.agents.timer_sentinel` | — | Validate all 21 systemd timers fired within expected windows. Returns per-timer status, stale list, and overall health (healthy/warning/critical). |
+| `agents.timer_health` | python: `ai.agents.timer_sentinel` | — | Validate all 22 systemd timers fired within expected windows. Returns per-timer status, stale list, and overall health (healthy/warning/critical). |
+
+### intel.* (2 tools)
+
+| Tool | Source | Args | Description |
+|------|--------|------|-------------|
+| `intel.scrape_now` | python: `ai.intel_scraper` | — | Trigger intelligence scrape: GitHub releases, CISA KEV, NVD CVEs, Fedora RSS |
+| `intel.ingest_pending` | python: `ai.system.ingest_pipeline` | `intel_dir` (optional) | Ingest pending scraped intelligence into LanceDB RAG knowledge base |
 
 ### Built-in
 
 | Tool | Description |
 |------|-------------|
-| `health` | Returns `{"status": "ok", "tools": 79}` |
+| `health` | Returns `{"status": "ok", "tools": 82}` |
 
 ---
 
@@ -270,7 +285,7 @@ Source: `configs/mcp-bridge-allowlist.yaml` + tools registered directly in serve
 | MCP tools | 82 (+ 1 health endpoint) |
 | Systemd timers | 22 |
 | LanceDB tables | 23 |
-| Tests | ~1816 |
+| Tests | 1872 |
 | Cloud LLM providers | 6 |
 | Threat intel APIs | 16 |
 | P24-P28 status | complete (2026-04-06) |

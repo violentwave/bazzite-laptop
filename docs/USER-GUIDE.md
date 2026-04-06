@@ -169,7 +169,7 @@ bash scripts/start-security-tray-qt.sh
 
 ---
 
-## 4. MCP Tools Reference (48 tools)
+## 4. MCP Tools Reference (82 tools)
 
 All tools are accessible through Newelle via the MCP bridge. They are read-only
 (no system mutations). Output is truncated to 4 KB and paths are redacted.
@@ -179,28 +179,43 @@ All tools are accessible through Newelle via the MCP bridge. They are read-only
 > If you see "Input validation failed", adjust your query to avoid risky patterns.
 > API keys and tokens are automatically redacted from logs.
 
-### system.* (18 tools)
+### system.* (33 tools)
 
-| Tool                    | Args   | What it returns                                    |
-|-------------------------|--------|----------------------------------------------------|
-| `system.disk_usage`     | —      | `df -h` output                                     |
-| `system.cpu_temps`      | —      | `sensors -j` JSON thermal data                     |
-| `system.gpu_status`     | —      | nvidia-smi: temp, VRAM, power draw                 |
-| `system.memory_usage`   | —      | `free -h` output (RAM + ZRAM)                      |
-| `system.uptime`         | —      | System uptime and load average                     |
-| `system.service_status` | —      | Status of clamav-freshclam, system-health.timer, mcp-bridge, llm-proxy |
-| `system.llm_models`     | —      | Available modes (fast/reason/batch/code/embed), provider chains, proxy URL |
-| `system.mcp_manifest`   | —      | All 48 tools with descriptions and args (8 KB limit) |
-| `system.llm_status`     | —      | Provider health scores, token usage, active models |
-| `system.key_status`     | —      | API key presence: "set" or "missing" per key (never values) |
-| `system.release_watch`  | —      | Upstream dependency release updates (GitHub Releases, GHSA) |
-| `system.fedora_updates` | —      | Fedora/Bazzite pending security and package updates (Bodhi) |
-| `system.pkg_intel`      | —      | Package advisories, provenance, version status (deps.dev) |
-| `system.gpu_perf`       | —      | GPU perf snapshot: temp, pstate, clocks, VRAM, throttle reasons, headroom |
-| `system.gpu_health`     | —      | GPU health diagnostic with throttle bit interpretation and thermal warning |
-| `system.cache_stats`    | —      | LLM cache statistics: entries, size, hit rate |
-| `system.token_report`   | —      | Token usage and cost report from LLM proxy |
-| `system.pipeline_status`| —      | Log pipeline ingest/archive/retention status, pending files, table row counts |
+| Tool                       | Args                         | What it returns                                    |
+|----------------------------|------------------------------|----------------------------------------------------|
+| `system.disk_usage`        | —                            | `df -h` output                                     |
+| `system.cpu_temps`         | —                            | `sensors -j` JSON thermal data                     |
+| `system.gpu_status`        | —                            | nvidia-smi: temp, VRAM, power draw                 |
+| `system.gpu_perf`          | —                            | GPU perf snapshot: pstate, clocks, throttle reasons |
+| `system.gpu_health`        | —                            | GPU health diagnostic with throttle bit interpretation |
+| `system.memory_usage`      | —                            | `free -h` output (RAM + ZRAM)                      |
+| `system.uptime`            | —                            | System uptime and load average                     |
+| `system.service_status`    | —                            | Status of clamav-freshclam, system-health.timer, mcp-bridge, llm-proxy |
+| `system.llm_models`        | —                            | Available modes (fast/reason/batch/code/embed), provider chains, proxy URL |
+| `system.mcp_manifest`      | —                            | All 82 tools with descriptions and args (8 KB limit) |
+| `system.llm_status`        | —                            | Provider health scores, token usage, active models |
+| `system.key_status`        | —                            | API key presence: "set" or "missing" per key (never values) |
+| `system.release_watch`     | —                            | Upstream dependency release updates (GitHub Releases, GHSA) |
+| `system.fedora_updates`    | —                            | Fedora/Bazzite pending security and package updates (Bodhi) |
+| `system.pkg_intel`         | —                            | Package advisories, provenance, version status (deps.dev) |
+| `system.cache_stats`       | —                            | LLM cache statistics: entries, size, hit rate |
+| `system.token_report`      | —                            | Token usage and cost report from LLM proxy |
+| `system.pipeline_status`   | —                            | Log pipeline ingest/archive/retention status, pending files, table row counts |
+| `system.budget_status`     | —                            | Daily token budget usage and warnings across priority tiers |
+| `system.metrics_summary`   | `hours`, `metric_type`       | Aggregate metrics for last 24h |
+| `system.provider_status`   | —                            | Per-provider health, latency, error rates, and routing scores |
+| `system.weekly_insights`   | `limit`                      | Cached AI-generated weekly insights and recommendations |
+| `system.insights`          | —                            | Generate on-demand AI layer insights |
+| `system.dep_audit`         | —                            | Run pip-audit vulnerability scan and return findings |
+| `system.dep_audit_history` | `limit`                      | Retrieve historical dep-audit scan results |
+| `system.create_tool`       | `name`, `description`, `handler_code` | Create a dynamic tool with safety validation |
+| `system.list_dynamic_tools`| —                            | List all persisted dynamic tools |
+| `system.alert_history`     | `limit`                      | Recent desktop alert dispatch history |
+| `system.alert_rules`       | —                            | List all alert rules with enabled/cooldown status |
+| `system.dep_scan`          | —                            | Scan .venv dependencies for vulnerabilities via OSV API |
+| `system.test_analysis`     | `input`                      | Analyze pytest output for failure patterns and fix hints |
+| `system.perf_profile`      | `skip`                       | Run performance profiler (LLM, MCP, file I/O, LanceDB, system) |
+| `system.mcp_audit`         | `tool_name`                  | Audit MCP bridge allowlist for missing handlers |
 
 ### security.* (15 tools)
 
@@ -221,13 +236,22 @@ All tools are accessible through Newelle via the MCP bridge. They are read-only
 | `security.correlate`         | `ioc`, `ioc_type`       | Correlate IOC across VT/OTX/AbuseIPDB/GreyNoise/URLhaus |
 | `security.recommend_action`  | `finding_type`, `finding_id` | Response playbook for threat findings  |
 
-### knowledge.* (3 tools)
+### knowledge.* (6 tools)
 
-| Tool                   | Args                 | What it returns                              |
-|------------------------|----------------------|----------------------------------------------|
-| `knowledge.rag_query`  | `query` (max 500ch)  | Semantic search — raw context chunks (no LLM) |
-| `knowledge.rag_qa`     | `question` (max 500ch) | LLM-synthesized answer from knowledge base |
-| `knowledge.ingest_docs`| —                    | Re-embeds docs/ into LanceDB                 |
+| Tool                        | Args                 | What it returns                              |
+|-----------------------------|----------------------|----------------------------------------------|
+| `knowledge.rag_query`       | `query` (max 500ch)  | Semantic search — raw context chunks (no LLM) |
+| `knowledge.rag_qa`          | `question` (max 500ch) | LLM-synthesized answer from knowledge base |
+| `knowledge.ingest_docs`     | —                    | Re-embeds docs/ into LanceDB                 |
+| `knowledge.pattern_search`  | `query`, `language`, `domain` | Semantic search over curated code patterns |
+| `knowledge.task_patterns`   | `query`, `top_k`     | Retrieve similar past successful tasks       |
+| `knowledge.session_history` | `query`, `limit`     | Search session history from HANDOFF.md entries |
+
+### memory.* (1 tool)
+
+| Tool            | Args           | What it returns                              |
+|-----------------|----------------|----------------------------------------------|
+| `memory.search` | `query`, `top_k` | Search conversation memories by semantic similarity |
 
 ### gaming.* (2 tools)
 
@@ -246,14 +270,42 @@ All tools are accessible through Newelle via the MCP bridge. They are read-only
 | `logs.search`      | `query` (max 500ch)  | Semantic search across system logs             |
 | `logs.stats`       | —                    | Log pipeline stats: row counts, last ingest, DB size |
 
-### code.* (2 tools)
+### code.* (8 tools)
 
-| Tool             | Args                    | What it returns                          |
-|------------------|--------------------------|------------------------------------------|
-| `code.search`    | `query` (max 128ch)      | ripgrep pattern search across Python code |
-| `code.rag_query` | `question` (max 500ch)   | Semantic search over indexed Python code  |
+| Tool                      | Args                    | What it returns                          |
+|---------------------------|--------------------------|------------------------------------------|
+| `code.search`             | `query` (max 128ch)      | ripgrep pattern search across Python code |
+| `code.rag_query`          | `question` (max 500ch)   | Semantic search over indexed Python code  |
+| `code.impact_analysis`    | `changed_files`          | Impact of code changes on dependent modules |
+| `code.dependency_graph`   | `module`, `direction`    | Dependency graph for a module             |
+| `code.find_callers`       | `function_name`          | All functions that call a given function  |
+| `code.suggest_tests`      | `changed_files`          | Tests that cover the changed files        |
+| `code.complexity_report`  | `target`, `threshold`    | Complexity report for code files          |
+| `code.class_hierarchy`    | `class_name`             | Class hierarchy for a given class         |
 
-### agents.* (4 tools)
+### collab.* (3 tools)
+
+| Tool                    | Args                              | What it returns                      |
+|-------------------------|-----------------------------------|--------------------------------------|
+| `collab.queue_status`   | —                                 | Task queue status summary             |
+| `collab.add_task`       | `title`, `task_type`, `description`, `priority` | Add a task to the queue |
+| `collab.search_knowledge` | `query`, `top_k`               | Search the agent knowledge base       |
+
+### workflow.* (2 tools)
+
+| Tool             | Args                      | What it returns                  |
+|------------------|---------------------------|----------------------------------|
+| `workflow.run`   | `workflow_id`, `steps`    | Execute a saved workflow          |
+| `workflow.list`  | —                         | List available workflows          |
+
+### intel.* (2 tools)
+
+| Tool                  | Args       | What it returns                                        |
+|-----------------------|------------|--------------------------------------------------------|
+| `intel.scrape_now`    | —          | Trigger intelligence scrape (GitHub, CISA KEV, NVD, Fedora) |
+| `intel.ingest_pending`| `intel_dir`| Ingest pending scraped intelligence into LanceDB RAG   |
+
+### agents.* (5 tools)
 
 | Tool                       | Args | What it returns                                    |
 |----------------------------|------|----------------------------------------------------|
@@ -261,12 +313,13 @@ All tools are accessible through Newelle via the MCP bridge. They are read-only
 | `agents.performance_tuning`| —    | Temps, memory, disk, gaming profile analysis         |
 | `agents.knowledge_storage` | —    | Vector DB health, ingestion freshness, Ollama status |
 | `agents.code_quality`      | —    | ruff + bandit + git status report                    |
+| `agents.timer_health`      | —    | Validate all 22 systemd timers; returns per-timer status and overall health |
 
 ### Built-in
 
 | Tool     | Returns                           |
 |----------|-----------------------------------|
-| `health` | `{"status": "ok", "tools": 76}`   |
+| `health` | `{"status": "ok", "tools": 82}`   |
 
 ---
 

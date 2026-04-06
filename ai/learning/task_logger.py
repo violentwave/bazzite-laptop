@@ -24,7 +24,6 @@ from datetime import UTC, datetime
 from pathlib import Path
 from uuid import uuid4
 
-import lancedb
 import pyarrow as pa
 
 from ai.config import VECTOR_DB_DIR
@@ -73,6 +72,7 @@ class TaskLogger:
         if self._db is not None:
             return self._db
         try:
+            import lancedb  # noqa: PLC0415
             self._db_path.mkdir(parents=True, exist_ok=True)
             self._db = lancedb.connect(str(self._db_path))
         except (OSError, PermissionError) as e:

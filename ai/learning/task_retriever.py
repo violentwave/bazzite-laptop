@@ -7,8 +7,6 @@ from the task_patterns LanceDB table.
 import logging
 from pathlib import Path
 
-import lancedb
-
 from ai.config import VECTOR_DB_DIR
 from ai.learning.task_logger import TABLE_NAME
 from ai.rag.embedder import embed_single
@@ -38,6 +36,7 @@ def retrieve_similar_tasks(
     db_path = Path(db_path) if db_path else VECTOR_DB_DIR
 
     try:
+        import lancedb  # noqa: PLC0415
         db_path.mkdir(parents=True, exist_ok=True)
         db = lancedb.connect(str(db_path))
     except (OSError, PermissionError) as e:

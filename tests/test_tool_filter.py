@@ -1,5 +1,7 @@
 """Tests for MCP tool filtering middleware."""
 
+from unittest.mock import patch
+
 import pytest
 
 from ai.mcp_bridge.tool_filter import (
@@ -11,7 +13,8 @@ from ai.mcp_bridge.tool_filter import (
 @pytest.fixture
 def tool_filter():
     """Create a fresh ToolFilter instance for testing."""
-    return ToolFilter()
+    with patch("ai.mcp_bridge.tool_filter.embed", return_value=[0.0] * 768):
+        return ToolFilter()
 
 
 class TestFilterByNamespace:

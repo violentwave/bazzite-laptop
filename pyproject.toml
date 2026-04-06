@@ -19,6 +19,7 @@ select = ["E", "F", "W", "I", "S", "B", "UP"]
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = ["S101", "S105", "S108"]
 "tray/**" = ["E402", "I001", "S110"]
+"ai/router.py" = ["E402"]  # sentry_sdk.init() must run before other imports
 "ai/hooks.py" = ["S110"]
 # Scripts intentionally call subprocesses with partial paths (systemctl, clamscan etc.)
 "scripts/**" = ["S603", "S607"]

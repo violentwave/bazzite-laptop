@@ -36,6 +36,23 @@ Bazzite security/gaming system.
 
 ---
 
+## Phase P41–P42 — zo-tools Integration & Stabilization (2026-04-06)
+
+### Delivered
+- **P41 zo-tools** (`ai/intel_scraper.py`, `ai/system/dep_scanner.py`, `ai/system/test_analyzer.py`,
+  `ai/system/perf_profiler.py`, `ai/system/mcp_generator.py`, `ai/system/ingest_pipeline.py`):
+  intelligence scraper, OSV dependency scanner, pytest failure analyzer, performance profiler,
+  MCP tool generator, and intel→RAG ingest pipeline
+- **MCP tools**: `intel.scrape_now`, `intel.ingest_pending`, `system.dep_scan`, `system.test_analysis`,
+  `system.perf_profile`, `system.mcp_audit` wired
+- **P42 Stabilization**: 8 test failures fixed (SELinux db isolation, mock contamination, Sentry logging);
+  30 orphaned MCP tools wired in `_execute_python_tool`; AGENT.md/CHANGELOG.md/USER-GUIDE.md updated
+
+### Numbers after this phase
+- MCP tools: 82 | Timers: 22 | LanceDB tables: 23 | Tests: 1872 passed, 0 failed
+
+---
+
 ## Phase P24–P28 — Metrics, Memory, Provider Intel, Insights, Alerts (2026-04-06)
 
 ### Delivered

@@ -20,12 +20,16 @@ class TestStabilityTracker:
 
     def __init__(self, project_root: Path | None = None):
         self.project_root = project_root or Path.cwd()
-        _ensure_db_dir()
+        if project_root is not None:
+            self._db_path = project_root / "test-stability.db"
+        else:
+            _ensure_db_dir()
+            self._db_path = _TEST_DB_PATH
         self._init_db()
 
     def _init_db(self) -> None:
         """Initialize SQLite database for test tracking."""
-        conn = sqlite3.connect(str(_TEST_DB_PATH))
+        conn = sqlite3.connect(str(self._db_path))
         cursor = conn.cursor()
 
         cursor.execute("""
@@ -65,7 +69,7 @@ class TestStabilityTracker:
         self, test_id: str, passed: bool, duration: float, worker: str = "main"
     ) -> None:
         """Record a test result."""
-        conn = sqlite3.connect(str(_TEST_DB_PATH))
+        conn = sqlite3.connect(str(self._db_path))
         cursor = conn.cursor()
 
         timestamp = datetime.now(UTC).isoformat()
@@ -82,7 +86,7 @@ class TestStabilityTracker:
         self, min_runs: int = 5, min_pass_rate: float = 0.1, max_pass_rate: float = 0.99
     ) -> list[dict]:
         """Find tests that pass intermittently."""
-        conn = sqlite3.connect(str(_TEST_DB_PATH))
+        conn = sqlite3.connect(str(self._db_path))
         cursor = conn.cursor()
 
         cursor.execute(
@@ -118,7 +122,7 @@ class TestStabilityTracker:
 
     def quarantine_test(self, test_id: str, reason: str = "auto-detected flaky") -> None:
         """Add a test to the quarantine list."""
-        conn = sqlite3.connect(str(_TEST_DB_PATH))
+        conn = sqlite3.connect(str(self._db_path))
         cursor = conn.cursor()
 
         timestamp = datetime.now(UTC).isoformat()
@@ -133,7 +137,7 @@ class TestStabilityTracker:
 
     def check_unquarantine(self, consecutive_passes_needed: int = 10) -> list[str]:
         """Find quarantined tests that have enough recent passes to unquarantine."""
-        conn = sqlite3.connect(str(_TEST_DB_PATH))
+        conn = sqlite3.connect(str(self._db_path))
         cursor = conn.cursor()
 
         cursor.execute("""
@@ -226,7 +230,7 @@ class TestStabilityTracker:
 
     def get_test_stats(self) -> dict:
         """Get summary statistics about tests."""
-        conn = sqlite3.connect(str(_TEST_DB_PATH))
+        conn = sqlite3.connect(str(self._db_path))
         cursor = conn.cursor()
 
         cursor.execute("SELECT COUNT(DISTINCT test_id) FROM test_results")
