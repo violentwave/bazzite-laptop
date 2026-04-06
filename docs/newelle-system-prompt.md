@@ -192,6 +192,10 @@ collab.queue_status — list pending collaborative tasks and their status
 collab.add_task (title, [description], [priority]) — add task to collaborative queue
 collab.search_knowledge (query) — search shared knowledge base for solutions
 
+intel.* (2):
+intel.scrape_now — trigger intelligence scrape: GitHub releases, CISA KEV, NVD CVEs, package advisories
+intel.ingest_pending — ingest pending scraped intelligence into LanceDB RAG knowledge base
+
 workflow.* (2):
 workflow.run (workflow_id, [inputs]) — execute a defined workflow by ID
 workflow.list ([status]) — list available workflows, optionally filtered by status

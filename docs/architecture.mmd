@@ -8,7 +8,7 @@ graph TD
 
     subgraph "AI Proxy Layer"
         PROXY["LLM Proxy :8767\nOpenAI-compat · streaming\nai/llm_proxy.py"]
-        MCP["MCP Bridge :8766\nFastMCP streamable-http\n43 tools · ai/mcp_bridge/"]
+        MCP["MCP Bridge :8766\nFastMCP streamable-http\n82 tools · ai/mcp_bridge/"]
     end
 
     subgraph "AI Core"
@@ -18,8 +18,8 @@ graph TD
         RAG["RAG Pipeline\nai/rag/\nLanceDB · Cohere rerank"]
         INTEL["Threat Intel\nai/threat_intel/\n6 modules · 10 APIs"]
         LOGINTEL["Log Intelligence\nai/log_intel/\ningest · anomalies · search"]
-        AGENTS["AI Agents (4)\nai/agents/\nsecurity · perf · knowledge · code"]
-        SYSMOD["System Modules\nai/system/\nrelease_watch · fedora · pkg_intel"]
+        AGENTS["AI Agents (5)\nai/agents/\nsecurity · perf · knowledge · code · timer"]
+        SYSMOD["System Modules\nai/system/\nrelease_watch · fedora · pkg_intel\nalerts · perf_profiler · dep_scanner\ntest_analyzer · mcp_generator"]
         GAMING["Gaming\nai/gaming/\nScopeBuddy · MangoHud"]
     end
 
@@ -53,7 +53,7 @@ graph TD
     subgraph "System Layer"
         CLAMAV["ClamAV\nclamd + freshclam\n3 timers"]
         HEALTH_MON["Health Monitor\nsystem-health-snapshot.sh"]
-        SYSTEMD["systemd timers\n12 scheduled jobs"]
+        SYSTEMD["systemd timers\n22 scheduled jobs"]
         OLLAMA["Ollama :11434\nnomic-embed-text\nemergency embed only"]
         NVIDIA["NVIDIA GTX 1060 6GB\n0 VRAM used (normal)"]
         ZRAM["ZRAM 7.7GB\nzstd · swappiness=180"]

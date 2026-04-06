@@ -41,7 +41,7 @@ class TestPerfProfiler:
         mock_client.post.return_value = mock_response
 
         profiler = PerfProfiler()
-        tool_stats = profiler.profile_mcp_tools(n=1)
+        profiler.profile_mcp_tools(n=1)
 
         call_args = mock_client.post.call_args_list[0]
         rpc_payload = call_args[1]["json"]

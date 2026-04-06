@@ -25,6 +25,23 @@ Safety Rules below.
 | `system.release_watch` | GitHub Releases + GHSA watcher results for tracked dependencies | none |
 | `system.fedora_updates` | Fedora Bodhi pending security and package updates | none |
 | `system.pkg_intel` | deps.dev package intelligence: advisories, provenance, version status | none |
+| `system.cache_stats` | LLM response cache statistics: entries, size, hit rate, memory usage | none |
+| `system.token_report` | Token usage and cost report from LLM proxy (per-provider, per-task-type) | none |
+| `system.pipeline_status` | Log pipeline status: record counts, last ingestion, DB size, pending items | none |
+| `system.budget_status` | Token budget usage across all tiers (security, scheduled, interactive, coding) | none |
+| `system.metrics_summary` | Aggregate metrics for last 24h: cache hit rates, provider latencies, budget usage | `hours` (optional), `metric_type` (optional) |
+| `system.provider_status` | Per-provider health, latency, error rates, and routing scores | none |
+| `system.create_tool` | Create a dynamic MCP tool with safety validation (sandboxed exec) | `name`, `description`, `handler_code`, `parameters`, `created_by` |
+| `system.list_dynamic_tools` | List all persisted dynamic tools created via system.create_tool | none |
+| `system.dep_audit` | Latest dependency vulnerability audit: vulnerable packages, CVEs, fix versions | none |
+| `system.dep_audit_history` | Dependency audit history with timestamps (last 30 days) | `limit` (optional) |
+| `system.weekly_insights` | Weekly AI-generated insights: token usage trends, cache, provider health | `limit` (optional) |
+| `system.insights` | Generate fresh on-demand insights for current system state | none |
+| `system.alert_history` | Recent system alerts with timestamps and severity levels | `limit` (optional) |
+| `system.alert_rules` | Active alert rules: event types, urgency levels, enabled/cooldown status | none |
+| `system.mcp_audit` | Audit MCP bridge allowlist for missing handlers and validation gaps | none |
+| `system.perf_profile` | Run performance profiler: LLM latency, MCP tool timing, file I/O, LanceDB | none |
+| `system.test_analysis` | Analyze pytest output for failure patterns and actionable fixes | none |
 | `logs.health_trend` | Last 7 health snapshots with delta trends (temps, disk, RAM) | none |
 | `logs.search` | Semantic search across all system logs | `query` (string, max 500 chars, required) |
 | `logs.stats` | Log pipeline statistics: record counts, last ingestion time, DB size | none |
@@ -54,6 +71,16 @@ Safety Rules below.
 | "Show temp trends over the last week" | `logs.health_trend` |
 | "Find logs about GPU throttling" | `logs.search` with `query="GPU throttling"` |
 | "How many log records are indexed?" | `logs.stats` |
+| "How much of my token budget is left?" | `system.budget_status` |
+| "Which LLM providers are slowest today?" | `system.provider_status` |
+| "What's the cache hit rate?" | `system.cache_stats` |
+| "Show token usage by provider" | `system.token_report` |
+| "Are there any vulnerable packages?" | `system.dep_audit` |
+| "Show recent alerts" | `system.alert_history` |
+| "What alert rules are active?" | `system.alert_rules` |
+| "Show overall system performance" | `system.metrics_summary` |
+| "Show this week's insights" | `system.weekly_insights` |
+| "What dynamic tools exist?" | `system.list_dynamic_tools` |
 
 ---
 
