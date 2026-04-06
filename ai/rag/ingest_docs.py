@@ -69,7 +69,14 @@ def _save_state(state: dict) -> None:
     import tempfile  # noqa: PLC0415
     import time  # noqa: PLC0415
 
-    _STATE_FILE.parent.mkdir(parents=True, exist_ok=True)
+    # Handle case where VECTOR_DB_DIR is a symlink to a non-existent path
+    # (e.g., broken symlink to unmounted drive)
+    state_dir = _STATE_FILE.parent
+    if state_dir.exists() or state_dir.is_symlink():
+        # If symlink is broken (target doesn't exist), resolve and use parent
+        if state_dir.is_symlink() and not state_dir.resolve().exists():
+            state_dir = _STATE_FILE.resolve().parent
+    state_dir.mkdir(parents=True, exist_ok=True)
 
     # Retry up to 3 times with exponential backoff for transient I/O errors
     max_retries = 3

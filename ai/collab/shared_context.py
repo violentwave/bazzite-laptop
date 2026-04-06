@@ -41,7 +41,8 @@ class SharedContext:
         )
 
         table_names = self._db.list_tables()
-        if "shared_context" in table_names:
+        existing = table_names.tables if hasattr(table_names, "tables") else list(table_names)
+        if "shared_context" in existing:
             self._table = self._db.open_table("shared_context")
         else:
             self._table = self._db.create_table("shared_context", schema=schema)
