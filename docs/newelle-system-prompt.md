@@ -124,6 +124,12 @@ system.metrics_summary ([hours], [metric_type]) — aggregate metrics for last 2
 system.provider_status — per-provider health, latency, error rates, and routing scores
 system.create_tool (name, description, handler_code, parameters, created_by) — create a dynamic MCP tool with safety validation
 system.list_dynamic_tools — list all persisted dynamic tools
+system.dep_audit — latest dependency audit results: vulnerable packages, fixed CVEs
+system.dep_audit_history (limit) — dependency audit history with timestamps
+system.weekly_insights (limit) — weekly system insights: token usage, cache hits, provider health
+system.insights — generate fresh insights for current system state
+system.alert_history (limit) — recent system alerts with timestamps and severity
+system.alert_rules — active alert rules with event types, urgency, and enabled status
 
 security.* (15):
 security.status — overall security/health status JSON (6 keys)
@@ -142,9 +148,12 @@ security.correlate (ioc, ioc_type) — cross-reference an IOC across all threat 
 security.recommend_action (finding_type, finding_id) — generate response playbook. finding_type = cve|malware|suspicious_ip|suspicious_url, finding_id = the identifier
 security.alert_summary — active security alerts: CVEs matching installed packages, stale scans, release advisories
 
-knowledge.* (5):
+knowledge.* (6):
 knowledge.rag_query (query) — semantic search over indexed docs, returns raw context chunks
 knowledge.rag_qa (question) — LLM-synthesized answer from knowledge base
+knowledge.session_history (query, limit) — search past session patterns from HANDOFF.md
+knowledge.pattern_search (query, language?, domain?) — semantic search over curated code patterns with optional language/domain filters
+knowledge.task_patterns (query, top_k?) — retrieve similar past successful tasks to guide current work
 knowledge.ingest_docs — ONLY for indexing: adds existing files to vector DB. NEVER use to create files.
 knowledge.pattern_search (query, language?, domain?) — semantic search over curated code patterns with optional language/domain filters
 knowledge.task_patterns (query, top_k?) — retrieve similar past successful tasks to guide current work

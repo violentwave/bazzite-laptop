@@ -141,8 +141,9 @@ class TestToolRegistration:
             from ai.mcp_bridge.server import create_app
 
             app = create_app()
-            # 57 allowlisted tools + 1 health tool registered via mcp.tool()
-            assert len(app._tool_manager._tools) == 58
+            # 76 allowlisted tools + health + dep_audit tools registered via mcp.tool()
+            # Total: 78 (76 allowlist + health + dep_audit + dep_audit_history + perf_metrics)
+            assert len(app._tool_manager._tools) == 78
 
 
 # ---------------------------------------------------------------------------
@@ -289,7 +290,7 @@ class TestToolAnnotations:
         assert ann is not None
         assert ann.get("destructiveHint") is True
 
-    def test_all_44_allowlisted_tools_have_annotations(self):
+    def test_all_76_allowlisted_tools_have_annotations(self):
         """Every allowlisted tool (excludes built-in health endpoint) must have annotations."""
         app = self._make_app()
         unannotated = [

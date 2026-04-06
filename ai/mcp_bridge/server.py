@@ -127,10 +127,14 @@ def create_app():
         "security.recommend_action": {"readOnlyHint": True, "idempotentHint": True},
         "knowledge.pattern_search": {"readOnlyHint": True},
         "knowledge.task_patterns": {"readOnlyHint": True},
+        "knowledge.session_history": {"readOnlyHint": True},
         "memory.search": {"readOnlyHint": True},
         "system.provider_status": {"readOnlyHint": True, "idempotentHint": True},
         "system.weekly_insights": {"readOnlyHint": True, "idempotentHint": True},
         "system.insights": {"readOnlyHint": False, "idempotentHint": False},
+        "system.dep_audit": {"readOnlyHint": True, "idempotentHint": True},
+        "system.dep_audit_history": {"readOnlyHint": True, "idempotentHint": True},
+        "system.perf_metrics": {"readOnlyHint": True, "idempotentHint": True},
         # ── collaboration ────────────────────────────────────────────────────
         "collab.queue_status": {"readOnlyHint": True, "idempotentHint": True},
         "collab.add_task": {"readOnlyHint": False, "idempotentHint": False},
@@ -737,6 +741,7 @@ def create_app():
     @mcp.tool(
         name="system.perf_metrics",
         description="Get performance metrics for tracked functions (calls, latency, errors)",
+        annotations={"readOnlyHint": True, "idempotentHint": True},
     )
     async def _handler_perf_metrics(function: str | None = None, reset: bool = False):
         try:
