@@ -11,7 +11,7 @@ Auto-generated cross-tool handoff. Updated by save-handoff.sh
 
 ## Open Tasks
 
-- MCP tool documentation sync: docs/newelle-system-prompt.md needs 7 additional tools added (pre-existing gap, unrelated to handler parity work)
+- No open tasks
 
 ## Recent Sessions
 
