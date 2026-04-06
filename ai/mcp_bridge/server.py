@@ -131,6 +131,30 @@ def create_app():
         "system.provider_status": {"readOnlyHint": True, "idempotentHint": True},
         "system.weekly_insights": {"readOnlyHint": True, "idempotentHint": True},
         "system.insights": {"readOnlyHint": False, "idempotentHint": False},
+        # ── collaboration ────────────────────────────────────────────────────
+        "collab.queue_status": {"readOnlyHint": True, "idempotentHint": True},
+        "collab.add_task": {"readOnlyHint": False, "idempotentHint": False},
+        "collab.search_knowledge": {"readOnlyHint": True, "idempotentHint": True},
+        # ── code intelligence ─────────────────────────────────────────────────
+        "code.impact_analysis": {"readOnlyHint": True, "idempotentHint": True},
+        "code.dependency_graph": {"readOnlyHint": True, "idempotentHint": True},
+        "code.find_callers": {"readOnlyHint": True, "idempotentHint": True},
+        "code.suggest_tests": {"readOnlyHint": True, "idempotentHint": True},
+        "code.complexity_report": {"readOnlyHint": True, "idempotentHint": True},
+        "code.class_hierarchy": {"readOnlyHint": True, "idempotentHint": True},
+        # ── workflows ─────────────────────────────────────────────────────────
+        "workflow.run": {"readOnlyHint": False, "idempotentHint": False},
+        "workflow.list": {"readOnlyHint": True, "idempotentHint": True},
+        # ── dynamic tools ─────────────────────────────────────────────────────
+        "system.create_tool": {
+            "readOnlyHint": False,
+            "idempotentHint": False,
+            "destructiveHint": True,
+        },
+        "system.list_dynamic_tools": {"readOnlyHint": True, "idempotentHint": True},
+        # ── alerts ────────────────────────────────────────────────────────────
+        "system.alert_history": {"readOnlyHint": True, "idempotentHint": True},
+        "system.alert_rules": {"readOnlyHint": True, "idempotentHint": True},
     }
 
     # Load tool definitions from the allowlist
@@ -409,46 +433,298 @@ def create_app():
                 except Exception as e:
                     return {"error": str(e), "sessions": [], "count": 0}
 
+        elif tool_name == "collab.queue_status":
+
+            @mcp.tool(name=tool_name, description=description, annotations=ann)
+            async def _handler_queue_status(_tn=tool_name):
+                try:
+                    from ai.collab.task_queue import get_queue
+
+                    queue = get_queue()
+                    status = queue.get_queue_status()
+                    return status
+                except Exception as e:
+                    return {"error": str(e), "status": {}}
+
+        elif tool_name == "collab.add_task":
+
+            @mcp.tool(name=tool_name, description=description, annotations=ann)
+            async def _handler_add_task(
+                title: str,
+                task_type: str,
+                description: str = "",
+                priority: int = 3,
+                _tn=tool_name,
+            ):
+                try:
+                    from ai.collab.task_queue import TaskType, get_queue
+
+                    queue = get_queue()
+                    task_type_enum = TaskType(task_type)
+                    task_id = queue.add_task(
+                        title=title,
+                        task_type=task_type_enum,
+                        description=description,
+                        priority=priority,
+                    )
+                    return {"task_id": task_id, "status": "added"}
+                except Exception as e:
+                    return {"error": str(e), "task_id": None}
+
+        elif tool_name == "collab.search_knowledge":
+
+            @mcp.tool(name=tool_name, description=description, annotations=ann)
+            async def _handler_search_knowledge(
+                query: str,
+                top_k: int = 5,
+                _tn=tool_name,
+            ):
+                try:
+                    from ai.collab.knowledge_base import get_agent_knowledge
+
+                    kb = get_agent_knowledge()
+                    results = kb.query_knowledge(query=query, top_k=top_k)
+                    return {"results": results, "query": query, "count": len(results)}
+                except Exception as e:
+                    return {"error": str(e), "results": [], "count": 0}
+
+        elif tool_name == "code.impact_analysis":
+
+            @mcp.tool(name=tool_name, description=description, annotations=ann)
+            async def _handler_impact_analysis(
+                changed_files: str,
+                include_tests: bool = True,
+                max_depth: int = 3,
+                _tn=tool_name,
+            ):
+                try:
+                    from ai.code_intel.store import get_code_store
+
+                    store = get_code_store()
+                    files = [f.strip() for f in changed_files.split(",")]
+                    result = store.query_impact(files, max_depth=max_depth)
+                    return result
+                except Exception as e:
+                    return {"error": str(e), "impact": {}}
+
+        elif tool_name == "code.dependency_graph":
+
+            @mcp.tool(name=tool_name, description=description, annotations=ann)
+            async def _handler_dependency_graph(
+                module: str,
+                direction: str = "both",
+                _tn=tool_name,
+            ):
+                try:
+                    from ai.code_intel.store import get_code_store
+
+                    store = get_code_store()
+                    deps = store.query_dependents(module, max_depth=3)
+                    return {"module": module, "direction": direction, "dependents": deps}
+                except Exception as e:
+                    return {"error": str(e), "dependents": []}
+
+        elif tool_name == "code.find_callers":
+
+            @mcp.tool(name=tool_name, description=description, annotations=ann)
+            async def _handler_find_callers(
+                function_name: str,
+                include_indirect: bool = True,
+                _tn=tool_name,
+            ):
+                try:
+                    from ai.code_intel.store import get_code_store
+
+                    store = get_code_store()
+                    callers = store.find_callers(function_name, include_indirect)
+                    return {"function": function_name, "callers": callers}
+                except Exception as e:
+                    return {"error": str(e), "callers": []}
+
+        elif tool_name == "code.suggest_tests":
+
+            @mcp.tool(name=tool_name, description=description, annotations=ann)
+            async def _handler_suggest_tests(
+                changed_files: str,
+                _tn=tool_name,
+            ):
+                try:
+                    from ai.code_intel.store import get_code_store
+
+                    store = get_code_store()
+                    files = [f.strip() for f in changed_files.split(",")]
+                    tests = store.suggest_tests(files)
+                    return {"files": files, "suggested_tests": tests}
+                except Exception as e:
+                    return {"error": str(e), "suggested_tests": []}
+
+        elif tool_name == "code.complexity_report":
+
+            @mcp.tool(name=tool_name, description=description, annotations=ann)
+            async def _handler_complexity_report(
+                target: str | None = None,
+                threshold: int = 10,
+                _tn=tool_name,
+            ):
+                try:
+                    from ai.code_intel.store import get_code_store
+
+                    store = get_code_store()
+                    report = store.get_complexity_report(target, threshold)
+                    return report
+                except Exception as e:
+                    return {"error": str(e), "complexity": []}
+
+        elif tool_name == "code.class_hierarchy":
+
+            @mcp.tool(name=tool_name, description=description, annotations=ann)
+            async def _handler_class_hierarchy(
+                class_name: str,
+                _tn=tool_name,
+            ):
+                try:
+                    from ai.code_intel.store import get_code_store
+
+                    store = get_code_store()
+                    hierarchy = store.get_class_hierarchy(class_name)
+                    return {"class": class_name, "hierarchy": hierarchy}
+                except Exception as e:
+                    return {"error": str(e), "hierarchy": {}}
+
+        elif tool_name == "workflow.list":
+
+            @mcp.tool(name=tool_name, description=description, annotations=ann)
+            async def _handler_workflow_list(_tn=tool_name):
+                try:
+                    from ai.workflows.definitions import get_workflow_store
+
+                    store = get_workflow_store()
+                    workflows = store.list_workflows()
+                    return {"workflows": workflows, "count": len(workflows)}
+                except Exception as e:
+                    return {"error": str(e), "workflows": [], "count": 0}
+
+        elif tool_name == "workflow.run":
+
+            @mcp.tool(name=tool_name, description=description, annotations=ann)
+            async def _handler_workflow_run(
+                workflow_id: str | None = None,
+                steps: str | None = None,
+                _tn=tool_name,
+            ):
+                try:
+                    import asyncio
+                    import json
+
+                    from ai.workflows.runner import get_runner
+
+                    runner = get_runner()
+                    if steps:
+                        step_list = json.loads(steps)
+                        result = asyncio.run(runner.run_plan(step_list))
+                    elif workflow_id:
+                        from ai.workflows.definitions import get_workflow_store
+
+                        store = get_workflow_store()
+                        wf = store.get_workflow(workflow_id)
+                        if wf:
+                            result = asyncio.run(runner.run_plan(wf.get("steps", [])))
+                        else:
+                            return {"error": f"Workflow {workflow_id} not found"}
+                    else:
+                        return {"error": "Either workflow_id or steps required"}
+                    return result
+                except Exception as e:
+                    return {"error": str(e)}
+
+        elif tool_name == "system.create_tool":
+
+            @mcp.tool(name=tool_name, description=description, annotations=ann)
+            async def _handler_create_tool(
+                name: str,
+                description: str,
+                handler_code: str,
+                parameters: str | None = None,
+                _tn=tool_name,
+            ):
+                try:
+                    import json
+
+                    from ai.tools.builder import get_builder
+
+                    builder = get_builder()
+                    params = json.loads(parameters) if parameters else None
+                    result = builder.create_tool(
+                        name=name,
+                        description=description,
+                        handler_code=handler_code,
+                        parameters=params,
+                    )
+                    return result
+                except Exception as e:
+                    return {"error": str(e), "status": "failed"}
+
+        elif tool_name == "system.list_dynamic_tools":
+
+            @mcp.tool(name=tool_name, description=description, annotations=ann)
+            async def _handler_list_dynamic_tools(_tn=tool_name):
+                try:
+                    from ai.tools.builder import get_builder
+
+                    builder = get_builder()
+                    tools = builder.list_dynamic_tools()
+                    return {"tools": tools, "count": len(tools)}
+                except Exception as e:
+                    return {"error": str(e), "tools": [], "count": 0}
+
+        elif tool_name == "system.dep_audit":
+
+            @mcp.tool(name=tool_name, description=description, annotations=ann)
+            async def _handler_dep_audit(_tn=tool_name):
+                try:
+                    from ai.system.depaudit import get_latest_report
+
+                    result = get_latest_report()
+                    if result:
+                        return {
+                            "vulnerable": result.vulnerable,
+                            "fixed": result.fixed,
+                            "packages": [
+                                {
+                                    "name": p.name,
+                                    "version": p.version,
+                                    "vulns": [
+                                        {"id": v.id, "severity": v.severity} for v in p.vulns
+                                    ],
+                                }
+                                for p in result.packages
+                            ],
+                            "generated_at": result.generated_at,
+                        }
+                    return {"error": "No audit report found", "vulnerable": 0}
+                except Exception as e:
+                    return {"error": str(e), "vulnerable": 0}
+
+        elif tool_name == "system.dep_audit_history":
+
+            @mcp.tool(name=tool_name, description=description, annotations=ann)
+            async def _handler_dep_audit_history(
+                limit: int = 30,
+                _tn=tool_name,
+            ):
+                try:
+                    from ai.system.depaudit import get_report_history
+
+                    history = get_report_history(limit=limit)
+                    return {"reports": history, "count": len(history)}
+                except Exception as e:
+                    return {"error": str(e), "reports": [], "count": 0}
+
         # Built-in health tool (MCP protocol)
 
     @mcp.tool(name="health", description="Bridge health check")
     async def _health():
         return await health_check()
-
-    # Dependency audit tools
-    @mcp.tool(name="system.dep_audit", description="Get latest dependency audit results")
-    async def _dep_audit():
-        try:
-            from ai.system.depaudit import get_latest_report
-
-            result = get_latest_report()
-            if result:
-                return {
-                    "vulnerable": result.vulnerable,
-                    "fixed": result.fixed,
-                    "packages": [
-                        {
-                            "name": p.name,
-                            "version": p.version,
-                            "vulns": [{"id": v.id, "severity": v.severity} for v in p.vulns],
-                        }
-                        for p in result.packages
-                    ],
-                    "generated_at": result.generated_at,
-                }
-            return {"error": "No audit report found", "vulnerable": 0}
-        except Exception as e:
-            return {"error": str(e), "vulnerable": 0}
-
-    @mcp.tool(name="system.dep_audit_history", description="List dependency audit history")
-    async def _dep_audit_history(limit: int = 30):
-        try:
-            from ai.system.depaudit import get_report_history
-
-            history = get_report_history(limit=limit)
-            return {"reports": history, "count": len(history)}
-        except Exception as e:
-            return {"error": str(e), "reports": [], "count": 0}
 
     # Plain HTTP health endpoint (for curl/monitoring)
     @mcp.custom_route("/health", methods=["GET"])

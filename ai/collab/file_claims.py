@@ -28,13 +28,7 @@ def claim_file(agent: str, filepath: str) -> bool:
         else:
             claims = {}
 
-        # Check if already claimed by another agent
-        if filepath in claims:
-            existing_agent = claims[filepath].get("agent")
-            if existing_agent != agent:
-                return False
-
-        # Check for expired claims
+        # Check for expired claims first (before checking ownership)
         import time
 
         now = time.time()
@@ -45,6 +39,12 @@ def claim_file(agent: str, filepath: str) -> bool:
 
         for path in expired:
             del claims[path]
+
+        # Check if already claimed by another agent
+        if filepath in claims:
+            existing_agent = claims[filepath].get("agent")
+            if existing_agent != agent:
+                return False
 
         # Claim the file
         claims[filepath] = {
