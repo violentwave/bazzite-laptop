@@ -1,9 +1,40 @@
 # Changelog — Bazzite AI Enhancement Layer
-<!-- System: Acer Predator G3-571 | Bazzite 43 | Last updated: 2026-04-04 -->
+<!-- System: Acer Predator G3-571 | Bazzite 43 | Last updated: 2026-04-06 -->
 
 All notable changes are recorded here. Phases correspond to the original
 implementation plan for the AI enhancement layer built on top of the base
 Bazzite security/gaming system.
+
+---
+
+## Phase P24–P28 — Metrics, Memory, Provider Intel, Insights, Alerts (2026-04-06)
+
+### Delivered
+- **P24 MetricsRecorder** (`ai/metrics.py`): Full LanceDB-backed time-series recorder;
+  buffered thread-safe flush at 100 events or 60s; `VALID_METRIC_TYPES`; `get_recorder()`;
+  `record_metric()` with full 5-arg signature; `query_summary()`; `get_raw()`;
+  backward-compat `track_performance` decorator retained
+- **P28 InsightsEngine** (`ai/insights.py`): `insights_cache` LanceDB table with TTL expiry;
+  `generate_weekly()`, `generate_on_demand()`, `get_cached_insights()`, `format_for_newelle()`;
+  `get_engine()`; `run_insights_generation()` — no LLM calls, summarises existing LanceDB data
+- **P27 Security alerts** (`ai/alerts/dispatcher.py`, `ai/alerts/history.py`): desktop
+  notification dispatcher, alert history store
+- **P25 Memory** (`ai/memory.py`): confirmed spec-complete; 768-dim conversation_memory table;
+  secret redaction via InputValidator; `summarize_session()`
+- **P26 Provider Intel** (`ai/provider_intel.py`): unblocked by metrics rewrite; scoring formula
+  `(1/(1+latency_p95)) * (1-error_rate) * health_multiplier` operational
+- **MCP tool system.insights**: on-demand insights via `get_engine().generate_on_demand()`;
+  fixed stale `system.weekly_insights` handler (was calling non-existent method)
+- **Scripts**: `generate-weekly-insights.py`, `security-alert-eval.py`, `metrics-compact.py`;
+  `weekly-insights.service` wired to new API
+- **CI/CD**: dependabot config, CodeQL workflow, pyproject.toml duplicate key fixed,
+  `.hypothesis/` gitignored
+- **Tests**: `test_metrics.py` (14), `test_insights.py` (11), `test_properties.py`,
+  `test_performance.py`, `test_handoff_parser.py`, `test_alerts_desktop.py` added;
+  suite: ~1816 passed
+
+### Numbers after this phase
+- MCP tools: 76 | Timers: 21 | LanceDB tables: 8 | Tests: ~1816
 
 ---
 

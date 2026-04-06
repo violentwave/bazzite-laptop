@@ -267,12 +267,13 @@ Source: `configs/mcp-bridge-allowlist.yaml` + tools registered directly in serve
 
 | Metric | Value |
 |--------|-------|
-| MCP tools | 79 (+ 1 health endpoint) |
+| MCP tools | 76 (+ 1 health endpoint) |
 | Systemd timers | 21 |
 | LanceDB tables | 23 |
-| Tests | ~1951 |
+| Tests | ~1816 |
 | Cloud LLM providers | 6 |
 | Threat intel APIs | 16 |
+| P24-P28 status | complete (2026-04-06) |
 
 ### Dependency Graph
 

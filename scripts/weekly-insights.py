@@ -1,15 +1,12 @@
 #!/usr/bin/env python3
 import sys
 
-from ai.insights import InsightsEngine
+from ai.insights import run_insights_generation
 
 
 def main():
-    engine = InsightsEngine()
-    insights = engine.generate_weekly_insights()
-    print(f"[weekly-insights] Generated {len(insights['insights'])} insights")
-    for rec in insights.get("recommendations", []):
-        print(f"  - {rec}")
+    result = run_insights_generation()
+    print(f"[weekly-insights] kind={result.get('kind')} at {result.get('generated_at')}")
     return 0
 
 

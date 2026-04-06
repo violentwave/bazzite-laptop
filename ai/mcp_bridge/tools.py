@@ -975,6 +975,12 @@ async def _execute_python_tool(tool_name: str, tool_def: dict, args: dict) -> st
             response = get_response_plan(finding_type, finding_id)
             return json.dumps(response.to_dict(), indent=2)
 
+        elif tool_name == "system.insights":
+            from ai.insights import get_engine  # noqa: PLC0415
+
+            result = get_engine().generate_on_demand()
+            return _truncate(json.dumps(result, indent=2))
+
         elif tool_name == "security.run_ingest":
             proc = await asyncio.create_subprocess_exec(
                 str(Path(__file__).parent.parent.parent / ".venv" / "bin" / "python"),

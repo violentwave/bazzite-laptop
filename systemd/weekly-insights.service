@@ -3,7 +3,7 @@ Description=Weekly AI Insights Generator
 
 [Service]
 Type=oneshot
-ExecStart=/var/home/lch/projects/bazzite-laptop/.venv/bin/python /var/home/lch/projects/bazzite-laptop/scripts/weekly-insights.py
+ExecStart=/home/lch/projects/bazzite-laptop/.venv/bin/python scripts/generate-weekly-insights.py
 WorkingDirectory=/var/home/lch/projects/bazzite-laptop
 Environment="PATH=/var/home/lch/projects/bazzite-laptop/.venv/bin:/usr/bin"
 Environment="PYTHONPATH=/var/home/lch/projects/bazzite-laptop"

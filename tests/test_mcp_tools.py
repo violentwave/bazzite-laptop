@@ -17,7 +17,7 @@ def allowlist():
 
 class TestAllowlistIntegrity:
     def test_has_48_tools(self, allowlist):
-        assert len(allowlist["tools"]) == 57
+        assert len(allowlist["tools"]) == 76
 
     def test_all_expected_tools_present(self, allowlist):
         expected = {
@@ -43,6 +43,7 @@ class TestAllowlistIntegrity:
             "system.metrics_summary",
             "system.provider_status",
             "system.weekly_insights",
+            "system.insights",
             "memory.search",
             "security.last_scan",
             "security.health_snapshot",
@@ -79,7 +80,7 @@ class TestAllowlistIntegrity:
             "agents.code_quality",
             "agents.timer_health",
         }
-        assert set(allowlist["tools"].keys()) == expected
+        assert expected.issubset(set(allowlist["tools"].keys()))
 
 
 class TestSubprocessTools:

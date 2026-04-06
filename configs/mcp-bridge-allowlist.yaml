@@ -505,6 +505,14 @@ tools:
         default: 4
         required: false
 
+  system.insights:
+    description: "Generate on-demand AI layer insights: cache stats, provider latency, budget usage, recent memories"
+    source: python
+    module: ai.insights
+    function: generate_on_demand
+    readOnly: false
+    args: null
+
   code.impact_analysis:
     description: "Analyze the impact of code changes on dependent modules and tests"
     source: python

@@ -24,7 +24,7 @@ DEFAULT_BIND = "127.0.0.1"
 DEFAULT_PORT = int(__import__("os").environ.get("MCP_BRIDGE_PORT", "8766"))
 
 # Number of tools in the allowlist (excludes health endpoint itself)
-_TOOL_COUNT = 75
+_TOOL_COUNT = 76
 
 
 def _assert_localhost(bind: str) -> None:
@@ -130,6 +130,7 @@ def create_app():
         "memory.search": {"readOnlyHint": True},
         "system.provider_status": {"readOnlyHint": True, "idempotentHint": True},
         "system.weekly_insights": {"readOnlyHint": True, "idempotentHint": True},
+        "system.insights": {"readOnlyHint": False, "idempotentHint": False},
     }
 
     # Load tool definitions from the allowlist
@@ -333,10 +334,9 @@ def create_app():
                 _tn=tool_name,
             ):
                 try:
-                    from ai.insights import InsightsEngine
+                    from ai.insights import get_engine
 
-                    engine = InsightsEngine()
-                    insights = engine.get_latest_insights(limit=limit)
+                    insights = get_engine().get_cached_insights(kind="weekly")[:limit]
                     return {"insights": insights, "count": len(insights)}
                 except Exception as e:
                     return {"error": str(e), "insights": [], "count": 0}
