@@ -23,8 +23,22 @@ logger = logging.getLogger("ai.mcp_bridge")
 DEFAULT_BIND = "127.0.0.1"
 DEFAULT_PORT = int(__import__("os").environ.get("MCP_BRIDGE_PORT", "8766"))
 
+
+def _count_tools() -> int:
+    """Count tools dynamically from allowlist at import time."""
+    try:
+        from pathlib import Path
+
+        cfg = Path(__file__).parent.parent.parent / "configs" / "mcp-bridge-allowlist.yaml"
+        with open(cfg) as f:
+            data = yaml.safe_load(f)
+        return len(data.get("tools", {}))
+    except Exception:
+        return 0
+
+
 # Number of tools in the allowlist (excludes health endpoint itself)
-_TOOL_COUNT = 76
+_TOOL_COUNT = _count_tools()
 
 
 def _assert_localhost(bind: str) -> None:

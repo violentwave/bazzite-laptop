@@ -59,7 +59,7 @@
             ┌───────────▼──┐ ┌─▼──────────────────┐
              │  MCP Bridge  │ │  LLM Proxy          │
               │  :8766 FastMCP  │ │  :8767 OpenAI-compat│
-               │  79 tools       │ │  6 cloud providers  │
+               │  82 tools       │ │  6 cloud providers  │
             └──┬──┬──┬──┬─────┘ └──┬──────────────────┘
              │  │  │  │          │
     ┌────────┘  │  │  └───┐     │  Health-weighted routing
@@ -94,7 +94,7 @@ Key constraints:
 
 ---
 
-## MCP Tools (79)
+## MCP Tools (82)
 
 Source: `configs/mcp-bridge-allowlist.yaml` + tools registered directly in server.py.
 
@@ -116,7 +116,7 @@ Source: `configs/mcp-bridge-allowlist.yaml` + tools registered directly in serve
 > **Phase 39:** Added `system.dep_audit`, `system.dep_audit_history` — pip-audit vulnerability scanning + SBOM generation.
 > **Phase 40:** Added `system.perf_metrics` — real-time performance metrics snapshot.
 
-### system.* (24 tools)
+### system.* (33 tools)
 
 | Tool | Source | Args | Description |
 |------|--------|------|-------------|
@@ -146,7 +146,7 @@ Source: `configs/mcp-bridge-allowlist.yaml` + tools registered directly in serve
 | `system.create_tool` | python: `ai.tools.builder` | `name`, `description`, `handler_code`, `parameters`, `created_by` | Create a dynamic tool with safety validation |
 | `system.list_dynamic_tools` | python: `ai.tools.builder` | — | List all persisted dynamic tools |
 
-### security.* (16 tools)
+### security.* (15 tools)
 
 | Tool | Source | Args | Description |
 |------|--------|------|-------------|
@@ -167,7 +167,7 @@ Source: `configs/mcp-bridge-allowlist.yaml` + tools registered directly in serve
 | `security.alert_summary` | python: `ai.security.alerts` | — | Proactive security alerts: active CVEs, stale scans, release advisories, deduplication state |
 | `security.provider_status` | python: `ai.provider_intel` | — | Per-provider health, latency, error rates, and cost |
 
-### knowledge.* (5 tools)
+### knowledge.* (6 tools)
 
 | Tool | Source | Args | Description |
 |------|--------|------|-------------|
@@ -267,8 +267,8 @@ Source: `configs/mcp-bridge-allowlist.yaml` + tools registered directly in serve
 
 | Metric | Value |
 |--------|-------|
-| MCP tools | 76 (+ 1 health endpoint) |
-| Systemd timers | 21 |
+| MCP tools | 82 (+ 1 health endpoint) |
+| Systemd timers | 22 |
 | LanceDB tables | 23 |
 | Tests | ~1816 |
 | Cloud LLM providers | 6 |

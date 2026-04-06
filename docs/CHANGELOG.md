@@ -7,6 +7,35 @@ Bazzite security/gaming system.
 
 ---
 
+## Docs Sync — Performance Docs Rebaseline (2026-04-06)
+
+### Changes
+- **PERFORMANCE-ANALYSIS.md**: Refreshed from 956-line analysis to current repo state
+  - Moved implemented items to "Completed" section
+  - Kept only genuinely open opportunities
+  - Added current measurement tool references
+- **PERFORMANCE-SUMMARY.md**: Simplified to verified status table
+
+### Current State
+- Core performance infrastructure implemented (P34)
+- Parallel RAG, health caching, rate limiter, metrics all in place
+- Remaining work: cache size limits, schema caching, deque optimization
+
+---
+
+## Docs Sync — Truth Reconciliation (2026-04-06)
+
+### Changes
+- **AGENT.md**: Updated tool counts (79→82), timer count (21→22), namespace counts
+- **USER-GUIDE.md**: Updated tool count (48→82), health check expectation
+- **newelle-system-prompt.md**: Fixed tool count (69→82), timer count (16→22), removed duplicate knowledge.* entries
+- **newelle-skills/**: All 54 referenced tools validated against allowlist — no changes needed
+
+### Current State
+- MCP tools: 82 | Timers: 22 | Namespaces: 11
+
+---
+
 ## Phase P24–P28 — Metrics, Memory, Provider Intel, Insights, Alerts (2026-04-06)
 
 ### Delivered

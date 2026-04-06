@@ -1002,3 +1002,112 @@ async def _execute_python_tool(tool_name: str, tool_def: dict, args: dict) -> st
     except Exception as e:
         logger.error("Tool '%s' failed: %s", tool_name, e)
         return f"[Tool error: {e}]"
+
+
+async def handle_intel_scrape_now(args: dict) -> dict:
+    """Trigger intelligence scrape from all configured sources."""
+    try:
+        from pathlib import Path
+
+        from ai.intel_scraper import IntelScraper  # noqa: PLC0415
+
+        scraper = IntelScraper()
+        output_dir = str(Path.home() / "security" / "intel")
+        summary = scraper.run_all(output_dir)
+        return {"status": "ok", "data": summary}
+    except Exception as e:
+        return {"status": "error", "error": str(e)}
+
+
+async def handle_dep_scan(args: dict) -> dict:
+    """Scan venv dependencies for known vulnerabilities."""
+    try:
+        import json
+        from pathlib import Path
+
+        from ai.system.dep_scanner import DepVulnScanner  # noqa: PLC0415
+
+        scanner = DepVulnScanner()
+        venv = str(Path.home() / "projects" / "bazzite-laptop" / ".venv")
+        output_dir = str(Path.home() / "security" / "intel" / "dependencies")
+        report_path = scanner.run(venv, output_dir)
+        with open(report_path) as f:
+            return {"status": "ok", "data": json.load(f)}
+    except Exception as e:
+        return {"status": "error", "error": str(e)}
+
+
+async def handle_test_analysis(args: dict) -> dict:
+    """Analyze pytest output for failure patterns."""
+    try:
+        import json
+        from pathlib import Path
+
+        from ai.system.test_analyzer import TestFailureAnalyzer  # noqa: PLC0415
+
+        inp = args.get("input", "")
+        if not inp:
+            return {"status": "error", "error": "input required"}
+        analyzer = TestFailureAnalyzer()
+        output_dir = str(Path.home() / "security" / "intel" / "tests")
+        report_path = analyzer.run(inp, output_dir)
+        with open(report_path) as f:
+            return {"status": "ok", "data": json.load(f)}
+    except Exception as e:
+        return {"status": "error", "error": str(e)}
+
+
+async def handle_perf_profile(args: dict) -> dict:
+    """Run performance profiler for LLM, MCP, file I/O, LanceDB, and system."""
+    try:
+        from pathlib import Path
+
+        from ai.system.perf_profiler import PerfProfiler  # noqa: PLC0415
+
+        skip = args.get("skip", "")
+        skip_list = skip.split(",") if skip else []
+
+        profiler = PerfProfiler()
+        output_dir = str(Path.home() / "security" / "metrics")
+        report_path = profiler.run(output_dir, skip=skip_list)
+
+        import json
+
+        with open(report_path) as f:
+            data = json.load(f)
+        return {"status": "ok", "data": data, "report_path": report_path}
+    except Exception as e:
+        return {"status": "error", "error": str(e)}
+
+
+async def handle_mcp_audit(args: dict) -> dict:
+    """Audit MCP bridge allowlist for missing handlers."""
+    try:
+        from pathlib import Path
+
+        from ai.system.mcp_generator import MCPToolGenerator  # noqa: PLC0415
+
+        tool_name = args.get("tool_name")
+        project_root = str(Path.home() / "projects" / "bazzite-laptop")
+        gen = MCPToolGenerator(project_root)
+
+        if tool_name:
+            result = gen.validate_tool(tool_name)
+        else:
+            result = gen.audit_all_tools()
+
+        return {"status": "ok", "data": result}
+    except Exception as e:
+        return {"status": "error", "error": str(e)}
+
+
+async def handle_intel_ingest_pending(args: dict) -> dict:
+    """Ingest pending intel JSONL into LanceDB RAG."""
+    try:
+        from ai.system.ingest_pipeline import ingest_intel_to_rag  # noqa: PLC0415
+
+        intel_dir = args.get("intel_dir")
+        result = ingest_intel_to_rag(intel_dir)
+        return {"status": "ok", "data": result}
+    except Exception as e:
+        return {"status": "error", "error": str(e)}

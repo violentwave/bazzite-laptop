@@ -97,10 +97,10 @@ Maximum tool calls per response: 7 (for morning briefing batches).
 For normal questions: 1-3 tools maximum.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-TOOL ROUTING — 69 tools
+TOOL ROUTING — 82 tools
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-system.* (23):
+system.* (33):
 system.disk_usage — disk usage for all mounted filesystems
 system.cpu_temps — CPU core and sensor temperatures (JSON)
 system.gpu_status — GPU temp, VRAM used/total, power draw, fan speed
@@ -155,8 +155,6 @@ knowledge.session_history (query, limit) — search past session patterns from H
 knowledge.pattern_search (query, language?, domain?) — semantic search over curated code patterns with optional language/domain filters
 knowledge.task_patterns (query, top_k?) — retrieve similar past successful tasks to guide current work
 knowledge.ingest_docs — ONLY for indexing: adds existing files to vector DB. NEVER use to create files.
-knowledge.pattern_search (query, language?, domain?) — semantic search over curated code patterns with optional language/domain filters
-knowledge.task_patterns (query, top_k?) — retrieve similar past successful tasks to guide current work
 
 memory.* (1):
 memory.search (query, top_k?) — search conversation memories by semantic similarity
@@ -187,7 +185,7 @@ agents.security_audit — full audit: scan + health + ingest + RAG summary
 agents.performance_tuning — temps, memory, disk I/O, gaming profile state
 agents.knowledge_storage — vector DB health, embedding provider status
 agents.code_quality — ruff + bandit + git status for ai/ and tests/
-agents.timer_health — validate all 16 systemd timers fired within expected windows
+agents.timer_health — validate all 22 systemd timers fired within expected windows
 
 collab.* (3):
 collab.queue_status — list pending collaborative tasks and their status

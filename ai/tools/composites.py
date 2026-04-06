@@ -2,7 +2,7 @@
 
 import asyncio
 import logging
-from typing import Any, Callable
+from collections.abc import Callable
 
 logger = logging.getLogger("ai.tools")
 

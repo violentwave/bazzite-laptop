@@ -2,9 +2,8 @@
 
 import json
 import logging
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import Optional
 
 import lancedb
 import pyarrow as pa
@@ -18,7 +17,7 @@ logger = logging.getLogger("ai.workflows")
 class WorkflowStore:
     """LanceDB-backed workflow storage."""
 
-    def __init__(self, db_path: Optional[Path] = None):
+    def __init__(self, db_path: Path | None = None):
         self.db_path = db_path or VECTOR_DB_DIR
         self.db_path.mkdir(parents=True, exist_ok=True)
         self._db = lancedb.connect(str(self.db_path))
@@ -53,16 +52,16 @@ class WorkflowStore:
         name: str,
         description: str,
         steps: list[dict],
-        schedule: Optional[str] = None,
+        schedule: str | None = None,
         trigger_type: str = "manual",
-        trigger_config: Optional[dict] = None,
+        trigger_config: dict | None = None,
     ) -> str:
         """Save a workflow."""
         import uuid
 
         workflow_id = str(uuid.uuid4())
 
-        timestamp = datetime.now(timezone.utc).isoformat()
+        timestamp = datetime.now(UTC).isoformat()
 
         try:
             vector = embed(f"{name} {description}")
@@ -89,7 +88,7 @@ class WorkflowStore:
 
         return workflow_id
 
-    def get_workflow(self, workflow_id: str) -> Optional[dict]:
+    def get_workflow(self, workflow_id: str) -> dict | None:
         """Get a workflow by ID."""
         try:
             df = self._table.to_pandas()
@@ -195,7 +194,7 @@ class WorkflowStore:
             logger.warning(f"Failed to enable workflow: {e}")
 
 
-_store_instance: Optional[WorkflowStore] = None
+_store_instance: WorkflowStore | None = None
 
 
 def get_workflow_store() -> WorkflowStore:

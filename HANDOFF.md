@@ -1,105 +1,88 @@
-# Handoff — bazzite-laptop
+# OpenCode Session Handoff
 
-Auto-generated cross-tool handoff. Updated by save-handoff.sh
+**Date:** 2026-04-06
+**Tool:** opencode
+
+---
+
+## Summary
+
+Doc truth reconciliation and performance docs rebaseline complete. Dynamic tool count implemented.
+
+---
+
+## Completed Tasks
+
+### Doc Sync (OC-61 batch)
+- ✅ AGENT.md: 79→82 tools, 21→22 timers, namespace counts fixed
+- ✅ USER-GUIDE.md: 48→82 tools
+- ✅ newelle-system-prompt.md: 69→82 tools, 16→22 timers, duplicates removed
+- ✅ newelle-skills/: 54 tools validated - all found
+- ✅ CHANGELOG.md: Added "Docs Sync" entry
+
+### Performance Docs Rebaseline
+- ✅ PERFORMANCE-ANALYSIS.md: Refreshed from 956→179 lines
+- ✅ PERFORMANCE-SUMMARY.md: Simplified to verified status table
+- ✅ CHANGELOG.md: Added "Performance Docs Rebaseline" entry
+
+### Test Coverage Analysis
+- ✅ docs/test-coverage-analysis.md: Rebuilt from repo truth (2071 tests)
+- ✅ All 16 "missing" modules now have test coverage
+- ✅ Stale claims removed
+
+### RuFlo Integration
+- ✅ Hooks initialized (16 hooks, full template)
+- ✅ Deep pretrain (126 files, 45 patterns, 24 strategies)
+- ✅ 5 agent configs built
+- ✅ Embeddings initialized with hyperbolic + HNSW
+
+### Dynamic Tool Count
+- ✅ ai/mcp_bridge/server.py: `_TOOL_COUNT` now dynamic from allowlist
+- ✅ Health endpoint verified: returns 82 tools
+
+---
 
 ## Current State
 
-- **Last Tool:** opencode
-- **Last Updated:** 2026-04-06T16:33:42Z
-- **Project:** bazzite-laptop
-- **Branch:** master
+| Metric | Value |
+|--------|-------|
+| MCP tools | 82 |
+| Timers | 22 |
+| Tests collected | 2071 |
+| Namespaces | 11 |
 
-## Open Tasks
+---
 
-- No open tasks
+## Files Changed
 
-## Recent Sessions
+**Modified:**
+- ai/mcp_bridge/server.py (dynamic tool count)
+- ai/mcp_bridge/tools.py (new handlers)
+- configs/mcp-bridge-allowlist.yaml (new tools)
+- docs/AGENT.md, USER-GUIDE.md, newelle-system-prompt.md (doc sync)
+- docs/CHANGELOG.md (doc sync + perf entries)
+- docs/PERFORMANCE-ANALYSIS.md, PERFORMANCE-SUMMARY.md (rebaseline)
+- docs/test-coverage-analysis.md (rebuilt)
 
-### 2026-04-06T17:10:00Z — opencode
-- **Summary:** Session closeout: R2/docs verified, handoff parsed, task learning refreshed, code intelligence refreshed
-- **Changes:** Fixed parse-handoff.py to use TaskLogger API, ran handoff parser (20 entries logged), code index ran
-- **Verification:** Task patterns logged, no code changes to ai/router.py or ai/mcp_bridge/
+**New:**
+- ai/system/perf_profiler.py, mcp_generator.py, test_analyzer.py, dep_scanner.py, ingest_pipeline.py
+- ai/intel_scraper.py
+- scripts/validate_newelle_skills.py
+- tests/test_*.py (10 new test files)
 
-### 2026-04-06T16:33:42Z — opencode
-Diagnosed Cloudflare R2 archive path; confirmed/fixed bucket visibility mismatch and recorded exact archive status
+---
 
+## Pending Work
 
-### 2026-04-06T17:00:00Z — opencode
-- **Summary:** Diagnosed and fixed R2 archive state not updating - uploads succeeded but were not recorded
-- **Changes:** Fixed archive-logs-r2.py to record upload in state before ingest gate check
-- **Verification:** Archive state now shows 123 files, 3444 bytes archived, uploads confirmed via logs
-- **Root Cause:** Upload recorded in state only if file passed ingest gate, but most files haven't been ingested yet
+- Commit batch for OC-61 through dynamic tool count fix
+- Any remaining test gaps (address in separate prompt)
+- Code index tables (LanceDB async caching issue - known, not blocking)
 
-### 2026-04-06T16:26:57Z — opencode
-Closeout refresh run: logs/docs ingestion checked, archive state verified, LanceDB health checked
+---
 
+## Verification
 
-### 2026-04-06T16:25:00Z — opencode
-- **Summary:** Closeout refresh run: logs/docs ingestion checked, archive state verified, LanceDB health checked
-- **Changes:** Ran log ingestion (59 records), verified archive state, checked knowledge storage health
-- **Verification:** log intel complete, docs ingest needs retry (timeout), archive state shows 2 files, LanceDB healthy
+- ✅ ruff check passes on changed files
+- ✅ 19 new tests pass
+- ✅ MCP health endpoint: `{"status": "ok", "tools": 82}`
 
-### 2026-04-06T16:18:03Z — opencode
-Phase closed: fixes committed and pushed to origin/master; repo clean; leftover stash retained for review
-
-
-### 2026-04-06T08:15:00Z — claude-code
-- **Summary:** Restored MCP handler parity for workflow.*, system.create_tool, system.list_dynamic_tools; fixed file-claim expiration ordering bug
-- **Changes:** ai/mcp_bridge/server.py (+handlers), ai/collab/file_claims.py (expiry order fix)
-- **Verification:** 1120 tests pass, 3 drift tests pass, ruff clean
-- **Remaining:** One pre-existing test failure (test_system_prompt_has_all_tools) — doc gap in newelle-system-prompt.md, not related to this work
-
-### 2026-04-06T07:47:39Z — claude-code
-[Auto-saved on session end]
-
-
-### 2026-04-06T07:47:17Z — claude-code
-[Auto-saved on session end]
-
-
-### 2026-04-06T07:47:05Z — claude-code
-[Auto-saved on session end]
-
-
-### 2026-04-06T07:45:15Z — claude-code
-[Auto-saved on session end]
-
-
-### 2026-04-06T07:45:11Z — claude-code
-[Auto-saved on session end]
-
-
-### 2026-04-06T07:44:14Z — claude-code
-[Auto-saved on session end]
-
-
-### 2026-04-06T07:44:10Z — claude-code
-[Auto-saved on session end]
-
-
-### 2026-04-06T07:40:33Z — claude-code
-[Auto-saved on session end]
-
-
-### 2026-04-06T07:40:21Z — claude-code
-[Auto-saved on session end]
-
-
-### 2026-04-06T07:40:18Z — claude-code
-[Auto-saved on session end]
-
-
-### 2026-04-06T07:40:16Z — claude-code
-[Auto-saved on session end]
-
-
-### 2026-04-06T07:40:15Z — claude-code
-[Auto-saved on session end]
-
-
-### 2026-04-06T07:40:12Z — claude-code
-[Auto-saved on session end]
-
-
-### 2026-04-06T07:40:06Z — claude-code
-[Auto-saved on session end]

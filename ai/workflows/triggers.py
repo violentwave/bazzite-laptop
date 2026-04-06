@@ -2,8 +2,7 @@
 
 import asyncio
 import logging
-from pathlib import Path
-from typing import Callable, Optional
+from collections.abc import Callable
 
 logger = logging.getLogger("ai.workflows")
 
@@ -21,7 +20,7 @@ class FileWatcher:
     def __init__(self, paths: list[str], callback: Callable):
         self.paths = paths
         self.callback = callback
-        self._observer: Optional[Observer] = None
+        self._observer: Observer | None = None
         self._handlers = []
 
     def start(self) -> None:
@@ -65,7 +64,7 @@ class EventBus:
         self._subscribers: dict[str, list[Callable]] = {}
         self._queue: asyncio.Queue = asyncio.Queue()
         self._running = False
-        self._task: Optional[asyncio.Task] = None
+        self._task: asyncio.Task | None = None
 
     def subscribe(self, event_type: str, handler: Callable) -> None:
         """Subscribe to an event type."""
@@ -91,7 +90,7 @@ class EventBus:
                             handler(event["data"])
                     except Exception as e:
                         logger.error(f"Event handler error: {e}")
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 continue
 
     def start(self) -> None:

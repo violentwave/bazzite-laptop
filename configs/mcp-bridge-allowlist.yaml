@@ -738,4 +738,88 @@ tools:
         default: 30
         max: 30
 
+  intel.scrape_now:
+    description: "Trigger intelligence scrape: GitHub releases, CISA KEV, NVD CVEs, Fedora RSS"
+    source: python
+    module: ai.mcp_bridge.tools
+    function: handle_intel_scrape_now
+    annotations:
+      readOnly: false
+      destructive: false
+      openWorld: true
+
+  system.dep_scan:
+    description: "Scan .venv Python dependencies for known vulnerabilities via OSV API"
+    source: python
+    module: ai.mcp_bridge.tools
+    function: handle_dep_scan
+    annotations:
+      readOnly: true
+      destructive: false
+      openWorld: true
+
+  system.test_analysis:
+    description: "Analyze pytest output for failure patterns and actionable fix hints"
+    source: python
+    module: ai.mcp_bridge.tools
+    function: handle_test_analysis
+    args:
+      input:
+        type: str
+        required: true
+        description: "pytest -v output text or path to JSON report"
+        max_length: 50000
+    annotations:
+      readOnly: true
+      destructive: false
+      openWorld: false
+
+  system.perf_profile:
+    description: "Run performance profiler for LLM, MCP tools, file I/O, LanceDB, and system metrics"
+    source: python
+    module: ai.mcp_bridge.tools
+    function: handle_perf_profile
+    args:
+      skip:
+        type: str
+        required: false
+        description: "Comma-separated components to skip (llm,mcp,file_io,lancedb,system)"
+        max_length: 100
+    annotations:
+      readOnly: true
+      destructive: false
+      openWorld: false
+
+  system.mcp_audit:
+    description: "Audit MCP bridge tool allowlist for missing handlers and validation issues"
+    source: python
+    module: ai.mcp_bridge.tools
+    function: handle_mcp_audit
+    args:
+      tool_name:
+        type: str
+        required: false
+        description: "Specific tool to validate (omit for full audit)"
+        max_length: 100
+    annotations:
+      readOnly: true
+      destructive: false
+      openWorld: false
+
+  intel.ingest_pending:
+    description: "Ingest pending scraped intelligence into LanceDB RAG knowledge base"
+    source: python
+    module: ai.mcp_bridge.tools
+    function: handle_intel_ingest_pending
+    args:
+      intel_dir:
+        type: str
+        required: false
+        description: "Path to intel directory (default: ~/security/intel)"
+        max_length: 200
+    annotations:
+      readOnly: false
+      destructive: false
+      openWorld: false
+
 

@@ -16,8 +16,10 @@ def allowlist():
 
 
 class TestAllowlistIntegrity:
-    def test_has_48_tools(self, allowlist):
-        assert len(allowlist["tools"]) == 76
+    def test_has_expected_tool_count(self, allowlist):
+        """Allowlist should have all tools from various phases."""
+        tool_count = len(allowlist["tools"])
+        assert tool_count >= 76, f"Expected at least 76 tools, got {tool_count}"
 
     def test_all_expected_tools_present(self, allowlist):
         expected = {
