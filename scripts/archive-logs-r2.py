@@ -311,7 +311,7 @@ def archive_logs(
             uploaded += 1
             bytes_this_run += compressed_size
 
-            # Record successful upload in archive state.
+            # Always record successful upload in archive state (before ingest check).
             archive_state["archived_files"][filepath.name] = {
                 "r2_key": r2_key,
                 "archived_at": now_iso,
