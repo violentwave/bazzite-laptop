@@ -71,17 +71,16 @@ def main():
             continue
 
         try:
-            from ai.learning.task_logger import log_success
+            from ai.learning.task_logger import TaskLogger
 
+            tl = TaskLogger()
             pattern = entry_to_task_pattern(entry)
-            log_success(
-                task_type=pattern["task_type"],
-                prompt=pattern["prompt"],
-                result=pattern["result"],
-                success=pattern["success"],
-                duration_seconds=pattern["duration_seconds"],
-                tokens_used=pattern["tokens_used"],
-                metadata=pattern.get("metadata"),
+            tl.log_success(
+                description=pattern.get("prompt", "")[:500],
+                approach=pattern.get("task_type", "handoff"),
+                outcome=pattern.get("result", "")[:500],
+                phase="P31",
+                duration_minutes=int(pattern.get("duration_seconds", 0) / 60),
             )
             logged_count += 1
         except Exception as e:
