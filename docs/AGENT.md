@@ -278,33 +278,28 @@ Source: `configs/mcp-bridge-allowlist.yaml` + tools registered directly in serve
 | **P39** | Dependency Audit | +2 | `dep-audit.timer` (Weekly) | — | `ai/system/dep_audit.py` |
 | **P40** | Performance Round 2 + Observability | +1 | `metrics-compact.timer` | — | `ai/metrics.py` |
 
-### Current State (Post-P40)
+### Current State (Post-P50)
 
 | Metric | Value |
 |--------|-------|
-| MCP tools | 82 (+ 1 health endpoint) |
-| Systemd timers | 22 |
-| LanceDB tables | 23 |
-| Tests | 1872 |
+| MCP tools | 83 (+ 1 health endpoint) |
+| Systemd timers | 23 |
+| LanceDB tables | 26 |
+| Tests | 2297+ |
 | Cloud LLM providers | 6 |
 | Threat intel APIs | 16 |
-| P24-P28 status | complete (2026-04-06) |
+| P44-P50 status | complete (2026-04-07) |
 
 ### Dependency Graph
 
 ```
-P24 (Observability) ← foundational — P26 and P28 read its data
-P25 (Memory) ← independent, extends RAG embeddings
-P26 (Provider Intel) ← requires P24 metrics
-P27 (Security Alerts) ← independent, uses existing threat intel
-P28 (Self-Improvement) ← aggregates P24 + P25 + P26 + P27
-P29 (Code Intel) ← independent, AST + grimp
-P30 (Workflows) ← requires P29 event system
-P31 (Collab) ← independent
-P32 (Test Intel) ← requires P29 traceability
-P33 (Plugin Factory) ← independent
-P39 (Dep Audit) ← independent
-P40 (Perf Round 2) ← extends P24
+P44 (Input Validation) ← foundational security layer
+P45 (Semantic Cache) ← LanceDB-backed similarity cache
+P46 (Token Budget) ← priority-tiered budget enforcement
+P47 (Code Patterns) ← multi-language pattern RAG
+P48 (Headless Briefing) ← autonomous security briefing + timer sentinel
+P49 (Conversation Memory) ← persistent Newelle memory
+P50 (Integration Tests) ← E2E validation
 ```
 
 ### Phase Implementation Rules (OpenCode)
