@@ -285,3 +285,26 @@ class SemanticCache:
             return 0
 
         return len(to_delete)
+
+    def stats(self) -> dict:
+        """Return cache statistics.
+
+        Returns:
+            Dictionary with cache statistics including entry count and database status.
+        """
+        try:
+            table = self._get_or_create_table()
+            count = table.count_rows()
+            return {
+                "entries": count,
+                "status": "active",
+                "table": TABLE_NAME,
+                "db_path": str(self._db_path),
+            }
+        except Exception as e:
+            logger.debug("Failed to get cache stats: %s", e)
+            return {
+                "entries": 0,
+                "status": "error",
+                "error": str(e),
+            }

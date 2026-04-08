@@ -21,6 +21,14 @@ import os
 import sentry_sdk
 from sentry_sdk.integrations.asyncio import AsyncioIntegration
 
+
+def _sentry_before_send(event, hint):
+    # Drop events generated during pytest runs
+    if os.environ.get("PYTEST_CURRENT_TEST") or os.environ.get("CI"):
+        return None
+    return event
+
+
 sentry_sdk.init(
     dsn=os.environ.get("SENTRY_DSN"),
     traces_sample_rate=0.05,
@@ -28,6 +36,7 @@ sentry_sdk.init(
     environment=os.environ.get("SENTRY_ENV", "production"),
     send_default_pii=False,
     ignore_errors=[KeyboardInterrupt, SystemExit],
+    before_send=_sentry_before_send,
 )
 
 import hashlib
