@@ -282,10 +282,10 @@ Source: `configs/mcp-bridge-allowlist.yaml` + tools registered directly in serve
 
 | Metric | Value |
 |--------|-------|
-| MCP tools | 83 (+ 1 health endpoint) |
-| Systemd timers | 23 |
+| MCP tools | 82 (+ 1 health endpoint) |
+| Systemd timers | 22 |
 | LanceDB tables | 26 |
-| Tests | 2297+ |
+| Tests | 2317+ |
 | Cloud LLM providers | 6 |
 | Threat intel APIs | 16 |
 | P44-P50 status | complete (2026-04-07) |
@@ -349,7 +349,7 @@ P50 (Integration Tests) ← E2E validation
 
 ---
 
-## Systemd Timers (21)
+## Systemd Timers (22)
 
 | Timer | Schedule | Purpose |
 |-------|----------|---------|
@@ -410,7 +410,7 @@ P50 (Integration Tests) ← E2E validation
 | `ai/rate_limiter.py` | Cross-script rate limiting with file locking |
 | `ai/key_manager.py` | API key presence checker |
 | `ai/mcp_bridge/server.py` | FastMCP server on :8766, tool registration |
-| `ai/mcp_bridge/tools.py` | Tool dispatch handlers for all 79 tools |
+| `ai/mcp_bridge/tools.py` | Tool dispatch handlers for all 82 tools |
 | `ai/mcp_bridge/tool_filter.py` | Server-side namespace/semantic tool filtering (P29-Prereq) |
 | `ai/threat_intel/` | VT, OTX, AbuseIPDB, GreyNoise, NVD, URLhaus, etc. (6 API modules) |
 | `ai/rag/` | LanceDB store, embedder, query engine, code query |
@@ -549,9 +549,9 @@ Agents working on this project share context via `HANDOFF.md` in the project roo
 Newelle (Flatpak GTK4) is the AI chat/voice UI for this system.
 
 - **LLM**: `http://127.0.0.1:8767/v1/` (`model="fast"`)
-- **MCP**: `http://127.0.0.1:8766/mcp` (79 tools)
+- **MCP**: `http://127.0.0.1:8766/mcp` (82 tools)
 - **System prompt**: `docs/newelle-system-prompt.md`
-- **Skills**: `docs/newelle-skills/` — 5 bundles: security, system, dev, gaming, agents
+- **Skills**: `docs/newelle-skills/` — 12 bundles: agents, code, collab, dev, gaming, intel, knowledge, logs, memory, security, system, workflow
 - **Morning briefing**: `docs/morning-briefing-prompt.md` (scheduled 9:30 AM)
 - **Wrapper scripts**: `scripts/newelle-exec.sh` (venv activation), `scripts/newelle-sudo.sh` (allowlisted sudo)
 
