@@ -60,7 +60,7 @@ _HEALTH_LOG_DIR = Path("/var/log/system-health")
 _SCAN_LOG_DIR = Path("/var/log/clamav-scans")
 
 
-# ── Key / config loading ───────────────────────────────────────────────────────
+# ── Key / config loading ────────────────────────────────────────────────────────────────────────────────
 
 
 def load_keys_env(keys_file: Path) -> dict[str, str]:
@@ -87,7 +87,7 @@ def load_config(config_file: Path) -> dict:
         return {}
 
 
-# ── Archive state ──────────────────────────────────────────────────────────────
+# ── Archive state ──────────────────────────────────────────────────────────────────────────────
 
 
 def load_archive_state() -> dict:
@@ -123,7 +123,7 @@ def save_archive_state(state: dict) -> None:
         raise
 
 
-# ── Ingest verification ────────────────────────────────────────────────────────
+# ── Ingest verification ─────────────────────────────────────────────────────────────────────────
 
 
 def load_ingest_state() -> dict:
@@ -163,7 +163,7 @@ def _file_is_ingested(filepath: Path, ingest_state: dict) -> bool:
     return True
 
 
-# ── File discovery ─────────────────────────────────────────────────────────────
+# ── File discovery ──────────────────────────────────────────────────────────────────────────────────
 
 
 def find_old_files(directory: Path, age_seconds: float) -> list[Path]:
@@ -178,7 +178,7 @@ def find_old_files(directory: Path, age_seconds: float) -> list[Path]:
     ]
 
 
-# ── Compression / upload ───────────────────────────────────────────────────────
+# ── Compression / upload ─────────────────────────────────────────────────────────────────────────────
 
 
 def compress_bytes(data: bytes) -> bytes:
@@ -213,18 +213,17 @@ def upload_file(
         compressed = compress_bytes(filepath.read_bytes())
         key = f"{category}/{filepath.name}.gz"
         s3_client.put_object(Bucket=bucket, Key=key, Body=compressed)
-        msg = f"UPLOADED {filepath} -> {key} ({len(compressed)} bytes)"
+        msg = f"UPLOADED {filepath.name} -> {key} ({len(compressed)} bytes)"
         _append_archive_log(archive_log, msg)
-        _LOG.info(msg)
+        _LOG.info("Uploaded %s to R2 (%d bytes compressed)", filepath.name, len(compressed))
         return True, key, len(compressed)
-    except Exception as exc:  # noqa: BLE001
-        msg = f"FAILED {filepath}: {exc}"
-        _append_archive_log(archive_log, msg)
-        _LOG.warning(msg)
+    except Exception:  # noqa: BLE001
+        _append_archive_log(archive_log, f"FAILED {filepath.name}")
+        _LOG.warning("Upload failed for %s", filepath.name, exc_info=False)
         return False, "", 0
 
 
-# ── Directory helpers ──────────────────────────────────────────────────────────
+# ── Directory helpers ──────────────────────────────────────────────────────────────────────────────
 
 
 def _build_scan_dirs(config: dict) -> list[tuple[Path, str]]:
@@ -240,7 +239,7 @@ def _build_scan_dirs(config: dict) -> list[tuple[Path, str]]:
     return result
 
 
-# ── Main archival routine ──────────────────────────────────────────────────────
+# ── Main archival routine ────────────────────────────────────────────────────────────────────────────
 
 
 def archive_logs(
@@ -268,10 +267,10 @@ def archive_logs(
     secret_key = keys.get(secret_key_env) or os.environ.get(secret_key_env, "")
 
     if not access_key:
-        _LOG.warning("%s not set — skipping R2 archiving.", access_key_env)
+        _LOG.warning("R2 access key not set — skipping R2 archiving.")
         return {"skipped": True, "reason": "no_access_key"}
     if not secret_key:
-        _LOG.warning("%s not set — skipping R2 archiving.", secret_key_env)
+        _LOG.warning("R2 secret key not set — skipping R2 archiving.")
         return {"skipped": True, "reason": "no_secret_key"}
 
     bucket = r2_cfg.get("bucket", "bazzite-logs")
@@ -329,7 +328,7 @@ def archive_logs(
             try:
                 filepath.unlink()
             except OSError as exc:
-                _LOG.warning("Could not delete %s after upload: %s", filepath, exc)
+                _LOG.warning("Could not delete %s after upload: %s", filepath.name, exc)
 
     # Persist archive state atomically.
     archive_state["last_archive_run"] = now_iso
