@@ -1,0 +1,3 @@
+creation_rules:
+  - path_regex: configs/.*\.enc$
+    pgp: "6CD80C886A02BA612ECEBB915AD7F142735A180F"
