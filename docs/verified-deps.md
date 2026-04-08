@@ -1,205 +1,182 @@
-# Verified Dependencies
-<!-- Last verified: 2026-04-03 | System: Acer Predator G3-571 | Bazzite 43 / Fedora Atomic -->
-
-All versions pinned or noted below were confirmed working on this machine.
-"AI layer" packages live in `.venv/`; system packages are managed by Bazzite / rpm-ostree.
-
----
-
-## Python Runtime
-
-| Item | Version | Notes |
-|------|---------|-------|
-| Python | 3.12.13 | Minimum 3.12 required (`pyproject.toml`) |
-| pip | 25.1.1 | In `.venv` |
-
----
-
-## AI Layer — Core (`.venv/`)
-
-These are the packages actively used by `ai/`, `tray/`, and `tests/`.
-
-| Package | Version | Used by |
-|---------|---------|--------|
-| litellm | 1.82.2 | `ai/router.py` — multi-provider LLM routing |
-| lancedb | 0.29.2 | `ai/rag/` — vector database for embeddings (FTS indexes added) |
-| fastmcp | 3.1.1 | `ai/mcp_bridge/server.py` — MCP server (3.2.0 upgrade blocked: no PyPI access) |
-| uvicorn | 0.42.0 | `ai/llm_proxy.py` — ASGI server for LLM proxy |
-| starlette | 0.52.1 | `ai/llm_proxy.py` — ASGI framework |
-| python-dotenv | 1.2.2 | `ai/config.py` — loads keys from `keys.env` |
-| PyYAML | 6.0.3 | `ai/router.py`, allowlist loading |
-| pydantic | 2.12.5 | Data validation throughout |
-| pydantic_core | 2.41.5 | Pydantic backend |
-| httpx | 0.28.1 | HTTP client (used by litellm, fastmcp) |
-| socksio | 1.0.0 | SOCKS proxy support for httpx in bubblewrap |
-| requests | 2.32.5 | `ai/threat_intel/` — threat intel API calls |
-| openai | 2.28.0 | litellm OpenAI-compatible provider support |
-| ollama | 0.6.1 | `ai/rag/` — emergency local embedding fallback only |
-| boto3 | 1.42.73 | `scripts/archive-logs-r2.py` — Cloudflare R2 log archiving |
-| cohere | 5.20.7 | `ai/rag/embedder.py` — Cohere rerank for RAG QA |
-| sentry-sdk | 2.55.0 | `ai/llm_proxy.py` — error reporting (optional, via SENTRY_DSN key) |
-| pillow | 12.1.1 | Image processing utilities |
-| vt-py | 0.22.0 | `ai/threat_intel/lookup.py`, `correlator.py` — VirusTotal Python SDK |
-
----
-
-## AI Layer — Dev / Test (`.venv/`)
-
-| Package | Version | Used by |
-|---------|---------|--------|
-| pytest | 9.0.2 | Test runner |
-| pytest-asyncio | 1.3.0 | Async test support |
-| ruff | 0.15.6 | Linter + formatter (also system tool) |
-| bandit | 1.9.4 | Security scanner (also system tool) |
-| pandas | 3.0.2 | `tests/` — anomaly query tests (optional; tests skip if unavailable) |
-| grimp | 3.14 | `ai/code_intel/parser.py` — Import graph analysis |
-| radon | 6.0.1 | `ai/code_intel/parser.py` — McCabe complexity scoring |
-| pydriller | 2.9 | `ai/code_intel/store.py` — Co-change mining from git history |
-| pytest-testmon | 2.2.0 | `tests/` — Selective test execution |
-| pytest-xdist | 3.8.0 | `tests/` — Parallel test execution (`-n 4`) |
-| pytest-timeout | — | `tests/` — 60s per-test timeout |
-| pytest-rerunfailures | — | `tests/` — Flaky test reruns (`--reruns 3`) |
-| mutmut | 3.5.0 | `tests/` — Mutation testing |
-| hypothesis | — | `tests/` — Property-based test generation |
-| watchdog | — | `ai/workflows/triggers.py` — inotify file watching |
-| pip-audit | — | `ai/system/depaudit.py` — Python dependency vulnerability scanning |
-
----
-
-## System Requirements (installed by rpm-ostree / Bazzite)
-
-These must exist on the host — they are **not** installed via pip or npm.
-
-| Tool | Version | Purpose |
-|------|---------|--------|
-| Python | 3.12.13 | Runtime |
-| ruff | 0.15.6 | Lint (VS Code task, CI) |
-| bandit | 1.9.4 | Security scan (VS Code task, CI) |
-| shellcheck | 0.11.0 | Shell script linting |
-| gpg (GnuPG) | 2.4.9 | Key management, sops decryption |
-| sops | 3.12.2 | Secrets encryption/decryption for `configs/keys.env.enc` |
-| ollama | 0.18.0 (client) | Local embedding inference (`nomic-embed-text`) |
-| Node.js | v25.8.1 | Claude Flow CLI, npm plugins |
-| npm | 11.11.0 | Package management for Claude Flow |
-
-> **Note:** `ollama --version` reports client 0.18.0; the Python `ollama` SDK in `.venv` is 0.6.1.
-> These version numbers are on different tracks — both are required.
-
----
-
-## Node.js Packages (`package.json`)
-
-| Package | Version | Purpose |
-|---------|---------|--------|
-| `@claude-flow/cli` | ^3.5.15 (dev) | RuFlo orchestration CLI |
-| `@claude-flow/plugin-code-intelligence` | file:plugins/code-intelligence | Semantic code search plugin |
-| `@claude-flow/plugin-test-intelligence` | file:plugins/test-intelligence | Predictive test selection plugin |
-| `agentic-flow` | ^2.0.7 | Agentic workflow runtime |
-| `vitest` | ^4.1.2 (dev) | Plugin test runner |
-| `vite` | ^6.1.6 (dev) | Plugin build tool |
-
----
-
-## LLM Providers (`configs/litellm-config.yaml`)
-
-All providers are free-tier unless noted. Keys stored in `~/.config/bazzite-ai/keys.env`.
-
-| Provider | Env Var | Task Types | Notes |
-|----------|---------|-----------|-------|
-| Google Gemini | `GEMINI_API_KEY` | fast, reason, batch, code, embed | Preferred for tool calling; Pro subscription |
-| Groq | `GROQ_API_KEY` | fast, reason, batch, code | Speed-first; free tier |
-| Mistral | `MISTRAL_API_KEY` | fast, reason, batch, code, embed | Codestral for code/batch; free tier |
-| OpenRouter | `OPENROUTER_API_KEY` | fast, reason, batch, code | Routes to Llama and Claude |
-| z.ai | `ZAI_API_KEY` | fast, reason, code | OpenAI-compatible at `api.z.ai`; paid |
-| Cerebras | `CEREBRAS_API_KEY` | fast, batch | Fallback; free tier |
-| Ollama (local) | — | embed | `nomic-embed-text`; emergency fallback only, no VRAM used in normal operation |
-
-**Provider chain order (health-weighted at runtime):**
-- `fast`: Gemini → Groq → Mistral → OpenRouter → z.ai → Cerebras
-- `reason`: Gemini → Groq → Mistral → OpenRouter(Claude) → z.ai
-- `batch`: Gemini → Groq → Mistral → OpenRouter → Cerebras
-- `code`: Gemini → Groq → Mistral(Codestral) → OpenRouter(Claude) → z.ai
-- `embed`: Gemini Embedding 001 (primary, free) → Cohere embed-english-v3.0 (fallback) → Ollama nomic-embed-text (emergency local)
-
----
-
-## Threat Intel APIs (`configs/ai-rate-limits.json`)
-
-Keys stored in `~/.config/bazzite-ai/keys.env`.
-
-| Service | Env Var | Free Limits | Used by |
-|---------|---------|------------|--------|
-| VirusTotal | `VT_API_KEY` | 4 rpm, 500 rpd | `ai/threat_intel/lookup.py` |
-| AbuseIPDB | `ABUSEIPDB_API_KEY` | 60 rpm, 1000 rpd | `ai/threat_intel/ip_lookup.py` |
-| AlienVault OTX | `OTX_API_KEY` | 166 rpm, 10 000/hr | `ai/threat_intel/lookup.py` |
-| GreyNoise | `GREYNOISE_API_KEY` | 5 rpm, 7 rpd | `ai/threat_intel/ip_lookup.py` |
-| Hybrid Analysis | `HYBRID_ANALYSIS_API_KEY` | 5 rpm, 200 rpd | `ai/threat_intel/sandbox.py` |
-| NVD (NIST) | `NVD_API_KEY` _(optional)_ | 50 per 30s (anon); higher with key | `ai/threat_intel/cve_scanner.py` |
-| OSV (Google) | _(none)_ | 30 rpm, 10 000 rpd | `ai/threat_intel/cve_scanner.py` |
-| CISA KEV | _(none)_ | No enforced limit (JSON feed) | `ai/threat_intel/cve_scanner.py` |
-| Shodan InternetDB | _(none)_ | No enforced limit | `ai/threat_intel/ip_lookup.py` |
-| MalwareBazaar | _(none)_ | No enforced limit | `ai/threat_intel/lookup.py` |
-| URLhaus | _(none)_ | No enforced limit | `ai/threat_intel/ioc_lookup.py` |
-| ThreatFox | _(none)_ | No enforced limit | `ai/threat_intel/ioc_lookup.py` |
-| CIRCL Hashlookup | _(none)_ | No enforced limit | `ai/threat_intel/ioc_lookup.py` |
-| GitHub Releases / GHSA | _(none)_ | 15 rpm, 500 rpd (anon) | `ai/system/release_watch.py` |
-| Fedora Bodhi | _(none)_ | 10 rpm, 500 rpd | `ai/system/fedora_updates.py` |
-| deps.dev | _(none)_ | 30 rpm, 5 000 rpd | `ai/system/pkg_intel.py` |
-
----
-
-## Venv Rebuild
-
-> **Use `requirements-ai.txt`** (not `requirements.txt`) for venv rebuilds.
-> `requirements.txt` was generated from the system Python and includes system packages
-> (Brlapi, cockpit, rpm-python, etc.) that cannot be pip-installed and will break `uv pip install`.
->
-> ```bash
-> uv pip install -r requirements-ai.txt
-> ```
-
----
-
-## Known Incompatibilities
-
-| Dependency | Issue | Workaround |
-|------------|-------|-----------|
-| `litellm`, `rich`, `python-dotenv` | Do not expose `__version__` attribute | Use `importlib.metadata.version("package-name")` instead |
-| `diskcache` | CVE-2025-69872 (pickle RCE) | Replaced with `ai/cache.py` (`JsonFileCache`) in Phase 11. No pickle, JSON-only. |
-| `litellm.Router` | Does **not** check `litellm.cache` via `router.completion()` without `cache_responses=True`; caching is at `litellm.completion()` level | Integration-level cache testing requires a real router, not mocks |
-| NVIDIA PRIME offload vars | `__NV_PRIME_RENDER_OFFLOAD`, `__GLX_VENDOR_LIBRARY_NAME`, `prime-run` **crash** Proton/Vulkan on GTX 1060 + Intel HD 630 with `nvidia-drm.modeset=1` | Never set these; games route to NVIDIA automatically via DXVK/Vulkan |
-| `vm.swappiness` | Value of 180 is intentionally high for ZRAM; do **not** lower it | Leave at 180 |
-| `/usr` modifications | Bazzite / Fedora Atomic uses an immutable OS; `sudo dnf install` and direct `/usr` edits do not survive updates | Use `rpm-ostree install` for system packages, Flatpak for apps |
-| `ai/router.py` import in MCP bridge | Importing `ai.router` in the MCP bridge process loads all API keys unscoped | The bridge (`ai/mcp_bridge/`) must never import `ai.router` |
-| `socksio` | Required for httpx SOCKS proxy support used by litellm inside bubblewrap sandbox | Installed explicitly; not auto-pulled by litellm |
-| composefs (100% disk) | Shows as 100% full on `df`; this is normal for the Fedora Atomic immutable OS overlay | Not a real disk issue |
-
----
-
-## Dependabot PR Triage (2026-04-06)
-
-`gh` CLI unavailable at triage time — PRs require manual merge via GitHub web UI.
-Current `requirements-ai.txt` already reflects these merged updates:
-
-| Package | Old → New | Category | Notes |
-|---------|-----------|----------|-------|
-| `requests` | 2.32.5 → 2.33.0 | **MERGED** | CVE-2026-25645 fix; already in `requirements-ai.txt` |
-| `cryptography` | 45.x → 46.0.6 | SAFE TO MERGE | Patch; already in `requirements-ai.txt` |
-| `filelock` | 3.24.x → 3.25.2 | SAFE TO MERGE | Patch; already in `requirements-ai.txt` |
-| `pillow` | 11.x → 12.1.1 | REVIEW NEEDED | Minor bump; already in `requirements-ai.txt` and tests pass |
-| `aiohttp` | 3.12.x → 3.13.5 | REVIEW NEEDED | Minor bump; transitive dep |
-| `certifi` | 2025.x → 2026.2.25 | SAFE TO MERGE | CA bundle update |
-| `urllib3` | 2.5.x → 2.6.3 | REVIEW NEEDED | Minor bump; already in `requirements-ai.txt` |
-| `charset-normalizer` | 3.3.x → 3.4.7 | SAFE TO MERGE | Patch; transitive |
-| `idna` | 3.10 → 3.11 | SAFE TO MERGE | Patch |
-
-Remaining ~8 PRs (protobuf, boto3, cohere, litellm, lancedb, pydantic, etc.):
-- **protobuf**: REVIEW NEEDED — check breaking API changes before merging
-- **boto3/botocore**: SAFE TO MERGE — patch bumps are always safe
-- **cohere**: REVIEW NEEDED — minor bumps may change embedding behavior
-- **litellm**: DEFER — litellm evolves fast; verify router API compatibility first
-- **lancedb**: DEFER — API changes between versions; verify with Context7 before upgrading
-- **pydantic**: SAFE TO MERGE — patch bumps only
-
-**Action required**: Merge SAFE and MERGED PRs via GitHub web UI. Run tests after each batch.
-`python -m pytest tests/ -x -q --tb=short` must pass (1872 tests) before pushing.
+aiofile==3.9.0
+aiofiles==25.1.0
+aiohappyeyeballs==2.6.1
+aiohttp==3.13.5
+aiosignal==1.4.0
+annotated-doc==0.0.4
+annotated-types==0.7.0
+anyio==4.13.0
+attrs==26.1.0
+authlib==1.6.9
+bandit==1.9.4
+beartype==0.22.9
+boltons==21.0.0
+boto3==1.42.73
+botocore==1.42.81
+bracex==2.6
+cachetools==7.0.5
+caio==0.9.25
+certifi==2026.2.25
+cffi==2.0.0
+charset-normalizer==3.4.7
+click==8.1.8
+click-option-group==0.5.9
+cohere==5.20.7
+colorama==0.4.6
+coverage==7.13.5
+cryptography==46.0.6
+cyclopts==4.10.1
+deprecation==2.1.0
+distro==1.9.0
+dnspython==2.8.0
+docstring-parser==0.17.0
+docutils==0.22.4
+email-validator==2.3.0
+exceptiongroup==1.2.2
+execnet==2.1.2
+face==26.0.0
+fastavro==1.12.1
+fastmcp==3.1.1
+fastuuid==0.14.0
+feedparser==6.0.12
+filelock==3.25.2
+frozenlist==1.8.0
+fsspec==2026.3.0
+gitdb==4.0.12
+gitpython==3.1.46
+glom==25.12.0
+googleapis-common-protos==1.74.0
+grimp==3.14
+h11==0.16.0
+hf-xet==1.4.3
+httpcore==1.0.9
+httpx==0.28.1
+httpx-sse==0.4.3
+huggingface-hub==1.8.0
+hypothesis==6.151.10
+idna==3.11
+importlib-metadata==8.7.1
+iniconfig==2.3.0
+jaraco-classes==3.4.0
+jaraco-context==6.1.2
+jaraco-functools==4.4.0
+jeepney==0.9.0
+jinja2==3.1.6
+jiter==0.13.0
+jmespath==1.1.0
+jsonref==1.1.0
+jsonschema==4.25.1
+jsonschema-path==0.4.5
+jsonschema-specifications==2025.9.1
+keyring==25.7.0
+lance-namespace==0.6.1
+lance-namespace-urllib3-client==0.6.1
+lancedb==0.29.2
+libcst==1.8.6
+linkify-it-py==2.1.0
+litellm==1.82.2
+lizard==1.21.3
+mando==0.7.1
+markdown-it-py==4.0.0
+markupsafe==3.0.3
+mcp==1.23.3
+mdit-py-plugins==0.5.0
+mdurl==0.1.2
+more-itertools==11.0.1
+multidict==6.7.1
+mutmut==3.5.0
+numpy==2.4.4
+ollama==0.6.1
+openai==2.28.0
+openapi-pydantic==0.5.1
+opentelemetry-api==1.37.0
+opentelemetry-exporter-otlp-proto-common==1.37.0
+opentelemetry-exporter-otlp-proto-http==1.37.0
+opentelemetry-instrumentation==0.58b0
+opentelemetry-instrumentation-requests==0.58b0
+opentelemetry-instrumentation-threading==0.58b0
+opentelemetry-proto==1.37.0
+opentelemetry-sdk==1.37.0
+opentelemetry-semantic-conventions==0.58b0
+opentelemetry-util-http==0.58b0
+otxv2==1.5.12
+packaging==26.0
+pandas==3.0.2
+pathable==0.5.0
+pathspec==1.0.4
+peewee==3.19.0
+pillow==12.1.1
+platformdirs==4.9.4
+pluggy==1.6.0
+propcache==0.4.1
+protobuf==6.33.6
+py-key-value-aio==0.4.4
+pyarrow==23.0.1
+pycparser==3.0
+pydantic==2.12.5
+pydantic-core==2.41.5
+pydantic-settings==2.13.1
+pydriller==2.9
+pygments==2.20.0
+pyjwt==2.12.1
+pyperclip==1.11.0
+pytest==9.0.3
+pytest-asyncio==1.3.0
+pytest-mock==3.15.1
+pytest-rerunfailures==16.1
+pytest-testmon==2.2.0
+pytest-timeout==2.4.0
+pytest-xdist==3.8.0
+python-dateutil==2.9.0.post0
+python-dotenv==1.2.2
+python-multipart==0.0.22
+pytz==2026.1.post1
+pyyaml==6.0.3
+radon==6.0.1
+referencing==0.37.0
+regex==2026.3.32
+requests==2.32.5
+rich==14.3.3
+rich-rst==1.3.2
+rpds-py==0.30.0
+ruamel-yaml==0.19.1
+ruamel-yaml-clib==0.2.14
+ruff==0.15.6
+s3transfer==0.16.0
+secretstorage==3.5.0
+semantic-version==2.10.0
+semgrep==1.157.0
+sentry-sdk==2.57.0
+setproctitle==1.3.7
+sgmllib3k==1.0.0
+shellingham==1.5.4
+six==1.17.0
+smmap==5.0.3
+sniffio==1.3.1
+socksio==1.0.0
+sortedcontainers==2.4.0
+sse-starlette==3.3.4
+starlette==0.52.1
+stevedore==5.7.0
+textual==8.2.2
+tiktoken==0.12.0
+tokenizers==0.22.2
+tomli==2.0.2
+tqdm==4.67.3
+typer==0.24.1
+types-pytz==2026.1.1.20260402
+types-requests==2.33.0.20260402
+typing-extensions==4.15.0
+typing-inspection==0.4.2
+uc-micro-py==2.0.0
+uncalled-for==0.2.0
+urllib3==2.6.3
+uvicorn==0.42.0
+vt-py==0.22.0
+watchdog==6.0.0
+watchfiles==1.1.1
+wcmatch==8.5.2
+websockets==16.0
+wrapt==1.17.3
+yarl==1.23.0
+zipp==3.23.0
