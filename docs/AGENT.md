@@ -510,7 +510,10 @@ uv pip install -r requirements-ai.txt  # Install/update deps
 
 **Python 3.12** in `.venv/` managed by `uv`. Key packages: litellm, lancedb, fastmcp, pydantic, httpx, requests, cohere, boto3, pillow, sentry-sdk. LLM response cache: `ai/cache.py` (JsonFileCache, zero-dep, no pickle).
 
-**Node.js v25** for RuFlo orchestration CLI (`@claude-flow/cli` v3.5.15).
+**Optional Desktop Dependencies**: Install with `uv pip install -e ".[tray]"`
+- **PySide6>=6.6**: Required for security tray application (`tray/security_tray_qt.py`)
+
+**Node.js v25** for RuFlo orchestration CLI (`@claude-flow/cli` v3.5.15) + 2 plugins (code-intelligence, test-intelligence).
 
 **System tools** (rpm-ostree): ruff, bandit, shellcheck, gpg, sops, ollama.
 
