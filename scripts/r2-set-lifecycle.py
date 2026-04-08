@@ -101,10 +101,10 @@ def main() -> int:
     secret_key = keys.get(secret_key_env) or os.environ.get(secret_key_env, "")
 
     if not access_key:
-        _LOG.error("%s not set — cannot configure R2 lifecycle", access_key_env)
+        _LOG.error("R2 access key not set — cannot configure R2 lifecycle")
         return 1
     if not secret_key:
-        _LOG.error("%s not set — cannot configure R2 lifecycle", secret_key_env)
+        _LOG.error("R2 secret key not set — cannot configure R2 lifecycle")
         return 1
 
     bucket = r2_cfg.get("bucket", "bazzite-logs")
