@@ -6,5 +6,5 @@ After=network-online.target
 Type=oneshot
 WorkingDirectory=%h/projects/bazzite-laptop
 ExecStart=%h/projects/bazzite-laptop/.venv/bin/python -m ai.intel_scraper --output-dir %h/security/intel
-StandardOutput=append:%h/security/intel/logs/scraper.log
-StandardError=append:%h/security/intel/logs/scraper.log
+StandardOutput=journal
+StandardError=journal
