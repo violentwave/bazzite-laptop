@@ -104,18 +104,27 @@ def test_zram_ingestion_and_query_e2e(tmp_path: Path):
     # STEP 4: Run ingestion pipeline with isolated DB
     # ============================================================
     from ai.rag.ingest_docs import ingest_files
-    from ai.rag.store import VectorStore
+    from ai.rag.store import VectorStore, get_store
 
     # Create isolated store instance
     test_store = VectorStore(db_path=test_vector_db)
 
     # Patch get_store to return our isolated instance
-    # (get_store is imported inside ingest_files, so we patch where it's used)
     from unittest.mock import patch
 
+    # Force get_store into ai.rag.ingest_docs module scope
+    import ai.rag.ingest_docs
+
+    ai.rag.ingest_docs.get_store = get_store
+
+    # Force Ollama as provider for tests (avoid rate-limited Cohere)
+    import ai.rag.embedder as embedder
+
+    # Now the patch will work
     with patch("ai.rag.store.get_store", return_value=test_store):
-        # Run ingestion (force=true to ensure re-ingest even if state exists)
-        result = ingest_files([test_doc], force=True)
+        with patch.object(embedder, "select_provider", return_value="ollama"):
+            # Run ingestion (force=true to ensure re-ingest even if state exists)
+            result = ingest_files([test_doc], force=True)
 
     logger.info(f"Ingestion result: {result}")
 
@@ -129,12 +138,18 @@ def test_zram_ingestion_and_query_e2e(tmp_path: Path):
     # ============================================================
     # STEP 5: Query the vector database for ZRAM information
     # ============================================================
+    # Inject get_store into ai.rag.query module for the patch to work
+    import ai.rag.embedder as embedder
+    import ai.rag.query
     from ai.rag.query import rag_query
+
+    ai.rag.query.get_store = get_store
 
     # Patch get_store for the query as well - patch at source where it's defined
     with patch("ai.rag.store.get_store", return_value=test_store):
-        # Query for ZRAM configuration
-        qr = rag_query("How do I configure ZRAM swap?", use_llm=False)
+        with patch.object(embedder, "select_provider", return_value="ollama"):
+            # Query for ZRAM configuration
+            qr = rag_query("How do I configure ZRAM swap?", use_llm=False)
 
     logger.info(f"Query returned answer length: {len(qr.answer)} chars")
     logger.info(f"Query returned {len(qr.context_chunks)} context chunks")
