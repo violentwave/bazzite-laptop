@@ -15,6 +15,7 @@ summary when complete.
 | `agents.performance_tuning` | Performance analysis: CPU/GPU temps, memory pressure, disk I/O, gaming profile state | none |
 | `agents.knowledge_storage` | Vector DB health report: table sizes, ingestion freshness, embedding provider status | none |
 | `agents.code_quality` | Code quality report: ruff + bandit results + git status summary for `ai/` and `tests/` | none |
+| `agents.timer_health` | Validate all 16 systemd timers fired within expected windows; returns per-timer status and health | none |
 
 ---
 
@@ -30,6 +31,8 @@ summary when complete.
 | "When was the vector DB last updated?" | `agents.knowledge_storage` |
 | "Any linting or security issues in the code?" | `agents.code_quality` |
 | "Run a code quality check" | `agents.code_quality` |
+| "Are all the systemd timers firing correctly?" | `agents.timer_health` |
+| "Check timer health" | `agents.timer_health` |
 
 ---
 

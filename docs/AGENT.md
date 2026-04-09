@@ -297,28 +297,7 @@ Module: `ai/orchestration/`
 
 The OrchestrationBus provides async pub/sub message dispatch between named agents. All 5 agents are pre-registered in the default bus via `get_default_bus()`.
 
-| Component | Purpose |
-|---|---|
-| `OrchestrationBus` | Async dispatcher with max_depth=5 circular handoff guard |
-| `AgentMessage` | Typed envelope: source, target, task_type, payload, correlation_id, priority |
-| `AgentResult` | Result envelope: success, data, error, duration_seconds |
-| `AgentRegistry` | asyncio.Lock-safe handler registry |
-| `BaseAgent` | ABC with `handle()` and `can_handle()` |
-| `TaskType` | 20 canonical task type string constants |
-
-**Named Workflows:**
-
-| Workflow | Pattern | Steps |
-|---|---|---|
-| `security_deep_scan` | Chain | timer_sentinel → security → knowledge |
-| `code_health_check` | Chain + payload_from | code_quality → performance → knowledge |
-| `morning_briefing_enriched` | Fan-out + collect | security + code_quality + performance + timer_sentinel → knowledge |
-
-**Rule:** `ai/orchestration/` NEVER imports `ai.router`. Pure asyncio, no threading.
-
----
-
-## Current State (Post-P53)
+### Current State (Post-P51)
 
 | Metric | Value |
 |--------|-------|
@@ -328,8 +307,33 @@ The OrchestrationBus provides async pub/sub message dispatch between named agent
 | Tests | 2193 |
 | Cloud LLM providers | 6 |
 | Threat intel APIs | 16 |
-| Orchestration agents | 5 |
-| P53 status | complete (2026-04-09) |
+| P44-P51 status | complete (2026-04-08) |
+
+### Dependency Graph
+
+```
+P44 (Input Validation) ← foundational security layer
+P45 (Semantic Cache) ← LanceDB-backed similarity cache
+P46 (Token Budget) ← priority-tiered budget enforcement
+P47 (Code Patterns) ← multi-language pattern RAG
+P48 (Headless Briefing) ← autonomous security briefing + timer sentinel
+P49 (Conversation Memory) ← persistent Newelle memory
+P50 (Integration Tests) ← E2E validation
+P51 (TBD) ←
+```
+
+### Phase Implementation Rules (OpenCode)
+
+1. **One phase at a time** — complete and commit before starting the next
+2. **Pre-flight every phase** — verify git clean, tests passing, ruff clean
+3. **Context7 before LanceDB code** — API patterns change between versions
+4. **ruff check after every file** — catch 5-space indentation immediately
+5. **Never modify ai/router.py and ai/mcp_bridge/ in the same prompt**
+6. **Always run full test suite** at end of phase, not just new tests
+7. **Update AGENT.md + CHANGELOG.md** counts at the end of every phase
+8. **Wrap metric/memory calls in try/except** — observability must never break core flow
+9. **Atomic writes** for all JSON output files (tmp + os.rename)
+10. **Secret redaction** via ai.security.inputvalidator before storing user text
 
 ---
 

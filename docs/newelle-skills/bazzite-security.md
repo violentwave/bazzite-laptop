@@ -27,6 +27,9 @@ instant; trigger operations start a background systemd job.
 | `security.cve_check` | CVE scan of installed packages (NVD + OSV + CISA KEV overlay) | none |
 | `security.sandbox_submit` | Submit a quarantine file to Hybrid Analysis sandbox | `file_path` (under quarantine/, required) |
 | `security.threat_summary` | Compiled threat summary from all agent/scan report directories | none |
+| `security.alert_summary` | Active security alerts: CVEs, stale scans, release advisories | none |
+| `security.correlate` | Cross-reference an IOC across all threat intel sources | `ioc` (required), `ioc_type` (required: hash/ip/url/cve) |
+| `security.recommend_action` | Generate response playbook for a threat finding | `finding_type` (required), `finding_id` (required) |
 | `logs.scan_history` | Last 10 ClamAV scan results with threat details | none |
 | `logs.anomalies` | Unacknowledged anomalies: threats detected, temperature spikes, disk issues | none |
 
@@ -51,6 +54,9 @@ instant; trigger operations start a background systemd job.
 | "What CVEs affect my system?" | `security.cve_check` |
 | "Submit suspicious file to sandbox" | `security.sandbox_submit` with `file_path="..."` |
 | "Give me a threat overview" | `security.threat_summary` |
+| "What active security alerts do I have?" | `security.alert_summary` |
+| "Check if CVE-2024-1234 affects my system" | `security.correlate` with `ioc="CVE-2024-1234", ioc_type="cve"` |
+| "What should I do about this malware finding?" | `security.recommend_action` with `finding_type="malware", finding_id="<id>"` |
 
 ---
 
