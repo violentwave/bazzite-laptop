@@ -32,12 +32,21 @@ class AgentRegistry:
             self._handlers.pop(name, None)
             logger.info("Unregistered agent handler: %s", name)
 
+    async def get(self, name: str) -> Callable[[AgentMessage], Awaitable[AgentResult]] | None:
+        """Retrieve the handler for a named agent, or None if not found."""
+        return await self.get_handler(name)
+
     async def get_handler(
         self, name: str
     ) -> Callable[[AgentMessage], Awaitable[AgentResult]] | None:
         """Retrieve the handler for a named agent, or None if not found."""
         async with self._lock:
             return self._handlers.get(name)
+
+    async def is_registered(self, name: str) -> bool:
+        """Check if an agent with the given name is registered."""
+        async with self._lock:
+            return name in self._handlers
 
     async def list_agents(self) -> list[str]:
         """List all registered agent names."""

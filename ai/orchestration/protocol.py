@@ -17,6 +17,21 @@ class TaskType(StrEnum):
     CODE_QUALITY = "code_quality"
     TIMER_HEALTH = "timer_health"
     GENERAL = "general"
+    SCAN_IOC = "scan_ioc"
+    RUN_AUDIT = "run_audit"
+    CHECK_CVE_FRESHNESS = "check_cve_freshness"
+    LINT_CHECK = "lint_check"
+    AST_QUERY = "ast_query"
+    SUGGEST_REFACTOR = "suggest_refactor"
+    PROFILE_TOOL = "profile_tool"
+    DETECT_REGRESSION = "detect_regression"
+    TUNE_CACHE = "tune_cache"
+    STORE_INSIGHT = "store_insight"
+    RETRIEVE_CONTEXT = "retrieve_context"
+    SUMMARIZE_SESSION = "summarize_session"
+    CHECK_TIMERS = "check_timers"
+    ALERT_STALE = "alert_stale"
+    RESCHEDULE = "reschedule"
 
 
 @dataclass
@@ -37,10 +52,19 @@ class BaseAgent(ABC):
     def name(self) -> str:
         """Unique name identifier for this agent."""
 
+    @property
+    @abstractmethod
+    def supported_task_types(self) -> list[str]:
+        """List of task types this agent can handle."""
+
     @abstractmethod
     async def handle(self, message: AgentMessage) -> AgentResult:
         """Handle an incoming message and return a result."""
         ...
+
+    def can_handle(self, task_type: str) -> bool:
+        """Check if this agent can handle the given task type."""
+        return task_type in self.supported_task_types
 
 
 class HandoffProtocol:
