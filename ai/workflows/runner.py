@@ -1,9 +1,15 @@
 """Workflow runner with ReAct-style tool chaining."""
 
+from __future__ import annotations
+
 import logging
 import time
+from typing import TYPE_CHECKING
 
 logger = logging.getLogger("ai.workflows")
+
+if TYPE_CHECKING:
+    from ai.orchestration import AgentResult
 
 
 class WorkflowRunner:
@@ -86,6 +92,19 @@ class WorkflowRunner:
                 results[step_id] = {"status": "skipped", "reason": "dependencies not met"}
                 continue
 
+            if step.get("agent"):
+                agent_result = await self._execute_agent_step(step, results)
+                results[step_id] = {
+                    "status": "complete" if agent_result.success else "failed",
+                    "result": agent_result.data,
+                    "error": agent_result.error,
+                }
+                if agent_result.success:
+                    completed.add(step_id)
+                elif step.get("abort_on_error"):
+                    break
+                continue
+
             try:
                 tool = step.get("tool")
                 args = step.get("args", {})
@@ -108,6 +127,27 @@ class WorkflowRunner:
             else "partial"
         )
         return {"steps": results, "status": status}
+
+    async def _execute_agent_step(self, step: dict, results: dict) -> AgentResult:
+        """Execute an agent-dispatched step via OrchestrationBus."""
+        from ai.orchestration import AgentMessage, get_default_bus
+
+        bus = get_default_bus()
+
+        payload = step.get("args", {})
+        if step.get("payload_from") and step["payload_from"] in results:
+            upstream = results[step["payload_from"]]
+            if upstream.get("status") == "complete":
+                payload["upstream_result"] = upstream.get("result")
+
+        msg = AgentMessage(
+            source_agent="workflow_runner",
+            target_agent=step["agent"],
+            task_type=step["task_type"],
+            payload=payload,
+        )
+
+        return await bus.dispatch(msg)
 
     async def _call_llm(
         self, messages: list[dict], tools: list[dict] | None, task_type: str

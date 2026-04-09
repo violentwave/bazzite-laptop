@@ -203,3 +203,75 @@ def get_workflow_store() -> WorkflowStore:
     if _store_instance is None:
         _store_instance = WorkflowStore()
     return _store_instance
+
+
+SECURITY_DEEP_SCAN = {
+    "name": "security_deep_scan",
+    "description": "Timer sentinel check → security audit → store results in knowledge base",
+    "steps": [
+        {"id": "timers", "agent": "timer_sentinel", "task_type": "check_timers", "args": {}},
+        {
+            "id": "audit",
+            "agent": "security",
+            "task_type": "run_audit",
+            "args": {},
+            "depends_on": ["timers"],
+        },
+        {
+            "id": "store",
+            "agent": "knowledge",
+            "task_type": "store_insight",
+            "payload_from": "audit",
+            "args": {"category": "security_audit"},
+            "depends_on": ["audit"],
+        },
+    ],
+}
+
+CODE_HEALTH_CHECK = {
+    "name": "code_health_check",
+    "description": "Lint check → performance profile on changed files → store tuning insight",
+    "steps": [
+        {"id": "lint", "agent": "code_quality", "task_type": "lint_check", "args": {}},
+        {
+            "id": "profile",
+            "agent": "performance",
+            "task_type": "profile_tool",
+            "payload_from": "lint",
+            "args": {},
+            "depends_on": ["lint"],
+        },
+        {
+            "id": "store",
+            "agent": "knowledge",
+            "task_type": "store_insight",
+            "payload_from": "profile",
+            "args": {"category": "performance_insight"},
+            "depends_on": ["profile"],
+        },
+    ],
+}
+
+MORNING_BRIEFING_ENRICHED = {
+    "name": "morning_briefing_enriched",
+    "description": "Fan-out to all 5 agents in parallel, KnowledgeStorage collects results",
+    "steps": [
+        {"id": "security", "agent": "security", "task_type": "run_audit", "args": {}},
+        {"id": "code", "agent": "code_quality", "task_type": "lint_check", "args": {}},
+        {"id": "perf", "agent": "performance", "task_type": "detect_regression", "args": {}},
+        {"id": "timers", "agent": "timer_sentinel", "task_type": "check_timers", "args": {}},
+        {
+            "id": "collect",
+            "agent": "knowledge",
+            "task_type": "summarize_session",
+            "args": {"context_keys": ["security", "code", "perf", "timers"]},
+            "depends_on": ["security", "code", "perf", "timers"],
+        },
+    ],
+}
+
+WORKFLOW_REGISTRY = {
+    "security_deep_scan": SECURITY_DEEP_SCAN,
+    "code_health_check": CODE_HEALTH_CHECK,
+    "morning_briefing_enriched": MORNING_BRIEFING_ENRICHED,
+}
