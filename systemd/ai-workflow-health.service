@@ -1,0 +1,10 @@
+[Unit]
+Description=Bazzite AI Workflow Health Check
+After=network.target
+
+[Service]
+Type=oneshot
+User=lch
+WorkingDirectory=/home/lch/projects/bazzite-laptop
+ExecStart=/home/lch/projects/bazzite-laptop/.venv/bin/python -m ai.workflows.cli --run security_deep_scan
+Environment=PYTHONPATH=/home/lch/projects/bazzite-laptop
