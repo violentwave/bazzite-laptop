@@ -1034,6 +1034,42 @@ async def _execute_python_tool(tool_name: str, tool_def: dict, args: dict) -> st
             result = await handle_slack_get_history(args)
             return _truncate(json.dumps(result, indent=2))
 
+        elif tool_name == "workflow.list":
+            from ai.mcp_bridge.handlers.workflow_tools import workflow_list
+
+            result = await workflow_list(args)
+            return _truncate(json.dumps(result, indent=2))
+
+        elif tool_name == "workflow.run":
+            from ai.mcp_bridge.handlers.workflow_tools import workflow_run
+
+            result = await workflow_run(args)
+            return _truncate(json.dumps(result, indent=2))
+
+        elif tool_name == "workflow.status":
+            from ai.mcp_bridge.handlers.workflow_tools import workflow_status
+
+            result = await workflow_status(args)
+            return _truncate(json.dumps(result, indent=2))
+
+        elif tool_name == "workflow.agents":
+            from ai.mcp_bridge.handlers.workflow_tools import workflow_agents
+
+            result = await workflow_agents(args)
+            return _truncate(json.dumps(result, indent=2))
+
+        elif tool_name == "workflow.handoff":
+            from ai.mcp_bridge.handlers.workflow_tools import workflow_handoff
+
+            result = await workflow_handoff(args)
+            return _truncate(json.dumps(result, indent=2))
+
+        elif tool_name == "workflow.history":
+            from ai.mcp_bridge.handlers.workflow_tools import workflow_history
+
+            result = await workflow_history(args)
+            return _truncate(json.dumps(result, indent=2))
+
         elif tool_name == "system.alert_history":
             from ai.alerts.history import get_recent  # noqa: PLC0415
 

@@ -645,28 +645,6 @@ tools:
         default: 5
         required: false
 
-  workflow.run:
-    description: "Execute a saved workflow or ad-hoc steps"
-    source: python
-    module: ai.workflows.runner
-    function: execute_workflow
-    args:
-      workflow_id:
-        type: string
-        max_length: 100
-        required: false
-      steps:
-        type: string
-        max_length: 2000
-        required: false
-
-  workflow.list:
-    description: "List available workflows"
-    source: python
-    module: ai.workflows.definitions
-    function: list_workflows
-    args: null
-
   system.create_tool:
     description: "Create a dynamic tool with safety validation"
     source: python
@@ -958,4 +936,109 @@ tools:
       destructive: false
       openWorld: false
 
+  workflow.list:
+    description: "List all registered workflow definitions"
+    source: python
+    module: ai.mcp_bridge.handlers.workflow_tools
+    function: workflow_list
+    args: null
+    annotations:
+      readOnly: true
+      idempotent: true
+      openWorld: false
+
+  workflow.run:
+    description: "Trigger a named workflow. Logs run to workflow_runs table."
+    source: python
+    module: ai.mcp_bridge.handlers.workflow_tools
+    function: workflow_run
+    args:
+      name:
+        type: string
+        required: true
+        description: "Workflow name (e.g., security_deep_scan)"
+      triggered_by:
+        type: string
+        required: false
+        default: "mcp"
+        description: "Trigger source: mcp, user, timer, agent:<name>"
+    annotations:
+      readOnly: false
+      idempotent: false
+      openWorld: false
+
+  workflow.status:
+    description: "Get last run result for a workflow from workflow_runs table"
+    source: python
+    module: ai.mcp_bridge.handlers.workflow_tools
+    function: workflow_status
+    args:
+      name:
+        type: string
+        required: true
+        description: "Workflow name"
+    annotations:
+      readOnly: true
+      idempotent: true
+      openWorld: false
+
+  workflow.agents:
+    description: "List all registered agents and their supported task types"
+    source: python
+    module: ai.mcp_bridge.handlers.workflow_tools
+    function: workflow_agents
+    args: null
+    annotations:
+      readOnly: true
+      idempotent: true
+      openWorld: false
+
+  workflow.handoff:
+    description: "Manually dispatch a task message to a named agent"
+    source: python
+    module: ai.mcp_bridge.handlers.workflow_tools
+    function: workflow_handoff
+    args:
+      agent:
+        type: string
+        required: true
+        description: "Target agent name"
+      task_type:
+        type: string
+        required: true
+        description: "Task type to execute"
+      payload:
+        type: object
+        required: false
+        description: "Additional payload data"
+      priority:
+        type: int
+        required: false
+        default: 0
+        description: "Message priority"
+    annotations:
+      readOnly: false
+      idempotent: false
+      openWorld: false
+
+  workflow.history:
+    description: "Query workflow_runs table for run history"
+    source: python
+    module: ai.mcp_bridge.handlers.workflow_tools
+    function: workflow_history
+    args:
+      workflow_name:
+        type: string
+        required: false
+        description: "Filter by workflow name"
+      limit:
+        type: int
+        required: false
+        default: 10
+        max: 100
+        description: "Maximum number of runs to return"
+    annotations:
+      readOnly: true
+      idempotent: true
+      openWorld: false
 

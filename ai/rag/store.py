@@ -82,11 +82,28 @@ def _get_schemas() -> dict:
         ]
     )
 
+    workflow_runs_schema = pa.schema(
+        [
+            pa.field("run_id", pa.utf8()),
+            pa.field("workflow_name", pa.utf8()),
+            pa.field("triggered_by", pa.utf8()),
+            pa.field("started_at", pa.utf8()),
+            pa.field("completed_at", pa.utf8()),
+            pa.field("status", pa.utf8()),
+            pa.field("step_count", pa.int32()),
+            pa.field("steps_completed", pa.int32()),
+            pa.field("result_summary", pa.utf8()),
+            pa.field("error", pa.utf8()),
+            pa.field("vector", pa.list_(pa.float32(), 384)),
+        ]
+    )
+
     return {
         "security_logs": security_log_schema,
         "threat_intel": threat_intel_schema,
         "docs": docs_schema,
         CODE_TABLE: code_files_schema,
+        "workflow_runs": workflow_runs_schema,
     }
 
 
