@@ -29,19 +29,28 @@ requires_ollama = pytest.mark.skipif(
 )
 
 
+def _embed_via_ollama(text: str) -> list[float]:
+    """Force Ollama for embedding — bypasses Cohere rate limits in tests."""
+    from ai.rag.embedder import _embed_ollama
+    return _embed_ollama([text])[0]
+
+
 class TestSemanticCache:
     @requires_ollama
     def test_semantic_cache_hit(self, tmp_path):
         """Test semantic cache hit with similar query."""
         cache = SemanticCache(similarity_threshold=0.85, db_path=str(tmp_path))
 
-        cache.put(
-            "What CVEs affect my system?",
-            {"answer": "none"},
-            "fast",
-        )
+        # Patch embed_single to force Ollama — Cohere trial key is rate-limited
+        # (100 calls/month) which causes put() to silently store nothing.
+        with patch("ai.cache_semantic.embed_single", side_effect=_embed_via_ollama):
+            cache.put(
+                "What CVEs affect my system?",
+                {"answer": "none"},
+                "fast",
+            )
 
-        result = cache.get("What CVEs are in my system?", "fast")
+            result = cache.get("What CVEs are in my system?", "fast")
 
         assert result is not None
         assert result.get("answer") == "none"
