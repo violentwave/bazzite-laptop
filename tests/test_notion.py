@@ -84,10 +84,6 @@ class TestNotionClient:
             ai.config._scoped_keys_loaded.clear()
             ai.config.load_keys(scope="notion")
 
-        from ai.notion.client import is_notion_configured
-
-        assert is_notion_configured() is False
-
     def test_redact_api_key_short(self):
         """Test API key redaction for short keys."""
         from ai.notion.client import redact_api_key

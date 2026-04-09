@@ -61,7 +61,9 @@ async def workflow_run(params: dict) -> dict:
         logger.exception("Failed to log workflow run start")
 
     runner = WorkflowRunner()
-    result = await runner.run_plan(WORKFLOW_REGISTRY[name]["steps"])
+    result = await runner.run_plan(
+        WORKFLOW_REGISTRY[name]["steps"], workflow_name=name, run_id=run_id
+    )
 
     completed_at = datetime.now(UTC).isoformat()
     steps_completed = sum(1 for s in result["steps"].values() if s.get("status") == "complete")
@@ -230,3 +232,69 @@ def _embed_workflow_status(workflow_name: str, status: str) -> list[float]:
         return embed(f"{workflow_name} {status}")
     except Exception:
         return [0.0] * 384
+
+
+async def workflow_status_steps(params: dict) -> dict:
+    """Get per-step status for a workflow run."""
+    run_id = params.get("run_id")
+    if not run_id:
+        return {"error": "Missing required parameter: run_id"}
+
+    try:
+        from ai.orchestration.observer import get_observer
+
+        observer = get_observer()
+    except Exception as e:
+        return {"error": f"Failed to initialize observer: {e}"}
+
+    steps = observer.get_run_steps(run_id)
+    if not steps:
+        return {"error": f"No steps found for run_id: {run_id}"}
+
+    summary = observer.get_run_summary(run_id)
+
+    return {
+        "run_id": run_id,
+        "workflow_name": summary.get("workflow_name", ""),
+        "status": summary.get("status", "unknown"),
+        "total_steps": summary.get("total_steps", 0),
+        "completed": summary.get("completed", 0),
+        "failed": summary.get("failed", 0),
+        "cancelled": summary.get("cancelled", 0),
+        "total_duration_ms": summary.get("total_duration_ms", 0.0),
+        "started_at": summary.get("started_at", ""),
+        "finished_at": summary.get("finished_at", ""),
+        "steps": steps,
+    }
+
+
+async def workflow_history_steps(params: dict) -> dict:
+    """List recent workflow runs with summary stats."""
+    limit = params.get("limit", 20)
+
+    try:
+        from ai.orchestration.observer import get_observer
+
+        observer = get_observer()
+    except Exception as e:
+        return {"error": f"Failed to initialize observer: {e}"}
+
+    runs = observer.get_recent_runs(limit=limit)
+    return {"runs": runs}
+
+
+async def workflow_cancel_steps(params: dict) -> dict:
+    """Cancel pending/running steps in a workflow run."""
+    run_id = params.get("run_id")
+    if not run_id:
+        return {"error": "Missing required parameter: run_id"}
+
+    try:
+        from ai.orchestration.observer import get_observer
+
+        observer = get_observer()
+    except Exception as e:
+        return {"error": f"Failed to initialize observer: {e}"}
+
+    cancelled_count = observer.cancel_run(run_id)
+    return {"run_id": run_id, "cancelled_count": cancelled_count}

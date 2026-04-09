@@ -439,10 +439,10 @@ class TestMcpManifest:
 
     @pytest.mark.asyncio
     async def test_manifest_output_under_4096_bytes(self):
-        from ai.mcp_bridge.tools import execute_tool
+        from ai.mcp_bridge.tools import _TOOL_OUTPUT_LIMITS, execute_tool
 
         result = await execute_tool("system.mcp_manifest", {})
-        assert len(result.encode()) < 8192
+        assert len(result.encode()) <= _TOOL_OUTPUT_LIMITS["system.mcp_manifest"]
 
     def test_tool_output_limits(self):
         from ai.mcp_bridge.tools import _DEFAULT_OUTPUT_LIMIT, _TOOL_OUTPUT_LIMITS

@@ -168,20 +168,15 @@ class TestWorkflowDefinitions:
     def test_security_deep_scan_workflow(self):
         """Test security_deep_scan workflow structure."""
         assert SECURITY_DEEP_SCAN["name"] == "security_deep_scan"
-        assert len(SECURITY_DEEP_SCAN["steps"]) == 3
+        assert len(SECURITY_DEEP_SCAN["steps"]) == 6
 
-        steps = {s["id"]: s for s in SECURITY_DEEP_SCAN["steps"]}
-        assert steps["timers"]["agent"] == "timer_sentinel"
-        assert steps["timers"]["task_type"] == "check_timers"
-
-        assert steps["audit"]["agent"] == "security"
-        assert steps["audit"]["task_type"] == "run_audit"
-        assert steps["audit"]["depends_on"] == ["timers"]
-
-        assert steps["store"]["agent"] == "knowledge"
-        assert steps["store"]["task_type"] == "store_insight"
-        assert steps["store"]["payload_from"] == "audit"
-        assert steps["store"]["depends_on"] == ["audit"]
+        deps_map = {step["id"]: step.get("depends_on", []) for step in SECURITY_DEEP_SCAN["steps"]}
+        assert deps_map["av_scan"] == []
+        assert deps_map["log_ingest"] == []
+        assert deps_map["cve_check"] == ["log_ingest"]
+        assert deps_map["threat_summary"] == ["log_ingest"]
+        assert deps_map["alert_summary"] == ["log_ingest"]
+        assert set(deps_map["full_audit"]) == {"cve_check", "threat_summary", "alert_summary"}
 
     def test_code_health_check_workflow(self):
         """Test code_health_check workflow structure."""
@@ -202,9 +197,10 @@ class TestWorkflowDefinitions:
     def test_morning_briefing_enriched_workflow(self):
         """Test morning_briefing_enriched workflow structure."""
         assert MORNING_BRIEFING_ENRICHED["name"] == "morning_briefing_enriched"
-        assert len(MORNING_BRIEFING_ENRICHED["steps"]) == 5
+        assert len(MORNING_BRIEFING_ENRICHED["steps"]) == 6
 
         step_ids = [s["id"] for s in MORNING_BRIEFING_ENRICHED["steps"]]
+        assert "memory_context" in step_ids
         assert "security" in step_ids
         assert "code" in step_ids
         assert "perf" in step_ids
@@ -212,7 +208,13 @@ class TestWorkflowDefinitions:
         assert "collect" in step_ids
 
         collect_step = next(s for s in MORNING_BRIEFING_ENRICHED["steps"] if s["id"] == "collect")
-        assert collect_step["depends_on"] == ["security", "code", "perf", "timers"]
+        assert collect_step["depends_on"] == [
+            "memory_context",
+            "security",
+            "code",
+            "perf",
+            "timers",
+        ]
 
     def test_workflow_registry_contains_all_three(self):
         """Test WORKFLOW_REGISTRY contains all 3 workflows."""
@@ -231,47 +233,38 @@ class TestWorkflowExecution:
 
     @pytest.mark.asyncio
     async def test_security_deep_scan_completes_all_steps(self, runner):
-        """Test security_deep_scan 3-step chain completes."""
-        mock_results = {
-            "timers": AgentResult(
-                correlation_id="corr-1",
-                source_agent="timer_sentinel",
-                success=True,
-                data={"status": "healthy", "stale": []},
-                duration_seconds=0.1,
-            ),
-            "audit": AgentResult(
-                correlation_id="corr-2",
-                source_agent="security",
-                success=True,
-                data={"status": "clean", "scan_triggered": False},
-                duration_seconds=0.2,
-            ),
-            "store": AgentResult(
-                correlation_id="corr-3",
-                source_agent="knowledge",
-                success=True,
-                data={"stored": True},
-                duration_seconds=0.1,
-            ),
-        }
+        """Test security_deep_scan 6-step chain completes."""
+        tool_results = [
+            '{"scan":"ok"}',
+            '{"ingest":"ok"}',
+            '{"cve":"ok"}',
+            '{"threat":"ok"}',
+            '{"alert":"ok"}',
+        ]
+        full_audit_result = AgentResult(
+            correlation_id="corr-1",
+            source_agent="security",
+            success=True,
+            data={"status": "clean", "scan_triggered": False},
+            duration_seconds=0.2,
+        )
 
         with patch("ai.orchestration.get_default_bus") as mock_get_bus:
             mock_bus = MagicMock()
-            mock_bus.dispatch = AsyncMock(
-                side_effect=[
-                    mock_results["timers"],
-                    mock_results["audit"],
-                    mock_results["store"],
-                ]
-            )
+            mock_bus.dispatch = AsyncMock(return_value=full_audit_result)
             mock_get_bus.return_value = mock_bus
+            runner._execute_tool = AsyncMock(side_effect=tool_results)
 
             result = await runner.run_plan(SECURITY_DEEP_SCAN["steps"])
 
-            assert result["steps"]["timers"]["status"] == "complete"
-            assert result["steps"]["audit"]["status"] == "complete"
-            assert result["steps"]["store"]["status"] == "complete"
+            assert result["steps"]["av_scan"]["status"] == "complete"
+            assert result["steps"]["log_ingest"]["status"] == "complete"
+            assert result["steps"]["cve_check"]["status"] == "complete"
+            assert result["steps"]["threat_summary"]["status"] == "complete"
+            assert result["steps"]["alert_summary"]["status"] == "complete"
+            assert result["steps"]["full_audit"]["status"] == "complete"
+            assert runner._execute_tool.await_count == 5
+            mock_bus.dispatch.assert_called_once()
             assert result["status"] == "complete"
 
     @pytest.mark.asyncio
@@ -346,6 +339,7 @@ class TestWorkflowExecution:
 
             result = await runner.run_plan(MORNING_BRIEFING_ENRICHED["steps"])
 
+            assert result["steps"]["memory_context"]["status"] == "complete"
             assert result["steps"]["security"]["status"] == "complete"
             assert result["steps"]["code"]["status"] == "complete"
             assert result["steps"]["perf"]["status"] == "complete"

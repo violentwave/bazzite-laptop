@@ -1064,6 +1064,24 @@ async def _execute_python_tool(tool_name: str, tool_def: dict, args: dict) -> st
             result = await workflow_handoff(args)
             return _truncate(json.dumps(result, indent=2))
 
+        elif tool_name == "workflow.status":
+            from ai.mcp_bridge.handlers.workflow_tools import workflow_status_steps
+
+            result = await workflow_status_steps(args)
+            return _truncate(json.dumps(result, indent=2))
+
+        elif tool_name == "workflow.history_steps":
+            from ai.mcp_bridge.handlers.workflow_tools import workflow_history_steps
+
+            result = await workflow_history_steps(args)
+            return _truncate(json.dumps(result, indent=2))
+
+        elif tool_name == "workflow.cancel":
+            from ai.mcp_bridge.handlers.workflow_tools import workflow_cancel_steps
+
+            result = await workflow_cancel_steps(args)
+            return _truncate(json.dumps(result, indent=2))
+
         elif tool_name == "workflow.history":
             from ai.mcp_bridge.handlers.workflow_tools import workflow_history
 

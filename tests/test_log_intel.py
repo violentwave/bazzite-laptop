@@ -21,9 +21,8 @@ import pytest
 # ---------------------------------------------------------------------------
 # Use setdefault so we share the same mock if another test file already
 # installed one (e.g. test_store.py), avoiding cross-file interference.
-# Create a fresh MagicMock to avoid issues with the real lancedb module
-_mock_lancedb = MagicMock(name="lancedb")
-sys.modules["lancedb"] = _mock_lancedb
+# Only install a mock if lancedb is not already loaded.
+_mock_lancedb = sys.modules.setdefault("lancedb", MagicMock(name="lancedb"))
 _mock_pyarrow = sys.modules.setdefault("pyarrow", MagicMock())
 
 
@@ -133,7 +132,8 @@ End Date:   2026:03:21 10:00:00
 @pytest.fixture(autouse=True)
 def _reset_lancedb_mock():
     """Reset the lancedb mock between tests."""
-    _mock_lancedb.reset_mock(return_value=True, side_effect=True)
+    if hasattr(_mock_lancedb, "reset_mock"):
+        _mock_lancedb.reset_mock(return_value=True, side_effect=True)
     yield
 
 
@@ -141,8 +141,14 @@ def _reset_lancedb_mock():
 def mock_db():
     """A mock LanceDB connection returned by lancedb.connect()."""
     db = MagicMock()
-    _mock_lancedb.connect.return_value = db
-    return db
+
+    if hasattr(_mock_lancedb, "reset_mock"):
+        _mock_lancedb.connect.return_value = db
+        yield db
+        return
+
+    with patch("lancedb.connect", return_value=db):
+        yield db
 
 
 @pytest.fixture()
@@ -412,7 +418,9 @@ class TestAnomalyDetection:
             "id": "rec-005",
             "timestamp": "2026-03-21T08:00:00",
         }
-        anomalies = detect_anomalies(record, record_type="health")
+        with patch("ai.log_intel.anomalies._recent_health_records", return_value=[]):
+            with patch("ai.log_intel.anomalies._last_health_record", return_value=None):
+                anomalies = detect_anomalies(record, record_type="health")
         assert anomalies == []
 
     def test_smart_failure(self):
@@ -501,7 +509,9 @@ class TestAnomalyDetection:
             "id": "rec-010",
             "timestamp": "2026-03-21T08:00:00",
         }
-        anomalies = detect_anomalies(record, record_type="health")
+        with patch("ai.log_intel.anomalies._recent_health_records", return_value=[]):
+            with patch("ai.log_intel.anomalies._last_health_record", return_value=None):
+                anomalies = detect_anomalies(record, record_type="health")
         assert anomalies == []
 
 

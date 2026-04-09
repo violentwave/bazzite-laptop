@@ -7,6 +7,19 @@ Bazzite security/gaming system.
 
 ---
 
+## P54 — Workflow Hardening + Observability (2026-04-09)
+
+- Fixed: test_mcp_drift.py — added system.dep_scan + system.test_analysis to allowlist
+- New: ai/orchestration/observer.py — WorkflowObserver with per-step LanceDB recording
+- New: workflow_steps LanceDB table — step_id, tool_called, duration_ms, status, error
+- New MCP tools: workflow.status, workflow.history, workflow.cancel (82→87 tools)
+- Enhanced: security_deep_scan — 6-step chained workflow with parallel phases
+- Enhanced: morning_briefing_enriched — memory.search context injection
+- Observer wired into OrchestrationBus — all workflow runs auto-recorded
+- Tests: tests/test_orchestration.py (8 cases) + tests/test_workflow_observer.py (10 cases)
+
+---
+
 ## Phase P53 — Agent Orchestration Expansion (2026-04-09)
 
 ### Delivered

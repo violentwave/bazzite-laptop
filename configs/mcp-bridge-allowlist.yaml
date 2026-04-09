@@ -716,6 +716,28 @@ tools:
         default: 30
         max: 30
 
+  system.dep_scan:
+    description: "Scan venv dependencies for known vulnerabilities"
+    source: python
+    module: ai.mcp_bridge.tools
+    function: handle_dep_scan
+    args: null
+    annotations:
+      readOnly: true
+
+  system.test_analysis:
+    description: "Analyze pytest output for failure patterns"
+    source: python
+    module: ai.mcp_bridge.tools
+    function: handle_test_analysis
+    args:
+      input:
+        type: str
+        required: false
+        description: "Pytest output to analyze"
+    annotations:
+      readOnly: true
+
   intel.scrape_now:
     description: "Trigger intelligence scrape: GitHub releases, CISA KEV, NVD CVEs, Fedora RSS"
     source: python
@@ -967,21 +989,6 @@ tools:
       idempotent: false
       openWorld: false
 
-  workflow.status:
-    description: "Get last run result for a workflow from workflow_runs table"
-    source: python
-    module: ai.mcp_bridge.handlers.workflow_tools
-    function: workflow_status
-    args:
-      name:
-        type: string
-        required: true
-        description: "Workflow name"
-    annotations:
-      readOnly: true
-      idempotent: true
-      openWorld: false
-
   workflow.agents:
     description: "List all registered agents and their supported task types"
     source: python
@@ -1041,4 +1048,52 @@ tools:
       readOnly: true
       idempotent: true
       openWorld: false
+
+  workflow.status:
+    description: "Get per-step status for a workflow run"
+    source: python
+    module: ai.mcp_bridge.handlers.workflow_tools
+    function: workflow_status_steps
+    args:
+      run_id:
+        type: string
+        required: true
+        description: "Workflow run ID"
+    annotations:
+      readOnly: true
+      idempotent: true
+      openWorld: false
+
+  workflow.history_steps:
+    description: "List recent workflow runs with summary stats"
+    source: python
+    module: ai.mcp_bridge.handlers.workflow_tools
+    function: workflow_history_steps
+    args:
+      limit:
+        type: int
+        required: false
+        default: 20
+        max: 100
+        description: "Maximum number of runs to return"
+    annotations:
+      readOnly: true
+      idempotent: true
+      openWorld: false
+
+  workflow.cancel:
+    description: "Cancel pending/running steps in a workflow run"
+    source: python
+    module: ai.mcp_bridge.handlers.workflow_tools
+    function: workflow_cancel_steps
+    args:
+      run_id:
+        type: string
+        required: true
+        description: "Workflow run ID to cancel"
+    annotations:
+      readOnly: false
+      idempotent: false
+      openWorld: false
+      destructive: true
 

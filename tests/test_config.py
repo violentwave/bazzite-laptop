@@ -129,13 +129,17 @@ class TestScopedKeyLoading:
 
         # Save original state
         original_keys_loaded = cfg._keys_loaded
+        original_scoped_loaded = dict(cfg._scoped_keys_loaded)
         original_env = os.environ.copy()
 
         cfg._keys_loaded = False
+        cfg._scoped_keys_loaded.clear()
         yield
 
         # Restore env to original state (remove any keys added by this test)
         cfg._keys_loaded = original_keys_loaded
+        cfg._scoped_keys_loaded.clear()
+        cfg._scoped_keys_loaded.update(original_scoped_loaded)
         current_env = os.environ
         for key in current_env:
             if key not in original_env:

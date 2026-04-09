@@ -58,7 +58,7 @@
             ┌───────────▼──┐ ┌─▼──────────────────┐
               │  MCP Bridge  │ │  LLM Proxy          │
               │  :8766 FastMCP  │ │  :8767 OpenAI-compat│
-               │  88 tools       │ │  6 cloud providers  │
+               │  96 tools       │ │  6 cloud providers  │
             └──┬──┬──┬──┬─────┘ └──┬──────────────────┘
              │  │  │  │          │
     ┌────────┘  │  │  └───┐     │  Health-weighted routing
@@ -94,7 +94,7 @@ Key constraints:
 
 ---
 
-## MCP Tools (88)
+## MCP Tools (96)
 
 Source: `configs/mcp-bridge-allowlist.yaml` + tools registered directly in server.py.
 
@@ -232,16 +232,18 @@ Source: `configs/mcp-bridge-allowlist.yaml` + tools registered directly in serve
 | `collab.add_task` | python: `ai.collab.task_queue` | `title`, `task_type`, `description`, `priority` | Add a task to the collaborative queue |
 | `collab.search_knowledge` | python: `ai.collab.knowledge_base` | `query`, `top_k` | Search the agent knowledge base |
 
-### workflow.* (6 tools)
+### workflow.* (8 tools)
 
 | Tool | Source | Args | Description |
 |------|--------|------|-------------|
 | `workflow.list` | python: `ai.mcp_bridge.handlers.workflow_tools` | — | List all registered workflow definitions |
 | `workflow.run` | python: `ai.mcp_bridge.handlers.workflow_tools` | `name`, `triggered_by` | Trigger a named workflow. Logs run to workflow_runs table |
-| `workflow.status` | python: `ai.mcp_bridge.handlers.workflow_tools` | `name` | Get last run result for a workflow from workflow_runs table |
+| `workflow.status` | python: `ai.mcp_bridge.handlers.workflow_tools` | `run_id` | Get per-step status for a workflow run from workflow_steps/workflow_runs |
 | `workflow.agents` | python: `ai.mcp_bridge.handlers.workflow_tools` | — | List all registered agents and their supported task types |
 | `workflow.handoff` | python: `ai.mcp_bridge.handlers.workflow_tools` | `agent`, `task_type`, `payload`, `priority` | Manually dispatch a task message to a named agent |
-| `workflow.history` | python: `ai.mcp_bridge.handlers.workflow_tools` | `workflow_name`, `limit` | Query workflow_runs table |
+| `workflow.history` | python: `ai.mcp_bridge.handlers.workflow_tools` | `workflow_name`, `limit` | Query workflow_runs history |
+| `workflow.history_steps` | python: `ai.mcp_bridge.handlers.workflow_tools` | `limit` | List recent runs with step-level summaries |
+| `workflow.cancel` | python: `ai.mcp_bridge.handlers.workflow_tools` | `run_id` | Cancel pending/running steps for a run (marks workflow_steps as cancelled) |
 
 ### agents.* (5 tools)
 
@@ -306,7 +308,7 @@ Source: `configs/mcp-bridge-allowlist.yaml` + tools registered directly in serve
 
 | Tool | Description |
 |------|-------------|
-| `health` | Returns `{"status": "ok", "tools": 88}` |
+| `health` | Returns `{"status": "ok", "tools": 96}` |
 
 ---
 
@@ -314,19 +316,30 @@ Source: `configs/mcp-bridge-allowlist.yaml` + tools registered directly in serve
 
 Module: `ai/orchestration/`
 
-The OrchestrationBus provides async pub/sub message dispatch between named agents. All 5 agents are pre-registered in the default bus via `get_default_bus()`.
+| Phase | Name | New Tools | New Timer | New LanceDB Table | Key Module |
+|-------|------|-----------|-----------|-------------------|------------|
+| **Prereq** | MCP Tool Filtering | — | — | `tool_metadata` | `ai/mcp_bridge/tool_filter.py` |
+| **P32** | Testing Intelligence | — | — | `test_mappings` | `ai/testing/` |
+| **P29** | Structural Code Intel | +6 | `code-index.timer` (Daily 6:00) | `code_nodes`, `relationships`, `import_graph`, `change_history` | `ai/code_intel/` |
+| **P31** | Agent Collaboration | +3 | — | `shared_context`, `agent_knowledge` | `ai/collab/` |
+| **P30** | Workflow Engine | +2 | — | `workflows` | `ai/workflows/` |
+| **P33** | Plugin Factory | +2 | — | `persisted_tools` | `ai/tools/` |
+| **P39** | Dependency Audit | +2 | `dep-audit.timer` (Weekly) | — | `ai/system/dep_audit.py` |
+| **P40** | Performance Round 2 + Observability | +1 | `metrics-compact.timer` | — | `ai/metrics.py` |
+| **P53** | Agent Orchestration Expansion | +6 | `ai-workflow-health.timer` (Every 6h) | `workflow_runs` | `ai/orchestration/`, `ai/workflows/` |
+| **P54** | Workflow Hardening + Observability | +3 | — | `workflow_steps` | `ai/orchestration/observer.py`, `ai/workflows/` |
 
-### Current State (Post-P53)
+### Current State (Post-P54)
 
 | Metric | Value |
 |--------|-------|
-| MCP tools | 88 (+ 1 health endpoint) |
+| MCP tools | 96 (+ 1 health endpoint) |
 | Systemd timers | 23 |
-| LanceDB tables | 27 |
-| Tests | 2317+ |
+| LanceDB tables | 28 |
+| Tests | 2028+ |
 | Cloud LLM providers | 6 |
 | Threat intel APIs | 16 |
-| P44-P53 status | complete (2026-04-09) |
+| P44-P54 status | complete (2026-04-09) |
 
 ### Dependency Graph
 
@@ -446,7 +459,7 @@ P51 (TBD) ←
 | `ai/rate_limiter.py` | Cross-script rate limiting with file locking |
 | `ai/key_manager.py` | API key presence checker |
 | `ai/mcp_bridge/server.py` | FastMCP server on :8766, tool registration |
-| `ai/mcp_bridge/tools.py` | Tool dispatch handlers for all 88 tools |
+| `ai/mcp_bridge/tools.py` | Tool dispatch handlers for all 96 tools |
 | `ai/mcp_bridge/tool_filter.py` | Server-side namespace/semantic tool filtering (P29-Prereq) |
 | `ai/threat_intel/` | VT, OTX, AbuseIPDB, GreyNoise, NVD, URLhaus, etc. (6 API modules) |
 | `ai/rag/` | LanceDB store, embedder, query engine, code query |
@@ -495,7 +508,7 @@ P51 (TBD) ←
 | `~/.config/environment.d/bazzite-ai.conf` | Systemd user env vars (SENTRY_DSN, SENTRY_ENV) |
 | `~/security/` | Canonical root for all runtime security data |
 | `~/security/.status` | Shared JSON: ClamAV + health state (tray + MCP read this) |
-| `~/security/vector-db/` | LanceDB root (→ `/var/mnt/ext-ssd/bazzite-ai/vector-db`). Tables: `documents` (RAG docs), `code_index` (code embeddings), `log_entries` (system logs), `code_patterns` (curated code patterns — P21), `task_patterns` (task outcomes — P22), `semantic_cache` (LLM response cache — P23), `metrics` (observability time-series — P24), `conversation_memory` (cross-session memory — P25), `system_insights` (weekly insight snapshots — P28), `tool_metadata` (P29-Prereq), `test_mappings` (P32), `code_nodes`, `relationships`, `import_graph`, `change_history` (P29), `shared_context`, `agent_knowledge` (P31), `workflows` (P30), `persisted_tools` (P33), `workflow_runs` (P53) |
+| `~/security/vector-db/` | LanceDB root (→ `/var/mnt/ext-ssd/bazzite-ai/vector-db`). Tables: `documents` (RAG docs), `code_index` (code embeddings), `log_entries` (system logs), `code_patterns` (curated code patterns — P21), `task_patterns` (task outcomes — P22), `semantic_cache` (LLM response cache — P23), `metrics` (observability time-series — P24), `conversation_memory` (cross-session memory — P25), `system_insights` (weekly insight snapshots — P28), `tool_metadata` (P29-Prereq), `test_mappings` (P32), `code_nodes`, `relationships`, `import_graph`, `change_history` (P29), `shared_context`, `agent_knowledge` (P31), `workflows` (P30), `persisted_tools` (P33), `workflow_runs` (P53), `workflow_steps` (P54 step-level observability) |
 | `~/security/vector-db/.archive-state.json` | R2 archive state (upload records with key, timestamp, size) |
 | `~/security/llm-status.json` | LLM provider health + token usage |
 | `~/security/key-status.json` | API key presence map |
@@ -576,7 +589,7 @@ Agents share context via `HANDOFF.md` in the project root.
 Newelle (Flatpak GTK4) is the AI chat/voice UI.
 
 - **LLM**: `http://127.0.0.1:8767/v1/` (`model="fast"`)
-- **MCP**: `http://127.0.0.1:8766/mcp` (88 tools)
+- **MCP**: `http://127.0.0.1:8766/mcp` (96 tools)
 - **System prompt**: `docs/newelle-system-prompt.md`
 - **Skills**: `docs/newelle-skills/` — 9 bundles
 - **Morning briefing**: `docs/morning-briefing-prompt.md` (scheduled 9:30 AM)

@@ -136,7 +136,11 @@ class TestAnomalyDetection:
             "services_down": 0,
             "smart_status": "PASSED",
         }
-        anomalies = detect_anomalies(record, record_type="health")
+        anomalies = detect_anomalies(
+            record,
+            record_type="health",
+            previous={"disk_usage_pct": 45.0, "steam_usage_pct": 0.0},
+        )
 
         assert len(anomalies) == 0
 

@@ -207,23 +207,38 @@ def get_workflow_store() -> WorkflowStore:
 
 SECURITY_DEEP_SCAN = {
     "name": "security_deep_scan",
-    "description": "Timer sentinel check → security audit → store results in knowledge base",
+    "description": "Chained security: AV scan → ingest → CVE check → threat/alert → audit",
     "steps": [
-        {"id": "timers", "agent": "timer_sentinel", "task_type": "check_timers", "args": {}},
+        {"id": "av_scan", "tool": "security.run_scan", "args": {"scan_type": "quick"}},
         {
-            "id": "audit",
+            "id": "log_ingest",
+            "tool": "security.run_ingest",
+            "args": {},
+        },
+        {
+            "id": "cve_check",
+            "tool": "security.cve_check",
+            "args": {},
+            "depends_on": ["log_ingest"],
+        },
+        {
+            "id": "threat_summary",
+            "tool": "security.threat_summary",
+            "args": {},
+            "depends_on": ["log_ingest"],
+        },
+        {
+            "id": "alert_summary",
+            "tool": "security.alert_summary",
+            "args": {},
+            "depends_on": ["log_ingest"],
+        },
+        {
+            "id": "full_audit",
             "agent": "security",
             "task_type": "run_audit",
             "args": {},
-            "depends_on": ["timers"],
-        },
-        {
-            "id": "store",
-            "agent": "knowledge",
-            "task_type": "store_insight",
-            "payload_from": "audit",
-            "args": {"category": "security_audit"},
-            "depends_on": ["audit"],
+            "depends_on": ["cve_check", "threat_summary", "alert_summary"],
         },
     ],
 }
@@ -254,8 +269,13 @@ CODE_HEALTH_CHECK = {
 
 MORNING_BRIEFING_ENRICHED = {
     "name": "morning_briefing_enriched",
-    "description": "Fan-out to all 5 agents in parallel, KnowledgeStorage collects results",
+    "description": "Memory search → parallel agent execution → summarize results",
     "steps": [
+        {
+            "id": "memory_context",
+            "tool": "memory.search",
+            "args": {"query": "recent security incidents system health"},
+        },
         {"id": "security", "agent": "security", "task_type": "run_audit", "args": {}},
         {"id": "code", "agent": "code_quality", "task_type": "lint_check", "args": {}},
         {"id": "perf", "agent": "performance", "task_type": "detect_regression", "args": {}},
@@ -264,8 +284,8 @@ MORNING_BRIEFING_ENRICHED = {
             "id": "collect",
             "agent": "knowledge",
             "task_type": "summarize_session",
-            "args": {"context_keys": ["security", "code", "perf", "timers"]},
-            "depends_on": ["security", "code", "perf", "timers"],
+            "args": {"context_keys": ["memory_context", "security", "code", "perf", "timers"]},
+            "depends_on": ["memory_context", "security", "code", "perf", "timers"],
         },
     ],
 }

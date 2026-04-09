@@ -60,7 +60,7 @@ _HEALTH_LOG_DIR = Path("/var/log/system-health")
 _SCAN_LOG_DIR = Path("/var/log/clamav-scans")
 
 
-# ── Key / config loading ────────────────────────────────────────────────────────────────────────────────
+# ── Key / config loading ───────────────────────────────────────────
 
 
 def load_keys_env(keys_file: Path) -> dict[str, str]:
@@ -163,7 +163,7 @@ def _file_is_ingested(filepath: Path, ingest_state: dict) -> bool:
     return True
 
 
-# ── File discovery ──────────────────────────────────────────────────────────────────────────────────
+# ── File discovery ───────────────────────────────────────────────
 
 
 def find_old_files(directory: Path, age_seconds: float) -> list[Path]:
@@ -178,7 +178,7 @@ def find_old_files(directory: Path, age_seconds: float) -> list[Path]:
     ]
 
 
-# ── Compression / upload ─────────────────────────────────────────────────────────────────────────────
+# ── Compression / upload ──────────────────────────────────────────
 
 
 def compress_bytes(data: bytes) -> bytes:
@@ -223,7 +223,7 @@ def upload_file(
         return False, "", 0
 
 
-# ── Directory helpers ──────────────────────────────────────────────────────────────────────────────
+# ── Directory helpers ─────────────────────────────────────────────
 
 
 def _build_scan_dirs(config: dict) -> list[tuple[Path, str]]:
@@ -239,7 +239,7 @@ def _build_scan_dirs(config: dict) -> list[tuple[Path, str]]:
     return result
 
 
-# ── Main archival routine ────────────────────────────────────────────────────────────────────────────
+# ── Main archival routine ─────────────────────────────────────────
 
 
 def archive_logs(

@@ -1,34 +1,28 @@
-# Bazzite AI Phase Roadmap — P44–P50
+# Bazzite AI Phase Roadmap — P44–P54
 
-## Overview
-This document outlines the completion of phases P44 through P50 of the Bazzite AI Layer project. All phases in this range were completed on 2026-04-07.
+## Completed Phases (P44–P54)
 
-## Phase Details
+| Phase | Status | One-line Description |
+|-------|--------|----------------------|
+| **P44** | Complete | Input validation and MCP safety guardrails hardened at dispatch boundaries. |
+| **P45** | Complete | Semantic cache layer introduced for repeated-query latency and token reduction. |
+| **P46** | Complete | Token budget controls added with tier-aware usage accounting and reporting. |
+| **P47** | Complete | Code pattern retrieval expanded for cross-file structural assistance. |
+| **P48** | Complete | Headless briefing flow landed with scheduled autonomous status synthesis. |
+| **P49** | Complete | Conversation memory retrieval added for context persistence across sessions. |
+| **P50** | Complete | Integration test sweep stabilized end-to-end tooling and workflow paths. |
+| **P51** | Complete | Internal hardening and compatibility cleanups across orchestration-adjacent paths. |
+| **P52** | Complete | Slack and Notion integrations added with scoped key loading and handlers. |
+| **P53** | Complete | OrchestrationBus and agent handoff model introduced for workflow composition. |
+| **P54** | Complete | Workflow hardening + observability with `workflow_steps` and step-level tracking. |
 
-| Phase | Name | New Tools | New Timer | New LanceDB Table | Key Module |
-|-------|------|-----------|-----------|-------------------|------------|
-| **P44** | Input Validation | — | — | `tool_metadata` | `ai/mcp_bridge/tool_filter.py` |
-| **P45** | Semantic Cache | — | — | `semantic_cache` | `ai/cache_semantic.py` |
-| **P46** | Token Budget | `system.budget_status` | `dep-audit.timer` (Weekly) | `metrics` | `ai/budget.py` |
-| **P47** | Code Patterns | `knowledge.pattern_search`, `knowledge.task_patterns` | — | `code_patterns`, `task_patterns` | `ai/rag/`, `ai/learning/` |
-| **P48** | Headless Briefing | `security.alert_summary` | `security-alert.timer` (Every 6h) | `alerts` | `ai/security/alerts.py` |
-| **P49** | Conversation Memory | `memory.search` | — | `conversation_memory` | `ai/memory.py` |
-| **P50** | Integration Tests | — | — | `test_mappings` | `ai/testing/` |
+## P55+ Candidate Directions
 
-> **Note**: Tool and timer additions reflect the incremental changes introduced in each phase. LanceDB tables store the persistent state for each feature.
-
-## Dependency Graph
-```mermaid
-graph LR
-    P44 --> P45
-    P45 --> P46
-    P46 --> P47
-    P47 --> P48
-    P48 --> P49
-    P49 --> P50
-```
-
-**Execution Order**: P44 → P45 → P46 → P47 → P48 → P49 → P50
-
-## Completion Status
-All phases P44–P50 are marked as **COMPLETE** with a completion date of **2026-04-07**.
+1. **OrchestrationBus to real inter-agent composition**
+   - Move from basic dispatch to richer agent-to-agent result composition and reconciliation.
+2. **Workflow scheduler expansion**
+   - Add cron-driven automated workflow runs via dedicated systemd timers per workflow profile.
+3. **LanceDB-backed workflow templates**
+   - Persist user-defined reusable workflow templates with sharing/versioning support.
+4. **Security workflow ML on `workflow_steps`**
+   - Detect anomalies in per-step timing/error patterns for early workflow-health regression alerts.

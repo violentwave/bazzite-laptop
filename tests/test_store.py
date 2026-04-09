@@ -40,9 +40,12 @@ def _cleanup_lancedb_mock_after_module():
 def _reset_lancedb_mock():
     """Reset the lancedb mock and singleton between tests."""
     import ai.rag.store as _store_mod
-    _mock_lancedb.reset_mock(side_effect=True)
-    # Replace connect with a fresh mock to clear accumulated calls from other test files.
-    _mock_lancedb.connect = MagicMock(return_value=MagicMock())
+
+    if hasattr(_mock_lancedb, "reset_mock"):
+        _mock_lancedb.reset_mock(side_effect=True)
+        # Replace connect with a fresh mock to clear accumulated calls from other test files.
+        _mock_lancedb.connect = MagicMock(return_value=MagicMock())
+
     _store_mod._store_instance = None
     yield
     _store_mod._store_instance = None
@@ -52,8 +55,14 @@ def _reset_lancedb_mock():
 def mock_db():
     """A mock LanceDB connection returned by lancedb.connect()."""
     db = MagicMock()
-    _mock_lancedb.connect.return_value = db
-    return db
+
+    if hasattr(_mock_lancedb, "reset_mock"):
+        _mock_lancedb.connect.return_value = db
+        yield db
+        return
+
+    with patch("lancedb.connect", return_value=db):
+        yield db
 
 
 @pytest.fixture()
@@ -109,14 +118,29 @@ class TestVectorStoreInit:
 
     def test_lazy_connection(self, tmp_path):
         """Does not connect on __init__."""
-        VectorStore(db_path=tmp_path / "lazy-db")
-        _mock_lancedb.connect.assert_not_called()
+        if hasattr(_mock_lancedb.connect, "assert_not_called"):
+            VectorStore(db_path=tmp_path / "lazy-db")
+            _mock_lancedb.connect.assert_not_called()
+            return
 
-    def test_connect_called_once(self, store):
+        with patch("lancedb.connect") as mock_connect:
+            VectorStore(db_path=tmp_path / "lazy-db")
+            mock_connect.assert_not_called()
+
+    def test_connect_called_once(self, tmp_path):
         """Calling _connect() twice reuses the same connection."""
-        store._connect()
-        store._connect()
-        _mock_lancedb.connect.assert_called_once()
+        if hasattr(_mock_lancedb.connect, "assert_called_once"):
+            store = VectorStore(db_path=tmp_path / "reuse-db")
+            store._connect()
+            store._connect()
+            _mock_lancedb.connect.assert_called_once()
+            return
+
+        with patch("lancedb.connect", return_value=MagicMock()) as mock_connect:
+            store = VectorStore(db_path=tmp_path / "reuse-db")
+            store._connect()
+            store._connect()
+            mock_connect.assert_called_once()
 
 
 # ── Add Log Chunks ──
@@ -243,16 +267,18 @@ class TestSearchLogs:
         mock_db.list_tables.return_value = ["security_logs"]
         mock_db.open_table.return_value = mock_table
 
-        result_list = [{
-            "id": "chunk-001",
-            "source_file": "/var/log/health.log",
-            "section": "GPU Status",
-            "content": "GPU temp: 42C",
-            "log_type": "health",
-            "timestamp": "2026-03-15T08:00:00+00:00",
-            "vector": [0.1] * 768,
-            "_distance": 0.05,
-        }]
+        result_list = [
+            {
+                "id": "chunk-001",
+                "source_file": "/var/log/health.log",
+                "section": "GPU Status",
+                "content": "GPU temp: 42C",
+                "log_type": "health",
+                "timestamp": "2026-03-15T08:00:00+00:00",
+                "vector": [0.1] * 768,
+                "_distance": 0.05,
+            }
+        ]
         mock_table.search.return_value.limit.return_value.to_list.return_value = result_list
 
         results = store.search_logs([0.1] * 768, limit=5)
@@ -291,17 +317,19 @@ class TestSearchThreats:
         mock_db.list_tables.return_value = ["threat_intel"]
         mock_db.open_table.return_value = mock_table
 
-        result_list = [{
-            "id": "threat-001",
-            "hash": "a" * 64,
-            "source": "virustotal",
-            "family": "trojan.eicar/test",
-            "risk_level": "high",
-            "content": "62/72 detections",
-            "timestamp": "2026-03-15T12:00:00+00:00",
-            "vector": [0.2] * 768,
-            "_distance": 0.03,
-        }]
+        result_list = [
+            {
+                "id": "threat-001",
+                "hash": "a" * 64,
+                "source": "virustotal",
+                "family": "trojan.eicar/test",
+                "risk_level": "high",
+                "content": "62/72 detections",
+                "timestamp": "2026-03-15T12:00:00+00:00",
+                "vector": [0.2] * 768,
+                "_distance": 0.03,
+            }
+        ]
         mock_table.search.return_value.limit.return_value.to_list.return_value = result_list
 
         results = store.search_threats([0.2] * 768, limit=3)

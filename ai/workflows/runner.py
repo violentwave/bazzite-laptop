@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 import time
+import uuid
 from typing import TYPE_CHECKING
 
 logger = logging.getLogger("ai.workflows")
@@ -79,10 +80,20 @@ class WorkflowRunner:
             "iterations": iterations,
         }
 
-    async def run_plan(self, plan: list[dict]) -> dict:
+    async def run_plan(self, plan: list[dict], workflow_name: str = "", run_id: str = "") -> dict:
         """Execute a predefined plan with dependencies."""
         results = {}
         completed = set()
+
+        if not run_id:
+            run_id = str(uuid.uuid4())
+
+        try:
+            from ai.orchestration.observer import get_observer
+
+            observer = get_observer()
+        except Exception:
+            observer = None
 
         for step in plan:
             step_id = step.get("id", str(hash(str(step))))
@@ -92,41 +103,77 @@ class WorkflowRunner:
                 results[step_id] = {"status": "skipped", "reason": "dependencies not met"}
                 continue
 
-            if step.get("agent"):
-                agent_result = await self._execute_agent_step(step, results)
-                results[step_id] = {
-                    "status": "complete" if agent_result.success else "failed",
-                    "result": agent_result.data,
-                    "error": agent_result.error,
-                }
-                if agent_result.success:
-                    completed.add(step_id)
-                elif step.get("abort_on_error"):
-                    break
-                continue
+            step_name = step.get("name", step_id)
+            tool_called = step.get("tool", step.get("agent", ""))
+            agent_name = step.get("agent", "workflow_runner")
+
+            obs_step_id = None
+            if observer and workflow_name:
+                try:
+                    obs_step_id = observer.record_step_start(
+                        run_id=run_id,
+                        workflow_name=workflow_name,
+                        step_name=step_name,
+                        tool_called=tool_called,
+                        agent_name=agent_name,
+                    )
+                except Exception:
+                    observer = None
 
             try:
-                tool = step.get("tool")
-                args = step.get("args", {})
-
-                if tool == "llm":
-                    result = await self._call_llm_direct(args.get("prompt", ""))
+                if step.get("agent"):
+                    agent_result = await self._execute_agent_step(step, results)
+                    results[step_id] = {
+                        "status": "complete" if agent_result.success else "failed",
+                        "result": agent_result.data,
+                        "error": agent_result.error,
+                    }
+                    step_status = "success" if agent_result.success else "failed"
+                    if agent_result.success:
+                        completed.add(step_id)
+                    elif step.get("abort_on_error"):
+                        break
                 else:
-                    result = await self._execute_tool({"name": tool, "arguments": args})
+                    try:
+                        tool = step.get("tool")
+                        args = step.get("args", {})
 
-                results[step_id] = {"status": "complete", "result": result}
-                completed.add(step_id)
+                        if tool == "llm":
+                            result = await self._call_llm_direct(args.get("prompt", ""))
+                        else:
+                            result = await self._execute_tool({"name": tool, "arguments": args})
+
+                        results[step_id] = {"status": "complete", "result": result}
+                        completed.add(step_id)
+                        step_status = "success"
+                    except Exception as e:
+                        results[step_id] = {"status": "failed", "error": str(e)}
+                        step_status = "failed"
+                        if step.get("abort_on_error", False):
+                            break
             except Exception as e:
                 results[step_id] = {"status": "failed", "error": str(e)}
-                if step.get("abort_on_error", False):
-                    break
+                step_status = "failed"
+
+            if observer and obs_step_id:
+                try:
+                    output = results[step_id].get("result")
+                    error = results[step_id].get("error")
+                    observer.record_step_end(
+                        step_id=obs_step_id,
+                        status=step_status,
+                        output=output,
+                        error=error,
+                    )
+                except Exception:
+                    logger.debug("Failed to record step end for %s", step_id)
 
         status = (
             "complete"
             if all(r.get("status") == "complete" for r in results.values())
             else "partial"
         )
-        return {"steps": results, "status": status}
+        return {"steps": results, "status": status, "run_id": run_id}
 
     async def _execute_agent_step(self, step: dict, results: dict) -> AgentResult:
         """Execute an agent-dispatched step via OrchestrationBus."""

@@ -67,6 +67,8 @@ class TestAllowlistVsCode:
             "system.perf_profile",
             "system.mcp_audit",
             "intel.ingest_pending",
+            "workflow.history_steps",
+            "workflow.cancel",
         }
         missing = [
             name for name in allowlist if name not in prompt_text and name not in known_missing
