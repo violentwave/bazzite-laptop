@@ -236,12 +236,12 @@ Source: `configs/mcp-bridge-allowlist.yaml` + tools registered directly in serve
 
 | Tool | Source | Args | Description |
 |------|--------|------|-------------|
-| `workflow.run` | python: `ai.workflows.runner` | `workflow_id`, `steps` | Execute an ad-hoc workflow (ReAct loop) |
-| `workflow.list` | python: `ai.workflows.definitions` | — | List all available named workflows |
-| `workflow.status` | python: `ai.mcp_bridge.handlers.workflow_tools` | `name` | Get last run result for a named workflow |
-| `workflow.agents` | python: `ai.mcp_bridge.handlers.workflow_tools` | — | List registered agents and their supported task types |
-| `workflow.handoff` | python: `ai.mcp_bridge.handlers.workflow_tools` | `agent`, `task_type`, `payload`, `priority` | Dispatch a task directly to a named agent via OrchestrationBus |
-| `workflow.history` | python: `ai.mcp_bridge.handlers.workflow_tools` | `workflow_name` (optional), `limit` (default 10) | Query workflow_runs history table |
+| `workflow.list` | python: `ai.mcp_bridge.handlers.workflow_tools` | — | List all registered workflow definitions |
+| `workflow.run` | python: `ai.mcp_bridge.handlers.workflow_tools` | `name`, `triggered_by` | Trigger a named workflow. Logs run to workflow_runs table |
+| `workflow.status` | python: `ai.mcp_bridge.handlers.workflow_tools` | `name` | Get last run result for a workflow from workflow_runs table |
+| `workflow.agents` | python: `ai.mcp_bridge.handlers.workflow_tools` | — | List all registered agents and their supported task types |
+| `workflow.handoff` | python: `ai.mcp_bridge.handlers.workflow_tools` | `agent`, `task_type`, `payload`, `priority` | Manually dispatch a task message to a named agent |
+| `workflow.history` | python: `ai.mcp_bridge.handlers.workflow_tools` | `workflow_name`, `limit` | Query workflow_runs table |
 
 ### agents.* (5 tools)
 
@@ -316,17 +316,17 @@ Module: `ai/orchestration/`
 
 The OrchestrationBus provides async pub/sub message dispatch between named agents. All 5 agents are pre-registered in the default bus via `get_default_bus()`.
 
-### Current State (Post-P51)
+### Current State (Post-P53)
 
 | Metric | Value |
 |--------|-------|
 | MCP tools | 88 (+ 1 health endpoint) |
-| Systemd timers | 22 |
-| LanceDB tables | 26 |
+| Systemd timers | 23 |
+| LanceDB tables | 27 |
 | Tests | 2317+ |
 | Cloud LLM providers | 6 |
 | Threat intel APIs | 16 |
-| P44-P51 status | complete (2026-04-08) |
+| P44-P53 status | complete (2026-04-09) |
 
 ### Dependency Graph
 
@@ -409,14 +409,7 @@ P51 (TBD) ←
 | `code-index.timer` | Daily 6:00 | Code intelligence index rebuild |
 | `dep-audit.timer` | Weekly | pip-audit vulnerability scan + SBOM |
 | `weekly-insights.timer` | Weekly | AI-generated weekly system insights |
-| `ai-workflow-health.timer` | Every 6h | Run security_deep_scan workflow (**deploy pending**) |
-
-> ⚠️ `ai-workflow-health.timer` is committed but not yet enabled. Deploy with:
-> ```
-> cp systemd/ai-workflow-health.{timer,service} ~/.config/systemd/user/
-> restorecon ~/.config/systemd/user/ai-workflow-health.*
-> systemctl --user daemon-reload && systemctl --user enable --now ai-workflow-health.timer
-> ```
+| `ai-workflow-health.timer` | Every 6h | Workflow health check (security_deep_scan) |
 
 ---
 
@@ -454,13 +447,7 @@ P51 (TBD) ←
 | `ai/key_manager.py` | API key presence checker |
 | `ai/mcp_bridge/server.py` | FastMCP server on :8766, tool registration |
 | `ai/mcp_bridge/tools.py` | Tool dispatch handlers for all 88 tools |
-| `ai/mcp_bridge/tool_filter.py` | Server-side namespace/semantic tool filtering |
-| `ai/mcp_bridge/handlers/workflow_tools.py` | 6 workflow.* MCP tool handlers (P53) |
-| `ai/orchestration/` | OrchestrationBus, AgentMessage, AgentRegistry, BaseAgent, TaskType (P53) |
-| `ai/agents/*_adapter.py` | 5 BaseAgent adapters wrapping existing agents to orchestration bus (P53) |
-| `ai/workflows/runner.py` | WorkflowRunner with ReAct loop + agent-dispatched steps (P53) |
-| `ai/workflows/definitions.py` | Named workflow definitions incl. 3 multi-agent workflows (P53) |
-| `ai/workflows/cli.py` | `python -m ai.workflows.cli --run <name>` entry point (P53) |
+| `ai/mcp_bridge/tool_filter.py` | Server-side namespace/semantic tool filtering (P29-Prereq) |
 | `ai/threat_intel/` | VT, OTX, AbuseIPDB, GreyNoise, NVD, URLhaus, etc. (6 API modules) |
 | `ai/rag/` | LanceDB store, embedder, query engine, code query |
 | `ai/log_intel/` | Log ingestion, anomaly detection, semantic search |
@@ -474,23 +461,30 @@ P51 (TBD) ←
 | `ai/security/alerts.py` | SecurityAlertEvaluator: CVE matching, scan freshness, deduplication |
 | `ai/security/inputvalidator.py` | Pre-dispatch input validation + secret redaction |
 | `ai/system/` | release_watch, fedora_updates, pkg_intel, dep_audit |
-| `ai/testing/` | TestStabilityTracker, pytest_plugin, traceability |
-| `ai/code_intel/` | AST parser, grimp import graph, code knowledge graph |
-| `ai/collab/` | Task queue, shared context, knowledge base, file claims |
-| `ai/tools/` | Dynamic tool builder with safety validation |
-| `ai/insights.py` | InsightGenerator for weekly self-assessment |
-| `ai/integrations/` | slack.py, notion.py — scoped-loaded external integrations (P52) |
+| `ai/testing/` | TestStabilityTracker, pytest_plugin, traceability (P32) |
+| `ai/code_intel/` | AST parser, grimp import graph, code knowledge graph (P29) |
+| `ai/collab/` | Task queue, shared context, knowledge base, file claims (P31) |
+| `ai/workflows/` | ReAct runner, workflow store, event triggers (P30) |
+| `ai/tools/` | Dynamic tool builder with safety validation (P33) |
+| `ai/skills/` | Pluggable skill loading (P30) |
+| `ai/orchestration/` | OrchestrationBus, AgentMessage, AgentRegistry, BaseAgent (P53) |
+| `ai/insights.py` | InsightGenerator for weekly self-assessment (P28) |
+| `scripts/index-code.py` | Rebuild code intelligence index (P29) |
+| `scripts/test-smart.sh` | Smart/full/flaky test runner wrapper (P32) |
+| `scripts/security-alert-eval.py` | Security alert evaluation script (P27) |
+| `scripts/parse-handoff.py` | Parse HANDOFF.md to task_patterns table (P38) |
 | `configs/mcp-bridge-allowlist.yaml` | Tool definitions + argument validation |
 | `configs/safety-rules.json` | Input validation rules |
 | `configs/litellm-config.yaml` | LiteLLM provider routing config |
 | `configs/ai-rate-limits.json` | Per-provider rate limits |
 | `configs/keys.env.enc` | sops-encrypted API keys (in git, safe) |
-| `scripts/smoke-test-p53.py` | P53 integration smoke test |
-| `scripts/lancedb-prune.py` | LanceDB retention pruning |
-| `scripts/metrics-compact.py` | Metrics compaction |
-| `scripts/parse-handoff.py` | Parse HANDOFF.md to task_patterns table |
+| `scripts/` | Shell/Python scripts (deploy, scan, backup, etc.) |
+| `scripts/lancedb-prune.py` | LanceDB retention pruning (90d logs, 180d threats) + cache cleanup |
+| `scripts/metrics-compact.py` | Metrics compaction (P24) |
+| `scripts/r2-set-lifecycle.py` | One-time R2 bucket lifecycle rule setup (180d auto-expiration) |
+| `scripts/log-task-success.py` | CLI for logging successful task patterns to LanceDB (P22) |
 | `systemd/` | 23 timers + associated services |
-| `tests/` | 2193 pytest tests |
+| `tests/` | ~1951 pytest tests |
 | `tray/` | PySide6 system tray app |
 
 ### Runtime paths (not in repo)
@@ -500,9 +494,9 @@ P51 (TBD) ←
 | `~/.config/bazzite-ai/keys.env` | Plaintext API keys (chmod 600, never in git) |
 | `~/.config/environment.d/bazzite-ai.conf` | Systemd user env vars (SENTRY_DSN, SENTRY_ENV) |
 | `~/security/` | Canonical root for all runtime security data |
-| `~/security/.status` | Shared JSON: ClamAV + health state |
-| `~/security/vector-db/` | LanceDB root (→ `/var/mnt/ext-ssd/bazzite-ai/vector-db`). Tables: `documents`, `code_index`, `log_entries`, `code_patterns`, `task_patterns`, `semantic_cache`, `metrics`, `conversation_memory`, `system_insights`, `tool_metadata`, `test_mappings`, `code_nodes`, `relationships`, `import_graph`, `change_history`, `shared_context`, `agent_knowledge`, `workflows`, `persisted_tools`, `workflow_runs` (P53 — **27 tables total**) |
-| `~/security/vector-db/.archive-state.json` | R2 archive state |
+| `~/security/.status` | Shared JSON: ClamAV + health state (tray + MCP read this) |
+| `~/security/vector-db/` | LanceDB root (→ `/var/mnt/ext-ssd/bazzite-ai/vector-db`). Tables: `documents` (RAG docs), `code_index` (code embeddings), `log_entries` (system logs), `code_patterns` (curated code patterns — P21), `task_patterns` (task outcomes — P22), `semantic_cache` (LLM response cache — P23), `metrics` (observability time-series — P24), `conversation_memory` (cross-session memory — P25), `system_insights` (weekly insight snapshots — P28), `tool_metadata` (P29-Prereq), `test_mappings` (P32), `code_nodes`, `relationships`, `import_graph`, `change_history` (P29), `shared_context`, `agent_knowledge` (P31), `workflows` (P30), `persisted_tools` (P33), `workflow_runs` (P53) |
+| `~/security/vector-db/.archive-state.json` | R2 archive state (upload records with key, timestamp, size) |
 | `~/security/llm-status.json` | LLM provider health + token usage |
 | `~/security/key-status.json` | API key presence map |
 | `~/security/release-watch.json` | Release watch results |

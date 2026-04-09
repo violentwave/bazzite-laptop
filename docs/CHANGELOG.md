@@ -7,6 +7,52 @@ Bazzite security/gaming system.
 
 ---
 
+## Phase P53 — Agent Orchestration Expansion (2026-04-09)
+
+### Delivered
+- **Agent Orchestration** (`ai/orchestration/`):
+  - `OrchestrationBus`: message bus for inter-agent communication
+  - `AgentMessage`: typed message with source, target, task_type, payload
+  - `AgentRegistry`: dynamic agent registration and discovery
+  - `BaseAgent`: abstract base for all agents with common interface
+
+- **5 BaseAgent Adapters**:
+  - `SecurityAgent`, `CodeQualityAgent`, `PerformanceAgent`, `KnowledgeAgent`, `TimerSentinel`
+  - All wired to orchestration bus via `register_with_bus()`
+
+- **4 Cross-Agent Handoff Scenarios**:
+  - security → code_quality (issue escalation)
+  - code_quality → performance (regression detection)
+  - performance → knowledge (insight storage)
+  - knowledge → security (threat context)
+
+- **3 Multi-Agent Workflows** (`ai/workflows/definitions.py`):
+  - `security_deep_scan`: security → knowledge → collab
+  - `code_health_check`: code_quality → performance → knowledge
+  - `morning_briefing_enriched`: timer → security → knowledge
+
+- **6 workflow.* MCP tools**:
+  - `workflow.list`, `workflow.run`, `workflow.status`
+  - `workflow.agents`, `workflow.handoff`, `workflow.history`
+
+- **workflow_runs LanceDB table** (`ai/rag/store.py`):
+  - Schema: run_id, workflow_name, triggered_by, started_at, completed_at, status, step_count, steps_completed, result_summary, error, vector
+
+- **ai-workflow-health systemd timer**:
+  - Runs `security_deep_scan` workflow every 6 hours
+
+- **CLI entry point**: `python -m ai.workflows.cli --run <workflow_name>`
+
+- **Tests**: 9 passing (test_mcp_workflow_tools.py)
+
+### Current State
+- MCP tools: 88
+- LanceDB tables: 27
+- Systemd timers: 23
+- Tests: 2193
+
+---
+
 ## Phase P52 — Slack & Notion Integrations (2026-04-09)
 
 ### Delivered

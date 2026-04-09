@@ -291,12 +291,16 @@ All tools are accessible through Newelle via the MCP bridge. They are read-only
 | `collab.add_task`       | `title`, `task_type`, `description`, `priority` | Add a task to the queue |
 | `collab.search_knowledge` | `query`, `top_k`               | Search the agent knowledge base       |
 
-### workflow.* (2 tools)
+### workflow.* (6 tools)
 
-| Tool             | Args                      | What it returns                  |
-|------------------|---------------------------|----------------------------------|
-| `workflow.run`   | `workflow_id`, `steps`    | Execute a saved workflow          |
-| `workflow.list`  | —                         | List available workflows          |
+| Tool                 | Args                                  | What it returns                                    |
+|----------------------|---------------------------------------|----------------------------------------------------|
+| `workflow.list`      | —                                     | List all registered workflow definitions           |
+| `workflow.run`       | `name`, `triggered_by`                | Trigger a named workflow, logs to LanceDB          |
+| `workflow.status`    | `name`                                | Get last run result for a workflow                 |
+| `workflow.agents`    | —                                     | List all registered agents and task types          |
+| `workflow.handoff`   | `agent`, `task_type`, `payload`, `priority` | Manually dispatch a task to an agent |
+| `workflow.history`   | `workflow_name`, `limit`             | Query workflow_runs table                          |
 
 ### intel.* (2 tools)
 
@@ -313,7 +317,7 @@ All tools are accessible through Newelle via the MCP bridge. They are read-only
 | `agents.performance_tuning`| —    | Temps, memory, disk, gaming profile analysis         |
 | `agents.knowledge_storage` | —    | Vector DB health, ingestion freshness, Ollama status |
 | `agents.code_quality`      | —    | ruff + bandit + git status report                    |
-| `agents.timer_health`      | —    | Validate all 22 systemd timers; returns per-timer status and overall health |
+| `agents.timer_health`      | —    | Validate all 23 systemd timers; returns per-timer status and overall health |
 
 ### Built-in
 
@@ -644,6 +648,68 @@ systemctl --user restart bazzite-llm-proxy.service
 When enabled, each chat turn is embedded and stored. Relevant past context
 is retrieved and prepended to new requests. Disable if Newelle's built-in
 semantic memory already covers this need.
+
+---
+
+## 8b. Workflow Orchestration
+
+The AI layer includes a workflow engine for orchestrating multi-agent tasks.
+Workflows are defined in `ai/workflows/definitions.py` and executed via the
+`workflow.*` MCP tools.
+
+### Available Workflows
+
+| Workflow | Description |
+|----------|-------------|
+| `security_deep_scan` | Full security audit: scan → health → ingest → RAG summary |
+| `code_health_check` | Code quality → performance → knowledge storage |
+| `morning_briefing_enriched` | Timer-triggered security briefing with knowledge context |
+
+### Using Workflow Tools
+
+**List available workflows:**
+```
+workflow.list
+```
+
+**Run a workflow:**
+```
+workflow.run {name: "security_deep_scan", triggered_by: "user"}
+```
+
+**Check workflow status:**
+```
+workflow.status {name: "security_deep_scan"}
+```
+
+**Query workflow history:**
+```
+workflow.history {workflow_name: "security_deep_scan", limit: 10}
+```
+
+### Agent Handoff
+
+You can manually dispatch tasks to specific agents:
+
+```
+workflow.handoff {
+  agent: "security",
+  task_type: "run_audit",
+  payload: {target: "/home/lch/projects"},
+  priority: 5
+}
+```
+
+Available agents: `security`, `code_quality`, `performance`, `knowledge`, `timer_sentinel`
+
+### Automated Health Check
+
+The `ai-workflow-health.timer` runs every 6 hours to execute `security_deep_scan`
+automatically. To enable after installation:
+
+```bash
+systemctl --user enable --now ai-workflow-health.timer
+```
 
 ---
 

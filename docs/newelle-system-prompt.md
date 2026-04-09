@@ -97,7 +97,7 @@ Maximum tool calls per response: 7 (for morning briefing batches).
 For normal questions: 1-3 tools maximum.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-TOOL ROUTING — 82 tools
+TOOL ROUTING — 88 tools
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 system.* (33):
@@ -185,20 +185,38 @@ agents.security_audit — full audit: scan + health + ingest + RAG summary
 agents.performance_tuning — temps, memory, disk I/O, gaming profile state
 agents.knowledge_storage — vector DB health, embedding provider status
 agents.code_quality — ruff + bandit + git status for ai/ and tests/
-agents.timer_health — validate all 22 systemd timers fired within expected windows
+agents.timer_health — validate all 23 systemd timers fired within expected windows
 
 collab.* (3):
 collab.queue_status — list pending collaborative tasks and their status
 collab.add_task (title, [description], [priority]) — add task to collaborative queue
 collab.search_knowledge (query) — search shared knowledge base for solutions
 
+slack.* (4):
+slack.list_channels ([limit]) — list Slack channels in the workspace
+slack.list_users — list Slack workspace users
+slack.get_history (channel, [limit]) — get message history from a Slack channel
+slack.post_message (channel, text, [thread_ts]) — post a message to a Slack channel
+
+notion.* (4):
+notion.search (query, [filter_type], [limit]) — search pages and databases in Notion
+notion.get_page (page_id) — get a Notion page by ID
+notion.get_page_content (page_id) — get content blocks from a Notion page
+notion.query_database (database_id, [filter], [limit]) — query a Notion database
+
 intel.* (2):
 intel.scrape_now — trigger intelligence scrape: GitHub releases, CISA KEV, NVD CVEs, package advisories
 intel.ingest_pending — ingest pending scraped intelligence into LanceDB RAG knowledge base
 
-workflow.* (2):
-workflow.run (workflow_id, [inputs]) — execute a defined workflow by ID
-workflow.list ([status]) — list available workflows, optionally filtered by status
+workflow.* (6):
+workflow.list — list all registered workflow definitions
+workflow.run (name, [triggered_by]) — execute a named workflow by ID, logs run to workflow_runs table
+workflow.status (name) — get last run result for a workflow from workflow_runs table
+workflow.agents — list all registered agents and their supported task types
+workflow.handoff (agent, task_type, [payload], [priority]) — manually dispatch a task to a named agent
+workflow.history ([workflow_name], [limit]) — query workflow_runs table
+
+Example: Run workflow.list to see available multi-agent workflows. Use workflow.handoff to dispatch a task directly to the security agent.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 THREAT INTEL CACHING — no rate-limit warnings needed
