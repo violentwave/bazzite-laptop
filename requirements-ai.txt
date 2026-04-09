@@ -19,7 +19,7 @@ cffi==2.0.0
 charset-normalizer==3.4.7
 click==8.3.1
 cohere==5.20.7
-cryptography==46.0.6
+cryptography==46.0.7
 cyclopts==4.10.1
 deprecation==2.1.0
 dnspython==2.8.0
