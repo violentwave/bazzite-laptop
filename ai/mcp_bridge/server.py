@@ -149,7 +149,16 @@ def create_app():
         "system.dep_audit": {"readOnlyHint": True, "idempotentHint": True},
         "system.dep_audit_history": {"readOnlyHint": True, "idempotentHint": True},
         "system.perf_metrics": {"readOnlyHint": True, "idempotentHint": True},
-        # ── collaboration ────────────────────────────────────────────────────
+        # ── Slack integration ───────────────────────────────────────────────────
+        "slack.list_channels": {"readOnlyHint": True, "idempotentHint": True},
+        "slack.list_users": {"readOnlyHint": True, "idempotentHint": True},
+        "slack.get_history": {"readOnlyHint": True, "idempotentHint": True},
+        "slack.post_message": {
+            "readOnlyHint": False,
+            "idempotentHint": False,
+            "openWorldHint": True,
+        },
+        # ── collaboration ──────────────────────────────────────────────────────
         "collab.queue_status": {"readOnlyHint": True, "idempotentHint": True},
         "collab.add_task": {"readOnlyHint": False, "idempotentHint": False},
         "collab.search_knowledge": {"readOnlyHint": True, "idempotentHint": True},
@@ -770,5 +779,48 @@ def create_app():
             return get_metrics()
         except Exception as e:
             return {"error": str(e)}
+
+    # Slack tools
+    @mcp.tool(
+        name="slack.list_channels",
+        description="List Slack channels",
+        annotations={"readOnlyHint": True, "idempotentHint": True},
+    )
+    async def _slack_list_channels(limit: int = 100):
+        from ai.slack.handlers import handle_slack_list_channels
+
+        return await handle_slack_list_channels({"limit": limit})
+
+    @mcp.tool(
+        name="slack.list_users",
+        description="List Slack users",
+        annotations={"readOnlyHint": True, "idempotentHint": True},
+    )
+    async def _slack_list_users():
+        from ai.slack.handlers import handle_slack_list_users
+
+        return await handle_slack_list_users({})
+
+    @mcp.tool(
+        name="slack.get_history",
+        description="Get Slack channel history",
+        annotations={"readOnlyHint": True, "idempotentHint": True},
+    )
+    async def _slack_get_history(channel: str, limit: int = 100):
+        from ai.slack.handlers import handle_slack_get_history
+
+        return await handle_slack_get_history({"channel": channel, "limit": limit})
+
+    @mcp.tool(
+        name="slack.post_message",
+        description="Post a message to Slack",
+        annotations={"readOnlyHint": False, "idempotentHint": False, "openWorldHint": True},
+    )
+    async def _slack_post_message(channel: str, text: str, thread_ts: str | None = None):
+        from ai.slack.handlers import handle_slack_post_message
+
+        return await handle_slack_post_message(
+            {"channel": channel, "text": text, "thread_ts": thread_ts}
+        )
 
     return mcp

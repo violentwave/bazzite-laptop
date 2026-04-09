@@ -1,9 +1,37 @@
 # Changelog — Bazzite AI Enhancement Layer
-<!-- System: Acer Predator G3-571 | Bazzite 43 | Last updated: 2026-04-06 -->
+<!-- System: Acer Predator G3-571 | Bazzite 43 | Last updated: 2026-04-09 -->
 
 All notable changes are recorded here. Phases correspond to the original
 implementation plan for the AI enhancement layer built on top of the base
 Bazzite security/gaming system.
+
+---
+
+## Phase P52 — Slack & Notion Integrations (2026-04-09)
+
+### Delivered
+- **Slack integration** (`ai/slack/client.py`, `ai/slack/handlers.py`):
+  - 4 MCP tools: `slack.list_channels`, `slack.list_users`, `slack.get_history`, `slack.post_message`
+  - Scoped secret loading via `load_keys(scope="slack")`
+  - Token redaction function (`redact_token()`)
+  - `is_slack_configured()` for missing-secret handling
+
+- **Notion integration** (`ai/notion/client.py`, `ai/notion/handlers.py`):
+  - 4 MCP tools: `notion.search`, `notion.get_page`, `notion.get_page_content`, `notion.query_database`
+  - Scoped secret loading via `load_keys(scope="notion")`
+  - API key redaction function (`redact_api_key()`)
+  - `is_notion_configured()` for missing-secret handling
+
+- **Security hardening** (`ai/config.py`):
+  - Added `notion` scope to `KEY_SCOPES`
+  - Fixed `_scoped_keys_loaded` dict for independent per-scope caching
+  - Re-encrypted `configs/keys.env.enc` with Slack/Notion keys
+
+- **Tests**: 25 passing (13 Slack + 12 Notion), regression tests for missing-secret behavior
+
+### Current State
+- MCP tools: 88 (+6 from P52)
+- Key scopes: llm, threat_intel, slack, notion
 
 ---
 

@@ -25,7 +25,7 @@ AI chat/voice assistant) as the primary interface.
     ┌─────▼──────┐        ┌──────▼──────────────┐
     │ LLM Proxy  │        │  MCP Bridge         │
     │ :8767      │        │  :8766 (FastMCP)    │
-      │ Starlette  │        │  82 tools           │
+      │ Starlette  │        │  88 tools           │
     └─────┬──────┘        └──────┬──────────────┘
           │                      │
     ┌─────▼──────┐        ┌──────▼──────────────┐
@@ -75,7 +75,7 @@ systemctl --user start bazzite-llm-proxy.service bazzite-mcp-bridge.service
 ```bash
 # MCP bridge health
 curl -s http://127.0.0.1:8766/health
-# Expected: {"status": "ok", "tools": 82}
+# Expected: {"status": "ok", "tools": 88}
 
 # LLM proxy health
 curl -s http://127.0.0.1:8767/health
@@ -169,7 +169,7 @@ bash scripts/start-security-tray-qt.sh
 
 ---
 
-## 4. MCP Tools Reference (82 tools)
+## 4. MCP Tools Reference (88 tools)
 
 All tools are accessible through Newelle via the MCP bridge. They are read-only
 (no system mutations). Output is truncated to 4 KB and paths are redacted.
@@ -192,7 +192,7 @@ All tools are accessible through Newelle via the MCP bridge. They are read-only
 | `system.uptime`            | —                            | System uptime and load average                     |
 | `system.service_status`    | —                            | Status of clamav-freshclam, system-health.timer, mcp-bridge, llm-proxy |
 | `system.llm_models`        | —                            | Available modes (fast/reason/batch/code/embed), provider chains, proxy URL |
-| `system.mcp_manifest`      | —                            | All 82 tools with descriptions and args (8 KB limit) |
+| `system.mcp_manifest`      | —                            | All 88 tools with descriptions and args (8 KB limit) |
 | `system.llm_status`        | —                            | Provider health scores, token usage, active models |
 | `system.key_status`        | —                            | API key presence: "set" or "missing" per key (never values) |
 | `system.release_watch`     | —                            | Upstream dependency release updates (GitHub Releases, GHSA) |
@@ -319,7 +319,7 @@ All tools are accessible through Newelle via the MCP bridge. They are read-only
 
 | Tool     | Returns                           |
 |----------|-----------------------------------|
-| `health` | `{"status": "ok", "tools": 82}`   |
+| `health` | `{"status": "ok", "tools": 88}`   |
 
 ---
 
@@ -926,6 +926,19 @@ ollama pull nomic-embed-text
 | `configs/ai-rate-limits.json`             | Per-provider rate limits                   |
 | `configs/r2-config.yaml`                  | Cloudflare R2 log archive settings         |
 | `configs/keys.env.enc`                    | sops-encrypted API keys (in git)           |
+
+### Integrations (P52)
+
+| Integration | Env Vars | Description |
+|-------------|----------|-------------|
+| Slack | `SLACK_BOT_TOKEN` | List channels, users, history, post messages |
+| Notion | `NOTION_API_KEY` | Search pages, get page content, query databases |
+
+To enable: Add keys to `~/.config/bazzite-ai/keys.env`, then run:
+```bash
+sops --input-type dotenv --output-type dotenv --encrypt ~/.config/bazzite-ai/keys.env > configs/keys.env.enc
+git add configs/keys.env.enc && git commit -m "keys: add Slack/Notion"
+```
 
 ### Runtime (NOT in git)
 

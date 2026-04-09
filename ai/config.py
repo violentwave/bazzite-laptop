@@ -53,11 +53,20 @@ KEY_SCOPES: dict[str, set[str]] = {
         "OTX_API_KEY",
         "ABUSEIPDB_KEY",
     },
+    "slack": {
+        "SLACK_BOT_TOKEN",
+        "SLACK_APP_TOKEN",
+        "SLACK_SIGNING_SECRET",
+    },
+    "notion": {
+        "NOTION_API_KEY",
+    },
 }
 
 # ── Key Loading ──
 
 _keys_loaded = False
+_scoped_keys_loaded: dict[str, bool] = {}
 
 
 def load_keys(scope: str | None = None) -> bool:
@@ -68,6 +77,8 @@ def load_keys(scope: str | None = None) -> bool:
             None (default): load ALL keys (backward compatible).
             "llm": only load LLM provider keys.
             "threat_intel": only load threat intel keys.
+            "slack": only load Slack keys.
+            "notion": only load Notion keys.
 
     Raises:
         ValueError: If scope is not None and not a recognized scope name.
@@ -77,35 +88,37 @@ def load_keys(scope: str | None = None) -> bool:
     if scope is not None and scope not in KEY_SCOPES:
         raise ValueError(f"Unknown scope '{scope}'. Valid scopes: {sorted(KEY_SCOPES.keys())}")
 
+    # Scoped load: always parse and load (bypasses _keys_loaded flag)
+    if scope is not None:
+        if scope in _scoped_keys_loaded:
+            return True  # Already loaded this scope
+        if not KEYS_ENV.exists():
+            logging.getLogger(APP_NAME).warning("keys.env not found at %s", KEYS_ENV)
+            return False
+
+        allowed_keys = KEY_SCOPES[scope]
+        with open(KEYS_ENV, encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if not line or line.startswith("#") or "=" not in line:
+                    continue
+                key, _, value = line.partition("=")
+                key = key.strip()
+                value = value.strip()
+                if key in allowed_keys:
+                    os.environ[key] = value
+        _scoped_keys_loaded[scope] = True
+        return True
+
     # Unscoped load uses the cached flag for backward compatibility
-    if scope is None:
-        if _keys_loaded:
-            return True
-        if KEYS_ENV.exists():
-            load_dotenv(KEYS_ENV)
-            _keys_loaded = True
-            return True
-        logging.getLogger(APP_NAME).warning("keys.env not found at %s", KEYS_ENV)
-        return False
-
-    # Scoped load: parse the file and only set allowed keys
-    if not KEYS_ENV.exists():
-        logging.getLogger(APP_NAME).warning("keys.env not found at %s", KEYS_ENV)
-        return False
-
-    allowed_keys = KEY_SCOPES[scope]
-    # Read the env file and selectively load only scoped keys
-    with open(KEYS_ENV, encoding="utf-8") as f:
-        for line in f:
-            line = line.strip()
-            if not line or line.startswith("#") or "=" not in line:
-                continue
-            key, _, value = line.partition("=")
-            key = key.strip()
-            value = value.strip()
-            if key in allowed_keys:
-                os.environ[key] = value
-    return True
+    if _keys_loaded:
+        return True
+    if KEYS_ENV.exists():
+        load_dotenv(KEYS_ENV)
+        _keys_loaded = True
+        return True
+    logging.getLogger(APP_NAME).warning("keys.env not found at %s", KEYS_ENV)
+    return False
 
 
 def get_key(name: str) -> str | None:

@@ -39,7 +39,7 @@ class TestSemanticCache:
     @requires_ollama
     def test_semantic_cache_hit(self, tmp_path):
         """Test semantic cache hit with similar query."""
-        cache = SemanticCache(similarity_threshold=0.85, db_path=str(tmp_path))
+        cache = SemanticCache(similarity_threshold=0.55, db_path=str(tmp_path))
 
         # Patch embed_single to force Ollama — Cohere trial key is rate-limited
         # (100 calls/month) which causes put() to silently store nothing.

@@ -746,29 +746,91 @@ tools:
     annotations:
       readOnly: false
       destructive: false
-      openWorld: true
+      openWorld: false
 
-  system.dep_scan:
-    description: "Scan .venv Python dependencies for known vulnerabilities via OSV API"
+  notion.search:
+    description: "Search pages and databases in Notion"
     source: python
     module: ai.mcp_bridge.tools
-    function: handle_dep_scan
+    function: handle_notion_search
+    args:
+      query:
+        type: str
+        required: false
+        description: "Search query string"
+        max_length: 500
+      filter_type:
+        type: str
+        required: false
+        description: "Filter by 'page' or 'database'"
+        pattern: "^(page|database)?$"
+        max_length: 10
+      limit:
+        type: int
+        required: false
+        description: "Maximum number of results"
+        max_length: 100
     annotations:
       readOnly: true
       destructive: false
-      openWorld: true
+      openWorld: false
 
-  system.test_analysis:
-    description: "Analyze pytest output for failure patterns and actionable fix hints"
+  notion.get_page:
+    description: "Get a Notion page by ID"
     source: python
     module: ai.mcp_bridge.tools
-    function: handle_test_analysis
+    function: handle_notion_get_page
     args:
-      input:
+      page_id:
         type: str
         required: true
-        description: "pytest -v output text or path to JSON report"
-        max_length: 50000
+        description: "Page ID (UUID format)"
+        pattern: "^[0-9a-fA-F-]{36}$"
+        max_length: 40
+    annotations:
+      readOnly: true
+      destructive: false
+      openWorld: false
+
+  notion.get_page_content:
+    description: "Get content blocks from a Notion page"
+    source: python
+    module: ai.mcp_bridge.tools
+    function: handle_notion_get_page_content
+    args:
+      page_id:
+        type: str
+        required: true
+        description: "Page ID (UUID format)"
+        pattern: "^[0-9a-fA-F-]{36}$"
+        max_length: 40
+    annotations:
+      readOnly: true
+      destructive: false
+      openWorld: false
+
+  notion.query_database:
+    description: "Query a Notion database"
+    source: python
+    module: ai.mcp_bridge.tools
+    function: handle_notion_query_database
+    args:
+      database_id:
+        type: str
+        required: true
+        description: "Database ID (UUID format)"
+        pattern: "^[0-9a-fA-F-]{36}$"
+        max_length: 40
+      filter:
+        type: str
+        required: false
+        description: "Filter object as JSON string"
+        max_length: 1000
+      limit:
+        type: int
+        required: false
+        description: "Maximum number of results"
+        max_length: 100
     annotations:
       readOnly: true
       destructive: false
@@ -817,6 +879,80 @@ tools:
         required: false
         description: "Path to intel directory (default: ~/security/intel)"
         max_length: 200
+    annotations:
+      readOnly: false
+      destructive: false
+      openWorld: false
+
+  slack.list_channels:
+    description: "List Slack channels in the workspace"
+    source: python
+    module: ai.mcp_bridge.tools
+    function: handle_slack_list_channels
+    args:
+      limit:
+        type: int
+        required: false
+        description: "Maximum number of channels to return"
+        max_length: 10
+    annotations:
+      readOnly: true
+      destructive: false
+      openWorld: false
+
+  slack.list_users:
+    description: "List Slack workspace users"
+    source: python
+    module: ai.mcp_bridge.tools
+    function: handle_slack_list_users
+    args: null
+    annotations:
+      readOnly: true
+      destructive: false
+      openWorld: false
+
+  slack.get_history:
+    description: "Get message history from a Slack channel"
+    source: python
+    module: ai.mcp_bridge.tools
+    function: handle_slack_get_history
+    args:
+      channel:
+        type: str
+        required: true
+        description: "Channel ID (e.g., C01234567)"
+        max_length: 20
+      limit:
+        type: int
+        required: false
+        description: "Maximum number of messages"
+        max_length: 10
+    annotations:
+      readOnly: true
+      destructive: false
+      openWorld: false
+
+  slack.post_message:
+    description: "Post a message to a Slack channel"
+    source: python
+    module: ai.mcp_bridge.tools
+    function: handle_slack_post_message
+    args:
+      channel:
+        type: str
+        required: true
+        description: "Channel ID (e.g., C01234567)"
+        max_length: 20
+      text:
+        type: str
+        required: true
+        description: "Message text"
+        max_length: 3000
+      thread_ts:
+        type: str
+        required: false
+        description: "Thread timestamp to reply in thread"
+        max_length: 30
     annotations:
       readOnly: false
       destructive: false

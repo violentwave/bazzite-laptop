@@ -56,7 +56,7 @@
               MCP tools  │      │  LLM calls
                          │      │
             ┌───────────▼──┐ ┌─▼──────────────────┐
-             │  MCP Bridge  │ │  LLM Proxy          │
+              │  MCP Bridge  │ │  LLM Proxy          │
               │  :8766 FastMCP  │ │  :8767 OpenAI-compat│
                │  88 tools       │ │  6 cloud providers  │
             └──┬──┬──┬──┬─────┘ └──┬──────────────────┘
@@ -99,7 +99,8 @@ Key constraints:
 Source: `configs/mcp-bridge-allowlist.yaml` + tools registered directly in server.py.
 
 > **Phase 12:** PingMiddleware (25s keepalive) active. All tools carry MCP annotations (readOnly/destructive/openWorld hints).
-> **Phase 20:** Added `agents.timer_health` — validates all systemd timers.
+> **Phase 52:** Added Slack (4 tools) and Notion (4 tools) integrations with scoped secret loading.
+> **Phase 20:** Added `agents.timer_health` — validates all 21 systemd timers.
 > **Phase 21:** Added `knowledge.pattern_search` — semantic search over curated code patterns.
 > **Phase 22:** Added `knowledge.task_patterns` — retrieve similar past successful tasks.
 > **Phase 23:** Added `system.budget_status` — token budget usage across tiers.
@@ -283,6 +284,24 @@ Source: `configs/mcp-bridge-allowlist.yaml` + tools registered directly in serve
 |------|--------|------|-------------|
 | `secrets.scan` | python: `ai.security.secrets_scanner` | `content` | Scan text for leaked secrets/API keys |
 
+### slack.* (4 tools)
+
+| Tool | Source | Args | Description |
+|------|--------|------|-------------|
+| `slack.list_channels` | python: `ai.slack.handlers` | `limit` (int, default 100) | List Slack channels in the workspace |
+| `slack.list_users` | python: `ai.slack.handlers` | — | List Slack workspace users |
+| `slack.get_history` | python: `ai.slack.handlers` | `channel` (str, required), `limit` (int, default 100) | Get message history from a Slack channel |
+| `slack.post_message` | python: `ai.slack.handlers` | `channel` (str, required), `text` (str, required), `thread_ts` (optional) | Post a message to a Slack channel |
+
+### notion.* (4 tools)
+
+| Tool | Source | Args | Description |
+|------|--------|------|-------------|
+| `notion.search` | python: `ai.notion.handlers` | `query` (str), `filter_type` (page\|database), `limit` (int, default 10) | Search pages and databases in Notion |
+| `notion.get_page` | python: `ai.notion.handlers` | `page_id` (str, UUID, required) | Get a Notion page by ID |
+| `notion.get_page_content` | python: `ai.notion.handlers` | `page_id` (str, UUID, required) | Get content blocks from a Notion page |
+| `notion.query_database` | python: `ai.notion.handlers` | `database_id` (str, UUID, required), `filter` (JSON), `limit` (int, default 100) | Query a Notion database |
+
 ### Built-in
 
 | Tool | Description |
@@ -302,9 +321,9 @@ The OrchestrationBus provides async pub/sub message dispatch between named agent
 | Metric | Value |
 |--------|-------|
 | MCP tools | 88 (+ 1 health endpoint) |
-| Systemd timers | 23 |
-| LanceDB tables | 27 |
-| Tests | 2193 |
+| Systemd timers | 22 |
+| LanceDB tables | 26 |
+| Tests | 2317+ |
 | Cloud LLM providers | 6 |
 | Threat intel APIs | 16 |
 | P44-P51 status | complete (2026-04-08) |

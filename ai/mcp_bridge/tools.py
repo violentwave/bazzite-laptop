@@ -1018,6 +1018,22 @@ async def _execute_python_tool(tool_name: str, tool_def: dict, args: dict) -> st
             result = await handle_mcp_audit(args)
             return _truncate(json.dumps(result, indent=2))
 
+        elif tool_name == "slack.list_channels":
+            result = await handle_slack_list_channels(args)
+            return _truncate(json.dumps(result, indent=2))
+
+        elif tool_name == "slack.post_message":
+            result = await handle_slack_post_message(args)
+            return _truncate(json.dumps(result, indent=2))
+
+        elif tool_name == "slack.list_users":
+            result = await handle_slack_list_users(args)
+            return _truncate(json.dumps(result, indent=2))
+
+        elif tool_name == "slack.get_history":
+            result = await handle_slack_get_history(args)
+            return _truncate(json.dumps(result, indent=2))
+
         elif tool_name == "system.alert_history":
             from ai.alerts.history import get_recent  # noqa: PLC0415
 
@@ -1031,9 +1047,7 @@ async def _execute_python_tool(tool_name: str, tool_def: dict, args: dict) -> st
 
             engine = RulesEngine()
             rules = engine.get_all_rules()
-            serializable = [
-                _dc.asdict(r) if _dc.is_dataclass(r) else r.__dict__ for r in rules
-            ]
+            serializable = [_dc.asdict(r) if _dc.is_dataclass(r) else r.__dict__ for r in rules]
             return _truncate(json.dumps(serializable, indent=2, default=str))
 
         elif tool_name == "system.dep_audit":
@@ -1073,14 +1087,13 @@ async def _execute_python_tool(tool_name: str, tool_def: dict, args: dict) -> st
             limit = int(args.get("limit", 5))
             if query:
                 entries = [
-                    e for e in entries
+                    e
+                    for e in entries
                     if query in (getattr(e, "description", "") or "").lower()
                     or query in (getattr(e, "summary", "") or "").lower()
                 ]
             entries = entries[:limit]
-            serializable = [
-                _dc.asdict(e) if _dc.is_dataclass(e) else e.__dict__ for e in entries
-            ]
+            serializable = [_dc.asdict(e) if _dc.is_dataclass(e) else e.__dict__ for e in entries]
             return _truncate(json.dumps(serializable, indent=2, default=str))
 
         elif tool_name == "system.budget_status":
@@ -1229,9 +1242,9 @@ async def _execute_python_tool(tool_name: str, tool_def: dict, args: dict) -> st
             output = await _run_subprocess(
                 ["rg", "--no-heading", "-c", r"def |class ", str(PROJECT_ROOT / target)]
             )
-            return _truncate(_redact_paths(
-                f"[complexity report: {target}, threshold={threshold}]\n{output}"
-            ))
+            return _truncate(
+                _redact_paths(f"[complexity report: {target}, threshold={threshold}]\n{output}")
+            )
 
         elif tool_name == "code.class_hierarchy":
             from ai.code_intel.store import get_code_store  # noqa: PLC0415
@@ -1361,3 +1374,59 @@ async def handle_intel_ingest_pending(args: dict) -> dict:
         return {"status": "ok", "data": result}
     except Exception as e:
         return {"status": "error", "error": str(e)}
+
+
+async def handle_slack_list_channels(args: dict) -> dict:
+    """List Slack channels."""
+    from ai.slack.handlers import handle_slack_list_channels as _handler
+
+    return await _handler(args)
+
+
+async def handle_slack_post_message(args: dict) -> dict:
+    """Post a message to Slack."""
+    from ai.slack.handlers import handle_slack_post_message as _handler
+
+    return await _handler(args)
+
+
+async def handle_slack_list_users(args: dict) -> dict:
+    """List Slack users."""
+    from ai.slack.handlers import handle_slack_list_users as _handler
+
+    return await _handler(args)
+
+
+async def handle_slack_get_history(args: dict) -> dict:
+    """Get Slack channel history."""
+    from ai.slack.handlers import handle_slack_get_history as _handler
+
+    return await _handler(args)
+
+
+async def handle_notion_search(args: dict) -> dict:
+    """Search Notion pages and databases."""
+    from ai.notion.handlers import handle_notion_search as _handler
+
+    return await _handler(args)
+
+
+async def handle_notion_get_page(args: dict) -> dict:
+    """Get a Notion page by ID."""
+    from ai.notion.handlers import handle_notion_get_page as _handler
+
+    return await _handler(args)
+
+
+async def handle_notion_get_page_content(args: dict) -> dict:
+    """Get content blocks from a Notion page."""
+    from ai.notion.handlers import handle_notion_get_page_content as _handler
+
+    return await _handler(args)
+
+
+async def handle_notion_query_database(args: dict) -> dict:
+    """Query a Notion database."""
+    from ai.notion.handlers import handle_notion_query_database as _handler
+
+    return await _handler(args)
