@@ -9,10 +9,8 @@ import argparse
 import json
 import logging
 import os
-import re
 import sys
-from dataclasses import asdict, dataclass
-from datetime import UTC, datetime
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
@@ -45,13 +43,13 @@ class SkillBundle:
 
 class NewelleSkillBuilder:
     """Builds Newelle skill bundles for GTK4 AI assistant."""
-    
+
     def __init__(self, mcp_endpoint: str = "http://127.0.0.1:8766"):
         self.mcp_endpoint = mcp_endpoint
         self.client = httpx.Client(timeout=10)
-    
+
     def load_mcp_manifest(
-        self, 
+        self,
         endpoint: str | None = None,
         allowlist_path: str | None = None,
     ) -> dict[str, dict]:
@@ -61,13 +59,13 @@ class NewelleSkillBuilder:
         Falls back to parsing configs/mcp-bridge-allowlist.yaml if HTTP fails.
         """
         ep = endpoint or self.mcp_endpoint
-        
+
         # Try HTTP first
         try:
             response = self.client.get(f"{ep}/tools", timeout=10)
             response.raise_for_status()
             data = response.json()
-            
+
             tools = {}
             for tool in data.get("tools", []):
                 name = tool.get("name") or tool.get("id")
@@ -76,13 +74,13 @@ class NewelleSkillBuilder:
                         "description": tool.get("description", ""),
                         "annotations": tool.get("annotations", {}),
                     }
-            
+
             if tools:
                 return tools
-                
+
         except Exception as e:
             logging.warning(f"HTTP manifest fetch failed: {e}, falling back to YAML")
-        
+
         # Fallback to YAML
         if not allowlist_path:
             # Try common locations
@@ -94,15 +92,15 @@ class NewelleSkillBuilder:
                 if path.exists():
                     allowlist_path = str(path)
                     break
-        
+
         if not allowlist_path or not HAS_YAML:
             logging.error("Could not load MCP manifest via HTTP or YAML")
             return {}
-        
+
         try:
             with open(allowlist_path) as f:
                 data = yaml.safe_load(f)
-            
+
             tools = {}
             for name, config in data.get("tools", {}).items():
                 tools[name] = {
@@ -110,11 +108,11 @@ class NewelleSkillBuilder:
                     "annotations": config.get("annotations", {}),
                 }
             return tools
-            
+
         except Exception as e:
             logging.error(f"Failed to parse YAML fallback: {e}")
             return {}
-    
+
     def scaffold_skill(
         self,
         name: str,
@@ -131,29 +129,29 @@ class NewelleSkillBuilder:
         """
         # Load manifest for validation
         manifest = self.load_mcp_manifest()
-        
+
         output_path = Path(output_dir)
         output_path.mkdir(parents=True, exist_ok=True)
-        
+
         skill_file = output_path / f"{name}.json"
-        
+
         commands = []
         for cmd_spec in commands_spec:
             # Validate
             cmd_name = cmd_spec.get("name")
             if not cmd_name:
                 raise ValueError("Command missing name")
-            
+
             prompt = cmd_spec.get("prompt", "")
             if len(prompt) > 2000:
                 raise ValueError(f"Prompt for {cmd_name} exceeds 2000 chars")
-            
+
             mcp_tools = cmd_spec.get("mcp_tools", [])
             if mcp_tools and manifest:
                 missing = [t for t in mcp_tools if t not in manifest]
                 if missing:
                     logging.warning(f"Command {cmd_name} references unknown MCP tools: {missing}")
-            
+
             command = SkillCommand(
                 name=cmd_name,
                 description=cmd_spec.get("description", ""),
@@ -163,14 +161,14 @@ class NewelleSkillBuilder:
                 tags=cmd_spec.get("tags", []),
             )
             commands.append(command)
-        
+
         bundle = SkillBundle(
             name=name,
             description=description,
             version=cmd_spec.get("version", "1.0.0"),
             commands=commands,
         )
-        
+
         # Build JSON
         skill_json = {
             "name": bundle.name,
@@ -188,24 +186,24 @@ class NewelleSkillBuilder:
                 for c in bundle.commands
             ],
         }
-        
+
         # Validate with round-trip
         try:
             json.loads(json.dumps(skill_json))
         except json.JSONDecodeError as e:
             raise ValueError(f"Generated JSON is invalid: {e}")
-        
+
         # Atomic write
         tmp_file = skill_file.with_suffix(".tmp")
         with open(tmp_file, "w") as f:
             json.dump(skill_json, f, indent=2)
         os.replace(tmp_file, skill_file)
-        
+
         return str(skill_file)
-    
+
     def validate_skill(
-        self, 
-        skill_path: str, 
+        self,
+        skill_path: str,
         manifest: dict[str, dict] | None = None,
     ) -> dict[str, Any]:
         """
@@ -214,10 +212,10 @@ class NewelleSkillBuilder:
         """
         if manifest is None:
             manifest = self.load_mcp_manifest()
-        
+
         errors = []
         warnings = []
-        
+
         try:
             with open(skill_path) as f:
                 skill = json.load(f)
@@ -225,13 +223,13 @@ class NewelleSkillBuilder:
             return {"valid": False, "errors": [f"Invalid JSON: {e}"], "warnings": []}
         except FileNotFoundError:
             return {"valid": False, "errors": [f"File not found: {skill_path}"], "warnings": []}
-        
+
         # Schema validation
         required_fields = ["name", "description", "version", "commands"]
         for field in required_fields:
             if field not in skill:
                 errors.append(f"Missing required field: {field}")
-        
+
         commands = skill.get("commands", [])
         if not isinstance(commands, list):
             errors.append("commands must be a list")
@@ -240,7 +238,7 @@ class NewelleSkillBuilder:
                 if not isinstance(cmd, dict):
                     errors.append(f"Command {i} is not a dict")
                     continue
-                
+
                 # Required command fields
                 if "name" not in cmd:
                     errors.append(f"Command {i} missing name")
@@ -252,28 +250,28 @@ class NewelleSkillBuilder:
                     errors.append(f"Command {cmd.get('name', i)} has empty prompt")
                 elif len(cmd["prompt"]) > 2000:
                     errors.append(f"Command {cmd.get('name', i)} prompt exceeds 2000 chars")
-                
+
                 # Validate MCP tools
                 mcp_tools = cmd.get("mcp_tools", [])
                 if manifest:
                     missing = [t for t in mcp_tools if t not in manifest]
                     if missing:
                         warnings.append(f"Command {cmd.get('name', i)} references unknown tools: {missing}")
-                
+
                 # Validate examples exist
                 examples = cmd.get("examples", [])
                 if not examples:
                     warnings.append(f"Command {cmd.get('name', i)} has no examples")
-        
+
         return {
             "valid": len(errors) == 0,
             "errors": errors,
             "warnings": warnings,
         }
-    
+
     def validate_all_skills(
-        self, 
-        skills_dir: str, 
+        self,
+        skills_dir: str,
         manifest: dict[str, dict] | None = None,
     ) -> dict[str, Any]:
         """
@@ -282,10 +280,10 @@ class NewelleSkillBuilder:
         skills_path = Path(skills_dir)
         if not skills_path.exists():
             return {"total": 0, "valid": 0, "invalid": 0, "results": []}
-        
+
         if manifest is None:
             manifest = self.load_mcp_manifest()
-        
+
         results = []
         for skill_file in skills_path.glob("*.json"):
             result = self.validate_skill(str(skill_file), manifest)
@@ -294,14 +292,14 @@ class NewelleSkillBuilder:
                 "name": skill_file.stem,
                 **result,
             })
-        
+
         return {
             "total": len(results),
             "valid": sum(1 for r in results if r["valid"]),
             "invalid": sum(1 for r in results if not r["valid"]),
             "results": results,
         }
-    
+
     def generate_morning_briefing_skill(
         self,
         manifest: dict[str, dict] | None,
@@ -313,7 +311,7 @@ class NewelleSkillBuilder:
         """
         if manifest is None:
             manifest = self.load_mcp_manifest()
-        
+
         # Filter for security/monitoring tools
         security_tools = [
             name for name, info in manifest.items()
@@ -321,7 +319,7 @@ class NewelleSkillBuilder:
                 "security", "threat", "vuln", "scan", "system", "monitor", "status", "health", "log"
             ])
         ]
-        
+
         commands = [
             {
                 "name": "security_check",
@@ -364,14 +362,14 @@ Provide a summary in bullet points.""",
                 "tags": ["monitoring", "health", "status"],
             },
         ]
-        
+
         return self.scaffold_skill(
             name="morning_briefing",
             description="Morning security and system health briefing",
             commands_spec=commands,
             output_dir=output_dir,
         )
-    
+
     def generate_security_skill(
         self,
         manifest: dict[str, dict] | None,
@@ -383,13 +381,13 @@ Provide a summary in bullet points.""",
         """
         if manifest is None:
             manifest = self.load_mcp_manifest()
-        
+
         # Find relevant security tools
         lookup_tools = [
             name for name, info in manifest.items()
             if any(k in name.lower() for k in ["lookup", "threat", "ip", "url", "hash", "intel"])
         ]
-        
+
         commands = [
             {
                 "name": "investigate_indicator",
@@ -437,14 +435,14 @@ Provide a correlation report highlighting any shared infrastructure or TTPs.""",
                 "tags": ["security", "correlation", "analysis"],
             },
         ]
-        
+
         return self.scaffold_skill(
             name="security_investigation",
             description="Security indicator investigation and correlation",
             commands_spec=commands,
             output_dir=output_dir,
         )
-    
+
     def run(self, command: str, **kwargs) -> Any:
         """CLI dispatcher."""
         if command == "scaffold":
@@ -481,40 +479,40 @@ Provide a correlation report highlighting any shared infrastructure or TTPs.""",
 def main():
     parser = argparse.ArgumentParser(description="Newelle Skill Builder")
     subparsers = parser.add_subparsers(dest="command", required=True)
-    
+
     # scaffold command
     scaffold_parser = subparsers.add_parser("scaffold", help="Create new skill")
     scaffold_parser.add_argument("name", help="Skill name")
     scaffold_parser.add_argument("--description", "-d", required=True)
     scaffold_parser.add_argument("--commands", "-c", required=True, help="Commands JSON spec")
     scaffold_parser.add_argument("--output-dir", "-o", default="./skills", help="Output directory")
-    
+
     # validate command
     validate_parser = subparsers.add_parser("validate", help="Validate a skill")
     validate_parser.add_argument("skill_path", help="Path to skill JSON")
-    
+
     # validate-all command
     validate_all_parser = subparsers.add_parser("validate-all", help="Validate all skills in directory")
     validate_all_parser.add_argument("skills_dir", help="Directory containing skill JSONs")
-    
+
     # gen-morning command
     gen_morning_parser = subparsers.add_parser("gen-morning", help="Generate morning briefing skill")
     gen_morning_parser.add_argument("--output-dir", "-o", default="./skills", help="Output directory")
-    
+
     # gen-security command
     gen_security_parser = subparsers.add_parser("gen-security", help="Generate security investigation skill")
     gen_security_parser.add_argument("--output-dir", "-o", default="./skills", help="Output directory")
-    
+
     args = parser.parse_args()
-    
+
     logging.basicConfig(
         level=logging.INFO,
         format="%(asctime)s - %(levelname)s - %(message)s",
         handlers=[logging.StreamHandler(sys.stdout)],
     )
-    
+
     builder = NewelleSkillBuilder()
-    
+
     if args.command == "scaffold":
         commands_spec = json.loads(args.commands)
         result = builder.run("scaffold",
@@ -524,19 +522,19 @@ def main():
             output_dir=args.output_dir,
         )
         print(f"Generated skill: {result}")
-        
+
     elif args.command == "validate":
         result = builder.run("validate", skill_path=args.skill_path)
         print(json.dumps(result, indent=2))
-        
+
     elif args.command == "validate-all":
         result = builder.run("validate-all", skills_dir=args.skills_dir)
         print(json.dumps(result, indent=2))
-        
+
     elif args.command == "gen-morning":
         result = builder.run("gen-morning", output_dir=args.output_dir)
         print(f"Generated morning briefing skill: {result}")
-        
+
     elif args.command == "gen-security":
         result = builder.run("gen-security", output_dir=args.output_dir)
         print(f"Generated security skill: {result}")

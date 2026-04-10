@@ -16,14 +16,12 @@ Saves to ~/security/discovery/ with actionable recommendations.
 import argparse
 import json
 import logging
-import os
 import sys
 import time
 from collections import defaultdict
-from dataclasses import dataclass, asdict
-from datetime import UTC, datetime, timedelta
+from dataclasses import asdict, dataclass
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any
 
 import httpx
 
@@ -106,7 +104,7 @@ class DiscoveryItem:
     license: str | None
     stars: int | None
     language: str | None
-    
+
     def to_dict(self) -> dict:
         return asdict(self)
 
@@ -119,12 +117,12 @@ class DiscoveryScraper:
             follow_redirects=True,
             headers={"User-Agent": "Bazzite-Discovery-Scraper/1.0"},
         )
-        
+
         # Load GitHub token if available
         self.github_token = self._load_github_token()
         if self.github_token:
             self.session.headers["Authorization"] = f"token {self.github_token}"
-    
+
     def _load_github_token(self) -> str | None:
         try:
             keys_file = Path.home() / ".config" / "bazzite-ai" / "keys.env"
@@ -136,13 +134,13 @@ class DiscoveryScraper:
         except Exception as e:
             logging.warning(f"Could not load GitHub token: {e}")
         return None
-    
+
     def setup_dirs(self) -> None:
         """Ensure directory structure exists."""
         DISCOVERY_DIR.mkdir(parents=True, exist_ok=True)
         REPORTS_DIR.mkdir(parents=True, exist_ok=True)
         RAW_DIR.mkdir(parents=True, exist_ok=True)
-    
+
     def github_search(self, query: str, category: str) -> list[DiscoveryItem]:
         """Search GitHub for repositories."""
         items = []
@@ -164,12 +162,12 @@ class DiscoveryScraper:
                         action = "replace"
                     elif "mcp" in category or "security" in category:
                         action = "integrate"
-                    
+
                     # Calculate relevance score
                     score = min(10, int(repo.get("stargazers_count", 0) / 500) + 5)
                     if repo.get("topics") and any(t in ["security", "ai", "mcp", "llm"] for t in repo["topics"]):
                         score += 1
-                    
+
                     item = DiscoveryItem(
                         source="github",
                         category=category,
@@ -187,16 +185,16 @@ class DiscoveryScraper:
                         language=repo.get("language"),
                     )
                     items.append(item)
-                    
+
         except Exception as e:
             logging.error(f"GitHub search failed for '{query}': {e}")
-        
+
         return items
-    
+
     def _infer_benefit(self, category: str, repo: dict) -> str:
         """Infer potential benefit from category and description."""
         desc = (repo.get("description", "") or "").lower()
-        
+
         benefits = {
             "vector_databases": "Better vector search or smaller footprint than LanceDB",
             "llm_providers": "Additional free LLM tier or better routing",
@@ -205,9 +203,9 @@ class DiscoveryScraper:
             "optimization": "Reduced memory/CPU footprint or faster execution",
             "ai_capabilities": "New AI features: agents, RAG, knowledge graphs",
         }
-        
+
         base = benefits.get(category, "Potential system improvement")
-        
+
         # Refine based on keywords
         if "fast" in desc or "performance" in desc:
             base += "; PERFORMANCE BOOST"
@@ -217,9 +215,9 @@ class DiscoveryScraper:
             base += "; BETTER CONCURRENCY"
         if "embedded" in desc:
             base += "; NO EXTERNAL DEPENDENCIES"
-            
+
         return base
-    
+
     def _find_current_alternative(self, category: str) -> str | None:
         """Map category to current system component."""
         mapping = {
@@ -231,11 +229,11 @@ class DiscoveryScraper:
             "ai_capabilities": "current RAG + router",
         }
         return mapping.get(category)
-    
+
     def search_free_llm_apis(self) -> list[DiscoveryItem]:
         """Search for free LLM APIs and tiers."""
         items = []
-        
+
         # Known free tier providers to check for updates
         free_providers = [
             ("OpenRouter", "https://openrouter.ai/docs", "Free tier with rate limits"),
@@ -246,20 +244,20 @@ class DiscoveryScraper:
             ("Together AI", "https://together.xyz", "Free credits available"),
             ("Fireworks", "https://fireworks.ai", "Trial credits"),
         ]
-        
+
         # Also search GitHub for "free LLM API" projects
         for query in REPO_QUERIES["llm_providers"]:
             items.extend(self.github_search(query, "llm_providers"))
-        
+
         return items
-    
+
     def search_optimization_opportunities(self) -> list[DiscoveryItem]:
         """Find lighter alternatives to current dependencies."""
         items = []
-        
+
         for query in REPO_QUERIES["optimization"]:
             items.extend(self.github_search(query, "optimization"))
-        
+
         # Specific searches for bazzite's needs
         lightweight_searches = [
             ("sqlite alternative embedded rust", "database"),
@@ -267,22 +265,22 @@ class DiscoveryScraper:
             ("json parser simd", "parsing"),
             ("task queue minimal python", "queue"),
         ]
-        
+
         for query, subcat in lightweight_searches:
             found = self.github_search(query, f"optimization_{subcat}")
             for item in found:
                 item.potential_benefit = f"Replace {subcat} stack; REDUCED FOOTPRINT"
             items.extend(found)
-        
+
         return items
-    
+
     def search_database_improvements(self) -> list[DiscoveryItem]:
         """Find better vector database and storage options."""
         items = []
-        
+
         for query in REPO_QUERIES["vector_databases"]:
             items.extend(self.github_search(query, "vector_databases"))
-        
+
         # Specific vector DB comparison
         vector_dbs = [
             "chromadb",
@@ -292,20 +290,20 @@ class DiscoveryScraper:
             "pgvector",
             "sqlite-vss",
         ]
-        
+
         for db in vector_dbs:
             found = self.github_search(f"{db} vector database", "vector_databases")
             items.extend(found)
-        
+
         return items
-    
+
     def search_security_enhancements(self) -> list[DiscoveryItem]:
         """Find security tools that integrate with threat intel."""
         items = []
-        
+
         for query in REPO_QUERIES["security_tools"]:
             items.extend(self.github_search(query, "security_tools"))
-        
+
         # Specific security integrations
         security_searches = [
             "yara rules python",
@@ -314,22 +312,22 @@ class DiscoveryScraper:
             "velociraptor client",
             "sysmon rust",
         ]
-        
+
         for query in security_searches:
             found = self.github_search(query, "security_tools")
             for item in found:
                 item.potential_benefit = "Enhanced endpoint monitoring + threat detection"
             items.extend(found)
-        
+
         return items
-    
+
     def search_mcp_expansions(self) -> list[DiscoveryItem]:
         """Find MCP servers and tools to expand beyond current 79."""
         items = []
-        
+
         for query in REPO_QUERIES["mcp_tools"]:
             items.extend(self.github_search(query, "mcp_tools"))
-        
+
         # Check modelcontextprotocol GitHub org
         try:
             url = "https://api.github.com/users/modelcontextprotocol/repos"
@@ -356,16 +354,16 @@ class DiscoveryScraper:
                     items.append(item)
         except Exception as e:
             logging.error(f"MCP org search failed: {e}")
-        
+
         return items
-    
+
     def search_ai_capability_expansions(self) -> list[DiscoveryItem]:
         """Find AI/ML libraries to expand system intelligence."""
         items = []
-        
+
         for query in REPO_QUERIES["ai_capabilities"]:
             items.extend(self.github_search(query, "ai_capabilities"))
-        
+
         # Specific capability searches
         capability_searches = [
             ("graphrag microsoft", "knowledge graphs"),
@@ -374,35 +372,35 @@ class DiscoveryScraper:
             ("haystack rag", "RAG improvements"),
             ("semantic cache llm", "caching"),
         ]
-        
+
         for query, capability in capability_searches:
             found = self.github_search(query, "ai_capabilities")
             for item in found:
                 item.potential_benefit = f"{capability.upper()} - expand system intelligence"
             items.extend(found)
-        
+
         return items
-    
+
     def generate_report(self) -> dict:
         """Generate actionable discovery report."""
         # Group by action type
         by_action = defaultdict(list)
         for item in self.discovered:
             by_action[item.action_type].append(item)
-        
+
         # Group by category
         by_category = defaultdict(list)
         for item in self.discovered:
             by_category[item.category].append(item)
-        
+
         # Top recommendations (score >= 8)
         top_picks = [item for item in self.discovered if item.relevance_score >= 8]
         top_picks.sort(key=lambda x: x.relevance_score, reverse=True)
-        
+
         # Free APIs summary
-        free_apis = [item for item in self.discovered 
+        free_apis = [item for item in self.discovered
                      if item.free_tier and item.category in ["llm_providers", "mcp_tools"]]
-        
+
         report = {
             "generated_at": datetime.now(UTC).isoformat(),
             "summary": {
@@ -416,7 +414,7 @@ class DiscoveryScraper:
             "top_recommendations": [item.to_dict() for item in top_picks[:10]],
             "free_apis_and_services": [item.to_dict() for item in free_apis[:15]],
             "by_action_type": {
-                k: [item.to_dict() for item in v[:10]] 
+                k: [item.to_dict() for item in v[:10]]
                 for k, v in by_action.items()
             },
             "by_category": {
@@ -425,17 +423,17 @@ class DiscoveryScraper:
             },
             "current_system_alternatives": self._generate_alternative_matrix(),
         }
-        
+
         return report
-    
+
     def _generate_alternative_matrix(self) -> dict:
         """Map current dependencies to discovered alternatives."""
         matrix = {}
-        
+
         for category, current_deps in CURRENT_DEPS.items():
             alternatives = []
             for item in self.discovered:
-                if item.current_alternative and any(dep.lower() in item.current_alternative.lower() 
+                if item.current_alternative and any(dep.lower() in item.current_alternative.lower()
                                                     for dep in current_deps):
                     alternatives.append({
                         "current": item.current_alternative,
@@ -448,34 +446,34 @@ class DiscoveryScraper:
                 "current": current_deps,
                 "alternatives": alternatives[:5],
             }
-        
+
         return matrix
-    
+
     def save_results(self) -> None:
         """Save raw data and generated report."""
         timestamp = datetime.now(UTC).strftime("%Y%m%d_%H%M%S")
-        
+
         # Save all discovered items as JSONL
         raw_file = RAW_DIR / f"discovery_{timestamp}.jsonl"
         with open(raw_file, "w") as f:
             for item in self.discovered:
                 f.write(json.dumps(item.to_dict()) + "\n")
-        
+
         # Save report
         report = self.generate_report()
         report_file = REPORTS_DIR / f"report_{timestamp}.json"
         with open(report_file, "w") as f:
             json.dump(report, f, indent=2)
-        
+
         # Save latest report as symlink
         latest = REPORTS_DIR / "latest.json"
         if latest.exists():
             latest.unlink()
         latest.symlink_to(report_file.name)
-        
+
         logging.info(f"Saved {len(self.discovered)} items to {raw_file}")
         logging.info(f"Saved report to {report_file}")
-        
+
         # Print summary to stdout
         print(f"\n{'='*60}")
         print(f"DISCOVERY REPORT - {timestamp}")
@@ -483,42 +481,42 @@ class DiscoveryScraper:
         print(f"Total discovered: {report['summary']['total_discovered']}")
         print(f"Top recommendations: {report['summary']['top_recommendations']}")
         print(f"Free APIs found: {report['summary']['free_apis_found']}")
-        print(f"\nTop 5 Picks:")
+        print("\nTop 5 Picks:")
         for i, item in enumerate(report['top_recommendations'][:5], 1):
             print(f"  {i}. [{item['relevance_score']}/10] {item['title']}")
             print(f"     Action: {item['action_type']} | {item['potential_benefit'][:60]}...")
         print(f"\nSaved to: {report_file}")
-    
+
     def run(self) -> None:
         """Execute full discovery scrape."""
         logging.info("=== Starting Bazzite Discovery Scrape ===")
-        
+
         self.setup_dirs()
-        
+
         # Run all discovery searches
         logging.info("Searching for free LLM APIs...")
         self.discovered.extend(self.search_free_llm_apis())
         time.sleep(2)  # Rate limit courtesy
-        
+
         logging.info("Searching for optimization opportunities...")
         self.discovered.extend(self.search_optimization_opportunities())
         time.sleep(2)
-        
+
         logging.info("Searching for database improvements...")
         self.discovered.extend(self.search_database_improvements())
         time.sleep(2)
-        
+
         logging.info("Searching for security enhancements...")
         self.discovered.extend(self.search_security_enhancements())
         time.sleep(2)
-        
+
         logging.info("Searching for MCP expansions...")
         self.discovered.extend(self.search_mcp_expansions())
         time.sleep(2)
-        
+
         logging.info("Searching for AI capability expansions...")
         self.discovered.extend(self.search_ai_capability_expansions())
-        
+
         # Deduplicate by URL
         seen = set()
         unique = []
@@ -527,9 +525,9 @@ class DiscoveryScraper:
                 seen.add(item.url)
                 unique.append(item)
         self.discovered = unique
-        
+
         logging.info(f"Total unique discoveries: {len(self.discovered)}")
-        
+
         if not self.dry_run:
             self.save_results()
         else:
@@ -537,7 +535,7 @@ class DiscoveryScraper:
             print(f"\nDRY RUN - Would save {len(self.discovered)} items")
             for item in self.discovered[:5]:
                 print(f"  - {item.title} ({item.relevance_score}/10)")
-        
+
         logging.info("=== Discovery Scrape Complete ===")
 
 def main():
@@ -545,7 +543,7 @@ def main():
     parser.add_argument("--dry-run", action="store_true", help="Preview without saving")
     parser.add_argument("--category", type=str, help="Run single category only")
     args = parser.parse_args()
-    
+
     # Setup logging
     DISCOVERY_DIR.mkdir(parents=True, exist_ok=True)
     logging.basicConfig(
@@ -556,9 +554,9 @@ def main():
             logging.StreamHandler(sys.stdout),
         ],
     )
-    
+
     scraper = DiscoveryScraper(dry_run=args.dry_run)
-    
+
     if args.category:
         # Run single category
         method = getattr(scraper, f"search_{args.category}", None)

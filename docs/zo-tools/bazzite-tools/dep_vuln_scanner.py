@@ -10,10 +10,9 @@ import argparse
 import json
 import logging
 import os
-import re
 import subprocess
 import sys
-from dataclasses import asdict, dataclass
+from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
@@ -39,12 +38,12 @@ class PackageVulnResult:
 
 class DepVulnScanner:
     """Dependency vulnerability scanner using free public APIs."""
-    
+
     def __init__(self):
         self.client = httpx.Client(timeout=30, follow_redirects=True)
         self.osv_api = "https://api.osv.dev/v1/querybatch"
         self.safety_db_url = "https://pyup.io/api/v1/safety/"
-    
+
     def get_installed_packages(self, venv_path: str) -> list[tuple[str, str]]:
         """
         Read packages from {venv_path}/lib/python*/site-packages/*.dist-info/METADATA.
@@ -54,7 +53,7 @@ class DepVulnScanner:
         """
         venv = Path(venv_path)
         packages: list[tuple[str, str]] = []
-        
+
         # Try reading dist-info METADATA
         try:
             site_packages = list(venv.glob("lib/python*/site-packages"))
@@ -77,14 +76,14 @@ class DepVulnScanner:
                                 packages.append((name.lower(), version))
         except Exception as e:
             logging.warning(f"Failed to read dist-info: {e}, falling back to pip")
-        
+
         # Fallback: pip list
         if not packages:
             try:
                 pip_path = venv / "bin" / "pip"
                 if not pip_path.exists():
                     pip_path = venv / "Scripts" / "pip.exe"  # Windows fallback
-                
+
                 result = subprocess.run(
                     [str(pip_path), "list", "--format=json"],
                     capture_output=True,
@@ -99,9 +98,9 @@ class DepVulnScanner:
                     ]
             except Exception as e:
                 logging.error(f"Failed to run pip list: {e}")
-        
+
         return packages
-    
+
     def check_osv(self, packages: list[tuple[str, str]]) -> dict[str, list[Vulnerability]]:
         """
         POST to https://api.osv.dev/v1/querybatch with batches of 1000.
@@ -111,14 +110,14 @@ class DepVulnScanner:
         """
         results: dict[str, list[Vulnerability]] = {}
         batch_size = 1000
-        
+
         for i in range(0, len(packages), batch_size):
             batch = packages[i:i + batch_size]
             queries = [
                 {"package": {"name": name, "ecosystem": "PyPI"}, "version": version}
                 for name, version in batch
             ]
-            
+
             try:
                 response = self.client.post(
                     self.osv_api,
@@ -127,17 +126,17 @@ class DepVulnScanner:
                 )
                 response.raise_for_status()
                 data = response.json()
-                
+
                 for idx, vulns in enumerate(data.get("results", [])):
                     pkg_name = batch[idx][0]
                     vuln_list = vulns.get("vulns", [])
-                    
+
                     if vuln_list:
                         vuln_objects = []
                         for v in vuln_list:
                             # Get severity from database_specific
                             severity = v.get("database_specific", {}).get("severity")
-                            
+
                             # Get fixed versions from affected ranges
                             fixed_versions = []
                             for affected in v.get("affected", []):
@@ -145,7 +144,7 @@ class DepVulnScanner:
                                     for event in range_info.get("events", []):
                                         if "fixed" in event:
                                             fixed_versions.append(event["fixed"])
-                            
+
                             vuln_objects.append(Vulnerability(
                                 id=v.get("id", ""),
                                 summary=v.get("summary", "")[:500],
@@ -153,9 +152,9 @@ class DepVulnScanner:
                                 fixed_versions=fixed_versions if fixed_versions else None,
                                 aliases=v.get("aliases", []),
                             ))
-                        
+
                         results[pkg_name] = vuln_objects
-                        
+
             except httpx.HTTPStatusError as e:
                 if e.response.status_code in (429, 503):
                     logging.warning(f"OSV rate limit/service unavailable, retrying batch {i//batch_size}")
@@ -175,9 +174,9 @@ class DepVulnScanner:
                     logging.error(f"OSV error for batch {i//batch_size}: {e}")
             except Exception as e:
                 logging.error(f"OSV error for batch {i//batch_size}: {e}")
-        
+
         return results
-    
+
     def check_pip_audit_json(self, venv_path: str) -> dict[str, list[Vulnerability]]:
         """
         Runs `pip-audit --format=json --require-hashes=false -r {venv_path}/../requirements-ai.txt`
@@ -186,14 +185,14 @@ class DepVulnScanner:
         Returns same format as check_osv. Skips gracefully if pip-audit not installed.
         """
         results: dict[str, list[Vulnerability]] = {}
-        
+
         venv = Path(venv_path)
         req_file = venv.parent / "requirements-ai.txt"
-        
+
         if not req_file.exists():
             logging.warning(f"requirements-ai.txt not found at {req_file}")
             return results
-        
+
         try:
             result = subprocess.run(
                 [
@@ -207,18 +206,18 @@ class DepVulnScanner:
                 text=True,
                 timeout=60,
             )
-            
+
             # pip-audit exits 1 if vulnerabilities found, 0 if clean
             if result.returncode not in (0, 1):
                 logging.warning(f"pip-audit failed: {result.stderr}")
                 return results
-            
+
             data = json.loads(result.stdout)
-            
+
             for vuln in data.get("vulnerabilities", []):
                 pkg = vuln.get("package", {})
                 pkg_name = pkg.get("name", "").lower()
-                
+
                 vuln_obj = Vulnerability(
                     id=vuln.get("vulnerability_id", ""),
                     summary=vuln.get("description", "")[:500],
@@ -226,20 +225,20 @@ class DepVulnScanner:
                     fixed_versions=[vuln["fix_version"]] if vuln.get("fix_version") else None,
                     aliases=None,
                 )
-                
+
                 if pkg_name not in results:
                     results[pkg_name] = []
                 results[pkg_name].append(vuln_obj)
-                
+
         except FileNotFoundError:
             logging.info("pip-audit not installed, skipping")
         except subprocess.TimeoutExpired:
             logging.warning("pip-audit timed out, skipping")
         except Exception as e:
             logging.error(f"pip-audit error: {e}")
-        
+
         return results
-    
+
     def check_safety_db(self) -> dict[str, list[Vulnerability]]:
         """
         Fetch https://pyup.io/api/v1/safety/ (free tier, no key needed for basic use).
@@ -249,22 +248,22 @@ class DepVulnScanner:
         Returns dict in same format as check_osv.
         """
         results: dict[str, list[Vulnerability]] = {}
-        
+
         try:
             response = self.client.get(
                 self.safety_db_url,
                 timeout=30,
             )
-            
+
             if response.status_code in (429, 503):
                 # Retry once
                 response = self.client.get(self.safety_db_url, timeout=30)
-            
+
             response.raise_for_status()
-            
+
             # Safety DB format varies, attempt to parse
             data = response.json()
-            
+
             # If it's a list of vulnerabilities
             if isinstance(data, list):
                 for entry in data:
@@ -280,7 +279,7 @@ class DepVulnScanner:
                         if pkg_name not in results:
                             results[pkg_name] = []
                         results[pkg_name].append(vuln)
-                        
+
         except httpx.HTTPStatusError as e:
             if e.response.status_code in (429, 503):
                 logging.warning("Safety DB rate limited/service unavailable, skipping")
@@ -288,12 +287,12 @@ class DepVulnScanner:
                 logging.warning(f"Safety DB unavailable: {e}")
         except Exception as e:
             logging.warning(f"Safety DB fetch failed: {e}")
-        
+
         return results
-    
+
     def generate_report(
-        self, 
-        scan_results: dict[str, list[Vulnerability]], 
+        self,
+        scan_results: dict[str, list[Vulnerability]],
         total_packages: int,
         output_path: str
     ) -> dict[str, Any]:
@@ -312,17 +311,17 @@ class DepVulnScanner:
             "high_count": 0,
             "packages": [],
         }
-        
+
         # Severity mapping for counting
         severity_order = {"critical": 4, "high": 3, "moderate": 2, "medium": 2, "low": 1}
-        
+
         for pkg_name, vulns in sorted(scan_results.items()):
             pkg_report: dict[str, Any] = {
                 "name": pkg_name,
                 "version": "",  # We don't track version in OSV results
                 "vulns": [],
             }
-            
+
             for v in vulns:
                 vuln_report = {
                     "id": v.id,
@@ -332,15 +331,15 @@ class DepVulnScanner:
                 }
                 pkg_report["vulns"].append(vuln_report)
                 report["vulnerable_count"] += 1
-                
+
                 sev = (v.severity or "").lower()
                 if sev in ("critical", "c"):
                     report["critical_count"] += 1
                 elif sev in ("high", "h"):
                     report["high_count"] += 1
-            
+
             report["packages"].append(pkg_report)
-        
+
         # Atomic write
         output_file = Path(output_path)
         output_file.parent.mkdir(parents=True, exist_ok=True)
@@ -348,7 +347,7 @@ class DepVulnScanner:
         with open(tmp_file, "w") as f:
             json.dump(report, f, indent=2)
         os.replace(tmp_file, output_file)
-        
+
         # Print colored terminal summary using only stdlib
         # RED for critical, YELLOW for high, GREEN for clean
         RED = "\033[91m"
@@ -356,11 +355,11 @@ class DepVulnScanner:
         GREEN = "\033[92m"
         RESET = "\033[0m"
         BOLD = "\033[1m"
-        
+
         print(f"\n{BOLD}=== Dependency Vulnerability Report ==={RESET}")
         print(f"Scanned: {report['scanned_at']}")
         print(f"Total packages: {report['total_packages']}")
-        
+
         if report["critical_count"] > 0:
             print(f"{RED}CRITICAL vulnerabilities: {report['critical_count']}{RESET}")
         if report["high_count"] > 0:
@@ -369,11 +368,11 @@ class DepVulnScanner:
             print(f"{GREEN}No vulnerabilities found!{RESET}")
         else:
             print(f"Total vulnerable packages: {report['vulnerable_count']}")
-        
+
         print(f"\nDetailed report: {output_path}")
-        
+
         return report
-    
+
     def run(self, venv_path: str, output_dir: str) -> str:
         """
         Orchestrates all checks, merges results (dedup by vuln ID),
@@ -381,35 +380,35 @@ class DepVulnScanner:
         """
         output_path = Path(output_dir)
         output_path.mkdir(parents=True, exist_ok=True)
-        
+
         report_file = output_path / f"vuln_report_{datetime.now(UTC).strftime('%Y-%m-%d_%H%M%S')}.json"
-        
+
         logging.info(f"Scanning packages in {venv_path}")
-        
+
         # Get installed packages
         packages = self.get_installed_packages(venv_path)
         logging.info(f"Found {len(packages)} packages")
-        
+
         # Check OSV
         logging.info("Checking OSV database...")
         osv_results = self.check_osv(packages)
-        
+
         # Check pip-audit
         logging.info("Checking pip-audit...")
         pip_audit_results = self.check_pip_audit_json(venv_path)
-        
+
         # Check Safety DB
         logging.info("Checking Safety DB...")
         safety_results = self.check_safety_db()
-        
+
         # Merge and dedup results by vuln ID
         merged: dict[str, dict[str, Any]] = {}
-        
+
         for source, results in [("osv", osv_results), ("pip_audit", pip_audit_results), ("safety", safety_results)]:
             for pkg_name, vulns in results.items():
                 if pkg_name not in merged:
                     merged[pkg_name] = {"name": pkg_name, "version": "", "vulns": {}}
-                
+
                 for v in vulns:
                     # Dedup by ID
                     vuln_id = v.id
@@ -420,16 +419,16 @@ class DepVulnScanner:
                         existing = merged[pkg_name]["vulns"][vuln_id]
                         if v.fixed_versions and not existing.fixed_versions:
                             existing.fixed_versions = v.fixed_versions
-        
+
         # Convert back to Vulnerability lists
         final_results: dict[str, list[Vulnerability]] = {}
         for pkg_name, data in merged.items():
             final_results[pkg_name] = list(data["vulns"].values())
-        
+
         # Generate report
         report_path = str(report_file)
         self.generate_report(final_results, len(packages), report_path)
-        
+
         return report_path
 
 
@@ -438,25 +437,25 @@ def main():
     parser.add_argument("--venv", required=True, help="Path to virtualenv")
     parser.add_argument("--output-dir", default="~/security/intel/dependencies", help="Output directory")
     parser.add_argument("--format", choices=["json", "text"], default="json", help="Report format")
-    
+
     args = parser.parse_args()
-    
+
     output_dir = Path(args.output_dir).expanduser()
-    
+
     logging.basicConfig(
         level=logging.INFO,
         format="%(asctime)s - %(levelname)s - %(message)s",
         handlers=[logging.StreamHandler(sys.stdout)],
     )
-    
+
     scanner = DepVulnScanner()
     report_path = scanner.run(args.venv, str(output_dir))
-    
+
     if args.format == "text":
         # Already printed colored summary in generate_report
         with open(report_path) as f:
             report = json.load(f)
-        print(f"\n=== Summary ===")
+        print("\n=== Summary ===")
         print(f"Total: {report['total_packages']}")
         print(f"Vulnerable: {report['vulnerable_count']}")
         print(f"Critical: {report['critical_count']}")

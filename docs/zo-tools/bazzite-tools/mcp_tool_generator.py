@@ -19,6 +19,7 @@ from typing import Any
 
 try:
     import yaml
+
     HAS_YAML = True
 except ImportError:
     HAS_YAML = False
@@ -36,36 +37,36 @@ class ToolDefinition:
 
 class MCPToolGenerator:
     """Generator for MCP tool definitions, handlers, and tests."""
-    
+
     def __init__(self, project_root: str):
         self.project_root = Path(project_root)
         self.allowlist_path = self.project_root / "configs" / "mcp-bridge-allowlist.yaml"
         self.tools_py_path = self.project_root / "ai" / "mcp_bridge" / "tools.py"
-    
+
     def parse_allowlist(self, yaml_path: str | None = None) -> dict[str, dict]:
         """
         Read the YAML, return dict of existing tool definitions.
         Validates structure. Reports any tools missing handlers.
         """
         path = Path(yaml_path) if yaml_path else self.allowlist_path
-        
+
         if not path.exists():
             logging.warning(f"Allowlist not found: {path}")
             return {}
-        
+
         if not HAS_YAML:
             raise RuntimeError("PyYAML required for parsing")
-        
+
         content = path.read_text()
         try:
             data = yaml.safe_load(content)
         except yaml.YAMLError as e:
             raise ValueError(f"Invalid YAML: {e}")
-        
+
         tools = data.get("tools", {})
         if not isinstance(tools, dict):
             raise ValueError("tools key must be a dict")
-        
+
         # Validate structure
         for name, config in tools.items():
             if not isinstance(config, dict):
@@ -73,7 +74,7 @@ class MCPToolGenerator:
                 continue
             if "description" not in config:
                 logging.warning(f"Missing description for {name}")
-        
+
         # Check missing handlers
         existing_handlers = self._extract_handlers_from_tools_py()
         missing = []
@@ -83,26 +84,26 @@ class MCPToolGenerator:
                 func = handler.split(".")[-1] if "." in handler else handler
                 if func not in existing_handlers:
                     missing.append(name)
-        
+
         if missing:
             logging.warning(f"Tools missing handlers: {missing}")
-        
+
         return tools
-    
+
     def _extract_handlers_from_tools_py(self) -> set[str]:
         """Extract function names from tools.py."""
         if not self.tools_py_path.exists():
             return set()
-        
+
         content = self.tools_py_path.read_text()
         handlers = set()
-        
+
         # Simple regex for async def or def
         for match in re.finditer(r"(?:async\s+)?def\s+(\w+)\s*\(", content):
             handlers.add(match.group(1))
-        
+
         return handlers
-    
+
     def scaffold_tool(
         self,
         name: str,
@@ -121,30 +122,29 @@ class MCPToolGenerator:
         """
         out = Path(output_dir)
         out.mkdir(parents=True, exist_ok=True)
-        
+
         safe_name = re.sub(r"[^\w]", "_", name).lower()
         func_name = f"handle_{safe_name}"
-        
+
         # a) YAML snippet
         yaml_entry = {
             name: {
                 "description": description,
                 "handler": f"{handler_module}.{func_name}",
                 "args": {},
-                "annotations": annotations or {"readOnly": True, "destructive": False, "openWorld": False},
+                "annotations": annotations
+                or {"readOnly": True, "destructive": False, "openWorld": False},
             }
         }
-        
+
         for arg in args_spec:
-            yaml_entry[name]["args"][arg["name"]] = {
-                k: v for k, v in arg.items() if k != "name"
-            }
-        
+            yaml_entry[name]["args"][arg["name"]] = {k: v for k, v in arg.items() if k != "name"}
+
         # b) Handler stub
         handlers_dir = out / "handlers"
         handlers_dir.mkdir(exist_ok=True)
         handler_file = handlers_dir / f"{safe_name}.py"
-        
+
         handler_code = f'''"""Handler for {name}.
 
 Auto-generated MCP tool handler.
@@ -165,7 +165,7 @@ async def {func_name}(args: dict) -> dict:
             arg_name = arg.get("name", "arg")
             arg_desc = arg.get("description", "Parameter")
             handler_code += f"        {arg_name}: {arg_desc}\n"
-        
+
         handler_code += '''    
     Returns:
         dict with status and data/error
@@ -180,25 +180,25 @@ async def {func_name}(args: dict) -> dict:
         logger.error(f"Error in {func_name}: {{e}}")
         return {{"status": "error", "error": str(e)}}
 '''
-        
+
         # Write handler
         tmp_handler = handler_file.with_suffix(".tmp")
         with open(tmp_handler, "w") as f:
             f.write(handler_code)
-        
+
         # Validate Python syntax
         try:
             ast.parse(handler_code)
         except SyntaxError as e:
             raise ValueError(f"Generated handler has syntax error: {e}")
-        
+
         os.replace(tmp_handler, handler_file)
-        
+
         # c) Test stub
         tests_dir = out / "tests"
         tests_dir.mkdir(exist_ok=True)
         test_file = tests_dir / f"test_{safe_name}.py"
-        
+
         test_code = f'''"""Tests for {name}.
 
 Auto-generated test stub.
@@ -233,19 +233,19 @@ async def test_{func_name}_error_handling():
     # Should not raise exception
     assert "status" in result
 '''
-        
+
         tmp_test = test_file.with_suffix(".tmp")
         with open(tmp_test, "w") as f:
             f.write(test_code)
-        
+
         # Validate test syntax
         try:
             ast.parse(test_code)
         except SyntaxError as e:
             raise ValueError(f"Generated test has syntax error: {e}")
-        
+
         os.replace(tmp_test, test_file)
-        
+
         # Write YAML snippet
         yaml_file = out / f"{safe_name}_allowlist_snippet.yaml"
         tmp_yaml = yaml_file.with_suffix(".tmp")
@@ -263,7 +263,7 @@ async def test_{func_name}_error_handling():
                     for k, v in arg.items():
                         if k != "name":
                             f.write(f"        {k}: {v}\\n")
-        
+
         # Validate YAML by re-parsing
         if HAS_YAML:
             try:
@@ -271,18 +271,18 @@ async def test_{func_name}_error_handling():
                     yaml.safe_load(f)
             except yaml.YAMLError as e:
                 raise ValueError(f"Generated YAML is invalid: {e}")
-        
+
         os.replace(tmp_yaml, yaml_file)
-        
+
         return {
             "yaml_snippet": str(yaml_file),
             "handler_file": str(handler_file),
             "test_file": str(test_file),
         }
-    
+
     def validate_tool(
-        self, 
-        name: str, 
+        self,
+        name: str,
         allowlist_path: str | None = None,
         tools_py_path: str | None = None,
     ) -> dict[str, Any]:
@@ -292,29 +292,29 @@ async def test_{func_name}_error_handling():
         """
         al_path = Path(allowlist_path) if allowlist_path else self.allowlist_path
         tp_path = Path(tools_py_path) if tools_py_path else self.tools_py_path
-        
+
         issues = []
-        
+
         # Parse allowlist
         try:
             tools = self.parse_allowlist(str(al_path))
         except Exception as e:
             return {"valid": False, "issues": [str(e)]}
-        
+
         if name not in tools:
             return {"valid": False, "issues": [f"Tool '{name}' not found in allowlist"]}
-        
+
         config = tools[name]
         handler = config.get("handler", "")
-        
+
         if not handler:
             issues.append("No handler specified")
             return {"valid": False, "issues": issues}
-        
+
         # Extract function name
         func_name = handler.split(".")[-1] if "." in handler else handler
         module = handler.split(".")[0] if "." in handler else None
-        
+
         # Check tools.py
         if tp_path.exists():
             content = tp_path.read_text()
@@ -322,20 +322,20 @@ async def test_{func_name}_error_handling():
                 issues.append(f"Handler function '{func_name}' not found in tools.py")
         else:
             issues.append(f"tools.py not found at {tp_path}")
-        
+
         # Check args match
         args = config.get("args", {})
         for arg_name, arg_config in args.items():
             if not isinstance(arg_config, dict):
                 issues.append(f"Invalid arg config for '{arg_name}'")
-        
+
         return {
             "valid": len(issues) == 0,
             "issues": issues,
         }
-    
+
     def audit_all_tools(
-        self, 
+        self,
         allowlist_path: str | None = None,
         tools_py_path: str | None = None,
     ) -> dict[str, Any]:
@@ -344,19 +344,24 @@ async def test_{func_name}_error_handling():
         Returns summary: {total, valid, missing_handlers, issues: [{tool, issue}]}.
         """
         al_path = Path(allowlist_path) if allowlist_path else self.allowlist_path
-        
+
         try:
             tools = self.parse_allowlist(str(al_path))
         except Exception as e:
-            return {"total": 0, "valid": 0, "missing_handlers": 0, "issues": [{"tool": "_all", "issue": str(e)}]}
-        
+            return {
+                "total": 0,
+                "valid": 0,
+                "missing_handlers": 0,
+                "issues": [{"tool": "_all", "issue": str(e)}],
+            }
+
         summary = {
             "total": len(tools),
             "valid": 0,
             "missing_handlers": 0,
             "issues": [],
         }
-        
+
         for name in tools:
             result = self.validate_tool(name, allowlist_path, tools_py_path)
             if result["valid"]:
@@ -366,21 +371,21 @@ async def test_{func_name}_error_handling():
                     summary["missing_handlers"] += 1
                 for issue in result["issues"]:
                     summary["issues"].append({"tool": name, "issue": issue})
-        
+
         return summary
-    
+
     def generate_annotation_block(self, tools_dict: dict[str, dict]) -> str:
         """
         Generate the _ANNOTATIONS dict Python code block from tool definitions.
         Returns formatted Python string.
         """
-        lines = ["_ANNOTATIONS = {", '    # Auto-generated from allowlist', ""]
-        
+        lines = ["_ANNOTATIONS = {", "    # Auto-generated from allowlist", ""]
+
         for name, config in tools_dict.items():
             annotations = config.get("annotations", {})
             if not annotations:
                 annotations = {"readOnly": True, "destructive": False, "openWorld": False}
-            
+
             lines.append(f'    "{name}": {{')
             for key, value in annotations.items():
                 if isinstance(value, bool):
@@ -390,11 +395,11 @@ async def test_{func_name}_error_handling():
                 else:
                     lines.append(f'        "{key}": {value},')
             lines.append("    },")
-        
+
         lines.append("}")
-        
+
         return "\\n".join(lines)
-    
+
     def run(self, command: str, **kwargs) -> Any:
         """CLI dispatcher. Commands: scaffold, validate, audit, gen-annotations."""
         if command == "scaffold":
@@ -433,38 +438,44 @@ async def test_{func_name}_error_handling():
 def main():
     parser = argparse.ArgumentParser(description="MCP Tool Generator")
     subparsers = parser.add_subparsers(dest="command", required=True)
-    
+
     # scaffold command
     scaffold_parser = subparsers.add_parser("scaffold", help="Generate new tool stubs")
     scaffold_parser.add_argument("name", help="Tool name")
     scaffold_parser.add_argument("--description", "-d", required=True, help="Tool description")
-    scaffold_parser.add_argument("--handler-module", "-m", default="ai.mcp_bridge.generated", help="Handler module path")
-    scaffold_parser.add_argument("--args", "-a", help="Args spec as JSON '[{"name":"x","type":"str"}]'")
-    scaffold_parser.add_argument("--annotations", help="Annotations as JSON '{"readOnly":true}'")
-    scaffold_parser.add_argument("--output-dir", "-o", default="./generated_tools", help="Output directory")
-    
+    scaffold_parser.add_argument(
+        "--handler-module", "-m", default="ai.mcp_bridge.generated", help="Handler module path"
+    )
+    scaffold_parser.add_argument(
+        "--args", "-a", help='Args spec as JSON \'[{"name":"x","type":"str"}]\''
+    )
+    scaffold_parser.add_argument("--annotations", help="Annotations as JSON '{\"readOnly\":true}'")
+    scaffold_parser.add_argument(
+        "--output-dir", "-o", default="./generated_tools", help="Output directory"
+    )
+
     # validate command
     validate_parser = subparsers.add_parser("validate", help="Validate existing tool")
     validate_parser.add_argument("name", help="Tool name to validate")
     validate_parser.add_argument("--project-root", "-r", help="Project root path")
-    
+
     # audit command
     audit_parser = subparsers.add_parser("audit", help="Audit all tools")
     audit_parser.add_argument("--project-root", "-r", help="Project root path")
-    
+
     # gen-annotations command
     gen_parser = subparsers.add_parser("gen-annotations", help="Generate _ANNOTATIONS block")
     gen_parser.add_argument("--project-root", "-r", help="Project root path")
     gen_parser.add_argument("--output-dir", "-o", default=".", help="Output directory")
-    
+
     args = parser.parse_args()
-    
+
     logging.basicConfig(
         level=logging.INFO,
         format="%(asctime)s - %(levelname)s - %(message)s",
         handlers=[logging.StreamHandler(sys.stdout)],
     )
-    
+
     # Default to current directory or bazzite-laptop
     project_root = getattr(args, "project_root", None)
     if not project_root:
@@ -474,14 +485,15 @@ def main():
             project_root = str(possible)
         else:
             project_root = "."
-    
+
     gen = MCPToolGenerator(project_root)
-    
+
     if args.command == "scaffold":
         args_spec = json.loads(args.args) if args.args else []
         annotations = json.loads(args.annotations) if args.annotations else {}
-        
-        result = gen.run("scaffold",
+
+        result = gen.run(
+            "scaffold",
             name=args.name,
             description=args.description,
             handler_module=args.handler_module,
@@ -490,15 +502,15 @@ def main():
             output_dir=args.output_dir,
         )
         print(json.dumps(result, indent=2))
-        
+
     elif args.command == "validate":
         result = gen.run("validate", name=args.name)
         print(json.dumps(result, indent=2))
-        
+
     elif args.command == "audit":
         result = gen.run("audit")
         print(json.dumps(result, indent=2))
-        
+
     elif args.command == "gen-annotations":
         result = gen.run("gen-annotations", output_dir=args.output_dir)
         print(json.dumps(result, indent=2))

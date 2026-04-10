@@ -17,7 +17,6 @@ import time
 from dataclasses import asdict, dataclass, field
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
-from typing import Any
 
 try:
     import psutil
@@ -104,7 +103,7 @@ class PerformanceProfiler:
         "python.*agent",
         "lancedb",
     ]
-    
+
     # LLM providers with pricing (per 1M tokens)
     PROVIDER_PRICING = {
         "gemini": {"input": 0.075, "output": 0.30},  # Flash pricing
@@ -114,38 +113,38 @@ class PerformanceProfiler:
         "zai": {"input": 0.0, "output": 0.0},        # Own model
         "cerebras": {"input": 0.60, "output": 0.60},
     }
-    
+
     def __init__(self):
         self.result = ProfileResult(
             timestamp=datetime.now(UTC).isoformat()
         )
         self.alerts: list[str] = []
-    
+
     def profile(self) -> ProfileResult:
         """Run complete system profile."""
         logger.info("Starting performance profile")
-        
+
         self._collect_system_metrics()
         self._collect_process_metrics()
         self._collect_llm_metrics()
         self._collect_database_metrics()
         self._collect_timer_metrics()
         self._check_thresholds()
-        
+
         self.result.alerts = self.alerts
         return self.result
-    
+
     def _collect_system_metrics(self):
         """Collect overall system metrics."""
         if not HAS_PSUTIL:
             logger.warning("psutil not available, skipping system metrics")
             return
-        
+
         try:
             vm = psutil.virtual_memory()
             du = psutil.disk_usage("/")
             load = os.getloadavg() if hasattr(os, 'getloadavg') else (0, 0, 0)
-            
+
             self.result.system = SystemMetrics(
                 cpu_percent=psutil.cpu_percent(interval=1),
                 memory_percent=vm.percent,
@@ -159,12 +158,12 @@ class PerformanceProfiler:
                        f"{self.result.system.memory_percent:.1f}% RAM")
         except Exception as e:
             logger.error(f"System metrics failed: {e}")
-    
+
     def _collect_process_metrics(self):
         """Collect metrics for monitored processes."""
         if not HAS_PSUTIL:
             return
-        
+
         try:
             for proc in psutil.process_iter(['pid', 'name', 'cpu_percent', 'memory_percent', 'memory_info']):
                 try:
@@ -183,20 +182,20 @@ class PerformanceProfiler:
                             break
                 except (psutil.NoSuchProcess, psutil.AccessDenied):
                     continue
-            
+
             logger.info(f"Found {len(self.result.processes)} monitored processes")
         except Exception as e:
             logger.error(f"Process metrics failed: {e}")
-    
+
     def _collect_llm_metrics(self):
         """Collect LLM provider usage and rate limits."""
         # Estimate from router.py cache/logs
         cache_dir = Path.home() / ".bazzite-ai" / "llm-cache"
-        
+
         # Default metrics for each provider
         for provider in ["gemini", "groq", "mistral", "openrouter", "zai", "cerebras"]:
             metrics = LLMProviderMetrics(name=provider)
-            
+
             # Try to estimate from cache size
             provider_cache = cache_dir / provider
             if provider_cache.exists():
@@ -204,12 +203,12 @@ class PerformanceProfiler:
                 # Rough estimate: 4 chars ~= 1 token
                 estimated_tokens = size // 4
                 metrics.tokens_24h = estimated_tokens
-                
+
                 # Estimate cost
                 pricing = self.PROVIDER_PRICING.get(provider, {"input": 0, "output": 0})
                 avg_price = (pricing["input"] + pricing["output"]) / 2
                 metrics.cost_24h = (estimated_tokens / 1_000_000) * avg_price
-            
+
             # Read rate limits from cache metadata
             meta_file = cache_dir / f"{provider}_meta.json"
             if meta_file.exists():
@@ -219,25 +218,25 @@ class PerformanceProfiler:
                     metrics.rate_limit_reset = meta.get("reset")
                 except json.JSONDecodeError:
                     pass
-            
+
             self.result.llm_providers.append(metrics)
-        
+
         logger.info(f"LLM: tracked {len(self.result.llm_providers)} providers")
-    
+
     def _collect_database_metrics(self):
         """Collect LanceDB database metrics."""
         db_path = Path.home() / ".bazzite-ai" / "lancedb"
-        
+
         if not db_path.exists():
             # Try alternative location
             db_path = Path.home() / ".local" / "share" / "bazzite-ai" / "lancedb"
-        
+
         if db_path.exists():
             try:
                 # Calculate size
                 size_bytes = sum(f.stat().st_size for f in db_path.rglob('*') if f.is_file())
                 size_mb = size_bytes / (1024**2)
-                
+
                 # Try to get table counts
                 table_counts = {}
                 for table_dir in db_path.iterdir():
@@ -245,7 +244,7 @@ class PerformanceProfiler:
                         # Count .lance files as proxy for rows
                         lance_files = list(table_dir.glob("*.lance"))
                         table_counts[table_dir.name] = len(lance_files)
-                
+
                 self.result.database = DatabaseMetrics(
                     lancedb_path=str(db_path),
                     size_mb=size_mb,
@@ -254,7 +253,7 @@ class PerformanceProfiler:
                 logger.info(f"Database: {size_mb:.1f} MB, {len(table_counts)} tables")
             except Exception as e:
                 logger.error(f"Database metrics failed: {e}")
-    
+
     def _collect_timer_metrics(self):
         """Collect systemd timer status."""
         try:
@@ -264,7 +263,7 @@ class PerformanceProfiler:
                 text=True,
                 timeout=10,
             )
-            
+
             if result.returncode != 0:
                 # Try without JSON (older systemctl)
                 result = subprocess.run(
@@ -299,21 +298,21 @@ class PerformanceProfiler:
                         ))
                 except json.JSONDecodeError:
                     pass
-            
+
             logger.info(f"Timers: tracked {len(self.result.timers)} systemd timers")
         except Exception as e:
             logger.warning(f"Timer metrics unavailable (systemctl): {e}")
-    
+
     def _check_thresholds(self):
         """Check metric thresholds and generate alerts."""
         if self.result.system:
             sys = self.result.system
-            
+
             if sys.cpu_percent > 80:
                 self.alerts.append(f"HIGH_CPU: {sys.cpu_percent:.1f}%")
             if sys.memory_percent > 85:
                 self.alerts.append(f"HIGH_MEMORY: {sys.memory_percent:.1f}%")
-            
+
             # Check security directory size
             security_dir = Path.home() / "security"
             if security_dir.exists():
@@ -330,7 +329,7 @@ class PerformanceProfiler:
                         self.alerts.append(f"SECURITY_DIR_LARGE: {size_gb:.1f} GB")
                 except Exception:
                     pass
-        
+
         # Check LLM rate limits
         for provider in self.result.llm_providers:
             if provider.rate_limit_remaining is not None:
@@ -338,44 +337,44 @@ class PerformanceProfiler:
                     self.alerts.append(
                         f"{provider.name.upper()}_RATE_LIMIT_LOW: {provider.rate_limit_remaining}"
                     )
-        
+
         # Check database size
         if self.result.database and self.result.database.size_mb > 1024:
             self.alerts.append(f"DATABASE_LARGE: {self.result.database.size_mb:.0f} MB")
-        
+
         if self.alerts:
             logger.warning(f"Alerts: {self.alerts}")
-    
+
     def save_snapshot(self) -> Path:
         """Save profile to JSON."""
         METRICS_DIR.mkdir(parents=True, exist_ok=True)
-        
+
         timestamp = datetime.now(UTC).strftime("%Y%m%d_%H%M%S")
         snapshot_path = METRICS_DIR / f"profile_{timestamp}.json"
         snapshot_path.write_text(json.dumps(asdict(self.result), indent=2, default=str))
-        
+
         # Update latest symlink
         latest = METRICS_DIR / "latest_profile.json"
         if latest.exists():
             latest.unlink()
         latest.symlink_to(snapshot_path.name)
-        
+
         logger.info(f"Snapshot saved: {snapshot_path}")
         return snapshot_path
-    
+
     def generate_cost_report(self, days: int = 7) -> dict:
         """Generate historical cost report."""
         cutoff = datetime.now(UTC) - timedelta(days=days)
-        
+
         total_cost = 0.0
         provider_costs: dict[str, float] = {}
-        
+
         # Aggregate all snapshots in date range
         for snapshot_file in METRICS_DIR.glob("profile_*.json"):
             try:
                 data = json.loads(snapshot_file.read_text())
                 snapshot_time = datetime.fromisoformat(data.get("timestamp", "").replace("Z", "+00:00"))
-                
+
                 if snapshot_time >= cutoff:
                     for provider in data.get("llm_providers", []):
                         name = provider.get("name", "unknown")
@@ -384,7 +383,7 @@ class PerformanceProfiler:
                         total_cost += cost
             except Exception:
                 continue
-        
+
         return {
             "period_days": days,
             "total_cost_usd": round(total_cost, 2),
@@ -398,41 +397,41 @@ def print_summary(result: ProfileResult):
     print(f"\n{'='*60}")
     print(f"PERFORMANCE PROFILE: {result.timestamp}")
     print(f"{'='*60}")
-    
+
     if result.system:
         s = result.system
-        print(f"\n🖥️  SYSTEM")
+        print("\n🖥️  SYSTEM")
         print(f"  CPU: {s.cpu_percent:.1f}% (load: {s.load_average[0]:.2f})")
         print(f"  RAM: {s.memory_percent:.1f}% ({s.memory_used_gb:.1f}/{s.memory_total_gb:.1f} GB)")
         print(f"  Disk: {s.disk_used_gb:.1f}/{s.disk_total_gb:.1f} GB")
-    
+
     if result.processes:
         print(f"\n🔧 MONITORED PROCESSES ({len(result.processes)})")
         for p in sorted(result.processes, key=lambda x: -x.memory_mb)[:5]:
             print(f"  {p.name[:25]:25} PID:{p.pid:6} MEM:{p.memory_mb:6.1f}MB CPU:{p.cpu_percent:5.1f}%")
-    
+
     if result.llm_providers:
-        print(f"\n🤖 LLM PROVIDERS (24h costs)")
+        print("\n🤖 LLM PROVIDERS (24h costs)")
         for prov in sorted(result.llm_providers, key=lambda x: -x.cost_24h):
             limit_str = f" ({prov.rate_limit_remaining} remaining)" if prov.rate_limit_remaining else ""
             print(f"  {prov.name:12} ${prov.cost_24h:.3f}{limit_str}")
-    
+
     if result.database:
-        print(f"\n🗄️  DATABASE")
+        print("\n🗄️  DATABASE")
         print(f"  LanceDB: {result.database.size_mb:.1f} MB")
         for table, count in result.database.table_counts.items():
             print(f"    - {table}: {count} items")
-    
+
     if result.timers:
         print(f"\n⏰ SYSTEMD TIMERS ({len(result.timers)} active)")
         for t in result.timers[:3]:
             print(f"  {t.name}")
-    
+
     if result.alerts:
-        print(f"\n⚠️  ALERTS")
+        print("\n⚠️  ALERTS")
         for alert in result.alerts:
             print(f"  ! {alert}")
-    
+
     print(f"{'='*60}")
 
 
@@ -446,7 +445,7 @@ def main():
     parser.add_argument("--days", type=int, default=7, help="Cost report period (days)")
     parser.add_argument("--save", action="store_true", help="Save snapshot to file")
     args = parser.parse_args()
-    
+
     if args.cost_report:
         profiler = PerformanceProfiler()
         report = profiler.generate_cost_report(args.days)
@@ -457,7 +456,7 @@ def main():
         for name, cost in sorted(report['provider_breakdown'].items(), key=lambda x: -x[1]):
             print(f"  {name}: ${cost:.2f}")
         return
-    
+
     if args.watch:
         print(f"Starting continuous monitoring (interval: {args.interval}s)")
         print("Press Ctrl+C to stop\n")
@@ -466,13 +465,13 @@ def main():
                 profiler = PerformanceProfiler()
                 result = profiler.profile()
                 print_summary(result)
-                
+
                 if args.save:
                     profiler.save_snapshot()
-                
+
                 if result.alerts:
                     print(f"\n🔔 {len(result.alerts)} alerts active!")
-                
+
                 time.sleep(args.interval)
         except KeyboardInterrupt:
             print("\nMonitoring stopped.")
@@ -480,11 +479,11 @@ def main():
         profiler = PerformanceProfiler()
         result = profiler.profile()
         print_summary(result)
-        
+
         if args.save:
             snapshot_path = profiler.save_snapshot()
             print(f"\nSaved: {snapshot_path}")
-        
+
         sys.exit(1 if result.alerts else 0)
 
 
