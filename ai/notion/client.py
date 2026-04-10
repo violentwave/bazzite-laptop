@@ -170,6 +170,19 @@ class NotionClient:
             "results", []
         )
 
+    def update_page_properties(self, page_id: str, properties: dict[str, Any]) -> dict[str, Any]:
+        """Update page properties.
+
+        Args:
+            page_id: The page ID to update.
+            properties: Dictionary of property updates.
+
+        Returns:
+            Updated page object.
+        """
+        payload = {"properties": properties}
+        return self._request("PATCH", f"/v1/pages/{page_id}", json=payload)
+
     def close(self) -> None:
         """Close the HTTP client."""
         self._client.close()
