@@ -25,7 +25,7 @@ AI chat/voice assistant) as the primary interface.
     ┌─────▼──────┐        ┌──────▼──────────────┐
     │ LLM Proxy  │        │  MCP Bridge         │
     │ :8767      │        │  :8766 (FastMCP)    │
-      │ Starlette  │        │  88 tools           │
+      │ Starlette  │        │  96 tools           │
     └─────┬──────┘        └──────┬──────────────┘
           │                      │
     ┌─────▼──────┐        ┌──────▼──────────────┐
@@ -75,7 +75,7 @@ systemctl --user start bazzite-llm-proxy.service bazzite-mcp-bridge.service
 ```bash
 # MCP bridge health
 curl -s http://127.0.0.1:8766/health
-# Expected: {"status": "ok", "tools": 88}
+# Expected: {"status": "ok", "tools": 96}
 
 # LLM proxy health
 curl -s http://127.0.0.1:8767/health
@@ -100,25 +100,35 @@ covering disk, CPU temps, GPU, memory, and security status.
 
 ### Automatic timer schedule
 
-All timers run unattended. This is the full daily/weekly timeline:
+All timers run unattended. This is the current scheduled timeline from `systemd/*.timer`:
 
 | Time          | Timer                    | What it does                          |
 |---------------|--------------------------|---------------------------------------|
-| Daily 08:00   | `system-health.timer`    | Hardware health snapshot              |
-| Daily 08:15   | `performance-tuning.timer` | Performance analysis agent          |
-| Daily 08:30   | `security-audit.timer`   | Automated security audit agent        |
-| Daily 09:00   | `rag-embed.timer`        | Re-ingest logs into LanceDB           |
-| Daily 09:15   | `knowledge-storage.timer` | Knowledge base health check + auto-repair |
-| Daily 09:45   | `release-watch.timer`    | Upstream release + GHSA check         |
-| Daily 12:00   | `clamav-quick.timer`     | ClamAV quick scan                     |
-| Every 15m     | `service-canary.timer`   | AI service health check + auto-restart |
-| Wed 14:00     | `clamav-healthcheck.timer` | ClamAV daemon health check          |
-| Fri 23:00     | `clamav-deep.timer`      | ClamAV full deep scan                 |
-| Sat 00:00     | `cve-scanner.timer`      | CVE scan of installed packages        |
-| Sun 00:30     | `log-ingest.timer`       | Weekly log ingestion before archive   |
-| Sun 01:00     | `log-archive.timer`      | Compress + upload old logs to R2      |
-| Sun 02:00     | `lancedb-optimize.timer` | Compact and optimize LanceDB tables   |
-| Mon 03:00     | `fedora-updates.timer`   | Fedora Bodhi security update check    |
+| Daily 06:00     | `code-index.timer`         | Rebuild code intelligence index         |
+| Daily 07:00     | `bazzite-intel-scrape.timer` | Run intelligence scraper              |
+| Daily 08:00     | `system-health.timer`      | Hardware health snapshot                |
+| Daily 08:15     | `performance-tuning.timer` | Performance analysis agent              |
+| Daily 08:30     | `security-audit.timer`     | Automated security audit agent          |
+| Daily 08:45     | `security-briefing.timer`  | Generate daily security briefing        |
+| Daily 09:00     | `rag-embed.timer`          | Re-ingest logs into LanceDB             |
+| Daily 09:15     | `knowledge-storage.timer`  | Knowledge base health check + auto-repair |
+| Daily 09:45     | `release-watch.timer`      | Upstream release + GHSA check           |
+| Daily 12:00     | `clamav-quick.timer`       | ClamAV quick scan                       |
+| Daily 19:00     | `bazzite-intel-scrape.timer` | Run intelligence scraper              |
+| Every 6h        | `security-alert.timer`     | Evaluate active security alerts         |
+| Every 6h        | `ai-workflow-health.timer` | Run workflow health check               |
+| Every 15m       | `service-canary.timer`     | AI service health check + auto-restart  |
+| Every 15m       | `phase-control.timer`      | Notion/Slack phase control tick         |
+| Wed 14:00       | `clamav-healthcheck.timer` | ClamAV daemon health check              |
+| Fri 23:00       | `clamav-deep.timer`        | ClamAV full deep scan                   |
+| Sat 00:00       | `cve-scanner.timer`        | CVE scan of installed packages          |
+| Sun 00:30       | `log-ingest.timer`         | Weekly log ingestion before archive     |
+| Sun 01:00       | `log-archive.timer`        | Compress + upload old logs to R2        |
+| Sun 02:00       | `lancedb-optimize.timer`   | Compact and optimize LanceDB tables     |
+| Sun 03:00       | `dep-audit.timer`          | Weekly pip-audit vulnerability scan     |
+| Sun 03:00       | `metrics-compact.timer`    | Compact and prune metrics data          |
+| Sun 03:00       | `weekly-insights.timer`    | Generate weekly AI insights             |
+| Mon 03:00       | `fedora-updates.timer`     | Fedora Bodhi security update check      |
 
 Check timer status:
 
@@ -169,7 +179,7 @@ bash scripts/start-security-tray-qt.sh
 
 ---
 
-## 4. MCP Tools Reference (88 tools)
+## 4. MCP Tools Reference (96 tools)
 
 All tools are accessible through Newelle via the MCP bridge. They are read-only
 (no system mutations). Output is truncated to 4 KB and paths are redacted.
@@ -192,7 +202,7 @@ All tools are accessible through Newelle via the MCP bridge. They are read-only
 | `system.uptime`            | —                            | System uptime and load average                     |
 | `system.service_status`    | —                            | Status of clamav-freshclam, system-health.timer, mcp-bridge, llm-proxy |
 | `system.llm_models`        | —                            | Available modes (fast/reason/batch/code/embed), provider chains, proxy URL |
-| `system.mcp_manifest`      | —                            | All 88 tools with descriptions and args (8 KB limit) |
+| `system.mcp_manifest`      | —                            | All 96 tools with descriptions and args (8 KB limit) |
 | `system.llm_status`        | —                            | Provider health scores, token usage, active models |
 | `system.key_status`        | —                            | API key presence: "set" or "missing" per key (never values) |
 | `system.release_watch`     | —                            | Upstream dependency release updates (GitHub Releases, GHSA) |
@@ -291,7 +301,7 @@ All tools are accessible through Newelle via the MCP bridge. They are read-only
 | `collab.add_task`       | `title`, `task_type`, `description`, `priority` | Add a task to the queue |
 | `collab.search_knowledge` | `query`, `top_k`               | Search the agent knowledge base       |
 
-### workflow.* (6 tools)
+### workflow.* (8 tools)
 
 | Tool                 | Args                                  | What it returns                                    |
 |----------------------|---------------------------------------|----------------------------------------------------|
@@ -301,6 +311,8 @@ All tools are accessible through Newelle via the MCP bridge. They are read-only
 | `workflow.agents`    | —                                     | List all registered agents and task types          |
 | `workflow.handoff`   | `agent`, `task_type`, `payload`, `priority` | Manually dispatch a task to an agent |
 | `workflow.history`   | `workflow_name`, `limit`             | Query workflow_runs table                          |
+| `workflow.history_steps` | `limit`                           | List recent runs with step-level summaries         |
+| `workflow.cancel`    | `run_id`                              | Cancel pending or running steps for a run          |
 
 ### intel.* (2 tools)
 
@@ -317,13 +329,13 @@ All tools are accessible through Newelle via the MCP bridge. They are read-only
 | `agents.performance_tuning`| —    | Temps, memory, disk, gaming profile analysis         |
 | `agents.knowledge_storage` | —    | Vector DB health, ingestion freshness, Ollama status |
 | `agents.code_quality`      | —    | ruff + bandit + git status report                    |
-| `agents.timer_health`      | —    | Validate all 23 systemd timers; returns per-timer status and overall health |
+| `agents.timer_health`      | —    | Validate all 24 systemd timers; returns per-timer status and overall health |
 
 ### Built-in
 
 | Tool     | Returns                           |
 |----------|-----------------------------------|
-| `health` | `{"status": "ok", "tools": 88}`   |
+| `health` | `{"status": "ok", "tools": 96}`   |
 
 ---
 
@@ -685,6 +697,11 @@ workflow.status {name: "security_deep_scan"}
 **Query workflow history:**
 ```
 workflow.history {workflow_name: "security_deep_scan", limit: 10}
+```
+
+**List recent step summaries:**
+```
+workflow.history_steps {limit: 10}
 ```
 
 ### Agent Handoff

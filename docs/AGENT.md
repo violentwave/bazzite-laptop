@@ -116,8 +116,8 @@ Source: `configs/mcp-bridge-allowlist.yaml` + tools registered directly in serve
 > **Phase 33:** Added `system.create_tool`, `system.list_dynamic_tools` — dynamic tool creation with safety validation.
 > **Phase 39:** Added `system.dep_audit`, `system.dep_audit_history` — pip-audit vulnerability scanning + SBOM generation.
 > **Phase 40:** Added `system.perf_metrics` — real-time performance metrics snapshot.
-> **Phase 52:** Added `slack.*` (4 tools), `notion.*` (4 tools), `secrets.scan` — external integrations with scoped loading.
-> **Phase 53:** Added `workflow.run_named`, `workflow.status`, `workflow.agents`, `workflow.handoff`, `workflow.history` (+4 expanded workflow.* tools, 6 total) + `workflow_runs` LanceDB table.
+> **Phase 52:** Added `slack.*` (4 tools) and `notion.*` (4 tools) with scoped secret loading.
+> **Phase 53:** Expanded `workflow.*` with `workflow.status`, `workflow.agents`, `workflow.handoff`, and `workflow.history` (6 total) + `workflow_runs` LanceDB table.
 
 ### system.* (33 tools)
 
@@ -238,7 +238,7 @@ Source: `configs/mcp-bridge-allowlist.yaml` + tools registered directly in serve
 |------|--------|------|-------------|
 | `workflow.list` | python: `ai.mcp_bridge.handlers.workflow_tools` | — | List all registered workflow definitions |
 | `workflow.run` | python: `ai.mcp_bridge.handlers.workflow_tools` | `name`, `triggered_by` | Trigger a named workflow. Logs run to workflow_runs table |
-| `workflow.status` | python: `ai.mcp_bridge.handlers.workflow_tools` | `run_id` | Get per-step status for a workflow run from workflow_steps/workflow_runs |
+| `workflow.status` | python: `ai.mcp_bridge.handlers.workflow_tools` | `name` | Get the most recent workflow_runs result for a workflow name |
 | `workflow.agents` | python: `ai.mcp_bridge.handlers.workflow_tools` | — | List all registered agents and their supported task types |
 | `workflow.handoff` | python: `ai.mcp_bridge.handlers.workflow_tools` | `agent`, `task_type`, `payload`, `priority` | Manually dispatch a task message to a named agent |
 | `workflow.history` | python: `ai.mcp_bridge.handlers.workflow_tools` | `workflow_name`, `limit` | Query workflow_runs history |
@@ -253,7 +253,7 @@ Source: `configs/mcp-bridge-allowlist.yaml` + tools registered directly in serve
 | `agents.performance_tuning` | python: `ai.agents.performance_tuning` | — | Temps, memory, disk, gaming profiles |
 | `agents.knowledge_storage` | python: `ai.agents.knowledge_storage` | — | Vector DB health + embedding provider status |
 | `agents.code_quality` | python: `ai.agents.code_quality_agent` | — | ruff + bandit + git status |
-| `agents.timer_health` | python: `ai.agents.timer_sentinel` | — | Validate all 23 systemd timers. Returns per-timer status, stale list, and overall health. |
+| `agents.timer_health` | python: `ai.agents.timer_sentinel` | — | Validate all 24 systemd timers. Returns per-timer status, stale list, and overall health. |
 
 ### intel.* (2 tools)
 
@@ -261,30 +261,6 @@ Source: `configs/mcp-bridge-allowlist.yaml` + tools registered directly in serve
 |------|--------|------|-------------|
 | `intel.scrape_now` | python: `ai.intel_scraper` | — | Trigger intelligence scrape: GitHub releases, CISA KEV, NVD CVEs, Fedora RSS |
 | `intel.ingest_pending` | python: `ai.system.ingest_pipeline` | `intel_dir` (optional) | Ingest pending scraped intelligence into LanceDB |
-
-### slack.* (4 tools)
-
-| Tool | Source | Args | Description |
-|------|--------|------|-------------|
-| `slack.post_message` | python: `ai.integrations.slack` | `channel`, `message` | Post a message to a Slack channel |
-| `slack.get_messages` | python: `ai.integrations.slack` | `channel`, `limit` | Retrieve recent messages from a channel |
-| `slack.create_channel` | python: `ai.integrations.slack` | `name` | Create a new Slack channel |
-| `slack.search` | python: `ai.integrations.slack` | `query` | Search Slack messages |
-
-### notion.* (4 tools)
-
-| Tool | Source | Args | Description |
-|------|--------|------|-------------|
-| `notion.create_page` | python: `ai.integrations.notion` | `title`, `content`, `parent_id` | Create a Notion page |
-| `notion.get_page` | python: `ai.integrations.notion` | `page_id` | Retrieve a Notion page |
-| `notion.update_page` | python: `ai.integrations.notion` | `page_id`, `content` | Update a Notion page |
-| `notion.search` | python: `ai.integrations.notion` | `query` | Search Notion workspace |
-
-### secrets.* (1 tool)
-
-| Tool | Source | Args | Description |
-|------|--------|------|-------------|
-| `secrets.scan` | python: `ai.security.secrets_scanner` | `content` | Scan text for leaked secrets/API keys |
 
 ### slack.* (4 tools)
 
@@ -328,18 +304,23 @@ Module: `ai/orchestration/`
 | **P40** | Performance Round 2 + Observability | +1 | `metrics-compact.timer` | — | `ai/metrics.py` |
 | **P53** | Agent Orchestration Expansion | +6 | `ai-workflow-health.timer` (Every 6h) | `workflow_runs` | `ai/orchestration/`, `ai/workflows/` |
 | **P54** | Workflow Hardening + Observability | +3 | — | `workflow_steps` | `ai/orchestration/observer.py`, `ai/workflows/` |
+| **P55** | Notion/Slack Autonomous Control Plane | — | `phase-control.timer` (Every 15m) | — | `ai/phase_control/` |
 
-### Current State (Post-P54)
+Read-only live probe:
+`./.venv/bin/python scripts/run-phase-control.py --smoke-test --database-id "$NOTION_PHASE_DATABASE_ID"`
+This validates Notion config, queries the phase database, and resolves the next eligible phase without mutating any rows.
+
+### Current State (Post-P55)
 
 | Metric | Value |
 |--------|-------|
 | MCP tools | 96 (+ 1 health endpoint) |
-| Systemd timers | 23 |
+| Systemd timers | 24 |
 | LanceDB tables | 28 |
-| Tests | 2028+ |
+| Tests | 2236+ |
 | Cloud LLM providers | 6 |
 | Threat intel APIs | 16 |
-| P44-P54 status | complete (2026-04-09) |
+| P44-P55 status | complete (2026-04-09) |
 
 ### Dependency Graph
 
@@ -397,7 +378,7 @@ P51 (TBD) ←
 
 ---
 
-## Systemd Timers (23)
+## Systemd Timers (24)
 
 | Timer | Schedule | Purpose |
 |-------|----------|---------|
@@ -423,6 +404,7 @@ P51 (TBD) ←
 | `dep-audit.timer` | Weekly | pip-audit vulnerability scan + SBOM |
 | `weekly-insights.timer` | Weekly | AI-generated weekly system insights |
 | `ai-workflow-health.timer` | Every 6h | Workflow health check (security_deep_scan) |
+| `phase-control.timer` | Every 15m | Notion/Slack autonomous control-plane tick |
 
 ---
 
@@ -496,7 +478,7 @@ P51 (TBD) ←
 | `scripts/metrics-compact.py` | Metrics compaction (P24) |
 | `scripts/r2-set-lifecycle.py` | One-time R2 bucket lifecycle rule setup (180d auto-expiration) |
 | `scripts/log-task-success.py` | CLI for logging successful task patterns to LanceDB (P22) |
-| `systemd/` | 23 timers + associated services |
+| `systemd/` | 24 timers + associated services |
 | `tests/` | ~1951 pytest tests |
 | `tray/` | PySide6 system tray app |
 
@@ -602,7 +584,7 @@ Newelle (Flatpak GTK4) is the AI chat/voice UI.
 2. **Eicar test files stuck in quarantine** — needs `sudo chattr -i` + `rm` outside sandbox
 3. **npm audit: 30 remaining vulns** — path-to-regexp, brace-expansion in RuFlo deps (not fixable without upstream)
 4. **CPU 87°C idle** — needs repaste with Kryonaut Extreme
-5. **`ai-workflow-health.timer` not yet deployed** — see timer table for deploy commands
+5. **Workflow/timer state can drift from docs** — verify with `systemctl list-timers --all` before assuming a timer is missing
 
 ---
 

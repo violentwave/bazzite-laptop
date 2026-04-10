@@ -23,7 +23,7 @@ KNOWN_KEYS=(
     "OPENROUTER_API_KEY"
     "ZAI_API_KEY"
     "CEREBRAS_API_KEY"
-    "CLOUDFLARE_API_KEY"
+    "CLOUDFLARE_API_TOKEN"
     "VT_API_KEY"
     "OTX_API_KEY"
     "ABUSEIPDB_KEY"
@@ -37,7 +37,7 @@ declare -A KEY_PREFIXES=(
     ["OPENROUTER_API_KEY"]="sk-or-"
     ["ZAI_API_KEY"]=""
     ["CEREBRAS_API_KEY"]=""
-    ["CLOUDFLARE_API_KEY"]=""
+    ["CLOUDFLARE_API_TOKEN"]=""
     ["VT_API_KEY"]=""
     ["OTX_API_KEY"]=""
     ["ABUSEIPDB_KEY"]=""
@@ -62,7 +62,7 @@ get_key_value() {
 show_status() {
     echo -e "\n${CYAN}═══ API Key Status ═══${NC}\n"
 
-    local llm_keys=("GEMINI_API_KEY" "GROQ_API_KEY" "MISTRAL_API_KEY" "OPENROUTER_API_KEY" "ZAI_API_KEY" "CEREBRAS_API_KEY" "CLOUDFLARE_API_KEY")
+    local llm_keys=("GEMINI_API_KEY" "GROQ_API_KEY" "MISTRAL_API_KEY" "OPENROUTER_API_KEY" "ZAI_API_KEY" "CEREBRAS_API_KEY" "CLOUDFLARE_API_TOKEN")
     local intel_keys=("VT_API_KEY" "OTX_API_KEY" "ABUSEIPDB_KEY")
 
     echo -e "${CYAN}LLM Providers:${NC}"

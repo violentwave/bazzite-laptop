@@ -8,7 +8,7 @@ graph TD
 
     subgraph "AI Proxy Layer"
         PROXY["LLM Proxy :8767\nOpenAI-compat · streaming\nai/llm_proxy.py"]
-        MCP["MCP Bridge :8766\nFastMCP streamable-http\n82 tools · ai/mcp_bridge/"]
+        MCP["MCP Bridge :8766\nFastMCP streamable-http\n96 tools · ai/mcp_bridge/"]
     end
 
     subgraph "AI Core"
@@ -53,7 +53,7 @@ graph TD
     subgraph "System Layer"
         CLAMAV["ClamAV\nclamd + freshclam\n3 timers"]
         HEALTH_MON["Health Monitor\nsystem-health-snapshot.sh"]
-        SYSTEMD["systemd timers\n22 scheduled jobs"]
+        SYSTEMD["systemd timers\n24 scheduled jobs"]
         OLLAMA["Ollama :11434\nnomic-embed-text\nemergency embed only"]
         NVIDIA["NVIDIA GTX 1060 6GB\n0 VRAM used (normal)"]
         ZRAM["ZRAM 7.7GB\nzstd · swappiness=180"]

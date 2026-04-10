@@ -7,12 +7,26 @@ Bazzite security/gaming system.
 
 ---
 
+## P55 — Notion/Slack Autonomous Control Plane (2026-04-09)
+
+- New package: `ai/phase_control/` with phase state machine, policy checks, lease handling, runner loop, and strict Slack command parsing
+- Implemented `NotionPhaseSync` row-backed read/write/lease behavior for phase selection and lease lifecycle
+- New backend adapter contract with normalized request/result models
+- New adapters: `codex`, `opencode`, `claude_code` under `ai/phase_control/backends/`
+- New runner entrypoint: `scripts/run-phase-control.py` (Notion-backed path is default; in-memory mode is explicit via `--in-memory`)
+- New timer wiring: `systemd/phase-control.service` + `systemd/phase-control.timer`
+- Hardened runner exception handling: backend/validation failures map to `Blocked` with validation summary and lease cleanup
+- Added `--smoke-test` read-only verification for live Notion config/database access and clearer operator diagnostics for Notion 404/auth failures
+- Added focused tests for transitions, leases, approval gating, parser strictness, backend normalization, runner control paths, and Notion sync semantics
+
+---
+
 ## P54 — Workflow Hardening + Observability (2026-04-09)
 
 - Fixed: test_mcp_drift.py — added system.dep_scan + system.test_analysis to allowlist
 - New: ai/orchestration/observer.py — WorkflowObserver with per-step LanceDB recording
 - New: workflow_steps LanceDB table — step_id, tool_called, duration_ms, status, error
-- New MCP tools: workflow.status, workflow.history, workflow.cancel (82→87 tools)
+- New MCP tools: workflow.history_steps, workflow.cancel
 - Enhanced: security_deep_scan — 6-step chained workflow with parallel phases
 - Enhanced: morning_briefing_enriched — memory.search context injection
 - Observer wired into OrchestrationBus — all workflow runs auto-recorded

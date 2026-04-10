@@ -16,7 +16,7 @@
 | **P53** | Complete | OrchestrationBus and agent handoff model introduced for workflow composition. |
 | **P54** | Complete | Workflow hardening + observability with `workflow_steps` and step-level tracking. |
 
-## P55+ Candidate Directions
+## P56+ Candidate Directions
 
 1. **OrchestrationBus to real inter-agent composition**
    - Move from basic dispatch to richer agent-to-agent result composition and reconciliation.

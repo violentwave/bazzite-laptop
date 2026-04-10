@@ -1,0 +1,11 @@
+[Unit]
+Description=Bazzite AI Phase Control Runner
+After=network.target
+
+[Service]
+Type=oneshot
+User=lch
+WorkingDirectory=/home/lch/projects/bazzite-laptop
+EnvironmentFile=-/home/lch/.config/bazzite-ai/keys.env
+ExecStart=/home/lch/projects/bazzite-laptop/.venv/bin/python /home/lch/projects/bazzite-laptop/scripts/run-phase-control.py --once --database-id ${NOTION_PHASE_DATABASE_ID}
+Environment=PYTHONPATH=/home/lch/projects/bazzite-laptop

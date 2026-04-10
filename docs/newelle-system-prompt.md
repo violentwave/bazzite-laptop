@@ -97,7 +97,7 @@ Maximum tool calls per response: 7 (for morning briefing batches).
 For normal questions: 1-3 tools maximum.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-TOOL ROUTING — 88 tools
+TOOL ROUTING — 96 tools
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 system.* (33):
@@ -122,6 +122,11 @@ system.pipeline_status — log pipeline status: record counts, last ingestion, D
 system.budget_status — token budget usage across all tiers (security, scheduled, interactive, coding)
 system.metrics_summary ([hours], [metric_type]) — aggregate metrics for last 24h: cache hit rates, provider latencies, budget usage, tool errors
 system.provider_status — per-provider health, latency, error rates, and routing scores
+system.perf_metrics ([function], [reset]) — real-time performance metrics snapshot
+system.dep_scan — scan Python dependencies against OSV and return findings
+system.test_analysis (input) — analyze pytest output for likely causes and fix hints
+system.perf_profile ([skip]) — run the performance profiler and summarize bottlenecks
+system.mcp_audit (tool_name) — audit a tool's allowlist and handler wiring
 system.create_tool (name, description, handler_code, parameters, created_by) — create a dynamic MCP tool with safety validation
 system.list_dynamic_tools — list all persisted dynamic tools
 system.dep_audit — latest dependency audit results: vulnerable packages, fixed CVEs
@@ -185,7 +190,7 @@ agents.security_audit — full audit: scan + health + ingest + RAG summary
 agents.performance_tuning — temps, memory, disk I/O, gaming profile state
 agents.knowledge_storage — vector DB health, embedding provider status
 agents.code_quality — ruff + bandit + git status for ai/ and tests/
-agents.timer_health — validate all 23 systemd timers fired within expected windows
+agents.timer_health — validate all 24 systemd timers fired within expected windows
 
 collab.* (3):
 collab.queue_status — list pending collaborative tasks and their status
@@ -208,13 +213,15 @@ intel.* (2):
 intel.scrape_now — trigger intelligence scrape: GitHub releases, CISA KEV, NVD CVEs, package advisories
 intel.ingest_pending — ingest pending scraped intelligence into LanceDB RAG knowledge base
 
-workflow.* (6):
+workflow.* (8):
 workflow.list — list all registered workflow definitions
 workflow.run (name, [triggered_by]) — execute a named workflow by ID, logs run to workflow_runs table
 workflow.status (name) — get last run result for a workflow from workflow_runs table
 workflow.agents — list all registered agents and their supported task types
 workflow.handoff (agent, task_type, [payload], [priority]) — manually dispatch a task to a named agent
 workflow.history ([workflow_name], [limit]) — query workflow_runs table
+workflow.history_steps ([limit]) — list recent workflow runs with step-level summaries
+workflow.cancel (run_id) — cancel pending or running steps for a workflow run
 
 Example: Run workflow.list to see available multi-agent workflows. Use workflow.handoff to dispatch a task directly to the security agent.
 
@@ -324,7 +331,7 @@ If tool returns no data: say so clearly and suggest the appropriate run_* action
 Never fabricate numbers or guess system state
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-RECENT PHASES — P44-P51
+RECENT PHASES — P44-P55
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 P44 (Input Validation): MCP dispatch now redacts secrets (API keys, tokens)
@@ -350,3 +357,14 @@ code.class_hierarchy, code.dependency_graph, code.find_callers, code.suggest_tes
 
 P51 (System Metrics): system.metrics_summary, system.provider_status,
 system.perf_metrics for aggregate performance tracking.
+
+P52 (Slack + Notion): slack.* and notion.* integrations added with scoped secret loading.
+
+P53 (Agent Orchestration): workflow.status, workflow.agents, workflow.handoff,
+workflow.history, and workflow_runs expanded orchestrated execution.
+
+P54 (Workflow Observability): workflow.history_steps, workflow.cancel,
+and workflow_steps added step-level observability and cancellation.
+
+P55 (Notion/Slack Control Plane): phase-control timer and the Notion-backed
+phase runner added autonomous phase execution plumbing.

@@ -255,7 +255,7 @@ class TestScopedKeyLoading:
             "OPENROUTER_API_KEY",
             "MISTRAL_API_KEY",
             "CEREBRAS_API_KEY",
-            "CLOUDFLARE_API_KEY",
+            "CLOUDFLARE_API_TOKEN",
         }
         assert expected == KEY_SCOPES["llm"]
 

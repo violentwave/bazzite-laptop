@@ -46,7 +46,7 @@ KEY_SCOPES: dict[str, set[str]] = {
         "OPENROUTER_API_KEY",
         "MISTRAL_API_KEY",
         "CEREBRAS_API_KEY",
-        "CLOUDFLARE_API_KEY",
+        "CLOUDFLARE_API_TOKEN",
     },
     "threat_intel": {
         "VT_API_KEY",
@@ -60,6 +60,7 @@ KEY_SCOPES: dict[str, set[str]] = {
     },
     "notion": {
         "NOTION_API_KEY",
+        "NOTION_PHASE_DATABASE_ID",
     },
 }
 
