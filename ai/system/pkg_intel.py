@@ -66,6 +66,8 @@ def _fetch_version(
         return None
 
     url = f"{_DEPS_DEV_BASE}/{ecosystem}/packages/{package}/versions/{version}"
+    if not url.startswith("https://") and not url.startswith("http://"):
+        raise ValueError("URL must start with https:// or http://")
     try:
         resp = requests.get(url, timeout=15)
         rate_limiter.record_call("deps_dev")
