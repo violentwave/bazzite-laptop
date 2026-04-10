@@ -15,6 +15,7 @@ import logging
 import re
 from datetime import UTC, date, datetime
 from pathlib import Path
+from urllib.parse import quote
 
 import requests
 
@@ -27,6 +28,44 @@ logger = logging.getLogger(APP_NAME)
 
 _DEPS_DEV_BASE = "https://api.deps.dev/v3/systems"
 PKG_INTEL_DIR = SECURITY_DIR
+
+# Safe characters for deps.dev path segments (alphanumeric, hyphen, dot, underscore)
+# This prevents path traversal and injection attacks
+_SAFE_PATH_RE = re.compile(r"^[a-zA-Z0-9._\-]+$")
+
+
+def _validate_and_encode_path_segment(segment: str, segment_type: str) -> str | None:
+    """Validate and URL-encode a path segment for deps.dev API.
+
+    Args:
+        segment: The path segment to validate (ecosystem, package, or version)
+        segment_type: Human-readable type for error messages
+
+    Returns:
+        URL-encoded segment if valid, None if invalid
+    """
+    if not segment:
+        logger.warning("Empty %s rejected", segment_type)
+        return None
+
+    # Check for path traversal attempts
+    if ".." in segment or "/" in segment or "\\" in segment:
+        logger.warning("Path traversal attempt in %s: %s", segment_type, segment)
+        return None
+
+    # Check for control characters and null bytes
+    if any(ord(c) < 32 or ord(c) == 127 for c in segment):
+        logger.warning("Control characters in %s: %s", segment_type, segment)
+        return None
+
+    # Validate against safe character set (allows typical package names)
+    # Most package ecosystems allow: alphanumeric, dots, hyphens, underscores
+    if not _SAFE_PATH_RE.match(segment):
+        # Still allow it but encode aggressively
+        logger.debug("Non-standard characters in %s, encoding: %s", segment_type, segment)
+
+    # URL-encode the segment to prevent any injection
+    return quote(segment, safe="")
 
 
 # ── deps.dev API ──────────────────────────────────────────────────────────────
@@ -42,7 +81,15 @@ def _fetch_package(
         logger.info("deps.dev rate limited, skipping %s", package)
         return None
 
-    url = f"{_DEPS_DEV_BASE}/{ecosystem}/packages/{package}"
+    # Validate and encode path segments to prevent SSRF/path traversal
+    safe_ecosystem = _validate_and_encode_path_segment(ecosystem, "ecosystem")
+    safe_package = _validate_and_encode_path_segment(package, "package")
+
+    if safe_ecosystem is None or safe_package is None:
+        logger.warning("Invalid parameters for package fetch: %s/%s", ecosystem, package)
+        return None
+
+    url = f"{_DEPS_DEV_BASE}/{safe_ecosystem}/packages/{safe_package}"
     try:
         resp = requests.get(url, timeout=15)
         rate_limiter.record_call("deps_dev")
@@ -65,7 +112,18 @@ def _fetch_version(
     if not rate_limiter.can_call("deps_dev"):
         return None
 
-    url = f"{_DEPS_DEV_BASE}/{ecosystem}/packages/{package}/versions/{version}"
+    # Validate and encode path segments to prevent SSRF/path traversal
+    safe_ecosystem = _validate_and_encode_path_segment(ecosystem, "ecosystem")
+    safe_package = _validate_and_encode_path_segment(package, "package")
+    safe_version = _validate_and_encode_path_segment(version, "version")
+
+    if safe_ecosystem is None or safe_package is None or safe_version is None:
+        logger.warning(
+            "Invalid parameters for version fetch: %s/%s@%s", ecosystem, package, version
+        )
+        return None
+
+    url = f"{_DEPS_DEV_BASE}/{safe_ecosystem}/packages/{safe_package}/versions/{safe_version}"
     try:
         resp = requests.get(url, timeout=15)
         rate_limiter.record_call("deps_dev")
