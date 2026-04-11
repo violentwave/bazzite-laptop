@@ -11,17 +11,41 @@ This agent now includes frontend website generation capabilities via the
 Frontend Capability Pack. Use this when generating React/Tailwind websites
 for external projects.
 
-### Quick Start for Frontend Work
+### Quick Start for Frontend Work — Retrieval-First Required
 
-1. **Read System Profile**: `docs/bazzite-ai-system-profile.md`
-2. **Select Archetype**: Choose from `docs/frontend-capability-pack/site-archetypes/`
-3. **Use Prompts**: Copy templates from `docs/frontend-capability-pack/prompt-pack.md`
-4. **Follow Constraints**: 
-   - TypeScript required
-   - Tailwind v4 patterns
-   - Accessibility first (see accessibility-guardrails.md)
-   - Motion-safe animations (see motion-guidance.md)
-5. **Validate**: Follow validation-flow.md checklist
+All frontend generation MUST follow this workflow:
+
+1. **Retrieve Patterns First** (Required)
+   - Use `knowledge.pattern_search` to find proven patterns
+   - Filter by `archetype`, `pattern_scope`, `semantic_role`
+   - Example: query="hero section", archetype="landing-page", pattern_scope="section"
+   - Browse corpus: `docs/patterns/frontend/` has 22 curated patterns
+
+2. **Retrieve Task Patterns** (Required)
+   - Use `knowledge.task_patterns` to find similar workflows
+   - Example: query="landing page generation", top_k=3
+
+3. **Read System Profile**: `docs/bazzite-ai-system-profile.md`
+
+4. **Select Archetype**: Choose from `docs/frontend-capability-pack/site-archetypes/`
+
+5. **Adapt Retrieved Patterns**
+   - Copy pattern structure from search results
+   - Apply brand colors, content, images
+   - Follow constraints from accessibility-guardrails.md and motion-guidance.md
+
+6. **Validate**: Follow validation-flow.md checklist
+
+### Frontend Pattern Corpus Available
+
+22 curated patterns in `docs/patterns/frontend/`:
+- **Sections**: Hero, Feature Grid, Testimonials, Pricing, FAQ, CTA Band
+- **Components**: Navigation Header, Contact Form, Footer, Lead-Gen Form
+- **Dashboard**: KPI Strip, Chart Panel
+- **Portfolio**: Gallery with Lightbox
+- **Motion**: Fade-in, Scroll Reveal, Staggered List, Mobile Menu, Modal
+- **Assets**: Naming Conventions, SVG Workflow
+- **Workflows**: Landing Page Flow, Dashboard Flow
 
 ### Site Archetypes Available
 

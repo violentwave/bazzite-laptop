@@ -18,7 +18,7 @@ def _is_lancedb_mocked():
 
 class TestSchemaFields:
     def test_schema_fields(self):
-        """Verify all 10 schema fields present in SCHEMA."""
+        """Verify all 14 schema fields present in SCHEMA."""
         from ai.rag.pattern_store import SCHEMA
 
         field_names = {f.name for f in SCHEMA}
@@ -33,9 +33,13 @@ class TestSchemaFields:
             "tags",
             "timestamp",
             "vector",
+            "archetype",
+            "pattern_scope",
+            "semantic_role",
+            "generation_priority",
         }
         assert field_names == expected
-        assert len(SCHEMA) == 10
+        assert len(SCHEMA) == 14
 
 
 class TestContentId:
@@ -72,6 +76,42 @@ class TestGetOrCreateTable:
 
 
 class TestUpsertPattern:
+    def test_upsert_pattern_with_frontend_metadata(self, tmp_path):
+        """Upsert a pattern with frontend metadata fields."""
+        if _is_lancedb_mocked():
+            pytest.skip("lancedb is mocked by test_memory.py.")
+        import lancedb
+
+        from ai.rag.pattern_store import SCHEMA, content_id
+
+        db = lancedb.connect(str(tmp_path))
+        tables = list(db.list_tables())
+        if "code_patterns" in tables:
+            table = db.open_table("code_patterns")
+        else:
+            table = db.create_table("code_patterns", schema=SCHEMA)
+
+        initial_count = table.count_rows()
+        record = {
+            "id": content_id("frontend test content"),
+            "content": "frontend test content",
+            "language": "typescript",
+            "domain": "frontend",
+            "pattern_type": "pattern",
+            "title": "Frontend Test Pattern",
+            "source": "curated",
+            "tags": "react,typescript",
+            "timestamp": "2026-04-11T00:00:00Z",
+            "vector": [0.0] * 768,
+            "archetype": "landing-page",
+            "pattern_scope": "section",
+            "semantic_role": "hero",
+            "generation_priority": 1,
+        }
+        table.add([record])
+        final_count = table.count_rows()
+        assert final_count == initial_count + 1
+
     def test_upsert_pattern_adds_row(self, tmp_path):
         """Upsert a synthetic record, verify row count +1."""
         if _is_lancedb_mocked():
@@ -274,6 +314,74 @@ class TestSearchPatterns:
         with pytest.raises(ValueError, match="Invalid domain"):
             search_patterns("test query", domain="invalid_domain")
 
+    def test_search_patterns_with_archetype_filter(self, tmp_path):
+        """Filter by archetype returns only matching patterns.
+
+        NOTE: This test creates a fresh table to verify the new frontend metadata
+        fields work correctly. In production, existing tables would need migration
+        or the code would gracefully handle missing columns.
+        """
+        if _is_lancedb_mocked():
+            pytest.skip("lancedb is mocked by test_memory.py.")
+        import lancedb
+
+        from ai.rag.pattern_query import search_patterns
+        from ai.rag.pattern_store import SCHEMA
+
+        # Use a unique table name to avoid conflicts with existing tables
+        db = lancedb.connect(str(tmp_path))
+        table = db.create_table("code_patterns_v2", schema=SCHEMA)
+
+        sample_records = [
+            {
+                "id": "test-landing",
+                "content": "Landing page hero section",
+                "language": "typescript",
+                "domain": "frontend",
+                "pattern_type": "pattern",
+                "title": "Landing Hero",
+                "source": "curated",
+                "tags": "hero,landing",
+                "timestamp": "2026-04-11T00:00:00Z",
+                "vector": [0.0] * 768,
+                "archetype": "landing-page",
+                "pattern_scope": "section",
+                "semantic_role": "hero",
+                "generation_priority": 1,
+            },
+            {
+                "id": "test-dashboard",
+                "content": "Dashboard KPI strip",
+                "language": "typescript",
+                "domain": "frontend",
+                "pattern_type": "pattern",
+                "title": "Dashboard KPI",
+                "source": "curated",
+                "tags": "kpi,dashboard",
+                "timestamp": "2026-04-11T00:00:00Z",
+                "vector": [0.0] * 768,
+                "archetype": "dashboard",
+                "pattern_scope": "component",
+                "semantic_role": "kpi",
+                "generation_priority": 1,
+            },
+        ]
+        table.add(sample_records)
+
+        # Mock the table in pattern_query to use our test table
+        with patch("ai.rag.pattern_query.get_or_create_table", return_value=table):
+            with patch("ai.rag.pattern_query.embed_single", return_value=[0.0] * 768):
+                results = search_patterns("hero section", archetype="landing-page", limit=10)
+                assert len(results) == 1
+                assert results[0]["archetype"] == "landing-page"
+
+    def test_search_patterns_invalid_archetype(self):
+        """ValueError raised for unknown archetype."""
+        from ai.rag.pattern_query import search_patterns
+
+        with pytest.raises(ValueError, match="Invalid archetype"):
+            search_patterns("test query", archetype="invalid_archetype")
+
 
 class TestValidSets:
     def test_valid_languages(self):
@@ -296,3 +404,24 @@ class TestValidSets:
         assert "pattern" in VALID_TYPES
         assert "anti_pattern" in VALID_TYPES
         assert "idiom" in VALID_TYPES
+
+    def test_valid_archetypes(self):
+        from ai.rag.pattern_store import VALID_ARCHETYPES
+
+        assert "landing-page" in VALID_ARCHETYPES
+        assert "dashboard" in VALID_ARCHETYPES
+        assert "portfolio" in VALID_ARCHETYPES
+
+    def test_valid_pattern_scopes(self):
+        from ai.rag.pattern_store import VALID_PATTERN_SCOPES
+
+        assert "section" in VALID_PATTERN_SCOPES
+        assert "component" in VALID_PATTERN_SCOPES
+        assert "motion" in VALID_PATTERN_SCOPES
+
+    def test_valid_semantic_roles(self):
+        from ai.rag.pattern_store import VALID_SEMANTIC_ROLES
+
+        assert "hero" in VALID_SEMANTIC_ROLES
+        assert "cta" in VALID_SEMANTIC_ROLES
+        assert "navigation" in VALID_SEMANTIC_ROLES

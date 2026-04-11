@@ -71,11 +71,122 @@ Created a comprehensive frontend capability pack for generating React/Tailwind w
 - P61 status updated to "Complete"
 - Completion comment added with deliverables summary
 
+## Completed Phase: P62
+
+**P62 - Frontend Pattern Intelligence + Asset Workflow** ✅ COMPLETED
+
+### Summary
+Extended the existing curated pattern system with frontend-aware metadata, created a 22-pattern frontend corpus, and established retrieval-first documentation workflow.
+
+### Files Modified
+
+**Pattern Store Evolution:**
+- `ai/rag/pattern_store.py` — Extended SCHEMA with 4 frontend metadata fields
+  - `archetype`: landing-page, service-site, dashboard, portfolio, lead-gen
+  - `pattern_scope`: section, component, layout, motion, asset, token, workflow
+  - `semantic_role`: hero, cta, navigation, pricing, testimonial, feature, etc.
+  - `generation_priority`: 1-10 ranking for generation order
+  - Added `typescript` to VALID_LANGUAGES
+  - Added `frontend` to VALID_DOMAINS
+
+- `ai/rag/pattern_query.py` — Extended search_patterns() with frontend filters
+  - Added `archetype`, `pattern_scope`, `semantic_role` filter parameters
+  - Maintains backward compatibility
+
+- `scripts/ingest-patterns.py` — Extended to parse new frontmatter fields
+  - Parses archetype, pattern_scope, semantic_role, generation_priority
+  - Validates frontend metadata
+
+- `tests/test_pattern_store.py` — Extended tests for new schema and filters
+  - Added tests for frontend metadata fields
+  - Added tests for archetype filtering
+  - All 18 tests pass
+
+### Frontend Pattern Corpus Created: 22 Patterns
+
+**Sections (6):**
+- `docs/patterns/frontend/hero-section.md` — Hero with CTA and social proof
+- `docs/patterns/frontend/feature-grid.md` — Feature grid with icons
+- `docs/patterns/frontend/testimonials-section.md` — Testimonials grid/carousel
+- `docs/patterns/frontend/pricing-table.md` — Pricing tiers with toggle
+- `docs/patterns/frontend/faq-accordion.md` — FAQ accordion
+- `docs/patterns/frontend/cta-band.md` — Conversion CTA band
+
+**Components (3):**
+- `docs/patterns/frontend/navigation-header.md` — Responsive header with mobile menu
+- `docs/patterns/frontend/contact-form.md` — Accessible contact form
+- `docs/patterns/frontend/footer-component.md` — Comprehensive footer
+
+**Dashboard (2):**
+- `docs/patterns/frontend/dashboard-kpi-strip.md` — KPI metrics strip
+- `docs/patterns/frontend/dashboard-chart-panel.md` — Chart panel with controls
+
+**Portfolio (1):**
+- `docs/patterns/frontend/portfolio-gallery.md` — Gallery with lightbox
+
+**Lead-Gen (1):**
+- `docs/patterns/frontend/lead-gen-multistep-form.md` — Multi-step form
+
+**Motion Recipes (5):**
+- `docs/patterns/frontend/motion-fade-in.md` — Fade-in on mount
+- `docs/patterns/frontend/motion-scroll-reveal.md` — Scroll-triggered reveal
+- `docs/patterns/frontend/motion-staggered-list.md` — Staggered list animation
+- `docs/patterns/frontend/motion-mobile-menu.md` — Mobile menu animation
+- `docs/patterns/frontend/motion-modal.md` — Modal/Lightbox animation
+
+**Asset Conventions (2):**
+- `docs/patterns/frontend/asset-naming-conventions.md` — Naming and sizing
+- `docs/patterns/frontend/svg-component-workflow.md` — SVG to component
+
+**Workflow Patterns (2):**
+- `docs/patterns/frontend/workflow-landing-page.md` — Landing page flow
+- `docs/patterns/frontend/workflow-dashboard.md` — Dashboard flow
+
+### Documentation Updated for Retrieval-First Workflow
+
+- `docs/frontend-capability-pack/README.md` — Added retrieval-first workflow section
+- `docs/frontend-capability-pack/prompt-pack.md` — Added retrieval guidance
+- `.opencode/AGENTS.md` — Updated with retrieval-first requirements
+
+### Test Results
+- **18 tests passed** in test_pattern_store.py
+- **25 tests passed** in pattern + task_logger combined
+- **All linting clean** for P62 files
+
+### Validation Commands (from Notion)
+```bash
+✅ ruff check ai/ tests/ docs/frontend-capability-pack/ docs/patterns/frontend/ — Clean
+✅ pytest tests/test_pattern_store.py — 18 passed
+✅ grep -r "frontend pattern\|retrieval-first\|archetype" — 97 references found
+```
+
+### Notion Status
+- P62 status: Ready for update to "Complete"
+- Dependencies: P60, P61 (both completed)
+
 ## Open Tasks
 
 - No open tasks
 
 ## Recent Sessions
+
+### 2026-04-11T08:00:00Z — claude-code
+**P62 Frontend Pattern Intelligence + Asset Workflow Complete**
+- Extended pattern_store.py with frontend metadata fields (archetype, pattern_scope, semantic_role, generation_priority)
+- Extended pattern_query.py with frontend filter support
+- Extended ingest-patterns.py to parse new frontmatter fields
+- Created 22 curated frontend patterns in docs/patterns/frontend/
+  - 6 section patterns (hero, feature grid, testimonials, pricing, FAQ, CTA)
+  - 3 component patterns (navigation, contact form, footer)
+  - 2 dashboard patterns (KPI strip, chart panel)
+  - 1 portfolio pattern (gallery with lightbox)
+  - 1 lead-gen pattern (multi-step form)
+  - 5 motion recipes (fade-in, scroll reveal, staggered list, mobile menu, modal)
+  - 2 asset conventions (naming, SVG workflow)
+  - 2 workflow patterns (landing page, dashboard flows)
+- Updated documentation for retrieval-first workflow
+- All 18 pattern store tests pass
+- All P62 files ruff clean
 
 ### 2026-04-11T04:00:00Z — claude-code
 **P61 Frontend Capability Pack Complete**

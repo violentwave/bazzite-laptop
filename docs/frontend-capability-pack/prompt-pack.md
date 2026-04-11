@@ -335,11 +335,37 @@ CONSTRAINTS:
 
 ---
 
-## Using These Prompts
+## Using These Prompts — Retrieval-First Workflow
 
-1. **Copy** the prompt template
+All frontend generation must follow this workflow:
+
+### Step 1: Retrieve Proven Patterns
+
+Before generating any code, search for existing patterns:
+
+```markdown
+Search `knowledge.pattern_search` with:
+- query: [component description, e.g., "hero section with CTA"]
+- archetype: [landing-page|service-site|dashboard|portfolio|lead-gen]
+- pattern_scope: [section|component|layout|motion|asset|token|workflow]
+- semantic_role: [hero|cta|navigation|pricing|testimonial|feature|...]
+```
+
+### Step 2: Retrieve Similar Workflows
+
+Find similar past successful tasks:
+
+```markdown
+Search `knowledge.task_patterns` with:
+- query: [archetype + generation type, e.g., "landing page generation"]
+- top_k: 3
+```
+
+### Step 3: Adapt Retrieved Patterns
+
+1. **Copy** pattern structure from retrieved results
 2. **Customize** CONTEXT with project specifics (colors, content, features)
-3. **Adjust** CONSTRAINTS based on project requirements
+3. **Apply** CONSTRAINTS based on project requirements
 4. **Generate** code following the structured format
 5. **Validate** against [validation-flow.md](validation-flow.md)
 

@@ -28,8 +28,11 @@ from datetime import datetime
 
 from ai.rag.embedder import embed_single
 from ai.rag.pattern_store import (
+    VALID_ARCHETYPES,
     VALID_DOMAINS,
     VALID_LANGUAGES,
+    VALID_PATTERN_SCOPES,
+    VALID_SEMANTIC_ROLES,
     VALID_TYPES,
     content_id,
     get_or_create_table,
@@ -76,12 +79,36 @@ def build_record(frontmatter: dict, body: str, source: str = "curated") -> dict:
     title = frontmatter.get("title", "Untitled")
     tags = frontmatter.get("tags", "")
 
+    # Frontend metadata (optional)
+    archetype = frontmatter.get("archetype", "").lower() or None
+    pattern_scope = frontmatter.get("pattern_scope", "").lower() or None
+    semantic_role = frontmatter.get("semantic_role", "").lower() or None
+    generation_priority = frontmatter.get("generation_priority")
+
     if language not in VALID_LANGUAGES:
         raise ValueError(f"Invalid language: {language!r}")
     if domain not in VALID_DOMAINS:
         raise ValueError(f"Invalid domain: {domain!r}")
     if pattern_type not in VALID_TYPES:
         raise ValueError(f"Invalid type: {pattern_type!r}")
+
+    # Validate frontend metadata if present
+    if archetype and archetype not in VALID_ARCHETYPES:
+        raise ValueError(f"Invalid archetype: {archetype!r}")
+    if pattern_scope and pattern_scope not in VALID_PATTERN_SCOPES:
+        raise ValueError(f"Invalid pattern_scope: {pattern_scope!r}")
+    if semantic_role and semantic_role not in VALID_SEMANTIC_ROLES:
+        raise ValueError(f"Invalid semantic_role: {semantic_role!r}")
+    if generation_priority is not None:
+        try:
+            priority = int(generation_priority)
+            if priority < 1 or priority > 10:
+                raise ValueError
+            generation_priority = priority
+        except (ValueError, TypeError) as exc:
+            raise ValueError(
+                f"Invalid generation_priority: {generation_priority!r}. Must be 1-10."
+            ) from exc
 
     vector = embed_single(body)
     record = {
@@ -95,6 +122,10 @@ def build_record(frontmatter: dict, body: str, source: str = "curated") -> dict:
         "tags": tags,
         "timestamp": datetime.now(tz=None).isoformat(),
         "vector": vector,
+        "archetype": archetype,
+        "pattern_scope": pattern_scope,
+        "semantic_role": semantic_role,
+        "generation_priority": generation_priority,
     }
     return record
 

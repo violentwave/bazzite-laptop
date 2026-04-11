@@ -25,12 +25,44 @@ This pack provides reusable prompts, scaffolds, and validation workflows for gen
 
 ## Quick Start
 
-### For OpenCode Agents
+### For OpenCode Agents — Retrieval-First Workflow
 
-1. **Read** `docs/bazzite-ai-system-profile.md` first
-2. **Read** this README and the specific archetype guide you need
-3. **Use** the prompt templates in [prompt-pack.md](prompt-pack.md)
-4. **Follow** the validation flow before marking complete
+All frontend generation follows this retrieval-first workflow:
+
+1. **Retrieve Patterns** — Search the curated pattern corpus
+   - Use `knowledge.pattern_search` to find proven patterns
+   - Filter by `archetype`, `pattern_scope`, `semantic_role`
+   - Query: "hero section with social proof", "pricing table", etc.
+
+2. **Retrieve Task Patterns** — Find similar past work
+   - Use `knowledge.task_patterns` to retrieve successful workflows
+   - Query: "landing page generation", "dashboard creation", etc.
+
+3. **Read** `docs/bazzite-ai-system-profile.md` for repo context
+
+4. **Use Retrieved Patterns** — Adapt retrieved patterns to project needs
+   - Copy pattern structure from `docs/patterns/frontend/`
+   - Apply brand colors, content, images
+   - Follow accessibility and motion guidelines
+
+5. **Generate** — Create code based on retrieved patterns
+
+6. **Validate** — Run through [validation-flow.md](validation-flow.md)
+
+### Direct Pattern Access
+
+Browse the curated pattern corpus at `docs/patterns/frontend/`:
+
+| Category | Patterns Available |
+|----------|-------------------|
+| Sections | Hero, Feature Grid, Testimonials, Pricing Table, FAQ, CTA Band |
+| Components | Navigation Header, Contact Form, Footer |
+| Dashboard | KPI Strip, Chart Panel |
+| Portfolio | Gallery with Lightbox |
+| Lead-Gen | Multi-Step Form |
+| Motion | Fade-in, Scroll Reveal, Staggered List, Mobile Menu, Modal |
+| Assets | Naming Conventions, SVG Workflow |
+| Workflows | Landing Page Flow, Dashboard Flow |
 
 ### Site Archetypes
 
