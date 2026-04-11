@@ -36,11 +36,58 @@ All critical runtime failures identified in P60 audit have been fixed and valida
 ### Documentation
 - Full remediation details: `docs/P60_REMEDIATION_SUMMARY.md`
 
+## Completed Phase: P61
+
+**P61 - Frontend Capability Pack for OpenCode** ✅ COMPLETED
+
+### Summary
+Created a comprehensive frontend capability pack for generating React/Tailwind websites via OpenCode for external projects.
+
+### Deliverables
+
+**Documentation:**
+- `docs/bazzite-ai-system-profile.md` — System profile (missing referenced file)
+- `docs/frontend-capability-pack/README.md` — Capability pack entry point
+- `docs/frontend-capability-pack/prompt-pack.md` — Reusable prompt templates
+- `docs/frontend-capability-pack/scaffolds.md` — File organization patterns
+- `docs/frontend-capability-pack/accessibility-guardrails.md` — WCAG-aligned rules
+- `docs/frontend-capability-pack/motion-guidance.md` — Animation best practices
+- `docs/frontend-capability-pack/validation-flow.md` — Post-generation checklist
+
+**Site Archetypes:**
+- `docs/frontend-capability-pack/site-archetypes/landing-pages.md`
+- `docs/frontend-capability-pack/site-archetypes/service-sites.md`
+- `docs/frontend-capability-pack/site-archetypes/dashboards.md`
+- `docs/frontend-capability-pack/site-archetypes/portfolios.md`
+- `docs/frontend-capability-pack/site-archetypes/lead-gen.md`
+
+**OpenCode Integration:**
+- `.opencode/AGENTS.md` — Updated with frontend pack usage instructions
+- `docs/AGENT.md` — Added P61 section with capability pack references
+
+### Files Created: 14
+
+### Notion Status
+- P61 status updated to "Complete"
+- Completion comment added with deliverables summary
+
 ## Open Tasks
 
 - No open tasks
 
 ## Recent Sessions
+
+### 2026-04-11T04:00:00Z — claude-code
+**P61 Frontend Capability Pack Complete**
+- Created docs/bazzite-ai-system-profile.md (missing referenced file)
+- Created docs/frontend-capability-pack/ with complete documentation
+- Added prompt templates for 5 site archetypes (landing, service, dashboard, portfolio, lead-gen)
+- Added accessibility guardrails and motion guidance
+- Added validation flow for post-generation checks
+- Updated .opencode/AGENTS.md with frontend pack usage
+- Updated docs/AGENT.md with P61 section
+- Updated Notion P61 status to Complete
+- 14 files created, all linting clean
 
 ### 2026-04-11T02:35:00Z — claude-code
 **P60 Remediation Complete**

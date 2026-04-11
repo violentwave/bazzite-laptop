@@ -335,6 +335,37 @@ P50 (Integration Tests) ← E2E validation
 P51 (TBD) ←
 ```
 
+## Frontend Capability Pack (P61)
+
+Module: `docs/frontend-capability-pack/`
+
+A documentation-and-prompt capability layer for generating React/Tailwind websites via OpenCode for **external projects**.
+
+| Resource | Purpose |
+|----------|---------|
+| [System Profile](bazzite-ai-system-profile.md) | Repo identity and constraints |
+| [Prompt Pack](frontend-capability-pack/prompt-pack.md) | Reusable prompt templates |
+| [Scaffolds](frontend-capability-pack/scaffolds.md) | File organization patterns |
+| [Accessibility](frontend-capability-pack/accessibility-guardrails.md) | WCAG-aligned practical rules |
+| [Motion](frontend-capability-pack/motion-guidance.md) | Animation decision framework |
+| [Validation](frontend-capability-pack/validation-flow.md) | Post-generation checklist |
+
+### Site Archetypes
+
+- [Landing Pages](frontend-capability-pack/site-archetypes/landing-pages.md)
+- [Service Sites](frontend-capability-pack/site-archetypes/service-sites.md)
+- [Dashboards](frontend-capability-pack/site-archetypes/dashboards.md)
+- [Portfolios](frontend-capability-pack/site-archetypes/portfolios.md)
+- [Lead-Gen Sites](frontend-capability-pack/site-archetypes/lead-gen.md)
+
+### Key Principles
+
+- **This repo is NOT a React app** — capability pack is for external projects only
+- **No detached tool stack** — integrate with existing Bazzite/RuFlo/Notion workflows
+- **Phase-scoped work** — frontend generation follows same phase rules as backend work
+
+---
+
 ### Phase Implementation Rules (OpenCode)
 
 1. **One phase at a time** — complete and commit before starting the next
