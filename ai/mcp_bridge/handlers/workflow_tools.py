@@ -6,14 +6,14 @@ import uuid
 from datetime import UTC, datetime
 
 from ai.rag.embedder import embed_single as embed
+from ai.rag.store import VectorStore, _get_schemas
+from ai.workflows.definitions import WORKFLOW_REGISTRY
 
 logger = logging.getLogger("workflow_tools")
 
 
 async def workflow_list(params: dict) -> dict:
     """List all registered workflow definitions."""
-    from ai.workflows.definitions import WORKFLOW_REGISTRY
-
     return {
         "workflows": [
             {"name": name, "description": wf["description"], "step_count": len(wf["steps"])}
@@ -25,8 +25,6 @@ async def workflow_list(params: dict) -> dict:
 async def workflow_run(params: dict) -> dict:
     """Trigger a named workflow. Logs run to workflow_runs table."""
 
-    from ai.rag.store import VectorStore
-    from ai.workflows.definitions import WORKFLOW_REGISTRY
     from ai.workflows.runner import WorkflowRunner
 
     name = params.get("name")
@@ -39,7 +37,7 @@ async def workflow_run(params: dict) -> dict:
     started_at = datetime.now(UTC).isoformat()
 
     store = VectorStore()
-    schemas = store._get_schemas()
+    schemas = _get_schemas()
 
     try:
         run_record = {
@@ -95,15 +93,13 @@ async def workflow_run(params: dict) -> dict:
 
 async def workflow_status(params: dict) -> dict:
     """Get last run result for a workflow from workflow_runs table."""
-    from ai.rag.store import VectorStore
-
     name = params.get("name")
     if not name:
         return {"error": "Missing required parameter: name"}
 
     store = VectorStore()
     try:
-        schemas = store._get_schemas()
+        schemas = _get_schemas()
         table = store._ensure_table("workflow_runs", schemas["workflow_runs"])
         df = table.to_pandas()
         if df.empty:
@@ -134,9 +130,9 @@ async def workflow_status(params: dict) -> dict:
 
 async def workflow_agents(params: dict) -> dict:
     """List all registered agents and their supported task types."""
-    from ai.orchestration import get_default_bus
+    from ai.orchestration import get_default_bus_async
 
-    bus = get_default_bus()
+    bus = await get_default_bus_async()
     agents = await bus.list_agents()
 
     result_agents = []
@@ -167,7 +163,7 @@ def _get_task_types_for_agent(agent_name: str) -> list[str]:
 
 async def workflow_handoff(params: dict) -> dict:
     """Manually dispatch a task message to a named agent."""
-    from ai.orchestration import AgentMessage, get_default_bus
+    from ai.orchestration import AgentMessage, get_default_bus_async
 
     agent = params.get("agent")
     task_type = params.get("task_type")
@@ -182,20 +178,19 @@ async def workflow_handoff(params: dict) -> dict:
         priority=params.get("priority", 0),
     )
 
-    result = await get_default_bus().dispatch(msg)
+    bus = await get_default_bus_async()
+    result = await bus.dispatch(msg)
     return {"success": result.success, "data": result.data, "error": result.error}
 
 
 async def workflow_history(params: dict) -> dict:
     """Query workflow_runs table. Params: workflow_name (optional), limit (default 10)."""
-    from ai.rag.store import VectorStore
-
     workflow_name = params.get("workflow_name")
     limit = params.get("limit", 10)
 
     store = VectorStore()
     try:
-        schemas = store._get_schemas()
+        schemas = _get_schemas()
         table = store._ensure_table("workflow_runs", schemas["workflow_runs"])
         df = table.to_pandas()
         if df.empty:

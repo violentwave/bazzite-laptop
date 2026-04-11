@@ -104,7 +104,7 @@ class TestWorkflowAgents:
     @pytest.mark.asyncio
     async def test_workflow_agents_returns_agents_with_task_types(self):
         """Test workflow_agents returns agents list with task_types."""
-        with patch("ai.orchestration.get_default_bus") as mock_get_bus:
+        with patch("ai.orchestration.get_default_bus_async") as mock_get_bus:
             mock_bus = MagicMock()
             mock_bus.list_agents = AsyncMock(
                 return_value=[
@@ -137,7 +137,7 @@ class TestWorkflowHandoff:
         mock_result.data = {"result": "ok"}
         mock_result.error = None
 
-        with patch("ai.orchestration.get_default_bus") as mock_get_bus:
+        with patch("ai.orchestration.get_default_bus_async") as mock_get_bus:
             mock_bus = MagicMock()
             mock_bus.dispatch = AsyncMock(return_value=mock_result)
             mock_get_bus.return_value = mock_bus

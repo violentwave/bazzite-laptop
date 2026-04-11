@@ -443,18 +443,41 @@ def create_app():
                 try:
                     from ai.config import PROJECT_ROOT
                     from ai.learning.handoff_parser import parse_handoff
-                    from ai.rag.embedder import embed_single
-                    from ai.rag.store import get_store
 
                     entries = parse_handoff(PROJECT_ROOT / "HANDOFF.md")
 
                     if not entries:
                         return {"sessions": [], "count": 0}
 
-                    query_vec = embed_single(query, input_type="search_query")
-                    store = get_store()
+                    # Simple text-based search on parsed handoff entries
+                    # Filter entries that match the query terms
+                    query_terms = query.lower().split()
+                    scored_entries = []
 
-                    results = store.search_task_patterns(query_vec, limit=limit)
+                    for entry in entries:
+                        done_tasks = " ".join(entry.done_tasks)
+                        open_tasks = " ".join(entry.open_tasks)
+                        text = f"{entry.agent} {entry.summary} {done_tasks} {open_tasks}".lower()
+                        score = sum(1 for term in query_terms if term in text)
+                        if score > 0:
+                            scored_entries.append((score, entry))
+
+                    # Sort by score descending, then by timestamp descending
+                    scored_entries.sort(key=lambda x: (-x[0], x[1].timestamp), reverse=False)
+
+                    # Take top results
+                    top_entries = scored_entries[:limit]
+
+                    results = [
+                        {
+                            "timestamp": entry.timestamp,
+                            "agent": entry.agent,
+                            "summary": entry.summary,
+                            "done_tasks": entry.done_tasks,
+                            "open_tasks": entry.open_tasks,
+                        }
+                        for _, entry in top_entries
+                    ]
 
                     return {"sessions": results, "count": len(results)}
                 except Exception as e:

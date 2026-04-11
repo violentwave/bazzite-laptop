@@ -97,3 +97,7 @@ llm-cache/
 bazzite-llm-cache/
 .hypothesis/
 uv.lock
+
+# Test databases
+test-*.db
+*.db

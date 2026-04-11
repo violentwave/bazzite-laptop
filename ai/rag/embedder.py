@@ -95,6 +95,24 @@ def _embed_gemini(
                 time.sleep(wait)
                 last_exc = None  # will retry
             except Exception as exc:  # noqa: BLE001
+                # Check if it's a bad request error (400 status code, INVALID_ARGUMENT, etc.)
+                # These are configuration issues that shouldn't be retried
+                exc_str = str(exc).lower()
+                is_bad_request = (
+                    "invalid_argument" in exc_str
+                    or "bad request" in exc_str
+                    or "api key not valid" in exc_str
+                    or getattr(exc, "status_code", None) == 400
+                    or (
+                        hasattr(exc, "__class__") and "badrequest" in exc.__class__.__name__.lower()
+                    )
+                )
+                if is_bad_request:
+                    logger.error("Gemini embed bad request for text %d: %s", i, exc)
+                    last_exc = exc
+                    # Don't retry bad requests - they're configuration issues
+                    break
+                # For other errors, log and continue to next retry or fail
                 logger.error("Gemini embed failed for text %d: %s", i, exc)
                 last_exc = exc
                 break
@@ -397,7 +415,26 @@ async def _embed_gemini_async(
                         "Gemini embed 429, waiting %.1fs (attempt %d)", wait, attempt + 1
                     )
                     await asyncio.sleep(wait)
-                except Exception as exc:  # noqa: BLE001
+                except Exception as exc:
+                    # Check if it's a bad request error (400 status code, INVALID_ARGUMENT, etc.)
+                    # These are configuration issues that shouldn't be retried
+                    exc_str = str(exc).lower()
+                    is_bad_request = (
+                        "invalid_argument" in exc_str
+                        or "bad request" in exc_str
+                        or "api key not valid" in exc_str
+                        or getattr(exc, "status_code", None) == 400
+                        or (
+                            hasattr(exc, "__class__")
+                            and "badrequest" in exc.__class__.__name__.lower()
+                        )
+                    )
+                    if is_bad_request:
+                        logger.error("Gemini embed bad request for text %d: %s", idx, exc)
+                        last_exc = exc
+                        # Don't retry bad requests - they're configuration issues
+                        break
+                    # For other errors, log and continue to next retry or fail
                     logger.error("Gemini embed failed for text %d: %s", idx, exc)
                     last_exc = exc
                     break

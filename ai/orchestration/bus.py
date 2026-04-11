@@ -149,13 +149,5 @@ class OrchestrationBus:
         return await self.dispatch(message)
 
 
-_default_bus: OrchestrationBus | None = None
-
-
-async def get_default_bus() -> OrchestrationBus:
-    """Get or create the default orchestration bus singleton."""
-    global _default_bus
-    if _default_bus is None:
-        _default_bus = OrchestrationBus()
-        await _default_bus.start()
-    return _default_bus
+# Note: get_default_bus() and get_default_bus_async() are defined in ai.orchestration.__init__
+# to ensure proper agent registration. Import from there instead of from this module.
