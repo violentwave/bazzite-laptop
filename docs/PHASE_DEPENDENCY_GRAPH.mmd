@@ -1,0 +1,164 @@
+```mermaid
+flowchart TD
+    subgraph Foundation["Foundation Layer (P0-P9)"]
+        P0[P0: Initial Foundation] --> P1
+        P1[P1: Systemd Services] --> P2
+        P2[P2: LiteLLM Router V2] --> P3
+        P3[P3: MCP Bridge Alpha] --> P4
+        P4[P4: Threat Intel Core] --> P5
+        P5[P5: RAG Foundation] --> P6
+        P6[P6: Tool Registration] --> P7
+        P7[P7: Health Metrics] --> P8
+        P8[P8: Code Quality Setup] --> P9
+        P9[P9: Gaming MangoHud]
+    end
+
+    subgraph Intelligence["Intelligence Layer (P10-P18)"]
+        P10[P10: Intel Scraper] --> P11
+        P11[P11: Timer Expansion] --> P12
+        P12[P12: PingMiddleware] --> P13
+        P13[P13: BM25 Search] --> P14
+        P14[P14: Cost + Sentry] --> P15
+        P15[P15: Workflow Engine] --> P16
+        P16[P16: Structured Logging] --> P17
+        P17[P17: Test Infrastructure] --> P18
+        P18[P18: Documentation Pass]
+    end
+
+    subgraph Security["Security Layer (P19-P21)"]
+        P19[P19: Input Validation] --> P20
+        P20[P20: Timer Sentinel] --> P21
+        P21[P21: Pattern Store]
+    end
+
+    subgraph Governance["Governance Layer (P22-P33)"]
+        P22[P22: Token Budget] --> P23
+        P23[P23: Semantic Cache] --> P24
+        P24[P24: Metrics Recording] --> P25
+        P25[P25: Conversation Memory] --> P26
+        P26[P26: Provider Intel] --> P27
+        P27[P27: Security Alerts] --> P28
+        P28[P28: Weekly Insights] --> P29
+        P29[P29: Code Intelligence] --> P30
+        P30[P30: Workflow Expansion] --> P31
+        P31[P31: Agent Collab] --> P32
+        P32[P32: Testing Intel] --> P33
+        P33[P33: Dynamic Tools]
+    end
+
+    subgraph Integration["Integration Layer (P34-P43)"]
+        P34[P34: Integration Parity] --> P35
+        P35[P35: Agent Stability] --> P36
+        P36[P36: Doc Reconcile] --> P37
+        P37[P37: Alert Rules] --> P38
+        P38[P38: Task Patterns] --> P39
+        P39[P39: DepAudit] --> P40
+        P40[P40: Intel Expansion] --> P41
+        P41[P41: Ingest Pipeline] --> P42
+        P42[P42: Stabilization] --> P43
+        P43[P43: Lint + Newelle]
+    end
+
+    subgraph ControlPlane["Control Plane (P44-P58)"]
+        P44[P44: Input Validation v2] --> P45
+        P45[P45: Semantic Cache v2] --> P46
+        P46[P46: Token Budget v2] --> P47
+        P47[P47: Code Patterns v2] --> P48
+        P48[P48: Memory v2] --> P49
+        P49[P49: Insights v2] --> P50
+        P50[P50: Integration Tests] --> P51
+        P51[P51: Newelle Skills] --> P52
+        P52[P52: Slack + Notion] --> P53
+        P53[P53: Orchestration] --> P54
+        P54[P54: Workflow Hardening] --> P55
+        P55[P55: Phase Control] --> P56
+        P56[P56: Stabilization] --> P57
+        P57[P57: Burn Down] --> P58
+        P58[P58: Whitespace Fixes]
+    end
+
+    subgraph Frontend["Frontend Capability (P59-P67)"]
+        P59[P59: Branch Convergence] --> P60
+        P60[P60: Intel Reliability] --> P61
+        P61[P61: Frontend Pack] --> P62
+        P62[P62: Pattern Intel] --> P63
+        P63[P63: QA Layer] --> P64
+        P64[P64: Design/Media] --> P65
+        P65[P65: Runtime Harness] --> P66
+        P66[P66: Brief Intake] --> P67
+        P67[P67: Deployment Pack]
+    end
+
+    subgraph Ops["Ops & Evaluation (P68-P69)"]
+        P68[P68: GitNexus Evaluation]
+        P69[P69: Ops Runbooks]
+    end
+
+    P9 --> P10
+    P18 --> P19
+    P21 --> P22
+    P33 --> P34
+    P43 --> P44
+    P58 --> P59
+    P67 --> P68
+    P67 --> P69
+
+    classDef foundation fill:#e1f5fe,stroke:#01579b
+    classDef intelligence fill:#f3e5f5,stroke:#4a148c
+    classDef security fill:#fff3e0,stroke:#e65100
+    classDef governance fill:#e8f5e9,stroke:#1b5e20
+    classDef integration fill:#fce4ec,stroke:#880e4f
+    classDef control fill:#fff8e1,stroke:#f57f17
+    classDef frontend fill:#e0f2f1,stroke:#004d40
+    classDef ops fill:#eceff1,stroke:#37474f
+
+    class P0,P1,P2,P3,P4,P5,P6,P7,P8,P9 foundation
+    class P10,P11,P12,P13,P14,P15,P16,P17,P18 intelligence
+    class P19,P20,P21 security
+    class P22,P23,P24,P25,P26,P27,P28,P29,P30,P31,P32,P33 governance
+    class P34,P35,P36,P37,P38,P39,P40,P41,P42,P43 integration
+    class P44,P45,P46,P47,P48,P49,P50,P51,P52,P53,P54,P55,P56,P57,P58 control
+    class P59,P60,P61,P62,P63,P64,P65,P66,P67 frontend
+    class P68,P69 ops
+```
+
+## Dependency Graph Description
+
+### Layer Dependencies
+
+| Layer | Phases | Depends On | Enables |
+|-------|--------|------------|---------|
+| Foundation | P0-P9 | — | All subsequent layers |
+| Intelligence | P10-P18 | Foundation | Security, Governance |
+| Security | P19-P21 | Intelligence | Governance |
+| Governance | P22-P33 | Security | Integration |
+| Integration | P34-P43 | Governance | Control Plane |
+| Control Plane | P44-P58 | Integration | Frontend |
+| Frontend | P59-P67 | Control Plane | Ops |
+| Ops | P68-P69 | Frontend | — |
+
+### Key Dependency Paths
+
+1. **RAG Path**: P5 → P13 → P21 → P29 → P47 → P62
+   - LanceDB foundation → BM25 search → Pattern store → Code intel → Code patterns v2 → Frontend patterns
+
+2. **Workflow Path**: P15 → P30 → P53 → P54 → P55
+   - Workflow engine → Expansion → Orchestration → Hardening → Phase control
+
+3. **Security Path**: P4 → P19 → P20 → P27 → P44
+   - Threat intel → Input validation → Timer sentinel → Alerts → Input validation v2
+
+4. **Frontend Path**: P61 → P62 → P63 → P64 → P65 → P66 → P67
+   - Capability pack → Pattern intel → QA layer → Design/media → Runtime → Intake → Deployment
+
+### Batch-Committed Phases
+
+The following phases were delivered in batch commits:
+- P34-P36: Single batch for integration parity
+- P45-P49: Referenced in P44 validation (prior phases P23-P28)
+- P56, P58: Stabilization phases (no dedicated plan docs)
+
+### Parallel Phases
+
+These phases were delivered in parallel or close succession:
+- P68, P69: Both completed 2026-04-12, independent deliverables

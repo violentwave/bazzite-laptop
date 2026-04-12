@@ -5,10 +5,78 @@ Auto-generated cross-tool handoff. Updated by save-handoff.sh
 ## Current State
 
 - **Last Tool:** opencode
-- **Last Updated:** 2026-04-12T18:30:00Z
+- **Last Updated:** 2026-04-12T20:30:00Z
 - **Project:** bazzite-laptop
 - **Branch:** master
+- **Active Phase:** P70 — Phase Documentation Overhaul + Artifact Normalization
 - **Recent Commits:** P65 (84a013f), P66 (4bdda9e), P67 (908d987), P69 (007d7b2)
+
+---
+
+## In Progress: P70 — Phase Documentation Overhaul
+
+### Summary
+Executing documentation-only overhaul for P0-P68 to make the project complete, consistent, and phase-native across GitHub and Notion. Created 6 core repo docs, updating agent references, creating Notion cross-phase pages.
+
+### Files Created (Repo)
+
+| File | Purpose | Status |
+|------|---------|--------|
+| `docs/PHASE_INDEX.md` | Master index P0-P70 | ✅ Created |
+| `docs/PHASE_ARTIFACT_REGISTER.md` | Per-phase artifact inventory | ✅ Created |
+| `docs/PHASE_DEPENDENCY_GRAPH.mmd` | Mermaid dependency visualization | ✅ Created |
+| `docs/PHASE_DELIVERY_TIMELINE.md` | Delivery timeline from Notion | ✅ Created |
+| `docs/ARCHITECTURE_EVOLUTION.md` | Architecture evolution narrative | ✅ Created |
+| `docs/PHASE_DOCUMENTATION_POLICY.md` | Future artifact placement rules | ✅ Created |
+
+### Files Updated
+
+| File | Change | Status |
+|------|--------|--------|
+| `docs/AGENT.md` | Added rule 11 (documentation policy) + Phase Doc Index table | ✅ Updated |
+
+### Notion Tasks
+
+- [ ] Create Phase Documentation Index page under Bazzite docs
+- [ ] Create Architecture Evolution Map page
+- [ ] Create Phase Dependency Map page
+- [ ] Create Artifact Coverage Audit page
+- [ ] Create Documentation Gaps / Exceptions Log page
+
+### Tavily Research Decisions
+
+| Topic | Decision |
+|-------|----------|
+| Docs-as-code | Store docs alongside code, CI-validate, already doing this |
+| Artifact registers | Single source of truth with phase metadata, reference not duplicate |
+| Mermaid best practices | Declare nodes first, self-explanatory IDs, subgraphs for logical groupings |
+| Notion + repo hybrid | Notion = tracking DB, repo = canonical source. Link, don't duplicate |
+| Future proofing | Phase-owned → `docs/P{NN}_*`, cross-phase → `docs/` root. Encode in policy |
+
+### Audit Findings
+
+- P0-P9: No dedicated plan docs (inferred historical boundaries)
+- P10-P18: No dedicated plan docs
+- P19-P21: No dedicated plan docs
+- P34-P36: Batch-commit references (see P44)
+- P45-P49: Prior phases in P23-P28 batch
+- P56, P58: Stabilization phases
+- P60: Plan doc is remediation summary
+- Duplicate files: `docs/performance-*.md` vs `docs/PERFORMANCE-*.md` (different casing)
+
+### Validation Commands
+
+```bash
+ruff check ai/ tests/ docs/
+python -m pytest tests/ -q --tb=short  # (skip test_properties.py - pre-existing hypothesis issue)
+```
+
+### Next Steps
+
+1. Create Notion cross-phase pages (5 pages)
+2. Commit repo docs
+3. Update P70 Notion row with Commit SHA, Validation Summary, Finished At
+4. Verify all links and references
 
 ## Completed Phase: P69
 

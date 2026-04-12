@@ -1,0 +1,796 @@
+# Phase Artifact Register — Bazzite AI Layer
+
+> Per-phase inventory of repo artifacts and Notion references.
+> Generated 2026-04-12. Canonical source: `git log` + Notion API.
+
+## Artifact Naming Conventions
+
+| Phase Artifact Type | Naming Pattern | Example |
+|---------------------|----------------|---------|
+| Planning Document | `P{NN}_PLAN.md` | `P68_PLAN.md` |
+| Completion Report | `P{NN}_COMPLETION_REPORT.md` | `P61_COMPLETION_REPORT.md` |
+| Training Summary | `P{NN}_TRAINING_SUMMARY.md` | `P61_TRAINING_SUMMARY.md` |
+| Remediation Summary | `P{NN}_REMEDIATION_SUMMARY.md` | `P60_REMEDIATION_SUMMARY.md` |
+| Code Module | `ai/{module}/` | `ai/orchestration/` |
+| Test Suite | `tests/test_{module}.py` | `tests/test_pattern_store.py` |
+| Systemd Timer | `systemd/{timer}.timer` | `ai-workflow-health.timer` |
+| Config File | `configs/{name}.yaml` | `configs/mcp-bridge-allowlist.yaml` |
+
+## Phase Artifact Inventory
+
+### P00 — Initial Foundation
+- **Status**: Done
+- **Commit SHA**: Initial
+- **Finished**: 2026-02-03
+- **Repo Artifacts**:
+  - `ai/config.py` — Configuration and paths
+  - `ai/router.py` — LiteLLM V2 router
+  - `ai/health.py` — Provider health tracking
+- **Notion**: Row exists with validation summary
+- **Missing**: No dedicated P00_PLAN.md (inferred historical boundary)
+
+### P01 — Systemd Service Setup
+- **Status**: Done
+- **Commit SHA**: Early systemd
+- **Finished**: 2026-02-05
+- **Repo Artifacts**:
+  - `systemd/*.service` — Service files
+- **Notion**: Row exists
+- **Missing**: No dedicated P01_PLAN.md
+
+### P02 — LiteLLM Router V2
+- **Status**: Done
+- **Commit SHA**: d5ff4cc3
+- **Finished**: 2026-02-08
+- **Repo Artifacts**:
+  - `ai/router.py` (873 lines) — Provider chain routing
+- **Notion**: Row exists
+- **Tests**: `tests/test_router.py` (25 tests)
+- **Missing**: No dedicated P02_PLAN.md
+
+### P03 — MCP Bridge Alpha
+- **Status**: Done
+- **Commit SHA**: Early MCP
+- **Finished**: 2026-02-12
+- **Repo Artifacts**:
+  - `ai/mcp_bridge/server.py` — FastMCP server
+  - `ai/mcp_bridge/tools.py` — Tool dispatch
+- **Notion**: Row exists
+- **Missing**: No dedicated P03_PLAN.md
+
+### P04 — Threat Intel Core
+- **Status**: Done
+- **Commit SHA**: Early security
+- **Finished**: 2026-02-15
+- **Repo Artifacts**:
+  - `ai/threat_intel/lookup.py` — VT/OTX integration
+  - `ai/threat_intel/ip_lookup.py` — AbuseIPDB integration
+- **Notion**: Row exists
+- **Missing**: No dedicated P04_PLAN.md
+
+### P05 — RAG Foundation
+- **Status**: Done
+- **Commit SHA**: RAG init
+- **Finished**: 2026-02-18
+- **Repo Artifacts**:
+  - `ai/rag/store.py` — LanceDB integration
+  - `ai/rag/query.py` — Semantic search
+- **Notion**: Row exists
+- **Missing**: No dedicated P05_PLAN.md
+
+### P06 — Tool Registration
+- **Status**: Done
+- **Commit SHA**: Tool reg
+- **Finished**: 2026-02-20
+- **Repo Artifacts**:
+  - `configs/mcp-bridge-allowlist.yaml` — Tool definitions
+- **Notion**: Row exists
+- **Missing**: No dedicated P06_PLAN.md
+
+### P07 — Health Metrics
+- **Status**: Done
+- **Commit SHA**: Health metrics
+- **Finished**: 2026-02-22
+- **Repo Artifacts**:
+  - `ai/health.py` — Provider health scoring
+- **Notion**: Row exists
+- **Missing**: No dedicated P07_PLAN.md
+
+### P08 — Code Quality Setup
+- **Status**: Done
+- **Commit SHA**: Code quality
+- **Finished**: 2026-02-25
+- **Repo Artifacts**:
+  - `.ruff.toml` — Ruff configuration
+  - `pyproject.toml` — Project config
+- **Notion**: Row exists
+- **Missing**: No dedicated P08_PLAN.md
+
+### P09 — Gaming MangoHud
+- **Status**: Done
+- **Commit SHA**: Gaming modes
+- **Finished**: 2026-02-28
+- **Repo Artifacts**:
+  - `ai/gaming/scopebuddy.py` — Game profiles
+- **Notion**: Row exists
+- **Missing**: No dedicated P09_PLAN.md
+
+### P10 — Intel Scraper Core
+- **Status**: Done
+- **Commit SHA**: Intel scraper
+- **Finished**: 2026-03-02
+- **Repo Artifacts**:
+  - `ai/intel_scraper.py` — CVE/release/Fedora watchers
+- **Notion**: Row exists with enriched validation
+- **Missing**: No dedicated P10_PLAN.md
+
+### P11 — Timer Expansion
+- **Status**: Done
+- **Commit SHA**: Timer expansion
+- **Finished**: 2026-03-05
+- **Repo Artifacts**:
+  - `ai/cache.py` (211 lines)
+  - Multiple `systemd/*.timer` files
+- **Notion**: Row exists
+- **Missing**: No dedicated P11_PLAN.md
+
+### P12 — PingMiddleware Keepalive
+- **Status**: Done
+- **Commit SHA**: 73fe5f6
+- **Finished**: 2026-03-08
+- **Repo Artifacts**:
+  - `ai/mcp_bridge/server.py` — PingMiddleware (25s keepalive)
+- **Notion**: Row exists
+- **Missing**: No dedicated P12_PLAN.md
+
+### P13 — BM25 Full-Text Search
+- **Status**: Done
+- **Commit SHA**: Provider search
+- **Finished**: 2026-03-10
+- **Repo Artifacts**:
+  - `ai/rag/store.py` — LanceDB FTS integration
+- **Notion**: Row exists
+- **Missing**: No dedicated P13_PLAN.md
+
+### P14 — Cost Tracking + Sentry
+- **Status**: Done
+- **Commit SHA**: Multiple
+- **Finished**: 2026-03-12
+- **Repo Artifacts**:
+  - `ai/router.py` — Cost tracking
+  - `ai/llm_proxy.py` — Sentry integration
+- **Notion**: Row exists
+- **Missing**: No dedicated P14_PLAN.md
+
+### P15 — Workflow Engine
+- **Status**: Done
+- **Commit SHA**: Workflow engine
+- **Finished**: 2026-03-14
+- **Repo Artifacts**:
+  - `ai/workflows/` — Workflow foundation
+- **Notion**: Row exists with enriched validation
+- **Missing**: No dedicated P15_PLAN.md
+
+### P16 — Structured Logging
+- **Status**: Done
+- **Commit SHA**: 2e5cb5fe
+- **Finished**: 2026-03-16
+- **Repo Artifacts**:
+  - JSON structured logging throughout `ai/`
+- **Notion**: Row exists with enriched validation
+- **Missing**: No dedicated P16_PLAN.md
+
+### P17 — Test Infrastructure
+- **Status**: Done
+- **Commit SHA**: Testing expansion
+- **Finished**: 2026-03-18
+- **Repo Artifacts**:
+  - `tests/` — 133 test files, 2221 functions
+- **Notion**: Row exists
+- **Missing**: No dedicated P17_PLAN.md
+
+### P18 — Documentation Pass
+- **Status**: Done
+- **Commit SHA**: Documentation
+- **Finished**: 2026-03-20
+- **Repo Artifacts**:
+  - `docs/AGENT.md` — Agent reference
+  - `docs/USER-GUIDE.md` — User guide
+  - 24 documentation files
+- **Notion**: Row exists
+- **Missing**: No dedicated P18_PLAN.md
+
+### P19 — Input Validation Layer
+- **Status**: Done
+- **Commit SHA**: c97aba0
+- **Finished**: 2026-04-03
+- **Repo Artifacts**:
+  - `ai/security/input_validator.py` — Input validation
+- **Tests**: `tests/test_input_validator.py` (51 tests)
+- **Notion**: Row exists
+- **Missing**: No dedicated P19_PLAN.md
+
+### P20 — Timer Sentinel + Headless Security
+- **Status**: Done
+- **Commit SHA**: 903ab26
+- **Finished**: 2026-04-03
+- **Repo Artifacts**:
+  - `scripts/security-briefing.py` — Headless briefing
+  - `ai/agents/timer_sentinel.py` — Timer validation
+- **Tests**: `tests/test_timer_sentinel.py`
+- **Notion**: Row exists
+- **Missing**: No dedicated P20_PLAN.md
+
+### P21 — Pattern Store
+- **Status**: Done
+- **Commit SHA**: 7eb5906
+- **Finished**: 2026-04-03
+- **Repo Artifacts**:
+  - `ai/rag/pattern_store.py` — Pattern storage with schema
+  - `ai/rag/pattern_query.py` — Pattern retrieval
+- **Tests**: `tests/test_pattern_store.py` (11 tests)
+- **Notion**: Row exists
+- **Missing**: No dedicated P21_PLAN.md
+
+### P22 — Token Budget (P24 Batch)
+- **Status**: Done
+- **Commit SHA**: 9f5c3b6e
+- **Finished**: 2026-04-05
+- **Repo Artifacts**:
+  - `ai/budget.py` — Token budget enforcement
+- **Notion**: Row exists (part of P24-P28 batch)
+- **Note**: stabilization phase — no dedicated plan doc
+
+### P23 — Semantic Cache (P24 Batch)
+- **Status**: Done
+- **Commit SHA**: dc293c5e
+- **Finished**: 2026-04-06
+- **Repo Artifacts**:
+  - `ai/cache_semantic.py` — LanceDB-backed cache
+- **Notion**: Row exists (part of P24-P28 batch)
+- **Note**: stabilization phase — no dedicated plan doc
+
+### P24 — Metrics Recording
+- **Status**: Done
+- **Commit SHA**: 98c5c2d2
+- **Finished**: 2026-04-07
+- **Repo Artifacts**:
+  - `ai/metrics.py` — Time-series metrics
+- **Tests**: `tests/test_metrics.py` (14 tests)
+- **Notion**: Row exists
+
+### P25 — Conversation Memory
+- **Status**: Done
+- **Commit SHA**: 98c5c2d2
+- **Finished**: 2026-04-07
+- **Repo Artifacts**:
+  - `ai/memory.py` (250 lines)
+  - LanceDB table: `conversation_memory`
+- **Notion**: Row exists (part of P24-P28 batch)
+
+### P26 — Provider Intelligence
+- **Status**: Done
+- **Commit SHA**: 98c5c2d2
+- **Finished**: 2026-04-07
+- **Repo Artifacts**:
+  - `ai/provider_intel.py` — Dynamic routing
+- **Notion**: Row exists (part of P24-P28 batch)
+- **Note**: referenced in P44 validation
+
+### P27 — Security Alerts
+- **Status**: Done
+- **Commit SHA**: 98c5c2d2
+- **Finished**: 2026-04-07
+- **Repo Artifacts**:
+  - `ai/alerts/rules.py` — Alert evaluation
+  - `ai/alerts/dispatcher.py` — Dispatch
+  - `ai/alerts/history.py` — History
+- **Tests**: `tests/test_alerts.py` (15 tests)
+- **Notion**: Row exists (part of P24-P28 batch)
+
+### P28 — Weekly Insights
+- **Status**: Done
+- **Commit SHA**: 98c5c2d2
+- **Finished**: 2026-04-08
+- **Repo Artifacts**:
+  - `ai/insights.py` — AI-generated insights
+- **Tests**: `tests/test_insights.py` (9 tests)
+- **Notion**: Row exists (part of P24-P28 batch)
+
+### P29 — Structural Code Intelligence
+- **Status**: Done
+- **Commit SHA**: e2ad3753
+- **Finished**: 2026-04-09
+- **Repo Artifacts**:
+  - `ai/code_intel/` — AST parser + grimp import graph
+  - LanceDB tables: `code_nodes`, `relationships`, `import_graph`, `change_history`
+- **Tests**: Multiple test files
+- **Docs**: `docs/phase-roadmap-p29-p33.md`
+- **Notion**: Row exists
+
+### P30 — Workflow Engine Expansion
+- **Status**: Done
+- **Commit SHA**: 9b7af54
+- **Finished**: 2026-04-09
+- **Repo Artifacts**:
+  - `ai/workflows/` — ReAct loop, workflow store
+- **Tests**: Workflow tests
+- **Notion**: Row exists
+
+### P31 — Agent Collaboration
+- **Status**: Done
+- **Commit SHA**: 82de124
+- **Finished**: 2026-04-09
+- **Repo Artifacts**:
+  - `ai/collab/` — Task queue, shared context
+  - LanceDB tables: `shared_context`, `agent_knowledge`
+- **Notion**: Row exists
+
+### P32 — Testing Intelligence
+- **Status**: Done
+- **Commit SHA**: 0ea5077
+- **Finished**: 2026-04-09
+- **Repo Artifacts**:
+  - `ai/testing/` — Stability tracker, flaky detection
+  - LanceDB table: `test_mappings`
+- **Docs**: `docs/phase-roadmap-p29-p33.md` (partial)
+- **Notion**: Row exists
+
+### P33 — Dynamic Tools
+- **Status**: Done
+- **Commit SHA**: 42cacb0
+- **Finished**: 2026-04-09
+- **Repo Artifacts**:
+  - `ai/tools/builder.py` — Dynamic tool creation
+  - LanceDB table: `persisted_tools`
+  - MCP tool: `system.create_tool`
+- **Notion**: Row exists
+
+### P34 — Integration Parity
+- **Status**: Done
+- **Commit SHA**: b45fc5ba
+- **Finished**: 2026-04-10
+- **Repo Artifacts**:
+  - Various integration fixes
+- **Notion**: Row exists (P34-P36 batch)
+- **Note**: Part of P34-P36 batch — see P44 validation
+
+### P35 — Agent Stabilization
+- **Status**: Done
+- **Commit SHA**: 790bd62
+- **Finished**: 2026-04-10
+- **Repo Artifacts**:
+  - Agent fixes
+- **Notion**: Row exists (P34-P36 batch)
+- **Note**: Part of P34-P36 batch
+
+### P36 — Documentation Reconcile
+- **Status**: Done
+- **Commit SHA**: 773f87f
+- **Finished**: 2026-04-10
+- **Repo Artifacts**:
+  - `docs/AGENT.md` — Count reconciliations
+- **Notion**: Row exists (P34-P36 batch)
+- **Note**: Part of P34-P36 batch
+
+### P37 — Alert Rules Module
+- **Status**: Done
+- **Commit SHA**: 39cef00
+- **Finished**: 2026-03-27
+- **Repo Artifacts**:
+  - `ai/alerts/rules.py`
+  - `ai/alerts/dispatcher.py`
+  - `ai/alerts/history.py`
+- **Tests**: `tests/test_alerts.py`
+- **Notion**: Row exists
+
+### P38 — Task Patterns
+- **Status**: Done
+- **Commit SHA**: 39cef00
+- **Finished**: 2026-03-29
+- **Repo Artifacts**:
+  - `ai/learning/handoff_parser.py`
+  - `scripts/log-task-success.py`
+  - LanceDB table: `task_patterns`
+- **Tests**: `tests/test_handoff_parser.py` (9 tests)
+- **Notion**: Row exists
+
+### P39 — Dependency Audit
+- **Status**: Done
+- **Commit SHA**: 39cef00
+- **Finished**: 2026-04-01
+- **Repo Artifacts**:
+  - `ai/system/dep_audit.py`
+  - `systemd/dep-audit.timer`
+- **Tests**: `tests/test_dep_audit.py` (11 tests)
+- **Notion**: Row exists
+
+### P40 — Intel Scraper Expansion
+- **Status**: Done
+- **Commit SHA**: debc0a3
+- **Finished**: 2026-04-02
+- **Repo Artifacts**:
+  - `ai/intel_scraper.py` (18K+ lines)
+- **Docs**: `docs/zo-tools/intel-scraper.md`
+- **Notion**: Row exists with enriched validation
+
+### P41 — Unified Ingest Pipeline
+- **Status**: Done
+- **Commit SHA**: Combined
+- **Finished**: 2026-04-03
+- **Repo Artifacts**:
+  - `ai/system/ingest_pipeline.py`
+- **Notion**: Row exists
+- **Missing**: No dedicated P41_PLAN.md
+
+### P42 — Stabilization
+- **Status**: Done
+- **Commit SHA**: cf9e7db
+- **Finished**: 2026-04-05
+- **Repo Artifacts**:
+  - Test fixes
+- **Docs**: `docs/cc-prompts-p42-stabilization.md`
+- **Notion**: Row exists
+
+### P43 — Lint + Newelle Sync
+- **Status**: Done
+- **Commit SHA**: e022b3c
+- **Finished**: 2026-04-06
+- **Repo Artifacts**:
+  - `docs/newelle-system-prompt.md`
+  - `docs/newelle-skills/`
+- **Docs**: `docs/cc-prompts-p43-lint-newelle-verify.md`
+- **Notion**: Row exists
+
+### P44 — Input Validation v2
+- **Status**: Done
+- **Commit SHA**: aae5965
+- **Finished**: 2026-04-06
+- **Repo Artifacts**:
+  - `ai/security/input_validator.py`
+  - `configs/safety-rules.json`
+- **Docs**: `docs/phase-roadmap-p44.md`
+- **Notion**: Row exists with enriched validation
+
+### P45 — Semantic Cache v2
+- **Status**: Done
+- **Commit SHA**: See P44
+- **Finished**: 2026-04-07
+- **Repo Artifacts**:
+  - `ai/cache_semantic.py` (310 lines)
+- **Notion**: Row exists (referenced in P44)
+- **Note**: Commit SHA in P44 batch
+
+### P46 — Token Budget v2
+- **Status**: Done
+- **Commit SHA**: See P44
+- **Finished**: 2026-04-07
+- **Repo Artifacts**:
+  - `ai/budget.py`
+- **Notion**: Row exists
+- **Note**: Originally delivered in P23
+
+### P47 — Code Patterns v2
+- **Status**: Done
+- **Commit SHA**: See P44
+- **Finished**: 2026-04-07
+- **Repo Artifacts**:
+  - `ai/rag/pattern_store.py`
+- **Notion**: Row exists (referenced in P44)
+
+### P48 — Conversation Memory v2
+- **Status**: Done
+- **Commit SHA**: See P44
+- **Finished**: 2026-04-07
+- **Repo Artifacts**:
+  - `ai/memory.py`
+- **Notion**: Row exists (referenced in P44)
+
+### P49 — Weekly Insights v2
+- **Status**: Done
+- **Commit SHA**: See P44
+- **Finished**: 2026-04-07
+- **Repo Artifacts**:
+  - `ai/insights.py`
+- **Notion**: Row exists (referenced in P44)
+
+### P50 — Integration Tests
+- **Status**: Done
+- **Commit SHA**: 909f5dc
+- **Finished**: 2026-04-08
+- **Repo Artifacts**:
+  - `tests/test_integration_*.py`
+- **Tests**: Integration tests for P44-P49
+- **Notion**: Row exists with enriched validation
+
+### P51 — Newelle Skills Sync
+- **Status**: Done
+- **Commit SHA**: 904b1d4
+- **Finished**: 2026-04-08
+- **Repo Artifacts**:
+  - `docs/newelle-system-prompt.md`
+  - `docs/newelle-skills/` (9 skill bundles)
+- **Docs**: `docs/P51_PLAN.md`
+- **Notion**: Row exists
+
+### P52 — Slack + Notion Integrations
+- **Status**: Done
+- **Commit SHA**: 9871497
+- **Finished**: 2026-04-09
+- **Repo Artifacts**:
+  - `ai/slack/` (312 lines)
+  - `ai/notion/` (302 lines)
+  - `ai/notion/client.py`
+  - `ai/notion/handlers.py`
+- **Tests**: `tests/test_phase_control_notion_sync.py`
+- **Notion**: Row exists
+
+### P53 — Orchestration Expansion
+- **Status**: Done
+- **Commit SHA**: e023411
+- **Finished**: 2026-04-10
+- **Repo Artifacts**:
+  - `ai/orchestration/` — Bus, Registry, BaseAgent
+  - `ai/orchestration/observer.py`
+  - `ai/workflows/` — Workflow steps observability
+  - LanceDB table: `workflow_runs`, `workflow_steps`
+  - Systemd timer: `ai-workflow-health.timer`
+- **Tests**: `tests/test_orchestration*.py` (9 tests)
+- **Docs**: `docs/phase-roadmap-p53.md`
+- **Notion**: Row exists
+
+### P54 — Workflow Hardening + Observability
+- **Status**: Done
+- **Commit SHA**: d33d8ee
+- **Finished**: 2026-04-10
+- **Repo Artifacts**:
+  - `ai/orchestration/observer.py`
+  - `ai/workflows/` — Event triggers
+  - LanceDB table: `workflow_steps`
+- **Notion**: Row exists with enriched validation
+
+### P55 — Phase Control
+- **Status**: Done
+- **Commit SHA**: 1008d84
+- **Finished**: 2026-04-10
+- **Repo Artifacts**:
+  - `ai/phase_control/` (15 files, 1460 lines)
+  - `scripts/run-phase-control.py`
+- **Tests**: `tests/test_phase_control_*.py` (30 tests)
+- **Docs**: `docs/phase-roadmap-p53.md` (partial)
+- **Notion**: Row exists
+
+### P56 — Stabilization
+- **Status**: Done
+- **Commit SHA**: 1008d84
+- **Finished**: 2026-04-10
+- **Repo Artifacts**:
+  - Process fixes, test stabilization
+- **Notion**: Row exists
+- **Note**: stabilization phase — no dedicated plan doc
+
+### P57 — Cross-System Issue Burn Down
+- **Status**: Done
+- **Commit SHA**: bd76dca1
+- **Finished**: 2026-04-10
+- **Repo Artifacts**:
+  - Multiple issue fixes across `ai/`, `tests/`, `systemd/`
+- **Docs**: `docs/zo-tools/` (syntax fixes)
+- **Notion**: Row exists with enriched validation
+
+### P58 — Whitespace + Syntax Fixes
+- **Status**: Done
+- **Commit SHA**: 07b5a63
+- **Finished**: 2026-04-10
+- **Repo Artifacts**:
+  - `docs/zo-tools/` — Whitespace and syntax fixes
+- **Notion**: Row exists
+- **Note**: stabilization phase
+
+### P59 — Branch Convergence
+- **Status**: Done
+- **Commit SHA**: 28955d01
+- **Finished**: 2026-04-10
+- **Repo Artifacts**:
+  - `HANDOFF.md` — Full forensic remediation
+- **Notion**: Row exists (created during cleanup)
+- **Docs**: `docs/update HANDOFF.md` commit
+
+### P60 — Intelligence Reliability + Feedback Loop Audit
+- **Status**: Done
+- **Commit SHA**: a0b5da9
+- **Finished**: 2026-04-11
+- **Repo Artifacts**:
+  - `ai/router.py` — Schema access fix
+  - `ai/orchestration/bus.py` — Duplicate removal
+  - `ai/embedder.py` — Fallback chain fix
+- **Docs**: `docs/P60_REMEDIATION_SUMMARY.md`
+- **Tests**: All passing (2058 tests)
+- **Notion**: Row exists with commit SHA (added during cleanup)
+
+### P61 — Frontend Capability Pack for OpenCode
+- **Status**: Done
+- **Commit SHA**: a97213c
+- **Finished**: 2026-04-10
+- **Repo Artifacts**:
+  - `docs/frontend-capability-pack/` — 14 docs
+  - `docs/frontend-capability-pack/README.md`
+  - `docs/frontend-capability-pack/prompt-pack.md`
+  - `docs/frontend-capability-pack/scaffolds.md`
+  - `docs/frontend-capability-pack/accessibility-guardrails.md`
+  - `docs/frontend-capability-pack/motion-guidance.md`
+  - `docs/frontend-capability-pack/validation-flow.md`
+  - `docs/frontend-capability-pack/site-archetypes/*.md` (5 files)
+  - `docs/bazzite-ai-system-profile.md`
+  - `.opencode/AGENTS.md` — Updated with frontend pack
+- **Docs**: `docs/P61_TRAINING_SUMMARY.md`, `docs/P61_COMPLETION_REPORT.md`
+- **Notion**: Row exists with commit + validation
+
+### P62 — Frontend Pattern Intelligence + Asset Workflow
+- **Status**: Done
+- **Commit SHA**: b07290c
+- **Finished**: 2026-04-12
+- **Repo Artifacts**:
+  - `ai/rag/pattern_store.py` — Extended schema with frontend metadata
+  - `ai/rag/pattern_query.py` — Frontend filters
+  - `scripts/ingest-patterns.py` — Frontmatter parsing
+  - `docs/patterns/frontend/*.md` — 22 frontend patterns
+  - `docs/frontend-capability-pack/README.md` — Updated
+  - `.opencode/AGENTS.md` — Updated
+- **Tests**: `tests/test_pattern_store.py` (18 tests)
+- **Notion**: Row exists with commit + validation
+
+### P63 — Website Build Validation + UX/Visual QA
+- **Status**: Done
+- **Commit SHA**: 170f30c
+- **Finished**: 2026-04-12
+- **Repo Artifacts**:
+  - `docs/patterns/frontend/qa-evidence-workflow.md`
+  - `docs/patterns/frontend/responsive-qa-checklist.md`
+  - `docs/patterns/frontend/accessibility-qa-checklist.md`
+  - `docs/patterns/frontend/motion-sanity-review.md`
+  - `docs/patterns/frontend/visual-consistency-review.md`
+  - `docs/patterns/frontend/tailwind-quality-review.md`
+  - `ai/phase_control/notion_sync.py` — Status parsing
+  - `configs/mcp-bridge-allowlist.yaml` — Frontend metadata filters
+- **Docs**: `docs/P63_PLAN.md`, `docs/P63_COMPLETION_REPORT.md`
+- **Tests**: All passing
+- **Notion**: Row exists with commit + validation
+
+### P64 — Design/Media Enhancement Layer for Frontend Builds
+- **Status**: Done
+- **Commit SHA**: e33b671
+- **Finished**: 2026-04-12
+- **Repo Artifacts**:
+  - `ai/rag/pattern_store.py` — Extended schema
+  - `docs/patterns/frontend/svg-illustration-system.md`
+  - `docs/patterns/frontend/svg-background-treatment.md`
+  - `docs/patterns/frontend/hero-split-media.md`
+  - `docs/patterns/frontend/hero-proof-driven.md`
+  - `docs/patterns/frontend/cta-proof-stack.md`
+  - `docs/patterns/frontend/cta-inline-form.md`
+  - `docs/patterns/frontend/motion-hover-depth.md`
+  - `docs/patterns/frontend/premium-visual-effects.md`
+  - `docs/patterns/frontend/design-media-qa-checklist.md`
+- **Docs**: `docs/P64_PLAN.md`, `docs/P64_COMPLETION_REPORT.md`
+- **Tests**: `tests/test_pattern_store.py` (28 passed)
+- **Notion**: Row exists with commit + validation
+
+### P65 — Frontend Runtime Harness + Browser Evidence Loop
+- **Status**: Done
+- **Commit SHA**: 84a013f
+- **Finished**: 2026-04-11
+- **Repo Artifacts**:
+  - `docs/frontend-capability-pack/runtime-harness.md`
+  - `docs/patterns/frontend/browser-evidence-loop.md`
+  - `docs/patterns/frontend/frontend-runtime-harness.md`
+  - `docs/AGENT.md` — Updated
+  - `docs/frontend-capability-pack/prompt-pack.md` — Updated
+  - `docs/frontend-capability-pack/validation-flow.md` — Updated
+- **Notion**: Row exists with commit + validation (added during cleanup)
+
+### P66 — Website Brief Intake + Content/SEO/Asset Schema
+- **Status**: Done
+- **Commit SHA**: 4bdda9e
+- **Finished**: 2026-04-11
+- **Repo Artifacts**:
+  - `docs/frontend-capability-pack/website-brief-schema.md`
+  - `docs/frontend-capability-pack/content-seo-intake.md`
+  - `docs/frontend-capability-pack/brand-asset-intake.md`
+  - `docs/frontend-capability-pack/page-map-cta-requirements.md`
+- **Notion**: Row exists with commit + validation (added during cleanup)
+
+### P67 — Deployment Target Pack + Launch Handoff
+- **Status**: Done
+- **Commit SHA**: 908d987
+- **Finished**: 2026-04-11
+- **Repo Artifacts**:
+  - `docs/frontend-capability-pack/deployment-target-pack.md`
+  - `docs/frontend-capability-pack/environment-config-checklist.md`
+  - `docs/frontend-capability-pack/analytics-forms-integration.md`
+  - `docs/frontend-capability-pack/launch-handoff-checklist.md`
+- **Notion**: Row exists with commit + validation (added during cleanup)
+
+### P68 — GitNexus Code-Graph Augmentation Pilot
+- **Status**: Done
+- **Commit SHA**: 3efff8c
+- **Finished**: 2026-04-12
+- **Repo Artifacts**:
+  - `docs/P68_PLAN.md` — Evaluation document
+- **Key Decision**: Defer GitNexus integration, enhance existing Bazzite code intelligence
+- **Notion**: Row exists with commit + validation
+- **Note**: Duplicate child page archived during cleanup
+
+### P69 — Ops Runbook Pack
+- **Status**: Done
+- **Commit SHA**: 007d7b2
+- **Finished**: 2026-04-12
+- **Repo Artifacts**:
+  - `docs/frontend-capability-pack/ops-dns-domain-setup.md`
+  - `docs/frontend-capability-pack/ops-tls-ssl-provisioning.md`
+  - `docs/frontend-capability-pack/ops-reverse-proxy-config.md`
+  - `docs/frontend-capability-pack/ops-launch-procedures.md`
+  - `docs/frontend-capability-pack/ops-troubleshooting-playbook.md`
+  - `docs/frontend-capability-pack/ops-monitoring-alerting.md`
+  - `docs/frontend-capability-pack/README.md` — Updated
+  - `docs/bazzite-ai-system-profile.md` — Updated
+- **Notion**: Row exists with commit + validation
+
+### P70 — Phase Documentation Overhaul + Artifact Normalization
+- **Status**: InProgress
+- **Commit SHA**: —
+- **Finished**: —
+- **Repo Artifacts**:
+  - `docs/PHASE_INDEX.md` — This file
+  - `docs/PHASE_ARTIFACT_REGISTER.md` — Artifact inventory
+  - `docs/PHASE_DEPENDENCY_GRAPH.mmd` — Mermaid dependency visualization
+  - `docs/PHASE_DELIVERY_TIMELINE.md` — Timeline view
+  - `docs/ARCHITECTURE_EVOLUTION.md` — Architecture evolution narrative
+  - `docs/PHASE_DOCUMENTATION_POLICY.md` — Future artifact placement rules
+- **Notion**: Phase Documentation Index, Architecture Evolution Map, Phase Dependency Map, Artifact Coverage Audit, Documentation Gaps Log
+- **Scope**: Documentation-only, no code changes, preserve existing phase truth
+
+## Cross-Phase Documentation
+
+### Hub Docs (docs/ root)
+| Doc | Purpose | Last Updated |
+|-----|---------|--------------|
+| `AGENT.md` | Agent reference (MCP tools, paths, rules) | P65 |
+| `CHANGELOG.md` | Version history | P52 |
+| `USER-GUIDE.md` | End-user guide | P18 |
+| `bazzite-ai-system-profile.md` | System identity for OpenCode | P69 |
+| `PHASE_INDEX.md` | Master phase index | P70 |
+| `PHASE_ARTIFACT_REGISTER.md` | Artifact inventory | P70 |
+| `PHASE_DEPENDENCY_GRAPH.mmd` | Dependency visualization | P70 |
+| `PHASE_DELIVERY_TIMELINE.md` | Delivery timeline | P70 |
+| `ARCHITECTURE_EVOLUTION.md` | Architecture evolution | P70 |
+| `PHASE_DOCUMENTATION_POLICY.md` | Artifact placement rules | P70 |
+
+### Phase Roadmaps
+| Doc | Phases Covered |
+|-----|----------------|
+| `docs/phase-roadmap-p44.md` | P44-P49 |
+| `docs/phase-roadmap-p53.md` | P53-P55 |
+
+### Performance Docs (Legacy)
+| Doc | Status | Notes |
+|-----|--------|-------|
+| `docs/performance-*.md` | Duplicate casing | Consolidate in future pass |
+| `docs/PERFORMANCE-*.md` | Duplicate casing | Consolidate in future pass |
+
+### Frontend Capability Pack
+| Directory | Files | Purpose |
+|-----------|-------|---------|
+| `docs/frontend-capability-pack/` | 22 files | Frontend generation guidance |
+| `docs/patterns/frontend/` | 37 files | Curated patterns |
+
+### Known Gaps
+
+1. **P0-P9**: No dedicated plan docs (inferred historical boundaries)
+2. **P10-P18**: No dedicated plan docs
+3. **P19-P21**: No dedicated plan docs (validation in Notion only)
+4. **P34-P36**: Batch-commit references (see P44 validation for details)
+5. **P45-P49**: Prior phases delivered in P23-P28 batch, referenced in P44
+6. **P56, P58**: Stabilization phases — no dedicated plan docs
+7. **P60**: Plan doc is `P60_REMEDIATION_SUMMARY.md` (remediation, not planning)
+8. **Duplicate files**: `docs/performance-*.md` vs `docs/PERFORMANCE-*.md` (different casing)

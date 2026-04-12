@@ -380,6 +380,20 @@ A documentation-and-prompt capability layer for generating React/Tailwind websit
 8. **Wrap metric/memory calls in try/except** — observability must never break core flow
 9. **Atomic writes** for all JSON output files (tmp + os.rename)
 10. **Secret redaction** via ai.security.inputvalidator before storing user text
+11. **Follow documentation policy** — Phase-owned artifacts go in `docs/P{NN}_*`, cross-phase in `docs/` root. See `docs/PHASE_DOCUMENTATION_POLICY.md`.
+
+---
+
+## Phase Documentation Index
+
+| Doc | Purpose |
+|-----|---------|
+| [PHASE_INDEX.md](./PHASE_INDEX.md) | Master index of all phases P0-P70 |
+| [PHASE_ARTIFACT_REGISTER.md](./PHASE_ARTIFACT_REGISTER.md) | Per-phase artifact inventory |
+| [PHASE_DEPENDENCY_GRAPH.mmd](./PHASE_DEPENDENCY_GRAPH.mmd) | Mermaid dependency visualization |
+| [PHASE_DELIVERY_TIMELINE.md](./PHASE_DELIVERY_TIMELINE.md) | Delivery timeline |
+| [ARCHITECTURE_EVOLUTION.md](./ARCHITECTURE_EVOLUTION.md) | Architecture evolution narrative |
+| [PHASE_DOCUMENTATION_POLICY.md](./PHASE_DOCUMENTATION_POLICY.md) | Artifact placement rules |
 
 ---
 
