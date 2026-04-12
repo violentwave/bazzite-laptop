@@ -3,6 +3,7 @@
 Provides safe runtime secret loading and MCP tool implementations for Notion integration.
 """
 
+import logging
 import os
 from dataclasses import dataclass
 from typing import Any
@@ -12,6 +13,7 @@ import httpx
 from ai.config import load_keys
 
 APP_NAME = "bazzite-ai"
+logger = logging.getLogger(APP_NAME)
 
 
 @dataclass
@@ -182,6 +184,77 @@ class NotionClient:
         """
         payload = {"properties": properties}
         return self._request("PATCH", f"/v1/pages/{page_id}", json=payload)
+
+    def create_child_page(
+        self,
+        parent_id: str,
+        title: str,
+        content: str | None = None,
+    ) -> dict[str, Any]:
+        """Create a child page under a parent page.
+
+        Args:
+            parent_id: The parent page ID (UUID format).
+            title: Title of the new page.
+            content: Optional markdown content to add as paragraph blocks.
+
+        Returns:
+            Created page object.
+        """
+        payload = {
+            "parent": {"type": "page_id", "page_id": parent_id},
+            "properties": {"title": [{"type": "text", "text": {"content": title}}]},
+        }
+
+        result = self._request("POST", "/v1/pages", json=payload)
+        page_id = result.get("id")
+
+        if content and page_id:
+            self._add_paragraph_blocks(page_id, content)
+
+        return result
+
+    def _add_paragraph_blocks(self, page_id: str, content: str) -> None:
+        """Add paragraph blocks to a page.
+
+        Args:
+            page_id: The page ID to add blocks to.
+            content: Text content to add (split by newlines into paragraphs).
+        """
+        lines = content.strip().split("\n")
+        blocks = []
+        for line in lines:
+            text = line.strip()
+            if text:
+                import re
+
+                text = re.sub(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]", "", text)
+                text = text[:1900]
+                blocks.append(
+                    {
+                        "object": "block",
+                        "type": "paragraph",
+                        "paragraph": {"rich_text": [{"type": "text", "text": {"content": text}}]},
+                    }
+                )
+
+        if blocks:
+            chunk_size = 50
+            for i in range(0, len(blocks), chunk_size):
+                chunk = blocks[i : i + chunk_size]
+                try:
+                    self._request(
+                        "POST", f"/v1/blocks/{page_id}/children", json={"children": chunk}
+                    )
+                except Exception:
+                    for block in chunk:
+                        try:
+                            self._request(
+                                "POST", f"/v1/blocks/{page_id}/children", json={"children": [block]}
+                            )
+                        except Exception:
+                            logger.debug("Failed to add individual block")
+                        pass
 
     def close(self) -> None:
         """Close the HTTP client."""
