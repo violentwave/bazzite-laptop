@@ -418,6 +418,8 @@ class TestValidSets:
         assert "section" in VALID_PATTERN_SCOPES
         assert "component" in VALID_PATTERN_SCOPES
         assert "motion" in VALID_PATTERN_SCOPES
+        assert "media" in VALID_PATTERN_SCOPES
+        assert "effect" in VALID_PATTERN_SCOPES
 
     def test_valid_semantic_roles(self):
         from ai.rag.pattern_store import VALID_SEMANTIC_ROLES
@@ -425,3 +427,5 @@ class TestValidSets:
         assert "hero" in VALID_SEMANTIC_ROLES
         assert "cta" in VALID_SEMANTIC_ROLES
         assert "navigation" in VALID_SEMANTIC_ROLES
+        assert "illustration" in VALID_SEMANTIC_ROLES
+        assert "visual-effect" in VALID_SEMANTIC_ROLES

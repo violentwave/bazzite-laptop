@@ -30,6 +30,11 @@ A retrieval-first workflow for generating landing pages using project intelligen
 3. Retrieve `knowledge.task_patterns` for:
    - Query: "landing page generation"
    - Top 3 similar past tasks
+
+4. Search `knowledge.pattern_search` for:
+   - archetype: "landing-page"
+   - pattern_scope: "media" or "effect"
+   - Query: "svg illustration hero premium visual effect"
 ```
 
 ## Phase 2: Select Sections
@@ -84,6 +89,7 @@ Run validation checklist:
 - [ ] Motion respects prefers-reduced-motion
 - [ ] Performance (Lighthouse)
 - [ ] Evidence package collected (checklist + screenshots + command outputs)
+- [ ] Design/media enhancement pass completed (SVG + hero/CTA polish)
 
 ## Phase 6: Document
 

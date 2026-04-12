@@ -197,6 +197,15 @@ npx lighthouse http://localhost:3000 --output=json
 
 ---
 
+## Level 5.5: Design & Media Enhancements
+
+- [ ] SVG assets are optimized and appropriately labeled
+- [ ] Hero/CTA enhancements keep conversion hierarchy clear
+- [ ] Premium effects do not degrade contrast/readability
+- [ ] Media and effects follow tokenized visual language
+
+---
+
 ## Level 6: Motion & Animation
 
 ### Reduced Motion

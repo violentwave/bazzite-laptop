@@ -12,6 +12,15 @@ Service sites establish credibility and guide visitors to **contact or book**. M
 
 ## Standard Pages
 
+## P64 Design/Media Enhancements
+
+For service trust and polish:
+
+- Use `svg-illustration-system` for repeatable service visuals.
+- Use `hero-proof-driven` to bring trust signals near primary CTA.
+- Use `premium-visual-effects` sparingly on key sections only.
+- Validate with `design-media-qa-checklist` and existing P63 QA evidence flow.
+
 ### 1. Home
 
 **Purpose:** Overview + conversion

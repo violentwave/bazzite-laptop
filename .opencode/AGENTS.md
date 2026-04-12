@@ -33,6 +33,7 @@ All frontend generation MUST follow this workflow:
    - Copy pattern structure from search results
    - Apply brand colors, content, images
    - Follow constraints from accessibility-guardrails.md and motion-guidance.md
+   - For polished builds, retrieve one design/media pattern (SVG/hero/CTA/effects)
 
 6. **Validate**: Follow validation-flow.md checklist
 7. **Collect Evidence** (Required)

@@ -21,6 +21,7 @@ src/
 │   ├── ui/              # Primitive components (Button, Card, Input)
 │   ├── layout/          # Layout components (Header, Footer, Sidebar)
 │   └── sections/        # Page sections (Hero, Features, CTA)
+│   └── illustrations/    # SVG/media illustration components
 ├── layouts/             # Page-level layout wrappers
 │   ├── MainLayout.tsx   # Standard page layout
 │   ├── AuthLayout.tsx   # Auth-specific layout
@@ -50,6 +51,8 @@ public/
 ├── images/              # Static images
 │   ├── logo.svg
 │   └── hero/
+├── illustrations/        # Decorative SVG backgrounds/illustrations
+├── textures/             # Optional subtle overlays (noise/grain)
 ├── fonts/               # Self-hosted fonts (if needed)
 └── favicon.ico
 ```

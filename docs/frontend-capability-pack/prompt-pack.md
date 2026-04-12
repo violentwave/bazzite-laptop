@@ -347,8 +347,8 @@ Before generating any code, search for existing patterns:
 Search `knowledge.pattern_search` with:
 - query: [component description, e.g., "hero section with CTA"]
 - archetype: [landing-page|service-site|dashboard|portfolio|lead-gen]
-- pattern_scope: [section|component|layout|motion|asset|token|workflow]
-- semantic_role: [hero|cta|navigation|pricing|testimonial|feature|...]
+- pattern_scope: [section|component|layout|motion|asset|token|workflow|media|effect]
+- semantic_role: [hero|cta|navigation|pricing|testimonial|feature|illustration|background|proof|visual-effect|...]
 ```
 
 ### Step 2: Retrieve Similar Workflows
@@ -372,6 +372,9 @@ Search `knowledge.task_patterns` with:
    - checklist notes
    - screenshots (mobile/tablet/desktop + reduced-motion)
    - command outputs (lint/typecheck/test/build/a11y)
+7. **Apply design/media enhancements intentionally**:
+   - retrieve one SVG/media pattern and one hero/CTA enhancement pattern
+   - keep effects motion-safe and token-driven
 
 ---
 

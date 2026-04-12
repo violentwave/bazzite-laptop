@@ -12,6 +12,15 @@ Landing pages focus on **single-action conversion**: sign up, download, purchase
 
 ## Standard Sections
 
+## P64 Design/Media Enhancements
+
+Apply after base sections are in place:
+
+- Use `hero-split-media` or `hero-proof-driven` pattern for stronger first impression.
+- Add `cta-proof-stack` for trust-backed conversion blocks.
+- Use `svg-background-treatment` for restrained visual depth.
+- Validate with `design-media-qa-checklist` before phase closure.
+
 ### 1. Hero
 
 **Content:**

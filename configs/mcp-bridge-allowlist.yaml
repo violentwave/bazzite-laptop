@@ -462,11 +462,11 @@ tools:
         required: false
       pattern_scope:
         type: string
-        pattern: "^(section|component|layout|motion|asset|token|workflow)$"
+        pattern: "^(section|component|layout|motion|asset|token|workflow|media|effect)$"
         required: false
       semantic_role:
         type: string
-        pattern: "^(hero|cta|navigation|pricing|testimonial|feature|footer|form|gallery|kpi|chart|modal|card|grid|list|header|sidebar|animation|asset|token|workflow)$"
+        pattern: "^(hero|cta|navigation|pricing|testimonial|feature|footer|form|gallery|kpi|chart|modal|card|grid|list|header|sidebar|animation|asset|token|workflow|illustration|background|logo|proof|media|visual-effect)$"
         required: false
       limit:
         type: integer

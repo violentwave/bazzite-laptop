@@ -18,7 +18,7 @@ Schema fields:
     archetype -- Frontend: landing-page, service-site, dashboard,
                  portfolio, lead-gen
     pattern_scope -- Frontend: section, component, layout, motion,
-                     asset, token, workflow
+                     asset, token, workflow, media, effect
     semantic_role -- Frontend: hero, cta, navigation, pricing,
                      testimonial, etc.
     generation_priority -- Frontend: 1-10 ranking for generation order
@@ -56,6 +56,8 @@ VALID_PATTERN_SCOPES = {
     "asset",
     "token",
     "workflow",
+    "media",
+    "effect",
 }
 VALID_SEMANTIC_ROLES = {
     "hero",
@@ -79,6 +81,12 @@ VALID_SEMANTIC_ROLES = {
     "asset",
     "token",
     "workflow",
+    "illustration",
+    "background",
+    "logo",
+    "proof",
+    "media",
+    "visual-effect",
 }
 
 SCHEMA = pa.schema(

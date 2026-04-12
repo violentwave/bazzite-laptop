@@ -249,6 +249,17 @@ function StaggeredList({ items }) {
 }
 ```
 
+---
+
+## Premium Effects Guardrail
+
+When using premium visual effects (glow, blur, gradient mesh, layered depth):
+
+- Choose one dominant effect per section.
+- Keep animation optional and motion-safe.
+- Prefer `transform` and `opacity` transitions over layout-driven animation.
+- Re-validate readability after applying overlays or glow treatments.
+
 ### Hover Scale (with Tailwind)
 
 ```tsx

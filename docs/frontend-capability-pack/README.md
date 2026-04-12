@@ -65,6 +65,7 @@ Browse the curated pattern corpus at `docs/patterns/frontend/`:
 | Assets | Naming Conventions, SVG Workflow |
 | Workflows | Landing Page Flow, Dashboard Flow |
 | QA Workflows | QA Evidence, Responsive QA, Accessibility QA, Motion Sanity, Visual Consistency, Tailwind Quality |
+| Design/Media | SVG Illustration System, Hero Split Media, Hero Proof-Driven, CTA Proof Stack, Premium Visual Effects |
 
 ### Site Archetypes
 

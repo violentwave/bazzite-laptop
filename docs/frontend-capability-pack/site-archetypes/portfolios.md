@@ -22,6 +22,15 @@ Portfolio sites demonstrate **creative skill and style** through curated work ex
 
 ## Standard Pages
 
+## P64 Design/Media Enhancements
+
+Portfolio-specific polish options:
+
+- Use `motion-hover-depth` for card and gallery interactions.
+- Use `premium-visual-effects` for restrained spotlight/gradient depth.
+- Keep media quality high while preserving load performance.
+- Validate enhancements using `design-media-qa-checklist`.
+
 ### 1. Home/Landing
 
 **Sections:**

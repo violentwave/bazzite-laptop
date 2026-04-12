@@ -5,9 +5,57 @@ Auto-generated cross-tool handoff. Updated by save-handoff.sh
 ## Current State
 
 - **Last Tool:** claude-code
-- **Last Updated:** 2026-04-12T00:00:00Z
+- **Last Updated:** 2026-04-12T01:30:00Z
 - **Project:** bazzite-laptop
 - **Branch:** master
+
+## Completed Phase: P64
+
+**P64 - Design/Media Enhancement Layer for Frontend Builds** ✅ COMPLETED
+
+### Summary
+Implemented a reusable design/media enhancement layer on top of the existing frontend capability pack and P63 QA system. Added retrievable SVG/hero/CTA/motion/effects playbooks, expanded retrieval metadata filters for media/effect taxonomy, and integrated P64 guidance into prompts, archetypes, and workflow docs.
+
+### Files Modified
+
+**Pattern retrieval + schema parity:**
+- `ai/rag/pattern_store.py`
+- `configs/mcp-bridge-allowlist.yaml`
+- `tests/test_pattern_store.py`
+
+**Capability-pack and archetype integration:**
+- `.opencode/AGENTS.md`
+- `docs/frontend-capability-pack/README.md`
+- `docs/frontend-capability-pack/prompt-pack.md`
+- `docs/frontend-capability-pack/motion-guidance.md`
+- `docs/frontend-capability-pack/validation-flow.md`
+- `docs/frontend-capability-pack/scaffolds.md`
+- `docs/frontend-capability-pack/site-archetypes/landing-pages.md`
+- `docs/frontend-capability-pack/site-archetypes/service-sites.md`
+- `docs/frontend-capability-pack/site-archetypes/portfolios.md`
+
+**New P64 design/media patterns:**
+- `docs/patterns/frontend/svg-illustration-system.md`
+- `docs/patterns/frontend/svg-background-treatment.md`
+- `docs/patterns/frontend/hero-split-media.md`
+- `docs/patterns/frontend/hero-proof-driven.md`
+- `docs/patterns/frontend/cta-proof-stack.md`
+- `docs/patterns/frontend/cta-inline-form.md`
+- `docs/patterns/frontend/motion-hover-depth.md`
+- `docs/patterns/frontend/premium-visual-effects.md`
+- `docs/patterns/frontend/design-media-qa-checklist.md`
+
+**Planning and completion docs:**
+- `docs/P64_PLAN.md`
+- `docs/P64_COMPLETION_REPORT.md`
+
+### Validation Results
+- `ruff check ...` across all P64-touched files ✅
+- `pytest tests/test_pattern_store.py tests/test_mcp_drift.py tests/test_phase_control_notion_sync.py -q --tb=short` ✅ (28 passed)
+
+### Notion Status
+- P64: Planned → Ready → Complete
+- Dependencies normalized: `61,62,63`
 
 ## Completed Phase: P63
 

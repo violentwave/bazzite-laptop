@@ -30,6 +30,10 @@ A retrieval-first workflow for generating data-rich admin dashboards.
 3. Retrieve `knowledge.task_patterns` for:
    - Query: "dashboard generation"
    - Top 3 similar past tasks
+
+4. Search `knowledge.pattern_search` for:
+   - pattern_scope: "media" or "effect"
+   - Query: "premium visual effect dashboard motion-safe"
 ```
 
 ## Phase 2: Select Components
@@ -111,6 +115,7 @@ useEffect(() => {
 - [ ] Reduced-motion behavior verified
 - [ ] Tailwind quality reviewed
 - [ ] Evidence package collected (checklist + screenshots + command outputs)
+- [ ] Design/media enhancement pass completed where appropriate
 
 Log successful workflow outcomes:
 
