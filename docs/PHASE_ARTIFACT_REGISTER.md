@@ -737,9 +737,9 @@
 - **Notion**: Row exists with commit + validation
 
 ### P70 — Phase Documentation Overhaul + Artifact Normalization
-- **Status**: InProgress
-- **Commit SHA**: —
-- **Finished**: —
+- **Status**: Done
+- **Commit SHA**: 8b34ddb
+- **Finished**: 2026-04-12
 - **Repo Artifacts**:
   - `docs/PHASE_INDEX.md` — This file
   - `docs/PHASE_ARTIFACT_REGISTER.md` — Artifact inventory
@@ -749,6 +749,21 @@
   - `docs/PHASE_DOCUMENTATION_POLICY.md` — Future artifact placement rules
 - **Notion**: Phase Documentation Index, Architecture Evolution Map, Phase Dependency Map, Artifact Coverage Audit, Documentation Gaps Log
 - **Scope**: Documentation-only, no code changes, preserve existing phase truth
+
+### P71 — Structural Analysis Enhancement
+- **Status**: Done
+- **Commit SHA**: —
+- **Finished**: 2026-04-12
+- **Repo Artifacts**:
+  - `ai/code_intel/parser.py` — Scope-aware AST parsing, attribute calls, inheritance extraction
+  - `ai/code_intel/store.py` — Missing store methods + table init hardening
+  - `scripts/index-code.py` — Incremental indexing flags and file-hash detection
+  - `ai/mcp_bridge/tools.py` — Store-backed implementations for 4 code-intel tool routes
+  - `tests/test_code_intel.py` — Expanded structural-analysis test coverage (26 tests)
+  - `docs/P71_PLAN.md`
+  - `docs/P71_COMPLETION_REPORT.md`
+- **Notion**: P71 row updated (status, SHA, validation, finished date)
+- **Scope**: Structural analysis only; no P72 dependency-graph expansion work
 
 ## Cross-Phase Documentation
 

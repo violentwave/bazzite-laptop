@@ -37,6 +37,34 @@ class Relationship:
     line_number: int
 
 
+@dataclass
+class ScopeContext:
+    """Tracks lexical scope during AST traversal."""
+
+    module_name: str
+    file_path: str
+    current_class: str | None = None
+    current_function: str | None = None
+
+    def with_class(self, class_name: str) -> "ScopeContext":
+        """Create a new context with class scope."""
+        return ScopeContext(
+            module_name=self.module_name,
+            file_path=self.file_path,
+            current_class=class_name,
+            current_function=None,
+        )
+
+    def with_function(self, func_name: str) -> "ScopeContext":
+        """Create a new context with function scope."""
+        return ScopeContext(
+            module_name=self.module_name,
+            file_path=self.file_path,
+            current_class=self.current_class,
+            current_function=func_name,
+        )
+
+
 class CodeParser:
     """Parse Python files to extract code elements and relationships."""
 
@@ -64,8 +92,8 @@ class CodeParser:
             logger.warning(f"Syntax error in {path}: {e}")
             return [], []
 
-        nodes = []
-        relationships = []
+        nodes: list[CodeNode] = []
+        relationships: list[Relationship] = []
         file_hash = self.get_file_hash(str(path))
 
         module_name = path.stem
@@ -88,82 +116,128 @@ class CodeParser:
             )
         )
 
-        for node in ast.walk(tree):
+        scope = ScopeContext(module_name=module_name, file_path=str(path))
+
+        for node in ast.iter_child_nodes(tree):
             if isinstance(node, ast.ClassDef):
-                qualified_name = f"{module_name}:{node.name}"
-                docstring = ast.get_docstring(node) or ""
-                complexity = self._get_complexity(node)
-
-                nodes.append(
-                    CodeNode(
-                        node_id=qualified_name,
-                        node_type="class",
-                        name=node.name,
-                        qualified_name=qualified_name,
-                        file_path=str(path),
-                        line_start=node.lineno,
-                        line_end=node.end_lineno or node.lineno,
-                        signature=self._get_class_signature(node),
-                        docstring=docstring,
-                        complexity=complexity,
-                        file_hash=file_hash,
-                    )
-                )
-
-                for item in node.body:
-                    if isinstance(item, ast.FunctionDef):
-                        method_qualified = f"{module_name}:{node.name}.{item.name}"
-                        method_doc = ast.get_docstring(item) or ""
-                        method_complexity = self._get_complexity(item)
-
-                        nodes.append(
-                            CodeNode(
-                                node_id=method_qualified,
-                                node_type="method",
-                                name=item.name,
-                                qualified_name=method_qualified,
-                                file_path=str(path),
-                                line_start=item.lineno,
-                                line_end=item.end_lineno or item.lineno,
-                                signature=self._get_function_signature(item),
-                                docstring=method_doc,
-                                complexity=method_complexity,
-                                file_hash=file_hash,
-                            )
-                        )
-
-                        self._extract_calls(
-                            item, method_qualified, module_name, str(path), relationships
-                        )
-
-            elif isinstance(node, ast.FunctionDef):
-                func_qualified = f"{module_name}:{node.name}"
-                func_doc = ast.get_docstring(node) or ""
-                func_complexity = self._get_complexity(node)
-
-                nodes.append(
-                    CodeNode(
-                        node_id=func_qualified,
-                        node_type="function",
-                        name=node.name,
-                        qualified_name=func_qualified,
-                        file_path=str(path),
-                        line_start=node.lineno,
-                        line_end=node.end_lineno or node.lineno,
-                        signature=self._get_function_signature(node),
-                        docstring=func_doc,
-                        complexity=func_complexity,
-                        file_hash=file_hash,
-                    )
-                )
-
-                self._extract_calls(node, func_qualified, module_name, str(path), relationships)
+                self._process_class(node, scope, nodes, relationships, file_hash)
+            elif isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                self._process_function(node, scope, nodes, relationships, file_hash)
 
         self._extract_imports(tree, module_name, str(path), relationships)
 
         return nodes, relationships
 
-    def _get_function_signature(self, node: ast.FunctionDef) -> str:
+    def _process_class(
+        self,
+        node: ast.ClassDef,
+        scope: ScopeContext,
+        nodes: list[CodeNode],
+        relationships: list[Relationship],
+        file_hash: str,
+    ) -> None:
+        """Process a class definition and its members."""
+        qualified_name = f"{scope.module_name}:{node.name}"
+        docstring = ast.get_docstring(node) or ""
+        complexity = self._get_complexity(node)
+
+        nodes.append(
+            CodeNode(
+                node_id=qualified_name,
+                node_type="class",
+                name=node.name,
+                qualified_name=qualified_name,
+                file_path=scope.file_path,
+                line_start=node.lineno,
+                line_end=node.end_lineno or node.lineno,
+                signature=self._get_class_signature(node),
+                docstring=docstring,
+                complexity=complexity,
+                file_hash=file_hash,
+            )
+        )
+
+        # Extract inheritance relationships
+        for base in node.bases:
+            base_name = self._resolve_base_name(base)
+            if base_name:
+                relationships.append(
+                    Relationship(
+                        source_id=qualified_name,
+                        target_id=base_name,
+                        rel_type="inherits",
+                        file_path=scope.file_path,
+                        line_number=node.lineno,
+                    )
+                )
+
+        class_scope = scope.with_class(node.name)
+
+        for item in node.body:
+            if isinstance(item, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                self._process_function(item, class_scope, nodes, relationships, file_hash)
+            elif isinstance(item, ast.ClassDef):
+                # Nested class
+                self._process_class(item, class_scope, nodes, relationships, file_hash)
+
+    def _process_function(
+        self,
+        node: ast.FunctionDef | ast.AsyncFunctionDef,
+        scope: ScopeContext,
+        nodes: list[CodeNode],
+        relationships: list[Relationship],
+        file_hash: str,
+    ) -> None:
+        """Process a function or method definition."""
+        if scope.current_class:
+            qualified_name = f"{scope.module_name}:{scope.current_class}.{node.name}"
+            node_type = "method"
+        else:
+            qualified_name = f"{scope.module_name}:{node.name}"
+            node_type = "function"
+
+        docstring = ast.get_docstring(node) or ""
+        complexity = self._get_complexity(node)
+
+        nodes.append(
+            CodeNode(
+                node_id=qualified_name,
+                node_type=node_type,
+                name=node.name,
+                qualified_name=qualified_name,
+                file_path=scope.file_path,
+                line_start=node.lineno,
+                line_end=node.end_lineno or node.lineno,
+                signature=self._get_function_signature(node),
+                docstring=docstring,
+                complexity=complexity,
+                file_hash=file_hash,
+            )
+        )
+
+        self._extract_calls(node, qualified_name, scope, relationships)
+
+    def _resolve_base_name(self, base: ast.expr) -> str | None:
+        """Resolve a base class name from an AST expression."""
+        if isinstance(base, ast.Name):
+            return base.id
+        elif isinstance(base, ast.Attribute):
+            # Handle cases like `module.ClassName`
+            parts = []
+            current: ast.expr = base
+            while isinstance(current, ast.Attribute):
+                parts.append(current.attr)
+                current = current.value
+            if isinstance(current, ast.Name):
+                parts.append(current.id)
+            parts.reverse()
+            return ".".join(parts)
+        elif isinstance(base, ast.Subscript):
+            # Handle generic base classes like `Generic[T]`
+            return self._resolve_base_name(base.value)
+        return None
+
+    def _get_function_signature(self, node: ast.FunctionDef | ast.AsyncFunctionDef) -> str:
         """Extract function signature."""
         args = node.args
         arg_names = [arg.arg for arg in args.args]
@@ -173,7 +247,8 @@ class CodeParser:
             arg_names.append(f"**{args.kwarg.arg}")
         defaults = ["..."] * (len(args.args) - len(args.defaults))
         defaults.extend([ast.unparse(d) for d in args.defaults])
-        return f"({', '.join(arg_names)})"
+        prefix = "async " if isinstance(node, ast.AsyncFunctionDef) else ""
+        return f"{prefix}({', '.join(arg_names)})"
 
     def _get_class_signature(self, node: ast.ClassDef) -> str:
         """Extract class signature."""
@@ -193,26 +268,100 @@ class CodeParser:
 
     def _extract_calls(
         self,
-        node: ast.FunctionDef,
+        node: ast.FunctionDef | ast.AsyncFunctionDef,
         source_id: str,
-        module_name: str,
-        file_path: str,
+        scope: ScopeContext,
         relationships: list[Relationship],
     ) -> None:
-        """Extract function call relationships."""
+        """Extract function call relationships with scope awareness.
+
+        Handles:
+        - Simple function calls: `func()`
+        - Method calls: `obj.method()`
+        - Self method calls: `self.method()`
+        - Module function calls: `module.func()`
+        - Chained calls: `obj.attr.method()`
+        """
         for child in ast.walk(node):
             if isinstance(child, ast.Call):
-                if isinstance(child.func, ast.Name):
-                    target = f"{module_name}:{child.func.id}"
+                target_id = self._resolve_call_target(child, scope)
+                if target_id:
                     relationships.append(
                         Relationship(
                             source_id=source_id,
-                            target_id=target,
+                            target_id=target_id,
                             rel_type="calls",
-                            file_path=file_path,
+                            file_path=scope.file_path,
                             line_number=child.lineno or 0,
                         )
                     )
+
+    def _resolve_call_target(self, call_node: ast.Call, scope: ScopeContext) -> str | None:
+        """Resolve a call expression to a qualified target ID.
+
+        Returns fully-qualified targets like:
+        - `module:function` for top-level functions
+        - `module:Class.method` for methods
+        - `module.Class.method` for module-level function calls
+        """
+        func = call_node.func
+
+        if isinstance(func, ast.Name):
+            # Simple function call: `func()`
+            # Target might be module-level or imported
+            return f"{scope.module_name}:{func.id}"
+
+        elif isinstance(func, ast.Attribute):
+            # Method or attribute call: `obj.method()` or `module.func()`
+            target_parts = self._extract_attribute_chain(func)
+
+            if not target_parts:
+                return None
+
+            # Handle `self.method()` - resolve to current class
+            if scope.current_class and target_parts[0] == "self":
+                if len(target_parts) >= 2:
+                    method_name = target_parts[1]
+                    return f"{scope.module_name}:{scope.current_class}.{method_name}"
+                return None
+
+            # Handle `cls.method()` - resolve to current class (class method)
+            if scope.current_class and target_parts[0] == "cls":
+                if len(target_parts) >= 2:
+                    method_name = target_parts[1]
+                    return f"{scope.module_name}:{scope.current_class}.{method_name}"
+                return None
+
+            # Handle `obj.method()` where obj is a local variable or parameter
+            # We can't resolve this statically, but we can still record the method name
+            if len(target_parts) >= 2:
+                # Record as `obj.method` - callers can resolve via semantic search
+                # This preserves the method call relationship even if we don't know the class
+                return ".".join(target_parts[-2:])  # Last two parts: obj.method
+
+            # Single attribute access - not a call we can resolve
+            return None
+
+        return None
+
+    def _extract_attribute_chain(self, node: ast.Attribute) -> list[str]:
+        """Extract the full attribute chain from nested ast.Attribute nodes.
+
+        Example: `self.foo.bar` -> ['self', 'foo', 'bar']
+        Example: `module.func` -> ['module', 'func']
+        """
+        parts: list[str] = []
+
+        def traverse(n: ast.expr) -> None:
+            if isinstance(n, ast.Attribute):
+                parts.append(n.attr)
+                traverse(n.value)
+            elif isinstance(n, ast.Name):
+                parts.append(n.id)
+
+        traverse(node)
+        parts.reverse()
+        return parts
 
     def _extract_imports(
         self, tree: ast.AST, module_name: str, file_path: str, relationships: list[Relationship]
@@ -246,8 +395,8 @@ class CodeParser:
 
     def parse_project(self) -> tuple[list[CodeNode], list[Relationship]]:
         """Parse all Python files in the project."""
-        all_nodes = []
-        all_relationships = []
+        all_nodes: list[CodeNode] = []
+        all_relationships: list[Relationship] = []
 
         for py_file in self.project_root.rglob("*.py"):
             if any(
@@ -289,8 +438,8 @@ class ImportGraphBuilder:
                 "edges": edges,
                 "circular": [],  # grimp doesn't expose circular directly
             }
-        except ImportError:
-            logger.warning("grimp not available, using AST-based fallback")
+        except Exception as e:
+            logger.warning(f"grimp unavailable or failed ({e}), using AST-based fallback")
             return self._ast_build()
 
     def _ast_build(self) -> dict:

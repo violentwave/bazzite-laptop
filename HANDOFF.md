@@ -2,6 +2,55 @@
 
 Auto-generated cross-tool handoff. Updated by save-handoff.sh
 
+## Completed Phase: P71
+
+**P71 — Structural Analysis Enhancement** ✅ COMPLETED
+
+### Summary
+Implemented the structural-analysis foundation on top of the existing `ai/code_intel` stack. Added scope-aware AST parsing for attribute-call relationships and inheritance edges, implemented the 4 missing `CodeIntelStore` APIs used by MCP tools, wired incremental indexing flags (`--incremental`, `--force`, `--file`), and removed fallback-only MCP behavior for code-intel routes in favor of store-backed implementations.
+
+### Files Created
+- `docs/P71_PLAN.md`
+- `docs/P71_COMPLETION_REPORT.md`
+
+### Files Updated
+- `ai/code_intel/parser.py`
+- `ai/code_intel/store.py`
+- `scripts/index-code.py`
+- `ai/mcp_bridge/tools.py`
+- `tests/test_code_intel.py`
+- `docs/PHASE_INDEX.md`
+- `docs/PHASE_ARTIFACT_REGISTER.md`
+
+### Delivered in P71
+- Scope-aware `ast.Attribute` call extraction (`self.method()`, `cls.method()`, `obj.method()`, module-style attribute calls)
+- Populated `inherits` relationships from `ClassDef.bases`
+- Nested class traversal and async function support
+- Runtime-hardening for grimp build failures (AST fallback)
+- Implemented missing store methods:
+  - `find_callers`
+  - `suggest_tests`
+  - `get_complexity_report`
+  - `get_class_hierarchy`
+- Added `get_file_hashes()` for incremental index diffing
+- Hardened LanceDB table open/create behavior against existing-table mismatches
+- MCP tool path updates to real store-backed handlers for:
+  - `code.find_callers`
+  - `code.suggest_tests`
+  - `code.complexity_report`
+  - `code.class_hierarchy`
+
+### Validation Results
+- `ruff check ai/code_intel/ tests/test_code_intel.py` ✅ clean
+- `python -m pytest tests/test_code_intel.py -v` ✅ 26 passed
+- `python -m pytest tests/test_mcp_drift.py -q --tb=short` ✅ 4 passed
+- `python scripts/index-code.py --incremental` ⚠️ executed, but embed providers in this environment returned auth/rate-limit errors during indexing
+- Manual MCP verification (all 6 code-intel tools) ✅ successful responses and no missing-method crashes
+
+### Notes
+- P71 stayed in scope (no P72 features, no networkx, no GitNexus)
+- Notion P71 row should be updated with commit SHA after commit creation
+
 ## Completed Phase: P70
 
 **P70 — Phase Documentation Overhaul + Artifact Normalization** ✅ COMPLETED

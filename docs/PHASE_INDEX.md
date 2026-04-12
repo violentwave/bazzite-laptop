@@ -1,15 +1,15 @@
 # Phase Index — Bazzite AI Layer
 
-> Master index of all phases P0-P70. Generated 2026-04-12.
+> Master index of all phases P0-P71. Generated 2026-04-12.
 > Source of truth: Notion `Bazzite Phases` database + `git log`.
 
 ## Quick Stats
 
 | Metric | Value |
 |--------|-------|
-| Total Phases | P0-P70 (71 phases) |
-| Completed | P0-P69 |
-| In Progress | P70 |
+| Total Phases | P0-P71 (72 phases) |
+| Completed | P0-P71 |
+| In Progress | — |
 | Repo Docs | docs/*.md, docs/patterns/frontend/*.md, docs/frontend-capability-pack/*.md |
 | Notion DB | `398c13ed-47f6-4f7e-9e54-eb339b462c90` |
 
@@ -101,7 +101,8 @@
 | P67 | Deployment Pack + Handoff | Done | 908d987 | 2026-04-11 | docs/frontend-capability-pack/deployment-target-pack.md | HANDOFF.md | Launch docs |
 | P68 | GitNexus Evaluation | Done | 3efff8c | 2026-04-12 | docs/P68_PLAN.md | HANDOFF.md | Evaluation |
 | P69 | Ops Runbook Pack | Done | 007d7b2 | 2026-04-12 | docs/frontend-capability-pack/ops-*.md | HANDOFF.md | 6 runbooks |
-| P70 | Phase Doc Overhaul | InProgress | — | — | docs/PHASE_*.md | This page | Documentation |
+| P70 | Phase Doc Overhaul | Done | 8b34ddb | 2026-04-12 | docs/PHASE_*.md | This page | Documentation |
+| P71 | Structural Analysis Enhancement | Done | — | 2026-04-12 | ai/code_intel/, scripts/index-code.py, tests/test_code_intel.py, docs/P71_*.md | Notion row | AST + store + MCP fixes |
 
 ## Notion Database Reference
 

@@ -1275,11 +1275,9 @@ async def _execute_python_tool(tool_name: str, tool_def: dict, args: dict) -> st
             from ai.code_intel.store import get_code_store  # noqa: PLC0415
 
             store = get_code_store()
-            result = store.search_nodes(
-                query=args.get("function_name", ""),
-                node_type="function",
-                top_k=20,
-            )
+            function_name = args.get("function_name", "")
+            include_indirect = args.get("include_indirect", True)
+            result = store.find_callers(function_name, include_indirect)
             return _truncate(json.dumps(result, indent=2, default=str))
 
         elif tool_name == "code.suggest_tests":
@@ -1287,28 +1285,24 @@ async def _execute_python_tool(tool_name: str, tool_def: dict, args: dict) -> st
 
             store = get_code_store()
             changed = [f.strip() for f in args.get("changed_files", "").split(",") if f.strip()]
-            impact = store.query_impact(changed)
-            return _truncate(json.dumps(impact, indent=2, default=str))
+            result = store.suggest_tests(changed)
+            return _truncate(json.dumps(result, indent=2, default=str))
 
         elif tool_name == "code.complexity_report":
-            target = args.get("target", "ai/")
+            from ai.code_intel.store import get_code_store  # noqa: PLC0415
+
+            store = get_code_store()
+            target = args.get("target", None)
             threshold = int(args.get("threshold", 10))
-            output = await _run_subprocess(
-                ["rg", "--no-heading", "-c", r"def |class ", str(PROJECT_ROOT / target)]
-            )
-            return _truncate(
-                _redact_paths(f"[complexity report: {target}, threshold={threshold}]\n{output}")
-            )
+            result = store.get_complexity_report(target, threshold)
+            return _truncate(json.dumps(result, indent=2, default=str))
 
         elif tool_name == "code.class_hierarchy":
             from ai.code_intel.store import get_code_store  # noqa: PLC0415
 
             store = get_code_store()
-            result = store.search_nodes(
-                query=args.get("class_name", ""),
-                node_type="class",
-                top_k=20,
-            )
+            class_name = args.get("class_name", "")
+            result = store.get_class_hierarchy(class_name)
             return _truncate(json.dumps(result, indent=2, default=str))
 
         else:
