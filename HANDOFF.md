@@ -4,12 +4,99 @@ Auto-generated cross-tool handoff. Updated by save-handoff.sh
 
 ## Current State
 
-- **Last Tool:** claude-code
-- **Last Updated:** 2026-04-12T01:30:00Z
+- **Last Tool:** opencode
+- **Last Updated:** 2026-04-13T00:30:00Z
 - **Project:** bazzite-laptop
 - **Branch:** master
 
-## Completed Phase: P64
+## Completed Phase: P68
+
+**P68 — GitNexus Code-Graph Augmentation Pilot** ✅ COMPLETED
+
+### Summary
+Evaluated GitNexus as a potential augmentation to existing Bazzite code intelligence. Conducted comprehensive analysis of current capabilities (code_query.py, pattern_query.py, pattern_store.py), identified gaps (structural analysis, call graphs, dependency analysis), and made a recommendation to defer GitNexus integration in favor of enhancing existing Bazzite code intelligence with targeted structural analysis features.
+
+### Files Created
+
+**P68 evaluation document:**
+- `docs/P68_PLAN.md` — Comprehensive evaluation, gap analysis, integration options, benchmark criteria, recommendation
+
+### Key Findings
+
+1. **GitNexus duplicates existing capabilities:** Semantic search, vector embeddings, pattern retrieval already exist in Bazzite via LanceDB+ embedding providers
+
+2. **Unique value is limited:** Only structural analysis (call graphs, dependency graphs, impact analysis) is truly unique
+
+3. **Recommendation — Defer GitNexus:** Licensing concerns (PolyForm Noncommercial), maintenance burden, duplication of existing capabilities
+
+4. **Alternative approach:** Enhance existing `code_query.py` and `pattern_query.py` with structural analysis instead of adding GitNexus
+
+### Done Criteria Met
+
+1. ✅ GitNexus pilot plan implemented or documented (this document)
+2. ✅ Benchmark criteria defined (Section 5)
+3. ✅ Optional integration path documented (Section 4)
+4. ✅ Repo-scale and agent-context tradeoffs recorded (Section 6)
+5. ✅ Recommendation made — Defer GitNexus integration (Section 7)
+6. ✅ Docs and handoff updated
+
+### Validation Results
+
+- `ruff check docs/P68_PLAN.md` ✅ No Python files to check
+- File created with proper frontmatter structure
+
+### Notion Status
+
+- P68: Planned → Done
+
+### Future Work (P69-P71, Optional)
+
+If structural analysis enhancements are prioritized:
+- P69: Structural Analysis Enhancement (call graphs)
+- P70: Dependency Analysis
+- P71: Impact Analysis
+
+---
+
+## Completed Phase: P67
+
+**P67 — Deployment Target Pack + Launch Handoff** ✅ COMPLETED
+
+### Summary
+Implemented a deployment target and launch handoff pack for generated website projects. Created deployment platform guides (Vercel, Netlify, Cloudflare Pages, AWS Amplify), environment configuration checklists, analytics and form integration requirements, and comprehensive launch handoff documentation. Updated all frontend docs to connect generation, QA, runtime evidence, and deployment handoff.
+
+### Files Created
+
+**P67 deployment and launch docs:**
+- `docs/frontend-capability-pack/deployment-target-pack.md` — Platform guides (Vercel, Netlify, Cloudflare, Amplify)
+- `docs/frontend-capability-pack/environment-config-checklist.md` — Environment variables and configuration
+- `docs/frontend-capability-pack/analytics-forms-integration.md` — GA4 setup, form handling, conversion tracking
+- `docs/frontend-capability-pack/launch-handoff-checklist.md` — Pre-launch, launch-day, post-launch checklists
+
+**Updated for deployment handoff integration:**
+- `docs/frontend-capability-pack/README.md` — Added P67 docs to file map, deployment workflow
+- `.opencode/AGENTS.md` — Added Steps 9-10 for deployment prep and launch handoff
+- `docs/bazzite-ai-system-profile.md` — Added deployment checklist, P67 references
+
+### Done Criteria Met
+
+1. ✅ Deployment target pack added for common external website targets
+2. ✅ Environment and configuration checklist added
+3. ✅ Analytics/forms/launch requirements standardized
+4. ✅ Launch handoff checklist added
+5. ✅ Frontend docs updated to connect generation, QA, runtime evidence, and deployment handoff
+6. ✅ Docs and handoff updated
+
+### Validation Results
+
+- `ruff check ai/` ✅ All checks passed
+- P67 keyword coverage across 4 new files + updated docs ✅
+
+### Notion Status
+
+- P67: Planned → Done
+
+## Completed Phase: P66
 
 **P64 - Design/Media Enhancement Layer for Frontend Builds** ✅ COMPLETED
 
@@ -267,6 +354,15 @@ Extended the existing curated pattern system with frontend-aware metadata, creat
 - No open tasks
 
 ## Recent Sessions
+
+### 2026-04-13T00:30:00Z — opencode
+**P68 GitNexus Code-Graph Augmentation Pilot Complete**
+- Evaluated GitNexus as potential augmentation to existing code intelligence
+- Analyzed current Bazzite capabilities: code_query.py, pattern_query.py, pattern_store.py
+- Identified gaps: structural analysis, call graphs, dependency analysis
+- Created comprehensive P68_PLAN.md with benchmark criteria and integration options
+- Recommendation: Defer GitNexus in favor of enhancing existing Bazzite code intelligence
+- Updated Notion P68 status to Done
 
 ### 2026-04-11T08:00:00Z — claude-code
 **P62 Frontend Pattern Intelligence + Asset Workflow Complete**
