@@ -11,11 +11,42 @@ This agent now includes frontend website generation capabilities via the
 Frontend Capability Pack. Use this when generating React/Tailwind websites
 for external projects.
 
-### Quick Start for Frontend Work — Retrieval-First Required
+### Quick Start for Frontend Work — Brief-First + Retrieval Workflow
 
 All frontend generation MUST follow this workflow:
 
-1. **Retrieve Patterns First** (Required)
+**Step 0: Complete Project Brief (Required - NEW)**
+
+Before retrieving patterns or generating code, the brief MUST be complete:
+
+1. **Populate Brief** using `docs/frontend-capability-pack/website-brief-schema.md`:
+   - Project metadata (name, type, goals)
+   - Target audience and personas
+   - Sitemap with all routes
+   - Page modules mapped to patterns
+   - CTA specifications per page
+   - Form requirements with fields and validation
+   - SEO inputs per page
+
+2. **Complete Content Intake** using `docs/frontend-capability-pack/content-seo-intake.md`:
+   - Content audit worksheet
+   - SEO keyword and metadata templates
+   - Structured data requirements
+
+3. **Complete Brand Intake** using `docs/frontend-capability-pack/brand-asset-intake.md`:
+   - Color palette (primary, secondary, neutral, semantic)
+   - Typography system
+   - Logo variants and usage rules
+   - Imagery and icon style
+
+4. **Define Page Maps** using `docs/frontend-capability-pack/page-map-cta-requirements.md`:
+   - Page structure with sections
+   - CTA specifications
+   - Form specifications
+
+**Brief completion is REQUIRED before code generation begins.**
+
+**Step 1: Retrieve Patterns (Required)**
    - Use `knowledge.pattern_search` to find proven patterns
    - Filter by `archetype`, `pattern_scope`, `semantic_role`
    - Example: query="hero section", archetype="landing-page", pattern_scope="section"
@@ -40,6 +71,26 @@ All frontend generation MUST follow this workflow:
    - checklist notes
    - screenshots (mobile/tablet/desktop + reduced-motion)
    - command outputs (lint/typecheck/test/build/a11y)
+   - preview command + local URL + evidence manifest
+8. **Define Runtime Harness** (Required)
+   - use `docs/frontend-capability-pack/runtime-harness.md`
+   - preview the target project on `127.0.0.1`
+   - close out only after live browser evidence exists
+9. **Deployment Prep** (P67 - NEW)
+   - use `docs/frontend-capability-pack/environment-config-checklist.md`
+   - configure environment variables for target platform
+   - set up analytics per `docs/frontend-capability-pack/analytics-forms-integration.md`
+10. **Launch Handoff** (P67 - NEW)
+   - follow `docs/frontend-capability-pack/launch-handoff-checklist.md`
+   - complete pre-launch checklist
+   - prepare client handoff documentation
+11. **Operational Runbooks** (P69 - NEW)
+   - DNS troubleshooting: `docs/frontend-capability-pack/ops-dns-domain-setup.md`
+   - TLS/certificate issues: `docs/frontend-capability-pack/ops-tls-ssl-provisioning.md`
+   - Self-hosted proxy: `docs/frontend-capability-pack/ops-reverse-proxy-config.md`
+   - Launch day procedures: `docs/frontend-capability-pack/ops-launch-procedures.md`
+   - Troubleshooting: `docs/frontend-capability-pack/ops-troubleshooting-playbook.md`
+   - Monitoring setup: `docs/frontend-capability-pack/ops-monitoring-alerting.md`
 
 ### Frontend Pattern Corpus Available
 
@@ -65,6 +116,7 @@ All frontend generation MUST follow this workflow:
 - This repo remains a **Python control-plane**, not a React app
 - Frontend pack is for **external project guidance only**
 - Do NOT add frontend build tools to this repo
+- Do NOT host the target project's runtime inside this repo
 - Generated code goes to **target project**, not this repo
 
 ---
@@ -124,6 +176,20 @@ All frontend generation MUST follow this workflow:
 
 - [System Profile](../docs/bazzite-ai-system-profile.md) — Repo identity & constraints
 - [Frontend Capability Pack](../docs/frontend-capability-pack/README.md) — Frontend guidance
+- [Website Brief Schema](../docs/frontend-capability-pack/website-brief-schema.md) — P66: Project brief
+- [Content & SEO Intake](../docs/frontend-capability-pack/content-seo-intake.md) — P66: SEO templates
+- [Brand & Asset Intake](../docs/frontend-capability-pack/brand-asset-intake.md) — P66: Brand checklist
+- [Page Map & CTA/Forms](../docs/frontend-capability-pack/page-map-cta-requirements.md) — P66: Page structure
+- [Deployment Target Pack](../docs/frontend-capability-pack/deployment-target-pack.md) — P67: Platform guides
+- [Environment Config Checklist](../docs/frontend-capability-pack/environment-config-checklist.md) — P67: Env vars
+- [Analytics & Forms Integration](../docs/frontend-capability-pack/analytics-forms-integration.md) — P67: Analytics/forms
+- [Launch Handoff Checklist](../docs/frontend-capability-pack/launch-handoff-checklist.md) — P67: Go-live
+- [Ops: DNS & Domain Setup](../docs/frontend-capability-pack/ops-dns-domain-setup.md) — P69: DNS config
+- [Ops: TLS/SSL Provisioning](../docs/frontend-capability-pack/ops-tls-ssl-provisioning.md) — P69: Certificates
+- [Ops: Reverse Proxy Config](../docs/frontend-capability-pack/ops-reverse-proxy-config.md) — P69: Caddy/nginx
+- [Ops: Launch Procedures](../docs/frontend-capability-pack/ops-launch-procedures.md) — P69: Runbooks
+- [Ops: Troubleshooting Playbook](../docs/frontend-capability-pack/ops-troubleshooting-playbook.md) — P69: Diagnosis
+- [Ops: Monitoring & Alerting](../docs/frontend-capability-pack/ops-monitoring-alerting.md) — P69: Observability
 - [Agent Reference](../docs/AGENT.md) — Detailed architecture
 - [HANDOFF.md](../HANDOFF.md) — Session context (read first)
 

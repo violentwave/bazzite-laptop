@@ -5,16 +5,66 @@ Auto-generated cross-tool handoff. Updated by save-handoff.sh
 ## Current State
 
 - **Last Tool:** opencode
-- **Last Updated:** 2026-04-13T00:30:00Z
+- **Last Updated:** 2026-04-13T01:30:00Z
 - **Project:** bazzite-laptop
 - **Branch:** master
+
+## Completed Phase: P69
+
+**P69 — Selective Ops / Deploy Runbook Pack** ✅ COMPLETED
+
+### Summary
+Created a curated operational runbook pack for website deployment, focusing on highest-signal guidance: DNS configuration, TLS provisioning, reverse proxy setup, launch procedures, troubleshooting, and monitoring. All documents follow symptom→diagnosis→fix format aligned with P67 deployment guidance.
+
+### Files Created
+
+**P69 ops runbooks:**
+- `docs/frontend-capability-pack/ops-dns-domain-setup.md` — Per-platform DNS tables, propagation diagnosis, Cloudflare config, domain transfers
+- `docs/frontend-capability-pack/ops-tls-ssl-provisioning.md` — Platform TLS, Let's Encrypt/Certbot, Caddy auto-TLS, certificate troubleshooting
+- `docs/frontend-capability-pack/ops-reverse-proxy-config.md` — Caddy (primary), nginx (alternative), self-hosted deployment checklist
+- `docs/frontend-capability-pack/ops-launch-procedures.md` — DNS cutover, SSL verify, cache purge, rollback, 72h post-launch, incident escalation
+- `docs/frontend-capability-pack/ops-troubleshooting-playbook.md` — Symptom→diagnosis→fix decision trees (DNS, SSL, 5xx, slow, forms, analytics, build failures)
+- `docs/frontend-capability-pack/ops-monitoring-alerting.md` — Uptime monitoring, Sentry setup, alerting rules, on-call procedures
+
+**Updated for P69 integration:**
+- `docs/frontend-capability-pack/README.md` — Added P69 docs to file map, workflow steps
+- `.opencode/AGENTS.md` — Added Step 11 for ops runbook references
+- `docs/bazzite-ai-system-profile.md` — Added P69 refs to file map, references section
+
+### Done Criteria Met
+
+1. ✅ Selective ops/deploy runbook pack added (6 focused `ops-*` files)
+2. ✅ Noisy/low-value reference excluded (symptom→action format, not encyclopedic)
+3. ✅ DNS, TLS, reverse proxy, launch, troubleshooting guidance curated
+4. ✅ Guidance aligned with P67 deployment target pack (cross-references)
+5. ✅ Docs and handoff updated
+
+### Validation Results
+
+- `ruff check docs/frontend-capability-pack/ops-*.md` ✅ No Python files (expected)
+- Keyword coverage: 190 matches across 6 files ✅
+- Notion tests: 20 passed ✅
+
+### Notion Status
+
+- P69: Planned → Done
+
+---
 
 ## Completed Phase: P68
 
 **P68 — GitNexus Code-Graph Augmentation Pilot** ✅ COMPLETED
 
 ### Summary
-Evaluated GitNexus as a potential augmentation to existing Bazzite code intelligence. Conducted comprehensive analysis of current capabilities (code_query.py, pattern_query.py, pattern_store.py), identified gaps (structural analysis, call graphs, dependency analysis), and made a recommendation to defer GitNexus integration in favor of enhancing existing Bazzite code intelligence with targeted structural analysis features.
+Evaluated GitNexus as a potential augmentation to Bazzite's existing code intelligence. Conducted comprehensive analysis of current capabilities (code_query.py, pattern_query.py, pattern_store.py), identified gaps (structural analysis, call graphs, dependency analysis), and made a recommendation to defer GitNexus integration in favor of enhancing existing Bazzite code intelligence with targeted structural analysis features.
+
+### Cleanup Complete (2026-04-13)
+- Normalized P68 Notion row:
+  - Commit SHA: 3efff8c12547cbc9b43dcafb9c86d4dab620fe5d
+  - Validation Summary: Updated with artifact links
+- Added artifact links to P60, P61, P63, P64, P68 Notion pages
+- Added create_child_page method to NotionClient (for future use)
+- All notion tests pass (20 passed)
 
 ### Files Created
 
