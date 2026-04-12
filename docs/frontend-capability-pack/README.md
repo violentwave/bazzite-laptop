@@ -48,6 +48,7 @@ All frontend generation follows this retrieval-first workflow:
 5. **Generate** — Create code based on retrieved patterns
 
 6. **Validate** — Run through [validation-flow.md](validation-flow.md)
+7. **Collect Evidence** — checklist + screenshots + command outputs
 
 ### Direct Pattern Access
 
@@ -63,6 +64,7 @@ Browse the curated pattern corpus at `docs/patterns/frontend/`:
 | Motion | Fade-in, Scroll Reveal, Staggered List, Mobile Menu, Modal |
 | Assets | Naming Conventions, SVG Workflow |
 | Workflows | Landing Page Flow, Dashboard Flow |
+| QA Workflows | QA Evidence, Responsive QA, Accessibility QA, Motion Sanity, Visual Consistency, Tailwind Quality |
 
 ### Site Archetypes
 
@@ -133,7 +135,7 @@ When using this pack for phase work:
 3. **Generation**: Use prompt template with project specifics
 4. **Validation**: Run through [validation-flow.md](validation-flow.md)
 5. **Documentation**: Update HANDOFF.md with what was created
-6. **Completion**: Update Notion phase status
+6. **Completion**: Update Notion phase status to `Done`
 
 ---
 
@@ -146,6 +148,7 @@ Before marking any frontend generation complete:
 - [ ] Motion respects `prefers-reduced-motion`
 - [ ] Responsive breakpoints verified
 - [ ] Documentation written for generated components
+- [ ] QA evidence package captured (checklist + screenshots + command outputs)
 
 ---
 

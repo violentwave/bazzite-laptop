@@ -440,7 +440,7 @@ tools:
         description: "The identifier — CVE ID, hash, IP, or URL"
 
   knowledge.pattern_search:
-    description: "Semantic search over code patterns (security, systems, testing) with optional language/domain filters"
+    description: "Semantic search over code patterns with optional language/domain/frontend metadata filters"
     source: python
     module: ai.rag.pattern_query
     args:
@@ -450,11 +450,23 @@ tools:
         required: true
       language:
         type: string
-        pattern: "^(python|rust|javascript|bash|c|yaml)$"
+        pattern: "^(python|rust|javascript|typescript|bash|c|yaml)$"
         required: false
       domain:
         type: string
-        pattern: "^(security|networking|systems|data|web|testing)$"
+        pattern: "^(security|networking|systems|data|web|testing|frontend)$"
+        required: false
+      archetype:
+        type: string
+        pattern: "^(landing-page|service-site|dashboard|portfolio|lead-gen)$"
+        required: false
+      pattern_scope:
+        type: string
+        pattern: "^(section|component|layout|motion|asset|token|workflow)$"
+        required: false
+      semantic_role:
+        type: string
+        pattern: "^(hero|cta|navigation|pricing|testimonial|feature|footer|form|gallery|kpi|chart|modal|card|grid|list|header|sidebar|animation|asset|token|workflow)$"
         required: false
       limit:
         type: integer
@@ -1096,4 +1108,3 @@ tools:
       idempotent: false
       openWorld: false
       destructive: true
-

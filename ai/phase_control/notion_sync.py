@@ -306,6 +306,8 @@ class NotionPhaseSync:
             "ready": PhaseStatus.READY,
             "in progress": PhaseStatus.IN_PROGRESS,
             "done": PhaseStatus.DONE,
+            "complete": PhaseStatus.DONE,
+            "completed": PhaseStatus.DONE,
             "needs review": PhaseStatus.NEEDS_REVIEW,
             "blocked": PhaseStatus.BLOCKED,
             "cancelled": PhaseStatus.CANCELLED,
@@ -350,7 +352,9 @@ class NotionPhaseSync:
             ),
             done_criteria=NotionPhaseSync._extract_list(pick("Done Criteria", "DoneCriteria")),
             dependencies=[
-                int(v) for v in NotionPhaseSync._extract_list(pick("Dependencies")) if v.isdigit()
+                int(v[1:]) if v.lower().startswith("p") and v[1:].isdigit() else int(v)
+                for v in NotionPhaseSync._extract_list(pick("Dependencies"))
+                if v.isdigit() or (v.lower().startswith("p") and v[1:].isdigit())
             ],
             backend=NotionPhaseSync._extract_text(pick("Backend")) or "codex",
             branch_name=NotionPhaseSync._extract_text(pick("Branch", "Branch Name")) or None,

@@ -104,8 +104,28 @@ useEffect(() => {
 }, []);
 ```
 
+## Phase 6: Validate + Evidence
+
+- [ ] Responsive checks at mobile/tablet/desktop
+- [ ] Accessibility checks completed (automated + keyboard pass)
+- [ ] Reduced-motion behavior verified
+- [ ] Tailwind quality reviewed
+- [ ] Evidence package collected (checklist + screenshots + command outputs)
+
+Log successful workflow outcomes:
+
+```bash
+python scripts/log-task-success.py \
+  --description "Dashboard generation with QA evidence package" \
+  --approach "Retrieval-first dashboard patterns and QA workflow" \
+  --outcome "Data dashboard validated for responsiveness, accessibility, and consistency" \
+  --tools "knowledge.pattern_search,knowledge.task_patterns" \
+  --phase "P63"
+```
+
 ## Related Patterns
 
 - Landing Page Generation Flow (for marketing sites)
 - KPI Strip Component (for metrics display)
 - Chart Panel Component (for visualizations)
+- Frontend QA Evidence Workflow

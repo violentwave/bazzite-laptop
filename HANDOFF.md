@@ -5,9 +5,59 @@ Auto-generated cross-tool handoff. Updated by save-handoff.sh
 ## Current State
 
 - **Last Tool:** claude-code
-- **Last Updated:** 2026-04-11T02:35:00Z
+- **Last Updated:** 2026-04-12T00:00:00Z
 - **Project:** bazzite-laptop
 - **Branch:** master
+
+## Completed Phase: P63
+
+**P63 - Website Build Validation + UX/Visual QA** ✅ COMPLETED
+
+### Summary
+Implemented a lightweight, evidence-first frontend QA layer that fits this repo's Python control-plane architecture. Added retrievable QA workflow patterns, aligned phase-control status parsing with Notion wording, and updated frontend guidance to require QA evidence before phase closure.
+
+### Files Modified
+
+**Control-plane compatibility:**
+- `ai/phase_control/notion_sync.py`
+  - Maps `Complete`/`Completed` to `Done`
+  - Parses dependencies in `P61` format as numeric dependencies
+
+**MCP retrieval schema parity:**
+- `configs/mcp-bridge-allowlist.yaml`
+  - Extended `knowledge.pattern_search` filters for frontend metadata (`archetype`, `pattern_scope`, `semantic_role`)
+  - Added `typescript` language and `frontend` domain support
+
+**Capability pack and workflow updates:**
+- `docs/frontend-capability-pack/README.md`
+- `docs/frontend-capability-pack/prompt-pack.md`
+- `docs/frontend-capability-pack/validation-flow.md`
+- `docs/bazzite-ai-system-profile.md`
+- `.opencode/AGENTS.md`
+- `docs/patterns/frontend/workflow-landing-page.md`
+- `docs/patterns/frontend/workflow-dashboard.md`
+
+**New P63 planning/completion docs:**
+- `docs/P63_PLAN.md`
+
+**New retrievable QA patterns (6):**
+- `docs/patterns/frontend/qa-evidence-workflow.md`
+- `docs/patterns/frontend/responsive-qa-checklist.md`
+- `docs/patterns/frontend/accessibility-qa-checklist.md`
+- `docs/patterns/frontend/motion-sanity-review.md`
+- `docs/patterns/frontend/visual-consistency-review.md`
+- `docs/patterns/frontend/tailwind-quality-review.md`
+
+### Validation Results
+- `ruff check ai/phase_control/notion_sync.py` ✅
+- `pytest tests/test_phase_control_notion_sync.py tests/test_mcp_drift.py -q --tb=short` ✅ (10 passed)
+- QA keyword coverage search across `ai/`, `docs/`, `.opencode/` ✅
+
+### Notion Status
+- P61: Done
+- P62: Done
+- P63: Ready → Complete (closeout)
+- Dependencies normalized for P63: `61,62`
 
 ## Completed Phase: P60
 

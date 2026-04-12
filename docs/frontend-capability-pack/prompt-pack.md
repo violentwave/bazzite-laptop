@@ -368,6 +368,10 @@ Search `knowledge.task_patterns` with:
 3. **Apply** CONSTRAINTS based on project requirements
 4. **Generate** code following the structured format
 5. **Validate** against [validation-flow.md](validation-flow.md)
+6. **Collect QA evidence package**:
+   - checklist notes
+   - screenshots (mobile/tablet/desktop + reduced-motion)
+   - command outputs (lint/typecheck/test/build/a11y)
 
 ---
 

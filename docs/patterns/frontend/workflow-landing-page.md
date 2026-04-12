@@ -83,6 +83,7 @@ Run validation checklist:
 - [ ] Responsive breakpoints
 - [ ] Motion respects prefers-reduced-motion
 - [ ] Performance (Lighthouse)
+- [ ] Evidence package collected (checklist + screenshots + command outputs)
 
 ## Phase 6: Document
 
@@ -90,13 +91,16 @@ Log successful generation to task patterns:
 
 ```bash
 python scripts/log-task-success.py \
-  --task-type "frontend-landing-page" \
-  --archetype "landing-page" \
-  --components "hero,feature-grid,testimonials,cta,faq,footer" \
-  --notes "Brand: SaaS, Stack: React/TS/Tailwind"
+  --description "Landing page generation with QA evidence package" \
+  --approach "Retrieval-first patterns + evidence-first validation" \
+  --outcome "Responsive, accessible, and reviewed landing page output" \
+  --files "docs/patterns/frontend/workflow-landing-page.md,docs/frontend-capability-pack/validation-flow.md" \
+  --tools "knowledge.pattern_search,knowledge.task_patterns" \
+  --phase "P63"
 ```
 
 ## Related Patterns
 
 - Dashboard Generation Flow (for admin interfaces)
 - Validation Flow (for post-generation checks)
+- Frontend QA Evidence Workflow

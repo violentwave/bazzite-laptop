@@ -61,7 +61,7 @@ All OpenCode work must remain phase-scoped:
 4. **Execute sequentially** — complete each deliverable in order
 5. **Validate after each file** — ruff check immediately
 6. **Update docs/handoff** — record what was done
-7. **Close Notion phase** — update status when complete
+7. **Close Notion phase** — update status to Done
 
 ---
 
@@ -135,7 +135,7 @@ When finishing a phase with frontend deliverables:
 1. All code passes lint and typecheck
 2. Documentation updated in `docs/frontend-capability-pack/`
 3. HANDOFF.md records what was created
-4. Notion phase status updated to "Complete"
+4. Notion phase status updated to "Done"
 5. Knowledge base refreshed if new patterns learned
 6. Task patterns logged for similar future work
 

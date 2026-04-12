@@ -35,6 +35,10 @@ All frontend generation MUST follow this workflow:
    - Follow constraints from accessibility-guardrails.md and motion-guidance.md
 
 6. **Validate**: Follow validation-flow.md checklist
+7. **Collect Evidence** (Required)
+   - checklist notes
+   - screenshots (mobile/tablet/desktop + reduced-motion)
+   - command outputs (lint/typecheck/test/build/a11y)
 
 ### Frontend Pattern Corpus Available
 
@@ -131,5 +135,5 @@ When finishing work:
 1. **Run full test suite** — Must pass
 2. **Run ruff check** — Must be clean  
 3. **Update HANDOFF.md** — Record what was done
-4. **Update Notion** — Set phase status to "Complete"
+4. **Update Notion** — Set phase status to "Done"
 5. **Commit** — Clear commit message

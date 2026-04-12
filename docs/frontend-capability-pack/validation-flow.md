@@ -317,6 +317,34 @@ For rapid iteration, use this abbreviated list:
 
 ---
 
+## Required Evidence Package
+
+For phase completion, attach all three evidence types:
+
+- [ ] Checklist evidence: completed validation checklist with pass/fail notes
+- [ ] Screenshot evidence: mobile/tablet/desktop captures plus one reduced-motion capture
+- [ ] Command output evidence: lint/typecheck/test/build/a11y command output (or CI link)
+
+Store evidence in a predictable folder for review handoff, for example:
+
+```text
+qa-evidence/
+  checklist.md
+  screenshots/
+    mobile-home.png
+    tablet-home.png
+    desktop-home.png
+    reduced-motion-home.png
+  commands/
+    lint.txt
+    typecheck.txt
+    test.txt
+    build.txt
+    a11y.txt
+```
+
+---
+
 ## Post-Validation Actions
 
 ### Documentation
@@ -335,7 +363,7 @@ If using Bazzite knowledge systems:
 
 ### Phase Closure
 
-- [ ] Notion phase status updated to "Complete"
+- [ ] Notion phase status updated to "Done"
 - [ ] HANDOFF.md updated
 - [ ] Git commit with validation results
 
