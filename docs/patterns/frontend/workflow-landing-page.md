@@ -87,8 +87,9 @@ Run validation checklist:
 - [ ] Accessibility audit (axe-core)
 - [ ] Responsive breakpoints
 - [ ] Motion respects prefers-reduced-motion
+- [ ] Runtime harness defined (preview command + local URL)
 - [ ] Performance (Lighthouse)
-- [ ] Evidence package collected (checklist + screenshots + command outputs)
+- [ ] Evidence package collected (checklist + screenshots + command outputs + manifest)
 - [ ] Design/media enhancement pass completed (SVG + hero/CTA polish)
 
 ## Phase 6: Document

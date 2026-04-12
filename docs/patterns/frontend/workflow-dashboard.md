@@ -113,8 +113,9 @@ useEffect(() => {
 - [ ] Responsive checks at mobile/tablet/desktop
 - [ ] Accessibility checks completed (automated + keyboard pass)
 - [ ] Reduced-motion behavior verified
+- [ ] Runtime harness defined (preview command + local URL)
 - [ ] Tailwind quality reviewed
-- [ ] Evidence package collected (checklist + screenshots + command outputs)
+- [ ] Evidence package collected (checklist + screenshots + command outputs + manifest)
 - [ ] Design/media enhancement pass completed where appropriate
 
 Log successful workflow outcomes:

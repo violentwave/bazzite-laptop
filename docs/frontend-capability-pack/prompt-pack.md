@@ -335,9 +335,33 @@ CONSTRAINTS:
 
 ---
 
-## Using These Prompts — Retrieval-First Workflow
+## Using These Prompts — Brief-First Workflow
 
 All frontend generation must follow this workflow:
+
+### Step 0: Complete Project Brief (NEW)
+
+**Before retrieving patterns, populate the brief:**
+
+1. **Gather** project requirements via intake form or client interview
+2. **Populate** brief using [website-brief-schema.md](website-brief-schema.md):
+   ```yaml
+   website_brief:
+     project_metadata:
+       name: "Project Name"
+       project_type: landing-page | service-site | dashboard | portfolio | lead-gen
+       primary_goal: "Main conversion/business goal"
+     target_audience:
+       primary_persona: { demographics, goals, pain_points }
+     sitemap:
+       pages: [ { route, title, page_type, sections } ]
+     # ... see full schema
+   ```
+3. **Complete** SEO intake using [content-seo-intake.md](content-seo-intake.md)
+4. **Complete** brand intake using [brand-asset-intake.md](brand-asset-intake.md)
+5. **Define** page maps and CTAs using [page-map-cta-requirements.md](page-map-cta-requirements.md)
+
+**Brief completion is required before code generation begins.**
 
 ### Step 1: Retrieve Proven Patterns
 
@@ -367,12 +391,14 @@ Search `knowledge.task_patterns` with:
 2. **Customize** CONTEXT with project specifics (colors, content, features)
 3. **Apply** CONSTRAINTS based on project requirements
 4. **Generate** code following the structured format
-5. **Validate** against [validation-flow.md](validation-flow.md)
-6. **Collect QA evidence package**:
+5. **Define runtime harness** using [runtime-harness.md](runtime-harness.md)
+6. **Validate** against [validation-flow.md](validation-flow.md)
+7. **Collect QA evidence package**:
    - checklist notes
    - screenshots (mobile/tablet/desktop + reduced-motion)
    - command outputs (lint/typecheck/test/build/a11y)
-7. **Apply design/media enhancements intentionally**:
+   - preview command + local URL + evidence manifest
+8. **Apply design/media enhancements intentionally**:
    - retrieve one SVG/media pattern and one hero/CTA enhancement pattern
    - keep effects motion-safe and token-driven
 
@@ -398,7 +424,12 @@ When saving prompts for reuse, include:
 
 ## References
 
+- [Website Brief Schema](website-brief-schema.md) — Canonical project brief
+- [Content & SEO Intake](content-seo-intake.md) — SEO metadata templates
+- [Brand & Asset Intake](brand-asset-intake.md) — Brand and asset checklist
+- [Page Map & CTA/Forms](page-map-cta-requirements.md) — Page structure specifications
 - [Site Archetypes](site-archetypes/) — Detailed per-type guidance
 - [Accessibility Guardrails](accessibility-guardrails.md) — Constraint details
 - [Motion Guidance](motion-guidance.md) — Animation decision framework
+- [Runtime Harness](runtime-harness.md) — Preview and browser evidence workflow
 - [Validation Flow](validation-flow.md) — Post-generation checklist

@@ -7,6 +7,16 @@ Bazzite security/gaming system.
 
 ---
 
+## P65 — Frontend Runtime Harness + Browser Evidence Loop (2026-04-12)
+
+- Added `docs/frontend-capability-pack/runtime-harness.md` with framework-specific preview conventions for external Vite, Next.js, and static frontend projects
+- Added runtime-evidence requirements to the frontend capability pack, prompt pack, validation flow, and OpenCode agent guidance
+- Added retrievable workflow patterns for `Frontend Runtime Harness` and `Browser Evidence Loop`
+- Standardized the browser evidence bundle format around `checklist.md`, `manifest.json`, command transcripts, and breakpoint screenshots
+- Extended frontend validation guidance so closeout requires a live preview command, stable local URL, breakpoint captures, and reduced-motion proof
+
+---
+
 ## P55 — Notion/Slack Autonomous Control Plane (2026-04-09)
 
 - New package: `ai/phase_control/` with phase state machine, policy checks, lease handling, runner loop, and strict Slack command parsing

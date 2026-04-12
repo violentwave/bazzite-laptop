@@ -8,6 +8,48 @@ Post-generation checklist for React/Tailwind frontend work.
 
 Every generated frontend codebase must pass these validation levels before being marked complete. The flow is designed to be agent-friendly while ensuring production-quality output.
 
+Live preview evidence is required. Static code review alone is not enough for closeout.
+
+---
+
+## Level 0: Runtime Harness
+
+### Preview Definition
+
+Before QA begins, document the target project's preview path:
+
+```bash
+# Example Vite
+npm run dev -- --host 127.0.0.1 --port 4173
+
+# Example Next.js
+npm run dev -- --hostname 127.0.0.1 --port 3000
+```
+
+**Checks:**
+- [ ] Preview command recorded
+- [ ] Local URL recorded
+- [ ] Preview bound to `127.0.0.1` unless project requirements say otherwise
+- [ ] Evidence output directory defined
+
+### Browser Evidence Bundle
+
+Create a stable bundle in the target project:
+
+```text
+qa/browser-evidence/<date>-<phase-or-ticket>/
+  checklist.md
+  manifest.json
+  commands/
+  screenshots/
+```
+
+**Checks:**
+- [ ] `checklist.md` includes pass/fail notes
+- [ ] `manifest.json` records preview URL and breakpoints
+- [ ] Screenshot filenames are stable
+- [ ] Command outputs are saved alongside screenshots
+
 ---
 
 ## Level 1: Syntax & Static Analysis
@@ -123,6 +165,13 @@ npx pa11y http://localhost:3000
 # Actual device testing (if available)
 ```
 
+### Required Browser Captures
+
+- [ ] `mobile-home.png` at 375px
+- [ ] `tablet-home.png` at 768px
+- [ ] `desktop-home.png` at 1280px or project desktop baseline
+- [ ] One route-specific capture if the main value is not visible on the home route
+
 ---
 
 ## Level 4: Performance
@@ -213,6 +262,7 @@ npx lighthouse http://localhost:3000 --output=json
 - [ ] `motion-safe:` or `useReducedMotion()` used
 - [ ] Animations disabled when reduced motion preferred
 - [ ] No vestigial motion (animations that don't work)
+- [ ] Reduced-motion screenshot captured for a key animated view
 
 ### Performance
 
@@ -316,6 +366,7 @@ jobs:
 
 For rapid iteration, use this abbreviated list:
 
+- [ ] Preview command and local URL recorded
 - [ ] `npm run lint` passes
 - [ ] `npm run typecheck` passes
 - [ ] Manual keyboard navigation works
@@ -332,6 +383,7 @@ For phase completion, attach all three evidence types:
 
 - [ ] Checklist evidence: completed validation checklist with pass/fail notes
 - [ ] Screenshot evidence: mobile/tablet/desktop captures plus one reduced-motion capture
+- [ ] Runtime harness evidence: preview command, local URL, and manifest
 - [ ] Command output evidence: lint/typecheck/test/build/a11y command output (or CI link)
 
 Store evidence in a predictable folder for review handoff, for example:
@@ -339,6 +391,7 @@ Store evidence in a predictable folder for review handoff, for example:
 ```text
 qa-evidence/
   checklist.md
+  manifest.json
   screenshots/
     mobile-home.png
     tablet-home.png

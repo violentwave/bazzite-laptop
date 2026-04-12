@@ -118,6 +118,7 @@ Source: `configs/mcp-bridge-allowlist.yaml` + tools registered directly in serve
 > **Phase 40:** Added `system.perf_metrics` — real-time performance metrics snapshot.
 > **Phase 52:** Added `slack.*` (4 tools) and `notion.*` (4 tools) with scoped secret loading.
 > **Phase 53:** Expanded `workflow.*` with `workflow.status`, `workflow.agents`, `workflow.handoff`, and `workflow.history` (6 total) + `workflow_runs` LanceDB table.
+> **Phase 65:** Added a frontend runtime harness and browser evidence loop so external React/Tailwind projects can be previewed locally and closed out with stable QA artifacts.
 
 ### system.* (33 tools)
 
@@ -348,6 +349,7 @@ A documentation-and-prompt capability layer for generating React/Tailwind websit
 | [Scaffolds](frontend-capability-pack/scaffolds.md) | File organization patterns |
 | [Accessibility](frontend-capability-pack/accessibility-guardrails.md) | WCAG-aligned practical rules |
 | [Motion](frontend-capability-pack/motion-guidance.md) | Animation decision framework |
+| [Runtime Harness](frontend-capability-pack/runtime-harness.md) | Preview + browser evidence workflow |
 | [Validation](frontend-capability-pack/validation-flow.md) | Post-generation checklist |
 
 ### Site Archetypes
