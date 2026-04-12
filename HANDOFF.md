@@ -2,121 +2,57 @@
 
 Auto-generated cross-tool handoff. Updated by save-handoff.sh
 
-## Current State
+## Completed Phase: P70
 
-- **Last Tool:** opencode
-- **Last Updated:** 2026-04-12T20:30:00Z
-- **Project:** bazzite-laptop
-- **Branch:** master
-- **Active Phase:** P70 — Phase Documentation Overhaul + Artifact Normalization
-- **Recent Commits:** P65 (84a013f), P66 (4bdda9e), P67 (908d987), P69 (007d7b2)
-
----
-
-## In Progress: P70 — Phase Documentation Overhaul
+**P70 — Phase Documentation Overhaul + Artifact Normalization** ✅ COMPLETED
 
 ### Summary
-Executing documentation-only overhaul for P0-P68 to make the project complete, consistent, and phase-native across GitHub and Notion. Created 6 core repo docs, updating agent references, creating Notion cross-phase pages.
-
-### Files Created (Repo)
-
-| File | Purpose | Status |
-|------|---------|--------|
-| `docs/PHASE_INDEX.md` | Master index P0-P70 | ✅ Created |
-| `docs/PHASE_ARTIFACT_REGISTER.md` | Per-phase artifact inventory | ✅ Created |
-| `docs/PHASE_DEPENDENCY_GRAPH.mmd` | Mermaid dependency visualization | ✅ Created |
-| `docs/PHASE_DELIVERY_TIMELINE.md` | Delivery timeline from Notion | ✅ Created |
-| `docs/ARCHITECTURE_EVOLUTION.md` | Architecture evolution narrative | ✅ Created |
-| `docs/PHASE_DOCUMENTATION_POLICY.md` | Future artifact placement rules | ✅ Created |
-
-### Files Updated
-
-| File | Change | Status |
-|------|--------|--------|
-| `docs/AGENT.md` | Added rule 11 (documentation policy) + Phase Doc Index table | ✅ Updated |
-
-### Notion Tasks
-
-- [ ] Create Phase Documentation Index page under Bazzite docs
-- [ ] Create Architecture Evolution Map page
-- [ ] Create Phase Dependency Map page
-- [ ] Create Artifact Coverage Audit page
-- [ ] Create Documentation Gaps / Exceptions Log page
-
-### Tavily Research Decisions
-
-| Topic | Decision |
-|-------|----------|
-| Docs-as-code | Store docs alongside code, CI-validate, already doing this |
-| Artifact registers | Single source of truth with phase metadata, reference not duplicate |
-| Mermaid best practices | Declare nodes first, self-explanatory IDs, subgraphs for logical groupings |
-| Notion + repo hybrid | Notion = tracking DB, repo = canonical source. Link, don't duplicate |
-| Future proofing | Phase-owned → `docs/P{NN}_*`, cross-phase → `docs/` root. Encode in policy |
-
-### Audit Findings
-
-- P0-P9: No dedicated plan docs (inferred historical boundaries)
-- P10-P18: No dedicated plan docs
-- P19-P21: No dedicated plan docs
-- P34-P36: Batch-commit references (see P44)
-- P45-P49: Prior phases in P23-P28 batch
-- P56, P58: Stabilization phases
-- P60: Plan doc is remediation summary
-- Duplicate files: `docs/performance-*.md` vs `docs/PERFORMANCE-*.md` (different casing)
-
-### Validation Commands
-
-```bash
-ruff check ai/ tests/ docs/
-python -m pytest tests/ -q --tb=short  # (skip test_properties.py - pre-existing hypothesis issue)
-```
-
-### Next Steps
-
-1. Create Notion cross-phase pages (5 pages)
-2. Commit repo docs
-3. Update P70 Notion row with Commit SHA, Validation Summary, Finished At
-4. Verify all links and references
-
-## Completed Phase: P69
-
-**P69 — Selective Ops / Deploy Runbook Pack** ✅ COMPLETED
-
-### Summary
-Created a curated operational runbook pack for website deployment, focusing on highest-signal guidance: DNS configuration, TLS provisioning, reverse proxy setup, launch procedures, troubleshooting, and monitoring. All documents follow symptom→diagnosis→fix format aligned with P67 deployment guidance.
+Created comprehensive documentation overhaul for P0-P68: master index, artifact register, dependency graph, delivery timeline, architecture evolution, and documentation policy. Created 5 Notion cross-phase pages. All phases now have predictable minimum artifact sets documented, and future phases will follow phase-native artifact placement rules.
 
 ### Files Created
+- `docs/PHASE_INDEX.md` — Master index P0-P70
+- `docs/PHASE_ARTIFACT_REGISTER.md` — Per-phase artifact inventory
+- `docs/PHASE_DEPENDENCY_GRAPH.mmd` — Mermaid dependency visualization
+- `docs/PHASE_DELIVERY_TIMELINE.md` — Delivery timeline from Notion dates
+- `docs/ARCHITECTURE_EVOLUTION.md` — Architecture evolution narrative
+- `docs/PHASE_DOCUMENTATION_POLICY.md` — Future artifact placement rules
 
-**P69 ops runbooks:**
-- `docs/frontend-capability-pack/ops-dns-domain-setup.md` — Per-platform DNS tables, propagation diagnosis, Cloudflare config, domain transfers
-- `docs/frontend-capability-pack/ops-tls-ssl-provisioning.md` — Platform TLS, Let's Encrypt/Certbot, Caddy auto-TLS, certificate troubleshooting
-- `docs/frontend-capability-pack/ops-reverse-proxy-config.md` — Caddy (primary), nginx (alternative), self-hosted deployment checklist
-- `docs/frontend-capability-pack/ops-launch-procedures.md` — DNS cutover, SSL verify, cache purge, rollback, 72h post-launch, incident escalation
-- `docs/frontend-capability-pack/ops-troubleshooting-playbook.md` — Symptom→diagnosis→fix decision trees (DNS, SSL, 5xx, slow, forms, analytics, build failures)
-- `docs/frontend-capability-pack/ops-monitoring-alerting.md` — Uptime monitoring, Sentry setup, alerting rules, on-call procedures
+### Files Updated
+- `docs/AGENT.md` — Added rule 11 (documentation policy) + Phase Doc Index table
 
-**Updated for P69 integration:**
-- `docs/frontend-capability-pack/README.md` — Added P69 docs to file map, workflow steps
-- `.opencode/AGENTS.md` — Added Step 11 for ops runbook references
-- `docs/bazzite-ai-system-profile.md` — Added P69 refs to file map, references section
+### Notion Pages Created
+- Phase Documentation Index (under Bazzite docs)
+- Architecture Evolution Map
+- Phase Dependency Map
+- Artifact Coverage Audit
+- Documentation Gaps / Exceptions Log
 
-### Done Criteria Met
+### Tavily Research Decisions
+| Topic | Key Pattern |
+|-------|-------------|
+| Docs-as-code | Store docs in VCS, version together, CI-validate |
+| Artifact registers | Single source of truth, phase metadata, reference not duplicate |
+| Mermaid graphs | Declare nodes first, self-explanatory IDs, subgraphs for groupings |
+| Notion + repo hybrid | Notion = tracking DB, repo = canonical source. Link, don't duplicate |
+| Future proofing | Phase-owned → `docs/P{NN}_*`, cross-phase → `docs/` root |
 
-1. ✅ Selective ops/deploy runbook pack added (6 focused `ops-*` files)
-2. ✅ Noisy/low-value reference excluded (symptom→action format, not encyclopedic)
-3. ✅ DNS, TLS, reverse proxy, launch, troubleshooting guidance curated
-4. ✅ Guidance aligned with P67 deployment target pack (cross-references)
-5. ✅ Docs and handoff updated
+### Audit Findings
+- P0-P9: No plan docs (inferred boundaries)
+- P34-P36: Batch commits, reference P44
+- P45-P49: Prior phases in P23-P28 batch
+- P56, P58: Stabilization, no plan docs
+- P68: Duplicate child page archived during cleanup
 
 ### Validation Results
-
-- `ruff check docs/frontend-capability-pack/ops-*.md` ✅ No Python files (expected)
-- Keyword coverage: 190 matches across 6 files ✅
-- Notion tests: 20 passed ✅
+- `ruff check ai/ tests/ docs/` — Pre-existing zo-tools issues only
+- Test suite — Pre-existing hypothesis import in test_properties.py
+- All docs referenced from AGENT.md ✅
 
 ### Notion Status
-
-- P69: Planned → Done
+- P70: InProgress → Done
+- Commit SHA: 8b34ddb
+- Finished At: 2026-04-12
+- Validation Summary: Complete prose with deliverables
 
 ---
 
