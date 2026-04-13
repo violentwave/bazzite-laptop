@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 import shlex
 import socket
 import subprocess
@@ -13,6 +14,17 @@ from typing import Any
 from uuid import uuid4
 
 from ai.phase_control.backends import ClaudeCodeBackend, CodexBackend, OpenCodeBackend
+from ai.phase_control.closeout import (
+    CloseoutIngestionEngine,
+    RetryConfig,
+)
+from ai.phase_control.closeout_targets import (
+    HandoffIngestionTarget,
+    NotionMemoryIngestionTarget,
+    RepoDocsIngestionTarget,
+    TaskPatternIngestionTarget,
+    ValidationCoverageIngestionTarget,
+)
 from ai.phase_control.models import PhaseRow, PhaseStatus
 from ai.phase_control.notion_sync import InMemoryPhaseSync, PhaseSyncBackend
 from ai.phase_control.policy import (
@@ -34,6 +46,8 @@ from ai.phase_control.state_machine import TransitionError, transition_phase
 
 SlackPoster = Callable[[str, str, str | None], str | None]
 
+logger = logging.getLogger("ai.phase_control.runner")
+
 
 @dataclass
 class RunnerConfig:
@@ -54,6 +68,7 @@ class PhaseControlRunner:
         backends: dict[str, Any] | None = None,
         config: RunnerConfig,
         slack_poster: SlackPoster | None = None,
+        enable_closeout: bool = True,
     ):
         self.sync_backend = sync_backend or InMemoryPhaseSync()
         self.config = config
@@ -63,6 +78,24 @@ class PhaseControlRunner:
             "opencode": OpenCodeBackend(),
             "claude_code": ClaudeCodeBackend(),
         }
+        self.enable_closeout = enable_closeout
+        self._closeout_engine: CloseoutIngestionEngine | None = None
+
+    def _get_closeout_engine(self) -> CloseoutIngestionEngine:
+        """Get or create the closeout ingestion engine with all targets registered."""
+        if self._closeout_engine is None:
+            engine = CloseoutIngestionEngine(
+                repo_path=self.config.repo_path,
+                retry_config=RetryConfig(max_retries=3, base_delay_seconds=1.0),
+            )
+            # Register all ingestion targets (P76)
+            engine.register_target(RepoDocsIngestionTarget())
+            engine.register_target(NotionMemoryIngestionTarget())
+            engine.register_target(TaskPatternIngestionTarget())
+            engine.register_target(HandoffIngestionTarget())
+            engine.register_target(ValidationCoverageIngestionTarget())
+            self._closeout_engine = engine
+        return self._closeout_engine
 
     def select_backend(self, phase: PhaseRow):
         """Select backend adapter by phase backend field."""
@@ -285,6 +318,20 @@ class PhaseControlRunner:
                 done_gate = check_done_validation(validation_summary)
                 if done_gate.allowed:
                     transition_phase(phase, PhaseStatus.DONE, validation_passed=True)
+                    # P76: Run closeout ingestion after successful phase completion
+                    if self.enable_closeout and phase.status == PhaseStatus.DONE:
+                        try:
+                            closeout_report = self._run_closeout_ingestion(phase, run_id)
+                            # Store closeout report in metadata for visibility
+                            phase.metadata["closeout_report"] = closeout_report.to_dict()
+                        except Exception as closeout_exc:
+                            # Do not fail phase completion due to ingestion issues
+                            logger.warning(
+                                "Closeout ingestion failed for phase %d: %s",
+                                phase.phase_number,
+                                closeout_exc,
+                            )
+                            phase.metadata["closeout_error"] = str(closeout_exc)
                 else:
                     transition_phase(
                         phase,
@@ -333,6 +380,119 @@ class PhaseControlRunner:
             "run_id": run_id,
             "phase_status": phase.status,
         }
+
+    def _run_closeout_ingestion(
+        self,
+        phase: PhaseRow,
+        run_id: str,
+        dry_run: bool = False,
+    ) -> Any:  # Returns CloseoutReport
+        """Run P76 closeout ingestion for a completed phase.
+
+        This method is called automatically when a phase transitions to DONE.
+        It orchestrates ingestion of repo docs, Notion memory, task patterns,
+        handoff summaries, and validation coverage.
+
+        Args:
+            phase: The completed phase row
+            run_id: The execution run ID
+            dry_run: If True, simulate without persisting
+
+        Returns:
+            CloseoutReport with ingestion results and coverage metrics
+        """
+        logger.info(
+            "Running closeout ingestion for phase %d (run_id=%s)",
+            phase.phase_number,
+            run_id,
+        )
+
+        engine = self._get_closeout_engine()
+        report = engine.run_closeout(phase, run_id=run_id, dry_run=dry_run)
+
+        # Log summary
+        if report.overall_status.value == "success":
+            logger.info(
+                "Closeout complete for phase %d: all targets succeeded",
+                phase.phase_number,
+            )
+        elif report.overall_status.value == "partial":
+            failed = [r.target for r in report.ingestion_results if r.status.value == "failed"]
+            logger.warning(
+                "Closeout partial for phase %d: failed targets: %s",
+                phase.phase_number,
+                failed,
+            )
+        else:
+            logger.error(
+                "Closeout failed for phase %d",
+                phase.phase_number,
+            )
+
+        # Notify on Slack if configured
+        if self.slack_poster and phase.slack_channel:
+            coverage_pct = report.coverage.coverage_percentage if report.coverage else 0.0
+            status_emoji = "✅" if report.overall_status.value == "success" else "⚠️"
+            message = (
+                f"{status_emoji} Phase {phase.phase_number} closeout complete. "
+                f"Coverage: {coverage_pct:.0f}%"
+            )
+            if report.dead_letter_entries:
+                message += f" | {len(report.dead_letter_entries)} items in dead letter"
+            self.slack_poster(
+                phase.slack_channel,
+                message,
+                phase.slack_thread_ts,
+            )
+
+        return report
+
+    def run_closeout_manually(
+        self,
+        phase_number: int,
+        dry_run: bool = False,
+        force: bool = False,
+    ) -> dict[str, Any]:
+        """Manually trigger closeout ingestion for a phase (recovery/retry).
+
+        Args:
+            phase_number: The phase to run closeout for
+            dry_run: If True, simulate without persisting
+            force: If True, re-ingest even if already processed
+
+        Returns:
+            Dict with closeout report or error
+        """
+        phase = self.sync_backend.get_phase(phase_number)
+        if phase is None:
+            return {"status": "error", "message": f"Phase {phase_number} not found"}
+
+        run_id = str(uuid4())
+        try:
+            report = self._run_closeout_ingestion(phase, run_id, dry_run=dry_run)
+            # Update phase with new closeout report
+            if not dry_run:
+                phase.metadata["closeout_report"] = report.to_dict()
+                phase.metadata["closeout_rerun"] = {
+                    "run_id": run_id,
+                    "forced": force,
+                    "timestamp": BackendResult.now(),
+                }
+                self.sync_backend.update_phase(phase)
+
+            return {
+                "status": "success",
+                "phase": phase_number,
+                "run_id": run_id,
+                "overall_status": report.overall_status.value,
+                "coverage_percentage": report.coverage.coverage_percentage
+                if report.coverage
+                else 0.0,
+                "report": report.to_dict(),
+            }
+        except Exception as e:
+            logger.exception("Manual closeout failed for phase %d", phase_number)
+            return {"status": "error", "phase": phase_number, "message": str(e)}
 
     def handle_slack_event(
         self,

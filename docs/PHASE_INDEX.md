@@ -107,6 +107,7 @@
 | P73 | Impact Analysis | Done | — | 2026-04-13 | ai/code_intel/store.py, ai/mcp_bridge/{tools.py,server.py}, scripts/index-code.py, tests/{test_dependency.py,test_impact.py}, docs/P73_*.md | Notion row | Blast radius, weighted impact scoring, and co-change analysis |
 | P74 | Code Intelligence Fusion Layer | Done | — | 2026-04-13 | ai/code_intel/store.py, ai/rag/code_query.py, ai/mcp_bridge/{tools.py,server.py}, configs/mcp-bridge-allowlist.yaml, tests/test_code_fusion.py, docs/P74_*.md | Notion row | Unified semantic+structural+artifact retrieval path |
 | P75 | Project Intelligence Preflight + Execution Gating | Done | — | 2026-04-13 | ai/phase_control/{preflight.py,runner.py,policy.py,result_models.py}, tests/test_phase_control_preflight.py, docs/P75_*.md | Notion row | Required preflight context + gate before phase execution |
+| P76 | Ingestion Reliability + Continuous Learning Automation | In Progress | — | — | ai/phase_control/{closeout.py,closeout_targets.py}, tests/test_phase_control_closeout.py, docs/P76_*.md | Notion row | Automated closeout ingestion with retry, dead-letter, coverage tracking |
 
 ## Notion Database Reference
 

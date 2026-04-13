@@ -2,6 +2,51 @@
 
 Auto-generated cross-tool handoff. Updated by save-handoff.sh
 
+## Current Phase: P76
+
+**P76 — Ingestion Reliability + Continuous Learning Automation** 🔄 IN PROGRESS
+
+### Summary
+Implemented automated phase-closeout ingestion system with retry, dead-letter handling, coverage tracking, and failure visibility. Integrated into PhaseControlRunner to trigger on phase completion.
+
+### Files Created
+- `ai/phase_control/closeout.py` — Core closeout engine with retry and dead-letter logic
+- `ai/phase_control/closeout_targets.py` — Five ingestion target implementations
+- `tests/test_phase_control_closeout.py` — 22 comprehensive tests
+- `docs/P76_PLAN.md` — Planning document
+- `docs/P76_COMPLETION_REPORT.md` — Completion report
+
+### Files Updated
+- `ai/phase_control/runner.py` — Integrated closeout triggering, manual retry method
+- `docs/PHASE_INDEX.md` — Added P76 entry
+- `docs/PHASE_ARTIFACT_REGISTER.md` — Added P76 artifact inventory
+
+### Delivered in P76
+- **CloseoutIngestionEngine**: Orchestrates ingestion workflow with bounded retry
+- **Five Ingestion Targets**:
+  - RepoDocsIngestionTarget — Phase docs → LanceDB
+  - NotionMemoryIngestionTarget — Phase summary → RuFlo memory
+  - TaskPatternIngestionTarget — High-signal patterns → task_patterns table
+  - HandoffIngestionTarget — HANDOFF.md → shared_context
+  - ValidationCoverageIngestionTarget — Validation metrics → shared_context
+- **Retry Model**: Exponential backoff (3 retries, 1s base, 60s max)
+- **Dead Letter**: JSONL logging for persistent failures
+- **Coverage Metrics**: 5-dimension tracking (metadata, artifact, ingestion, validation, failure)
+- **Integration**: Automatic trigger on phase completion, manual retry for recovery
+
+### Validation Results
+- `ruff check ai/phase_control/closeout.py ai/phase_control/closeout_targets.py ai/phase_control/runner.py` ✅ passed
+- `python -m pytest tests/test_phase_control_closeout.py -v` ✅ 22 passed
+- All ingestion targets tested in dry-run mode ✅
+
+### Notes
+- Closeout ingestion is idempotent — safe to re-run for recovery
+- Failures do not block phase completion but are logged visibly
+- Graceful degradation when external systems (RuFlo) unavailable
+- Dead letter entries can be queried and cleared via engine API
+
+---
+
 ## Completed Phase: P75
 
 **P75 — Project Intelligence Preflight + Execution Gating** ✅ COMPLETED

@@ -836,6 +836,26 @@
 - **Notion**: P75 row pending final status/SHA sync
 - **Scope**: Phase-native preflight and gating only; no separate orchestration stack
 
+### P76 — Ingestion Reliability + Continuous Learning Automation
+- **Status**: In Progress
+- **Commit SHA**: —
+- **Finished**: —
+- **Repo Artifacts**:
+  - `ai/phase_control/closeout.py` — CloseoutIngestionEngine with retry, dead-letter, coverage tracking
+  - `ai/phase_control/closeout_targets.py` — Five ingestion target implementations
+  - `ai/phase_control/runner.py` — Integrated closeout triggering on phase completion
+  - `tests/test_phase_control_closeout.py` — 22 tests covering all components
+  - `docs/P76_PLAN.md`
+  - `docs/P76_COMPLETION_REPORT.md`
+- **Notion**: P76 row with objective and dependencies
+- **Scope**: Automated closeout ingestion; reuse existing systems only
+- **Key Features**:
+  - Retry with bounded exponential backoff (3 retries, 1s base, 60s max)
+  - Dead-letter logging for persistent failures
+  - Coverage metrics across 5 dimensions
+  - Idempotent re-ingestion for recovery
+  - Graceful degradation when external systems unavailable
+
 ## Cross-Phase Documentation
 
 ### Hub Docs (docs/ root)
