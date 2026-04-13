@@ -1,5 +1,6 @@
 """Code intelligence store for LanceDB."""
 
+import hashlib
 import json
 import logging
 from collections import defaultdict, deque
@@ -494,6 +495,124 @@ class CodeIntelStore:
                 "circular": [],
             }
 
+    def map_code_chunk_to_nodes(
+        self,
+        relative_path: str,
+        symbol_name: str,
+        line_start: int,
+        line_end: int,
+        limit: int = 3,
+    ) -> list[dict]:
+        """Map a semantic code chunk to structural code nodes.
+
+        This is the P74 fusion mapping layer between code_files and code_nodes.
+        Matching priority: path + line overlap, then symbol fallback.
+        """
+        try:
+            df = self._code_nodes.to_pandas()
+            if df.empty:
+                return []
+
+            path_norm = self._normalize_rel_path(relative_path)
+            if not path_norm:
+                return []
+
+            # Path-first match: code_nodes.file_path may be absolute or relative.
+            path_matches = df[
+                df["file_path"]
+                .astype(str)
+                .apply(lambda p: self._normalize_rel_path(str(p)) == path_norm)
+            ]
+            if path_matches.empty:
+                return []
+
+            # Overlap score: favor nodes closest to chunk line range.
+            ranked = []
+            for _, row in path_matches.iterrows():
+                node_start = int(row.get("line_start", 0) or 0)
+                node_end = int(row.get("line_end", 0) or 0)
+                overlap = self._line_overlap_score(line_start, line_end, node_start, node_end)
+
+                name = str(row.get("name", "") or "")
+                qualified = str(row.get("qualified_name", "") or "")
+                symbol_boost = 0.0
+                if symbol_name and (symbol_name == name or symbol_name in qualified):
+                    symbol_boost = 0.25
+
+                score = overlap + symbol_boost
+                ranked.append((score, row))
+
+            ranked.sort(key=lambda item: item[0], reverse=True)
+
+            # Fallback to symbol-only within file if overlap is poor.
+            if ranked and ranked[0][0] <= 0.05 and symbol_name:
+                by_symbol = path_matches[
+                    path_matches["qualified_name"].str.contains(symbol_name, na=False, regex=False)
+                    | (path_matches["name"] == symbol_name)
+                ]
+                if not by_symbol.empty:
+                    ranked = [(0.5, row) for _, row in by_symbol.iterrows()]
+
+            output = []
+            for score, row in ranked[:limit]:
+                qualified_name = str(row.get("qualified_name", "") or "")
+                node_file = self._normalize_rel_path(str(row.get("file_path", "") or ""))
+                node_start = int(row.get("line_start", 0) or 0)
+                node_end = int(row.get("line_end", 0) or 0)
+                stable_id = self._stable_fusion_id(
+                    node_file,
+                    qualified_name or str(row.get("name", "") or ""),
+                    node_start,
+                    node_end,
+                )
+                output.append(
+                    {
+                        "stable_id": stable_id,
+                        "score": round(float(score), 4),
+                        "node_id": str(row.get("node_id", "") or ""),
+                        "node_type": str(row.get("node_type", "") or ""),
+                        "name": str(row.get("name", "") or ""),
+                        "qualified_name": qualified_name,
+                        "file_path": node_file,
+                        "line_start": node_start,
+                        "line_end": node_end,
+                    }
+                )
+
+            return output
+        except Exception as e:
+            logger.warning("Failed to map code chunk to nodes: %s", e)
+            return []
+
+    def get_node_relationship_neighbors(self, node_id: str, limit: int = 20) -> list[dict]:
+        """Return structural relationships connected to a node."""
+        try:
+            if not node_id:
+                return []
+            df = self._relationships.to_pandas()
+            if df.empty:
+                return []
+
+            matches = df[(df["source_id"] == node_id) | (df["target_id"] == node_id)]
+            if matches.empty:
+                return []
+
+            out = []
+            for _, row in matches.head(limit).iterrows():
+                out.append(
+                    {
+                        "source_id": str(row.get("source_id", "") or ""),
+                        "target_id": str(row.get("target_id", "") or ""),
+                        "rel_type": str(row.get("rel_type", "") or ""),
+                        "file_path": self._normalize_rel_path(str(row.get("file_path", "") or "")),
+                        "line_number": int(row.get("line_number", 0) or 0),
+                    }
+                )
+            return out
+        except Exception as e:
+            logger.warning("Failed to get node relationship neighbors: %s", e)
+            return []
+
     def search_nodes(self, query: str, node_type: str | None = None, top_k: int = 10) -> list[dict]:
         """Semantic search over code nodes.
 
@@ -893,6 +1012,41 @@ class CodeIntelStore:
                 "tests": round(test_signal, 4),
             },
         }
+
+    def _normalize_rel_path(self, path: str) -> str:
+        """Normalize a path to repo-relative form for fusion matching."""
+        if not path:
+            return ""
+        p = path.replace("\\", "/")
+        marker = "/bazzite-laptop/"
+        if marker in p:
+            p = p.split(marker, 1)[1]
+        p = p.lstrip("./")
+        return p
+
+    def _line_overlap_score(
+        self,
+        a_start: int,
+        a_end: int,
+        b_start: int,
+        b_end: int,
+    ) -> float:
+        """Return normalized overlap score between two line ranges."""
+        if a_start <= 0 or a_end <= 0 or b_start <= 0 or b_end <= 0:
+            return 0.0
+        left = max(a_start, b_start)
+        right = min(a_end, b_end)
+        overlap = max(0, right - left + 1)
+        if overlap == 0:
+            return 0.0
+        a_len = max(1, a_end - a_start + 1)
+        b_len = max(1, b_end - b_start + 1)
+        return overlap / float(max(a_len, b_len))
+
+    def _stable_fusion_id(self, path: str, symbol: str, line_start: int, line_end: int) -> str:
+        """Build deterministic stable identifier for semantic/structural linking."""
+        payload = f"{path}|{symbol}|{line_start}|{line_end}"
+        return hashlib.sha256(payload.encode("utf-8")).hexdigest()[:16]
 
     def get_complexity_report(self, target: str | None = None, threshold: int = 10) -> dict:
         """Get complexity report for code files or functions.

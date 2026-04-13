@@ -280,12 +280,13 @@ All tools are accessible through Newelle via the MCP bridge. They are read-only
 | `logs.search`      | `query` (max 500ch)  | Semantic search across system logs             |
 | `logs.stats`       | —                    | Log pipeline stats: row counts, last ingest, DB size |
 
-### code.* (9 tools)
+### code.* (10 tools)
 
 | Tool                      | Args                    | What it returns                          |
 |---------------------------|--------------------------|------------------------------------------|
 | `code.search`             | `query` (max 128ch)      | ripgrep pattern search across Python code |
 | `code.rag_query`          | `question` (max 500ch)   | Semantic search over indexed Python code  |
+| `code.fused_context`      | `question` (max 500ch)   | Fused semantic + structural + artifact context |
 | `code.impact_analysis`    | `changed_files`          | Impact of code changes on dependent modules |
 | `code.dependency_graph`   | `module`, `direction`    | Dependency graph for a module             |
 | `code.blast_radius`       | `changed_files`, `max_depth` | Blast radius with hop depth            |

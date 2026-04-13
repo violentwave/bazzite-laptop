@@ -2,6 +2,53 @@
 
 Auto-generated cross-tool handoff. Updated by save-handoff.sh
 
+## Completed Phase: P74
+
+**P74 — Code Intelligence Fusion Layer** ✅ COMPLETED
+
+### Summary
+Implemented a fusion layer that bridges semantic code chunks (`code_files`) with structural symbols/relationships (`code_nodes`, `relationships`) and enriches retrieval with task patterns and phase/session artifacts, while preserving existing stores and MCP architecture.
+
+### Files Created
+- `docs/P74_PLAN.md`
+- `docs/P74_COMPLETION_REPORT.md`
+- `tests/test_code_fusion.py`
+
+### Files Updated
+- `ai/code_intel/store.py`
+- `ai/rag/code_query.py`
+- `ai/mcp_bridge/tools.py`
+- `ai/mcp_bridge/server.py`
+- `configs/mcp-bridge-allowlist.yaml`
+- `tests/test_code_tools.py`
+- `scripts/smoke-test-tools.py`
+- `docs/AGENT.md`
+- `docs/USER-GUIDE.md`
+- `docs/PHASE_INDEX.md`
+- `docs/PHASE_ARTIFACT_REGISTER.md`
+
+### Delivered in P74
+- Added deterministic mapping layer from semantic chunks to structural nodes:
+  - path normalization
+  - line-overlap ranking
+  - symbol fallback matching
+  - stable fusion identifiers
+- Added unified retrieval path via `code_fused_context(question)` combining:
+  - semantic code hits
+  - structural neighbors/callers/dependency context
+  - task-pattern hints
+  - session/phase artifact context
+- Added MCP tool surface: `code.fused_context`
+
+### Validation Results
+- `ruff check ai/code_intel/ ai/rag/ ai/mcp_bridge/ tests/` ✅ passed
+- `python -m pytest tests/test_code_intel.py tests/test_dependency.py tests/test_impact.py tests/test_code_fusion.py -v` ✅ 43 passed
+- `rg -n "code_files|code_nodes|relationships|fusion|cross-reference|artifact" ai docs` ⚠️ `rg` unavailable in this environment; equivalent content search was run via built-in grep tooling
+
+### Notes
+- Quick bazzite-tools MCP checks were attempted first, but timed out in this environment.
+- Phase scope preserved: extended existing `ai/code_intel` + `ai/rag` surfaces only.
+
 ## Completed Phase: P73
 
 **P73 — Impact Analysis** ✅ COMPLETED

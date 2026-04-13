@@ -117,6 +117,7 @@ def create_app():
         "knowledge.rag_qa": {"readOnlyHint": True},
         "logs.search": {"readOnlyHint": True},
         "code.rag_query": {"readOnlyHint": True},
+        "code.fused_context": {"readOnlyHint": True, "idempotentHint": True},
         # ── triggers / writes (side-effects, safe to retry) ──────────────
         "security.run_scan": {"readOnlyHint": False, "idempotentHint": True},
         "security.run_health": {"readOnlyHint": False, "idempotentHint": True},

@@ -9,10 +9,12 @@ import yaml
 
 # ── Fixtures ──
 
+
 @pytest.fixture(autouse=True)
 def reset_rate_limiter():
     """Reset the bridge rate limiter between tests to prevent cross-test pollution."""
     import ai.mcp_bridge.tools as t
+
     t._global_call_times.clear()
     t._per_tool_call_times.clear()
     yield
@@ -29,12 +31,16 @@ def allowlist():
 
 # ── Allowlist integrity ──
 
+
 class TestCodeToolsInAllowlist:
     def test_code_search_present(self, allowlist):
         assert "code.search" in allowlist["tools"]
 
     def test_code_rag_query_present(self, allowlist):
         assert "code.rag_query" in allowlist["tools"]
+
+    def test_code_fused_context_present(self, allowlist):
+        assert "code.fused_context" in allowlist["tools"]
 
     def test_code_search_uses_query_arg(self, allowlist):
         tool = allowlist["tools"]["code.search"]
@@ -46,8 +52,14 @@ class TestCodeToolsInAllowlist:
         assert "question" in tool["args"]
         assert tool["args"]["question"]["max_length"] == 500
 
+    def test_code_fused_context_uses_question_arg(self, allowlist):
+        tool = allowlist["tools"]["code.fused_context"]
+        assert "question" in tool["args"]
+        assert tool["args"]["question"]["max_length"] == 500
+
 
 # ── Arg validation ──
+
 
 class TestCodeSearchArgValidation:
     @pytest.mark.asyncio
@@ -67,6 +79,7 @@ class TestCodeSearchArgValidation:
 
 
 # ── code.search execution ──
+
 
 class TestCodeSearch:
     @pytest.mark.asyncio
@@ -123,6 +136,7 @@ class TestCodeSearch:
 
 
 # ── code.rag_query execution ──
+
 
 class TestCodeRagQuery:
     @pytest.mark.asyncio
@@ -194,7 +208,32 @@ class TestCodeRagQuery:
         assert "/home/lch" not in result
 
 
+class TestCodeFusedContext:
+    @pytest.mark.asyncio
+    async def test_dispatches_to_fused_context(self):
+        fake = {
+            "question": "q",
+            "results": [],
+            "fused_results": [],
+            "task_patterns": [],
+            "session_artifacts": [],
+            "phase_artifacts": [],
+            "answer": "",
+            "model_used": "context-only",
+        }
+
+        with patch("ai.rag.code_query.code_fused_context", return_value=fake):
+            from ai.mcp_bridge.tools import execute_tool
+
+            result = await execute_tool("code.fused_context", {"question": "q"})
+
+        data = json.loads(result)
+        assert "fused_results" in data
+        assert data["model_used"] == "context-only"
+
+
 # ── code_query module unit tests ──
+
 
 class TestCodeRagQueryModule:
     def test_index_not_built_message(self):
@@ -246,8 +285,14 @@ class TestCodeRagQueryModule:
         mock_store = MagicMock()
         mock_store.count.return_value = 1
         mock_store.search_code.return_value = [
-            {"relative_path": "a.py", "symbol_name": "f", "line_start": 1,
-             "line_end": 5, "content": "x", "_distance": 0.1}
+            {
+                "relative_path": "a.py",
+                "symbol_name": "f",
+                "line_start": 1,
+                "line_end": 5,
+                "content": "x",
+                "_distance": 0.1,
+            }
         ]
 
         with (
@@ -260,7 +305,11 @@ class TestCodeRagQueryModule:
 
         assert set(result.keys()) == {"question", "results", "answer", "model_used"}
         required_chunk_keys = {
-            "relative_path", "symbol_name", "line_start", "line_end",
-            "content", "distance",
+            "relative_path",
+            "symbol_name",
+            "line_start",
+            "line_end",
+            "content",
+            "distance",
         }
         assert required_chunk_keys <= set(result["results"][0].keys())

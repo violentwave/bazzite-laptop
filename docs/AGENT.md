@@ -212,12 +212,13 @@ Source: `configs/mcp-bridge-allowlist.yaml` + tools registered directly in serve
 | `logs.search` | python: `ai.log_intel` | `query` (string, max 500, required) | Semantic search across system logs |
 | `logs.stats` | python: `ai.log_intel` | — | Log pipeline statistics |
 
-### code.* (9 tools)
+### code.* (10 tools)
 
 | Tool | Source | Args | Description |
 |------|--------|------|-------------|
 | `code.search` | python: ripgrep | `query` (string, max 128, required) | Pattern search across Python source |
 | `code.rag_query` | python: `ai.rag.code_query` | `question` (string, max 500, required) | Semantic search over indexed code |
+| `code.fused_context` | python: `ai.rag.code_query` | `question` (string, max 500, required) | Fused semantic + structural + artifact context |
 | `code.impact_analysis` | python: `ai.code_intel.store` | `changed_files`, `include_tests`, `max_depth` | Analyze impact of code changes |
 | `code.dependency_graph` | python: `ai.code_intel.store` | `module`, `direction` | Get dependency graph for a module |
 | `code.blast_radius` | python: `ai.code_intel.store` | `changed_files`, `max_depth` | Compute blast radius with hop depth |

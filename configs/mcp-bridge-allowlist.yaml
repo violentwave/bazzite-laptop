@@ -256,6 +256,17 @@ tools:
         pattern: "^[\\w\\s.,?!:;'\"()-]+$"
         required: true
 
+  code.fused_context:
+    description: "Unified code context across semantic, structural, and phase/task artifacts"
+    source: python
+    module: "ai.rag.code_query"
+    args:
+      question:
+        type: string
+        max_length: 500
+        pattern: "^[\\w\\s.,?!:;'\"()-]+$"
+        required: true
+
   system.mcp_manifest:
     description: "List all available MCP tools with descriptions and arguments"
     source: python

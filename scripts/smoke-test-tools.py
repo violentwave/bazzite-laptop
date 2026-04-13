@@ -67,6 +67,7 @@ NEW_TOOLS: list[tuple[str, dict]] = [
     # Code intelligence
     ("code.impact_analysis", {"changed_files": "ai/config.py"}),
     ("code.dependency_graph", {"module": "ai.config", "max_depth": 1}),
+    ("code.fused_context", {"question": "How does route_query relate to impact analysis?"}),
     ("code.blast_radius", {"changed_files": "ai/config.py", "max_depth": 2}),
     ("code.find_callers", {"function_name": "route_query"}),
     ("code.suggest_tests", {"changed_files": "ai/config.py"}),

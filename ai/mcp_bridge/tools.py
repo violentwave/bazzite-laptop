@@ -847,6 +847,13 @@ async def _execute_python_tool(tool_name: str, tool_def: dict, args: dict) -> st
             result = code_rag_query(question, use_llm=False)
             return _truncate(_redact_paths(json.dumps(result, indent=2)))
 
+        elif tool_name == "code.fused_context":
+            from ai.rag.code_query import code_fused_context  # noqa: PLC0415
+
+            question = args.get("question", "")
+            result = code_fused_context(question)
+            return _truncate(_redact_paths(json.dumps(result, indent=2)))
+
         elif tool_name == "system.mcp_manifest":
             allowlist = _load_allowlist()
             compact_tools = {}

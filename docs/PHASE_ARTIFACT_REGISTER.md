@@ -801,6 +801,25 @@
 - **Notion**: P73 row pending final status/SHA sync
 - **Scope**: Impact analysis only; no rename refactor or multi-language ingest
 
+### P74 — Code Intelligence Fusion Layer
+- **Status**: Done
+- **Commit SHA**: —
+- **Finished**: 2026-04-13
+- **Repo Artifacts**:
+  - `ai/code_intel/store.py` — chunk-to-node mapping layer + structural neighbor retrieval
+  - `ai/rag/code_query.py` — `code_fused_context` unified retrieval path
+  - `ai/mcp_bridge/tools.py` — dispatch path for `code.fused_context`
+  - `ai/mcp_bridge/server.py` — MCP annotations for fusion tool
+  - `configs/mcp-bridge-allowlist.yaml` — `code.fused_context` tool definition
+  - `tests/test_code_fusion.py` — fusion mapping and context tests
+  - `tests/test_code_tools.py` — allowlist/tool presence checks for fusion tool
+  - `scripts/smoke-test-tools.py` — fusion tool smoke invocation
+  - `docs/P74_PLAN.md`
+  - `docs/P74_COMPLETION_REPORT.md`
+  - `docs/AGENT.md` + `docs/USER-GUIDE.md` — code tool tables updated
+- **Notion**: P74 row pending final status/SHA sync
+- **Scope**: Fusion layer via existing stores/surfaces only; no parallel platform
+
 ## Cross-Phase Documentation
 
 ### Hub Docs (docs/ root)
