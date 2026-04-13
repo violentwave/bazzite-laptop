@@ -2,6 +2,7 @@
 
 import { useShell } from "@/components/shell/ShellContext";
 import { ChatContainer } from "@/components/chat/ChatContainer";
+import { SettingsContainer } from "@/components/settings/SettingsContainer";
 
 export default function Home() {
   const { activePanel } = useShell();
@@ -32,6 +33,8 @@ export default function Home() {
       <div className="flex-1 overflow-hidden">
         {activePanel === "chat" ? (
           <ChatContainer />
+        ) : activePanel === "settings" ? (
+          <SettingsContainer />
         ) : (
           <div className="h-full overflow-auto p-6">
             <PanelContent panel={activePanel} />
