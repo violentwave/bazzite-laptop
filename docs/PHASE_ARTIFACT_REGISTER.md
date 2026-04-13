@@ -837,9 +837,9 @@
 - **Scope**: Phase-native preflight and gating only; no separate orchestration stack
 
 ### P76 — Ingestion Reliability + Continuous Learning Automation
-- **Status**: In Progress
-- **Commit SHA**: —
-- **Finished**: —
+- **Status**: Done
+- **Commit SHA**: 38b8ea7
+- **Finished**: 2026-04-13
 - **Repo Artifacts**:
   - `ai/phase_control/closeout.py` — CloseoutIngestionEngine with retry, dead-letter, coverage tracking
   - `ai/phase_control/closeout_targets.py` — Five ingestion target implementations
@@ -847,7 +847,7 @@
   - `tests/test_phase_control_closeout.py` — 22 tests covering all components
   - `docs/P76_PLAN.md`
   - `docs/P76_COMPLETION_REPORT.md`
-- **Notion**: P76 row with objective and dependencies
+- **Notion**: P76 row updated to Done with SHA
 - **Scope**: Automated closeout ingestion; reuse existing systems only
 - **Key Features**:
   - Retry with bounded exponential backoff (3 retries, 1s base, 60s max)
@@ -855,6 +855,48 @@
   - Coverage metrics across 5 dimensions
   - Idempotent re-ingestion for recovery
   - Graceful degradation when external systems unavailable
+
+### P77 — UI Architecture + Contracts Baseline
+- **Status**: Ready
+- **Commit SHA**: —
+- **Finished**: —
+- **Repo Artifacts**:
+  - `docs/PHASE77_UI_ARCHITECTURE.md` — UI architecture specification
+- **Notion**: P77 row exists with objective
+- **Scope**: Architecture documentation for Bazzite Unified Control Console
+- **Key Decisions**:
+  - Local-only, single-user architecture
+  - Chat-first workflow with terminal as native companion
+  - Minimal shell / progressive disclosure navigation
+  - PIN-gated settings + 2FA for dangerous actions
+  - Security-first operator console feel
+
+### P78 — Midnight Glass Design System + Figma Mapping
+- **Status**: Planned
+- **Commit SHA**: —
+- **Finished**: —
+- **Repo Artifacts**:
+  - `docs/PHASE78_MIDNIGHT_GLASS_DESIGN_SYSTEM.md` — Design system specification
+- **Notion**: P78 row exists with objective
+- **External References**:
+  - FigJam: Bazzite Unified Control Console — Midnight Glass IA
+  - FigJam: Midnight Glass UX Structure — Minimal Shell, Deep Capability
+  - FigJam: Midnight Glass System Surfaces Pack
+  - FigJam: Midnight Glass Component Pass — Core UI Kit
+  - Canva: Midnight Glass Software UI Theme – Technical Operator Console
+  - Canva: Midnight Glass Premium UI Concept Board 1
+  - Canva: Poster - Midnight Glass UI Concept Board
+- **Scope**: Design system documentation (tokens, components, rules)
+- **Design Direction** (Locked):
+  - Theme: Midnight Glass
+  - Base: Near-black graphite (#0a0a0f)
+  - Accents: Indigo / cold violet / electric blue
+  - Live States: Brighter cyan (reserved)
+  - Anti-patterns: No gamer neon, no pink-forward retro, no cluttered SaaS dashboard
+- **Key Rules**:
+  - Glass reserved for overlays only (never full-glass UI)
+  - Cyan reserved for live/focus states only
+  - Final design sign-off is user-only
 
 ## Cross-Phase Documentation
 

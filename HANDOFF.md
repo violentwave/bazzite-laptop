@@ -2,7 +2,47 @@
 
 Auto-generated cross-tool handoff. Updated by save-handoff.sh
 
-## Current Phase: P76
+## Current Phase: P77/P78
+
+**P77 — UI Architecture + Contracts Baseline** 🔄 IN PROGRESS  
+**P78 — Midnight Glass Design System + Figma Mapping** 🔄 IN PROGRESS
+
+### Summary
+Translating the Midnight Glass design corpus from Notion/FigJam/Canva into repo-native, implementation-facing documentation. Creating comprehensive UI architecture and design system specs for the Bazzite Unified Control Console.
+
+### Design Direction (Locked)
+- **Theme**: Midnight Glass
+- **Base**: Near-black graphite (#0a0a0f)
+- **Accents**: Indigo / cold violet / electric blue
+- **Live States**: Brighter cyan (reserved)
+- **Feel**: Security-first operator console
+- **Anti-patterns**: No gamer neon, no pink-forward retro, no cluttered SaaS dashboard
+
+### Files Created
+- `docs/PHASE77_UI_ARCHITECTURE.md` — UI architecture, trust boundaries, panel map, navigation
+- `docs/PHASE78_MIDNIGHT_GLASS_DESIGN_SYSTEM.md` — Midnight Glass tokens, components, rules
+
+### Key Decisions Documented
+- Local-only, single-user architecture
+- Chat-first workflow with terminal as native companion
+- Minimal shell / progressive disclosure navigation
+- Collapsed icon rail (56px) default, expandable to 200px
+- PIN-gated settings + 2FA for dangerous actions
+- Glass effects reserved for overlays only (never full-glass UI)
+- Cyan accent reserved for live/focus states only
+
+### Design Sign-Off Status
+⚠️ **Design docs are implementation-facing specifications, not final visual approval.**  
+Final design sign-off remains **user-only** per hard rules.
+
+### Next Steps
+1. User review of P77/P78 documentation
+2. Iterate based on feedback
+3. Move to P79 (Shell + Navigation) when design direction approved
+
+---
+
+## Completed Phase: P76
 
 **P76 — Ingestion Reliability + Continuous Learning Automation** 🔄 IN PROGRESS
 
@@ -828,3 +868,33 @@ Extended the existing curated pattern system with frontend-aware metadata, creat
 
 ### 2026-04-11T01:48:31Z — claude-code
 [Auto-saved on session end]
+
+---
+
+## Session End — 2026-04-13
+
+**Phase Completed**: P76  
+**Commit SHA**: 38b8ea7  
+**Status**: Done
+
+### Summary
+Successfully implemented P76 — Ingestion Reliability + Continuous Learning Automation. The system now automatically ingests phase artifacts into multiple stores with retry, dead-letter handling, and comprehensive coverage tracking.
+
+### RuFlo Training
+- Trajectory recorded: traj-1776053096073-6r8m66
+- SONA pattern learned: opencode:automated+closeout+coverage+dead+handling+implement+ingestion+letter+phase+retry
+- Patterns extracted: 5
+- Quality scores: 0.95-1.0 across all steps
+
+### Files Delivered
+- ai/phase_control/closeout.py (537 lines)
+- ai/phase_control/closeout_targets.py (428 lines)
+- tests/test_phase_control_closeout.py (22 tests)
+- docs/P76_PLAN.md
+- docs/P76_COMPLETION_REPORT.md
+
+### Validation
+- 57 phase control tests passing
+- ruff clean
+- Notion P76 updated to Done
+
