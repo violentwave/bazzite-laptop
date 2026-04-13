@@ -1,4 +1,4 @@
-# P80 — Chat Workspace
+# P83 — Chat + MCP Workspace Integration
 
 **Status**: Complete  
 **Dependencies**: P79  
