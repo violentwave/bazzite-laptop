@@ -506,7 +506,7 @@ class SecretsService:
     def _trigger_provider_refresh(self, key_name: str) -> None:
         """Trigger a provider refresh when LLM keys change.
 
-        This is a placeholder for P82 integration.
+        Calls P82 provider_service to refresh provider discovery.
         """
         llm_keys = {
             "GROQ_API_KEY",
@@ -523,8 +523,12 @@ class SecretsService:
 
         if key_name in llm_keys:
             logger.info("Provider refresh triggered for %s", key_name)
-            # In P82, this would notify the provider manager to refresh
-            # For now, just log that it would happen
+            try:
+                from ai.provider_service import trigger_provider_refresh
+
+                trigger_provider_refresh(key_name)
+            except Exception as e:
+                logger.warning("Provider refresh failed: %s", e)
 
 
 # ── Public API ──────────────────────────────────────────────────────────────

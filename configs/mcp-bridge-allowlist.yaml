@@ -1265,3 +1265,54 @@ tools:
       readOnly: true
       idempotent: true
       openWorld: false
+
+  # P82 — Provider + Model Discovery / Routing Console
+  providers.discover:
+    description: "Discover all providers and their configuration/health status"
+    source: python
+    module: ai.provider_service
+    args: null
+    annotations:
+      readOnly: true
+      idempotent: true
+      openWorld: false
+
+  providers.models:
+    description: "Get all available models across all configured providers"
+    source: python
+    module: ai.provider_service
+    args: null
+    annotations:
+      readOnly: true
+      idempotent: true
+      openWorld: false
+
+  providers.routing:
+    description: "Get routing configuration for all task types (fast, reason, batch, code, embed)"
+    source: python
+    module: ai.provider_service
+    args: null
+    annotations:
+      readOnly: true
+      idempotent: true
+      openWorld: false
+
+  providers.refresh:
+    description: "Force a refresh of provider discovery and health status"
+    source: python
+    module: ai.provider_service
+    args: null
+    annotations:
+      readOnly: false
+      idempotent: false
+      openWorld: false
+
+  providers.health:
+    description: "Get detailed health metrics for all providers"
+    source: python
+    module: ai.provider_service
+    args: null
+    annotations:
+      readOnly: true
+      idempotent: true
+      openWorld: false

@@ -2,24 +2,25 @@
 
 Auto-generated cross-tool handoff. Updated by save-handoff.sh
 
-## Current Phase: P82 (Next)
+## Current Phase: P84 (Next)
 
 **P77 — UI Architecture + Contracts Baseline** ✅ COMPLETE  
 **P78 — Midnight Glass Design System + Figma Mapping** ✅ COMPLETE  
 **P79 — Frontend Shell Bootstrap** ✅ COMPLETE  
 **P80** → Auth, 2FA, Recovery, Gmail Notifications (deferred, placeholder created)  
-**P81 — PIN-Gated Settings + Secrets Service** ✅ COMPLETE
+**P81 — PIN-Gated Settings + Secrets Service** ✅ COMPLETE  
+**P82 — Provider + Model Discovery / Routing Console** ✅ COMPLETE
 
 ### Summary
-P81 complete. PIN-gated settings infrastructure implemented with PBKDF2-hashed PINs, masked secret display, MCP tool integration, and comprehensive audit logging. Settings UI includes PIN setup/unlock flows and secure secret management.
+P82 complete. Provider and model discovery console implemented with real-time health tracking, model catalog browsing, and task-type routing visualization. Integrates with P81 settings for automatic refresh and existing HealthTracker for provider state.
 
 ### Phase Reconciliation Note
 The original roadmap in PHASE77_UI_ARCHITECTURE.md positioned Chat Workspace as P80. However, the current working roadmap has been restructured per user direction:
 - **P80** → Auth, 2FA, Recovery, Gmail Notifications (placeholder created, deferred)
 - **P81** → PIN-Gated Settings + Secrets Service ✅ COMPLETE
-- **P82** → Provider + Model Discovery / Routing Console (next to implement)
+- **P82** → Provider + Model Discovery / Routing Console ✅ COMPLETE
 - **P83** → Chat + MCP Workspace Integration ✅ COMPLETE (reconciled from original P80)
-- **P84** → Security Ops Center
+- **P84** → Security Ops Center (next to implement)
 
 ### Files Delivered (P77-P79)
 - `docs/PHASE77_UI_ARCHITECTURE.md` — UI architecture with Mermaid trust boundary diagram
@@ -260,6 +261,99 @@ Implemented the sensitive settings and secrets-management layer with PIN-based a
 - `ruff check ai/settings_service.py` ✅ passed (20 auto-fixes applied)
 - `npx tsc --noEmit` ✅ Clean
 - 8 MCP tools registered ✅
+
+---
+
+## Completed Phase: P82
+
+**P82 — Provider + Model Discovery / Routing Console** ✅ COMPLETE
+
+### Summary
+Implemented the provider and model discovery + routing console for the Unified Control Console. Provides real-time provider health tracking, model catalog browsing, and task-type routing visualization with automatic refresh integration from P81 settings.
+
+### Commits
+```
+<to be committed>
+```
+
+### Backend Files Created/Updated
+
+**`ai/provider_service.py`** (~450 lines):
+- Provider discovery from secure runtime config
+- Integration with existing `ai/health.HealthTracker`
+- Model catalog generation across all providers
+- Routing configuration parsing from LiteLLM config
+- 5 MCP tools for provider operations
+- Refresh hooks called from P81 settings service
+
+**`ai/settings_service.py`**:
+- Updated `_trigger_provider_refresh()` to call P82 provider service
+- Maintains integration between settings and provider discovery
+
+**`ai/mcp_bridge/tools.py`**:
+- Added 5 provider tool handlers
+
+**`configs/mcp-bridge-allowlist.yaml`**:
+- Registered 5 provider tools
+
+### Frontend Files Created
+
+**`ui/src/components/providers/`** (~1,500 lines):
+- `ProvidersContainer.tsx` — Main panel with tab navigation (Health/Models/Routing)
+- `ProviderHealthPanel.tsx` — Summary cards and provider list with health scores
+- `ModelCatalogPanel.tsx` — Filtered model catalog grouped by provider
+- `RoutingConsole.tsx` — Task type routing with primary/fallback visualization
+- `index.ts` — Component exports
+
+**`ui/src/hooks/useProviders.ts`**:
+- React hook for fetching provider data
+- Auto-refresh every 30 seconds
+- Integration with MCP tools
+
+**`ui/src/types/providers.ts`**:
+- TypeScript interfaces for all provider/model data structures
+
+**`ui/src/app/page.tsx`**:
+- Updated to render `ProvidersContainer` for "models" panel
+
+### Delivered in P82
+
+**Provider Discovery**:
+- 7 known providers (Gemini, Groq, Mistral, OpenRouter, z.ai, Cerebras, Ollama)
+- Configuration detection from P81 settings service
+- Health status tracking via existing HealthTracker
+- Local Ollama embed visibility
+
+**Model Catalog**:
+- Normalized model availability per provider
+- Task type filtering (fast, reason, batch, code, embed)
+- Provider grouping
+- Real-time availability updates
+
+**Routing Console**:
+- 5 task types with distinct routing chains
+- Primary provider and fallback chain visualization
+- Eligible models per task type
+- Health state indicators (healthy, mixed, blocked, cooldown)
+- Caveats/warnings display
+
+**Integration**:
+- Automatic refresh when API keys change (via P81 hooks)
+- 30-second auto-refresh in UI
+- Manual refresh button
+- Integration with existing LiteLLM routing config
+
+### Validation Results
+- `ruff check ai/provider_service.py` ✅ passed
+- `npx tsc --noEmit` ✅ Clean
+- 5 provider MCP tools registered ✅
+
+### Next Phase Ready
+**P84 — Security Ops Center** can proceed:
+- Provider health monitoring available
+- Health tracker integration in place
+- Provider status persistence
+- Security event audit hooks ready
 
 ---
 

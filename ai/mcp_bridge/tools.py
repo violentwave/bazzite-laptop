@@ -1417,6 +1417,102 @@ async def _execute_python_tool(tool_name: str, tool_def: dict, args: dict) -> st
             entries = audit.get_recent(args.get("limit", 100))
             return json.dumps(entries, indent=2)
 
+        # P82 — Provider Service Tools
+        elif tool_name == "providers.discover":
+            from ai.provider_service import get_provider_service  # noqa: PLC0415
+
+            service = get_provider_service()
+            providers = service.discover_providers()
+            return json.dumps(
+                [
+                    {
+                        "id": p.id,
+                        "name": p.name,
+                        "status": p.status,
+                        "is_configured": p.is_configured,
+                        "is_healthy": p.is_healthy,
+                        "is_local": p.is_local,
+                        "health_score": p.health_score,
+                        "models": [
+                            {"id": m.id, "name": m.name, "task_types": m.task_types}
+                            for m in p.models
+                        ],
+                        "last_error": p.last_error,
+                    }
+                    for p in providers
+                ],
+                indent=2,
+            )
+
+        elif tool_name == "providers.models":
+            from ai.provider_service import get_provider_service  # noqa: PLC0415
+
+            service = get_provider_service()
+            models = service.get_model_catalog()
+            return json.dumps(
+                [
+                    {
+                        "id": m.id,
+                        "name": m.name,
+                        "provider": m.provider,
+                        "task_types": m.task_types,
+                    }
+                    for m in models
+                ],
+                indent=2,
+            )
+
+        elif tool_name == "providers.routing":
+            from ai.provider_service import get_provider_service  # noqa: PLC0415
+
+            service = get_provider_service()
+            routing = service.get_routing_config()
+            return json.dumps(
+                [
+                    {
+                        "task_type": r.task_type,
+                        "task_label": r.task_label,
+                        "primary_provider": r.primary_provider,
+                        "fallback_chain": r.fallback_chain,
+                        "eligible_models": [
+                            {"id": m.id, "name": m.name, "provider": m.provider}
+                            for m in r.eligible_models
+                        ],
+                        "health_state": r.health_state,
+                        "caveats": r.caveats,
+                    }
+                    for r in routing
+                ],
+                indent=2,
+            )
+
+        elif tool_name == "providers.refresh":
+            from ai.provider_service import get_provider_service  # noqa: PLC0415
+
+            service = get_provider_service()
+            result = service.refresh()
+            return json.dumps(result, indent=2)
+
+        elif tool_name == "providers.health":
+            from ai.provider_service import get_provider_service  # noqa: PLC0415
+
+            service = get_provider_service()
+            tracker = service.get_health_tracker()
+            # Get all tracked providers
+            providers = service.discover_providers()
+            health_data = {}
+            for p in providers:
+                h = tracker.get(p.id)
+                health_data[p.id] = {
+                    "score": h.effective_score,
+                    "success_count": h.success_count,
+                    "failure_count": h.failure_count,
+                    "consecutive_failures": h.consecutive_failures,
+                    "is_disabled": h.is_disabled,
+                    "auth_broken": h.auth_broken,
+                }
+            return json.dumps(health_data, indent=2)
+
         else:
             return f"[Tool '{tool_name}' not implemented]"
 
