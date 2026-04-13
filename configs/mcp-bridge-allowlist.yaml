@@ -1138,3 +1138,130 @@ tools:
       idempotent: false
       openWorld: false
       destructive: true
+
+  # P81 — PIN-Gated Settings + Secrets Service
+  settings.pin_status:
+    description: "Check if PIN is configured and get lockout status"
+    source: python
+    module: ai.settings_service
+    args: null
+    annotations:
+      readOnly: true
+      idempotent: true
+      openWorld: false
+
+  settings.setup_pin:
+    description: "Set up a new PIN (4-6 digits)"
+    source: python
+    module: ai.settings_service
+    args:
+      pin:
+        type: string
+        pattern: "^[0-9]{4,6}$"
+        required: true
+        description: "4-6 digit PIN"
+    annotations:
+      readOnly: false
+      idempotent: false
+      openWorld: false
+
+  settings.verify_pin:
+    description: "Verify PIN and unlock settings"
+    source: python
+    module: ai.settings_service
+    args:
+      pin:
+        type: string
+        required: true
+        description: "PIN to verify"
+    annotations:
+      readOnly: true
+      idempotent: false
+      openWorld: false
+
+  settings.list_secrets:
+    description: "List all secrets with masked values"
+    source: python
+    module: ai.settings_service
+    args: null
+    annotations:
+      readOnly: true
+      idempotent: true
+      openWorld: false
+
+  settings.reveal_secret:
+    description: "Reveal a secret value (requires PIN)"
+    source: python
+    module: ai.settings_service
+    args:
+      key_name:
+        type: string
+        required: true
+        description: "Name of the secret key"
+      pin:
+        type: string
+        required: true
+        description: "PIN for verification"
+    annotations:
+      readOnly: true
+      idempotent: true
+      openWorld: false
+
+  settings.set_secret:
+    description: "Set or update a secret (requires PIN)"
+    source: python
+    module: ai.settings_service
+    args:
+      key_name:
+        type: string
+        required: true
+        description: "Name of the secret key"
+      value:
+        type: string
+        required: true
+        maxLength: 4096
+        description: "Secret value"
+      pin:
+        type: string
+        required: true
+        description: "PIN for verification"
+    annotations:
+      readOnly: false
+      idempotent: false
+      openWorld: false
+      destructive: true
+
+  settings.delete_secret:
+    description: "Delete a secret (requires PIN)"
+    source: python
+    module: ai.settings_service
+    args:
+      key_name:
+        type: string
+        required: true
+        description: "Name of the secret key"
+      pin:
+        type: string
+        required: true
+        description: "PIN for verification"
+    annotations:
+      readOnly: false
+      idempotent: false
+      openWorld: false
+      destructive: true
+
+  settings.audit_log:
+    description: "Get recent settings audit log entries"
+    source: python
+    module: ai.settings_service
+    args:
+      limit:
+        type: int
+        required: false
+        default: 100
+        max: 1000
+        description: "Maximum number of entries to return"
+    annotations:
+      readOnly: true
+      idempotent: true
+      openWorld: false

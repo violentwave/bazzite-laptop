@@ -1328,6 +1328,95 @@ async def _execute_python_tool(tool_name: str, tool_def: dict, args: dict) -> st
             result = store.get_class_hierarchy(class_name)
             return _truncate(json.dumps(result, indent=2, default=str))
 
+        # P81 — Settings Service Tools
+        elif tool_name == "settings.pin_status":
+            from ai.settings_service import get_pin_manager  # noqa: PLC0415
+
+            pm = get_pin_manager()
+            return json.dumps(
+                {
+                    "pin_is_set": pm.is_pin_set(),
+                    "lockout": pm.get_lockout_status(),
+                },
+                indent=2,
+            )
+
+        elif tool_name == "settings.setup_pin":
+            from ai.settings_service import get_pin_manager  # noqa: PLC0415
+
+            pm = get_pin_manager()
+            try:
+                pm.setup_pin(args["pin"])
+                return json.dumps(
+                    {"success": True, "message": "PIN configured successfully"}, indent=2
+                )
+            except ValueError as e:
+                return json.dumps({"success": False, "error": str(e)}, indent=2)
+
+        elif tool_name == "settings.verify_pin":
+            from ai.settings_service import unlock_settings  # noqa: PLC0415
+
+            result = unlock_settings(args["pin"])
+            return json.dumps(result, indent=2)
+
+        elif tool_name == "settings.list_secrets":
+            from ai.settings_service import get_secrets_service  # noqa: PLC0415
+
+            service = get_secrets_service()
+            secrets = service.list_secrets(include_values=False)
+            return json.dumps(
+                [
+                    {
+                        "name": s.name,
+                        "masked_value": s.masked_value,
+                        "category": s.category,
+                        "is_set": s.is_set,
+                    }
+                    for s in secrets
+                ],
+                indent=2,
+            )
+
+        elif tool_name == "settings.reveal_secret":
+            from ai.settings_service import get_secrets_service  # noqa: PLC0415
+
+            service = get_secrets_service()
+            entry = service.get_secret(args["key_name"], args["pin"])
+            if entry:
+                return json.dumps(
+                    {
+                        "name": entry.name,
+                        "value": entry.value,
+                        "masked_value": entry.masked_value,
+                        "category": entry.category,
+                    },
+                    indent=2,
+                )
+            return json.dumps(
+                {"error": "Failed to reveal secret. Check PIN or key name."}, indent=2
+            )
+
+        elif tool_name == "settings.set_secret":
+            from ai.settings_service import get_secrets_service  # noqa: PLC0415
+
+            service = get_secrets_service()
+            success = service.set_secret(args["key_name"], args["value"], args["pin"])
+            return json.dumps({"success": success}, indent=2)
+
+        elif tool_name == "settings.delete_secret":
+            from ai.settings_service import get_secrets_service  # noqa: PLC0415
+
+            service = get_secrets_service()
+            success = service.delete_secret(args["key_name"], args["pin"])
+            return json.dumps({"success": success}, indent=2)
+
+        elif tool_name == "settings.audit_log":
+            from ai.settings_service import get_audit_logger  # noqa: PLC0415
+
+            audit = get_audit_logger()
+            entries = audit.get_recent(args.get("limit", 100))
+            return json.dumps(entries, indent=2)
+
         else:
             return f"[Tool '{tool_name}' not implemented]"
 
