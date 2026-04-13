@@ -1,0 +1,226 @@
+@import "tailwindcss";
+
+/* Midnight Glass Design System - P78 */
+/* Base: Near-black graphite (#0a0a0f) */
+/* Accents: Indigo / cold violet / electric blue */
+/* Cyan reserved for live/focus states only */
+
+:root {
+  /* Midnight Glass Base Colors (Graphite) */
+  --base-00: #050508;
+  --base-01: #0a0a0f;
+  --base-02: #12121a;
+  --base-03: #1a1a25;
+  --base-04: #252535;
+  --base-05: #353545;
+  --base-06: #454555;
+
+  /* Accent Colors (Indigo/Violet) */
+  --accent-primary: #6366f1;
+  --accent-secondary: #8b5cf6;
+  --accent-tertiary: #a78bfa;
+  --accent-glow: #4f46e5;
+
+  /* Cyan - Reserved for live/focus states only */
+  --live-cyan: #06b6d4;
+  --live-glow: #0891b2;
+  --live-dim: #164e63;
+
+  /* State Colors */
+  --success: #22c55e;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+  --info: #3b82f6;
+  --offline: #6b7280;
+
+  /* Text Colors */
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
+  --text-tertiary: #64748b;
+  --text-disabled: #475569;
+
+  /* Glass Surfaces */
+  --glass-bg: rgba(18, 18, 26, 0.85);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-highlight: rgba(99, 102, 241, 0.15);
+
+  /* Spacing */
+  --space-0: 0px;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+
+  /* Radius */
+  --radius-none: 0px;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+  --radius-full: 9999px;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.5);
+  --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.6);
+
+  /* Glow Effects */
+  --glow-accent: 0 0 20px rgba(99, 102, 241, 0.3);
+  --glow-live: 0 0 20px rgba(6, 182, 212, 0.4);
+  --glow-danger: 0 0 20px rgba(239, 68, 68, 0.3);
+
+  /* Blur */
+  --blur-sm: 4px;
+  --blur-md: 8px;
+  --blur-lg: 16px;
+
+  /* Durations */
+  --duration-fast: 100ms;
+  --duration-normal: 200ms;
+  --duration-slow: 300ms;
+  --duration-slower: 500ms;
+
+  /* Shell Dimensions */
+  --top-bar-height: 48px;
+  --icon-rail-collapsed: 56px;
+  --icon-rail-expanded: 200px;
+  --audit-strip-height: 32px;
+}
+
+@theme inline {
+  /* Colors */
+  --color-base-00: var(--base-00);
+  --color-base-01: var(--base-01);
+  --color-base-02: var(--base-02);
+  --color-base-03: var(--base-03);
+  --color-base-04: var(--base-04);
+  --color-base-05: var(--base-05);
+  --color-base-06: var(--base-06);
+
+  --color-accent-primary: var(--accent-primary);
+  --color-accent-secondary: var(--accent-secondary);
+  --color-accent-tertiary: var(--accent-tertiary);
+  --color-accent-glow: var(--accent-glow);
+
+  --color-live-cyan: var(--live-cyan);
+  --color-live-glow: var(--live-glow);
+  --color-live-dim: var(--live-dim);
+
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
+  --color-info: var(--info);
+  --color-offline: var(--offline);
+
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-tertiary: var(--text-tertiary);
+  --color-text-disabled: var(--text-disabled);
+
+  --color-glass-bg: var(--glass-bg);
+  --color-glass-border: var(--glass-border);
+  --color-glass-highlight: var(--glass-highlight);
+
+  /* Fonts */
+  --font-sans: "Inter", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", "Fira Code", monospace;
+
+  /* Spacing */
+  --spacing-0: var(--space-0);
+  --spacing-1: var(--space-1);
+  --spacing-2: var(--space-2);
+  --spacing-3: var(--space-3);
+  --spacing-4: var(--space-4);
+  --spacing-5: var(--space-5);
+  --spacing-6: var(--space-6);
+  --spacing-8: var(--space-8);
+  --spacing-10: var(--space-10);
+  --spacing-12: var(--space-12);
+
+  /* Border Radius */
+  --radius-sm: var(--radius-sm);
+  --radius-md: var(--radius-md);
+  --radius-lg: var(--radius-lg);
+  --radius-xl: var(--radius-xl);
+  --radius-full: var(--radius-full);
+}
+
+/* Global Styles */
+body {
+  background: var(--base-01);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--base-02);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--base-04);
+  border-radius: var(--radius-full);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--base-05);
+}
+
+/* Selection */
+::selection {
+  background: var(--accent-primary);
+  color: var(--text-primary);
+}
+
+/* Focus Visible */
+*:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 2px;
+}
+
+/* Live Pulse Animation */
+@keyframes pulse-live {
+  0%, 100% {
+    opacity: 1;
+    box-shadow: 0 0 0 0 rgba(6, 182, 212, 0.4);
+  }
+  50% {
+    opacity: 0.8;
+    box-shadow: 0 0 0 8px rgba(6, 182, 212, 0);
+  }
+}
+
+.animate-pulse-live {
+  animation: pulse-live 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Glass Effect Utility */
+.glass {
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--blur-md));
+  border: 1px solid var(--glass-border);
+}
+
+/* Hide scrollbar but keep functionality */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}

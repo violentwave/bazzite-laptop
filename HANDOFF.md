@@ -2,17 +2,23 @@
 
 Auto-generated cross-tool handoff. Updated by save-handoff.sh
 
-## Current Phase: P79 (Next)
+## Current Phase: P80 (Next)
 
 **P77 — UI Architecture + Contracts Baseline** ✅ COMPLETE  
-**P78 — Midnight Glass Design System + Figma Mapping** ✅ COMPLETE
+**P78 — Midnight Glass Design System + Figma Mapping** ✅ COMPLETE  
+**P79 — Frontend Shell Bootstrap** ✅ COMPLETE
 
 ### Summary
-P77/P78 closeout complete. Implementation-facing documentation created for Bazzite Unified Control Console. Minimal improvements applied (Mermaid trust boundary diagram + explicit state surface specs). Ready for P79+ execution.
+P79 complete. Frontend shell bootstrapped in `ui/` directory with Next.js 16 + React 19 + TypeScript + Tailwind v4. Shell includes compact top bar (48px), collapsed icon rail (56px/200px), command palette (Ctrl+K), notifications panel, and Midnight Glass theme integration. Ready for P80+ panel implementations.
 
 ### Files Delivered
 - `docs/PHASE77_UI_ARCHITECTURE.md` — UI architecture with Mermaid trust boundary diagram
 - `docs/PHASE78_MIDNIGHT_GLASS_DESIGN_SYSTEM.md` — Midnight Glass design system with state surfaces
+- `docs/P79_UI_SHELL_BOOTSTRAP.md` — P79 implementation documentation
+- `ui/src/components/shell/` — Shell components (Layout, TopBar, IconRail, CommandPalette, NotificationsPanel, ShellContext)
+- `ui/src/app/page.tsx` — Main content area with panel placeholders
+- `ui/src/app/globals.css` — Midnight Glass CSS tokens
+- `ui/package.json` — Next.js 16 + React 19 dependencies
 
 ### Improvements Applied
 1. **P77**: Added Mermaid trust-boundary diagram with security zones (Public/Operator/Privileged)
@@ -54,16 +60,57 @@ P77/P78 closeout complete. Implementation-facing documentation created for Bazzi
 - ✅ Phase roadmap P77-P88 established
 - ✅ Design sign-off authority clearly stated
 
-### P79 Can Proceed Immediately
-P79 (Shell + Navigation) has all required inputs:
-- Architecture contract from P77
-- Design system from P78
-- Token specifications
-- Component rules
-- State surface patterns
-
 ### Design Sign-Off Reminder
 ⚠️ **Final visual design approval remains user-only.** OpenCode may implement from the documented specs, but any visual direction changes require explicit user approval.
+
+---
+
+## Completed Phase: P79
+
+**P79 — Frontend Shell Bootstrap** ✅ COMPLETE
+
+### Summary
+Bootstrapped the custom local web UI shell for the Unified Control Console. Created working shell with Next.js 16, React 19, TypeScript, and Tailwind v4. Shell features compact top bar, collapsed icon rail by default, command palette, notifications panel, and full Midnight Glass theme integration.
+
+### Files Created/Updated
+- `docs/P79_UI_SHELL_BOOTSTRAP.md` — P79 implementation documentation with tech stack rationale
+- `ui/src/components/shell/ShellContext.tsx` — Global shell state management
+- `ui/src/components/shell/Layout.tsx` — Shell layout frame with audit strip
+- `ui/src/components/shell/TopBar.tsx` — Compact 48px top bar with search, notifications, user
+- `ui/src/components/shell/IconRail.tsx` — Collapsible rail (56px/200px) with 6 panel navigation
+- `ui/src/components/shell/CommandPalette.tsx` — Global command/search with Ctrl+K trigger
+- `ui/src/components/shell/NotificationsPanel.tsx` — Slide-out notifications activity frame
+- `ui/src/app/page.tsx` — Main content area with panel router and placeholders
+- `ui/src/app/globals.css` — Midnight Glass design tokens (colors, spacing, typography)
+- `ui/package.json` — Next.js 16.2.3 + React 19.2.4 + Tailwind v4
+
+### Delivered in P79
+- **Shell Frame**: Full-screen layout with top bar, icon rail, content area
+- **Top Bar**: 48px compact height, logo, context indicator, search trigger, notifications, user
+- **Icon Rail**: Collapsed 56px default, expandable to 200px, 6 panel icons with zone indicators
+- **Command Palette**: Modal overlay with glass effect, fuzzy search, keyboard navigation
+- **Notifications Panel**: 360px slide-out, priority-based styling, placeholder data
+- **Theme Integration**: All Midnight Glass tokens in CSS, glass surfaces, live pulse animation
+- **Local-Only Runtime**: Configured for 127.0.0.1 services, no external auth
+
+### Tech Stack
+- Next.js 16.2.3 (App Router)
+- React 19.2.4
+- TypeScript 5
+- Tailwind CSS v4
+- Inter + JetBrains Mono fonts
+
+### Validation Results
+- `npx tsc --noEmit` ✅ Clean (no type errors)
+- `ruff check docs/P79_UI_SHELL_BOOTSTRAP.md` ✅ Clean
+- Keyword coverage verified ✅ (43 matches across docs and ui/src)
+
+### Next Phase Ready
+**P80 — Chat Workspace** can proceed immediately:
+- Shell layout complete and functional
+- Content area ready for chat components
+- Icon rail navigation working
+- Command palette foundation ready
 
 ---
 
