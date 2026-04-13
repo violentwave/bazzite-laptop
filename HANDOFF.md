@@ -2,21 +2,23 @@
 
 Auto-generated cross-tool handoff. Updated by save-handoff.sh
 
-## Current Phase: P80 (Next)
+## Current Phase: P82 (Next)
 
 **P77 — UI Architecture + Contracts Baseline** ✅ COMPLETE  
 **P78 — Midnight Glass Design System + Figma Mapping** ✅ COMPLETE  
-**P79 — Frontend Shell Bootstrap** ✅ COMPLETE
+**P79 — Frontend Shell Bootstrap** ✅ COMPLETE  
+**P80** → Auth, 2FA, Recovery, Gmail Notifications (deferred, placeholder created)  
+**P81 — PIN-Gated Settings + Secrets Service** ✅ COMPLETE
 
 ### Summary
-P77-P79 complete. Frontend shell fully bootstrapped with Next.js 16 + React 19 + TypeScript + Tailwind v4. Shell includes compact top bar (48px), collapsed icon rail (56px/200px), command palette (Ctrl+K), notifications panel, and Midnight Glass theme integration.
+P81 complete. PIN-gated settings infrastructure implemented with PBKDF2-hashed PINs, masked secret display, MCP tool integration, and comprehensive audit logging. Settings UI includes PIN setup/unlock flows and secure secret management.
 
 ### Phase Reconciliation Note
 The original roadmap in PHASE77_UI_ARCHITECTURE.md positioned Chat Workspace as P80. However, the current working roadmap has been restructured per user direction:
-- **P80** → Auth, 2FA, Recovery, Gmail Notifications (next to implement)
-- **P81** → PIN-Gated Settings + Secrets Service
-- **P82** → Provider + Model Discovery / Routing Console  
-- **P83** → Chat + MCP Workspace Integration (completed, see below)
+- **P80** → Auth, 2FA, Recovery, Gmail Notifications (placeholder created, deferred)
+- **P81** → PIN-Gated Settings + Secrets Service ✅ COMPLETE
+- **P82** → Provider + Model Discovery / Routing Console (next to implement)
+- **P83** → Chat + MCP Workspace Integration ✅ COMPLETE (reconciled from original P80)
 - **P84** → Security Ops Center
 
 ### Files Delivered (P77-P79)
@@ -199,6 +201,65 @@ Implemented the primary AI interaction surface for the Bazzite Control Console. 
 - `npx tsc --noEmit` ✅ Clean (no errors)
 - Dependencies installed ✅ 104 packages, 0 vulnerabilities
 - Design compliance ✅ Midnight Glass tokens throughout
+
+---
+
+## Completed Phase: P81
+
+**P81 — PIN-Gated Settings + Secrets Service** ✅ COMPLETE
+
+### Summary
+Implemented the sensitive settings and secrets-management layer with PIN-based access control, masked secret display, and comprehensive audit logging. Backend provides PBKDF2-hashed PIN verification, atomic writes to keys.env, and JSONL audit trails. Frontend includes PIN setup/unlock flows and secure secret management UI.
+
+### Commits
+```
+4a8f2ba P81: Settings Service backend with PIN auth, masked secrets, and audit logging
+3cde9df P81: Settings UI components with PIN unlock, masked secrets, and audit strip
+```
+
+### Backend Files Created
+
+**`ai/settings_service.py`** (~550 lines):
+- `PINManager` — PBKDF2 hashing, lockout protection, SQLite storage
+- `AuditLogger` — JSONL append-only audit logging
+- `SecretsService` — Masked secrets, atomic writes, provider hooks
+- 8 MCP tools for settings operations
+
+**`configs/mcp-bridge-allowlist.yaml`**:
+- Added 8 settings tools (pin_status, setup_pin, verify_pin, list_secrets, reveal_secret, set_secret, delete_secret, audit_log)
+
+### Frontend Files Created
+
+**`ui/src/components/settings/`** (~1,200 lines):
+- `SettingsContainer.tsx` — Main panel with unlock flow
+- `PINSetup.tsx` — PIN enrollment form
+- `PINUnlock.tsx` — PIN entry with lockout display
+- `SecretsList.tsx` — Grouped secret list with reveal/edit/delete
+- `index.ts` — Component exports
+
+### Delivered in P81
+
+**Security**:
+- PBKDF2-SHA256 hashing with 100,000 iterations
+- 4-6 digit PIN validation
+- 3-attempt lockout with 5-minute timeout
+- Masked secret display (first 4 + ... + last 4)
+- Atomic file writes (temp + rename)
+
+**Audit**:
+- JSONL append-only logging
+- Actions: unlock, reveal, replace, add, delete, failure, lockout
+- Timestamp and success/failure tracking
+
+**Integration**:
+- 8 MCP tools for settings operations
+- Frontend components with Midnight Glass design
+- Provider refresh hooks prepared for P82
+
+### Validation Results
+- `ruff check ai/settings_service.py` ✅ passed (20 auto-fixes applied)
+- `npx tsc --noEmit` ✅ Clean
+- 8 MCP tools registered ✅
 
 ---
 
