@@ -452,6 +452,104 @@ class TestImportGraph:
         assert "edges" in graph
 
 
+class TestDependencyGraphQueries:
+    """Tests for dependency graph queries from import_graph table."""
+
+    def test_query_dependency_graph_direction_and_depth(self, tmp_path):
+        from ai.code_intel.store import CodeIntelStore
+
+        store = CodeIntelStore(db_path=tmp_path / "test_deps")
+        store.store_import_graph(
+            {
+                "edges": [
+                    {"source": "ai.alpha", "target": "ai.beta"},
+                    {"source": "ai.beta", "target": "ai.gamma"},
+                    {"source": "ai.delta", "target": "ai.beta"},
+                ],
+                "circular": [],
+            }
+        )
+
+        down = store.query_dependency_graph("ai.beta", direction="down", max_depth=1)
+        up = store.query_dependency_graph("ai.beta", direction="up", max_depth=1)
+        both = store.query_dependency_graph("ai.beta", direction="both", max_depth=2)
+
+        assert any(item["module"] == "ai.gamma" for item in down["dependencies"])
+        assert any(item["module"] == "ai.alpha" for item in up["dependents"])
+        assert any(item["module"] == "ai.delta" for item in up["dependents"])
+        assert both["module"] == "ai.beta"
+
+    def test_query_dependency_graph_circular_edges(self, tmp_path):
+        from ai.code_intel.store import CodeIntelStore
+
+        store = CodeIntelStore(db_path=tmp_path / "test_cycles")
+        store.store_import_graph(
+            {
+                "edges": [
+                    {"source": "ai.a", "target": "ai.b"},
+                    {"source": "ai.b", "target": "ai.a"},
+                ],
+                "circular": [
+                    {"source": "ai.a", "target": "ai.b"},
+                    {"source": "ai.b", "target": "ai.a"},
+                ],
+            }
+        )
+
+        graph = store.query_dependency_graph("ai.a", direction="both", max_depth=2)
+        assert len(graph["circular"]) >= 1
+        assert any(edge["is_circular"] for edge in graph["edges"])
+
+
+class TestImpactAnalysis:
+    """Tests for impact analysis graph + test suggestion integration."""
+
+    def test_query_impact_includes_dependency_and_tests(self, tmp_path):
+        from ai.code_intel.store import CodeIntelStore
+
+        store = CodeIntelStore(db_path=tmp_path / "test_impact")
+
+        src_file = tmp_path / "ai" / "module.py"
+        src_file.parent.mkdir(parents=True, exist_ok=True)
+        src_file.write_text(
+            """
+def important_func():
+    return 1
+"""
+        )
+
+        test_file = tmp_path / "tests" / "test_module.py"
+        test_file.parent.mkdir(parents=True, exist_ok=True)
+        test_file.write_text(
+            """
+from ai.module import important_func
+
+def test_important_func():
+    assert important_func() == 1
+"""
+        )
+
+        parser = CodeParser(project_root=tmp_path)
+        nodes, rels = parser.parse_file(str(src_file))
+        test_nodes, test_rels = parser.parse_file(str(test_file))
+        store.index_project(nodes + test_nodes, rels + test_rels)
+        store.store_import_graph(
+            {
+                "edges": [
+                    {"source": "ai.consumer", "target": "ai.module"},
+                ],
+                "circular": [],
+            }
+        )
+
+        impact = store.query_impact([str(src_file)], max_depth=2, include_tests=True)
+
+        assert "direct_dependents" in impact
+        assert "suggested_tests" in impact
+        assert any(dep.get("source_id") == "ai.consumer" for dep in impact["direct_dependents"])
+        assert isinstance(impact["suggested_tests"], list)
+
+
 class TestIncrementalIndexing:
     """Tests for incremental indexing."""
 

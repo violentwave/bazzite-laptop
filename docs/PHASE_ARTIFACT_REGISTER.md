@@ -765,6 +765,22 @@
 - **Notion**: P71 row updated (status, SHA, validation, finished date)
 - **Scope**: Structural analysis only; no P72 dependency-graph expansion work
 
+### P72 — Dependency Graph Expansion + Impact Analysis Alignment
+- **Status**: Done
+- **Commit SHA**: —
+- **Finished**: 2026-04-13
+- **Repo Artifacts**:
+  - `ai/code_intel/parser.py` — `grimp` API correction, cycle detection, fallback module naming
+  - `ai/code_intel/store.py` — `query_dependency_graph`, import graph replacement safety, impact analysis alignment
+  - `ai/mcp_bridge/tools.py` — dependency/impact arg forwarding and store method routing
+  - `ai/mcp_bridge/server.py` — dependency graph direction + depth, impact include_tests + depth
+  - `configs/mcp-bridge-allowlist.yaml` — `code.dependency_graph.max_depth`
+  - `tests/test_code_intel.py` — dependency graph and impact integration tests
+  - `docs/P72_PLAN.md`
+  - `docs/P72_COMPLETION_REPORT.md`
+- **Notion**: P72 row pending final status/SHA sync
+- **Scope**: Dependency graph + impact alignment; no rename refactor or multi-language expansion
+
 ## Cross-Phase Documentation
 
 ### Hub Docs (docs/ root)

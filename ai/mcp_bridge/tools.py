@@ -1259,7 +1259,13 @@ async def _execute_python_tool(tool_name: str, tool_def: dict, args: dict) -> st
 
             store = get_code_store()
             changed = [f.strip() for f in args.get("changed_files", "").split(",") if f.strip()]
-            result = store.query_impact(changed)
+            include_tests = bool(args.get("include_tests", True))
+            depth = int(args.get("max_depth", 3))
+            result = store.query_impact(
+                changed,
+                max_depth=depth,
+                include_tests=include_tests,
+            )
             return _truncate(json.dumps(result, indent=2, default=str))
 
         elif tool_name == "code.dependency_graph":
@@ -1267,8 +1273,9 @@ async def _execute_python_tool(tool_name: str, tool_def: dict, args: dict) -> st
 
             store = get_code_store()
             module = args.get("module", "")
+            direction = args.get("direction", "both")
             depth = int(args.get("max_depth", 3))
-            result = store.query_dependents(module, max_depth=depth)
+            result = store.query_dependency_graph(module, direction=direction, max_depth=depth)
             return _truncate(json.dumps(result, indent=2, default=str))
 
         elif tool_name == "code.find_callers":

@@ -2,6 +2,47 @@
 
 Auto-generated cross-tool handoff. Updated by save-handoff.sh
 
+## Completed Phase: P72
+
+**P72 — Dependency Graph Expansion + Impact Analysis Alignment** ✅ COMPLETED
+
+### Summary
+Implemented real module dependency graph querying from the `import_graph` table, added direction/depth-aware traversal and cycle reporting, and aligned impact analysis + MCP handlers to consume dependency graph data with optional test suggestions.
+
+### Files Created
+- `docs/P72_PLAN.md`
+- `docs/P72_COMPLETION_REPORT.md`
+
+### Files Updated
+- `ai/code_intel/parser.py`
+- `ai/code_intel/store.py`
+- `ai/mcp_bridge/tools.py`
+- `ai/mcp_bridge/server.py`
+- `configs/mcp-bridge-allowlist.yaml`
+- `tests/test_code_intel.py`
+- `docs/PHASE_INDEX.md`
+- `docs/PHASE_ARTIFACT_REGISTER.md`
+
+### Delivered in P72
+- Corrected `grimp` integration in `ImportGraphBuilder` to use package-based build + direct import methods
+- Added dependency cycle edge detection and `circular` graph output
+- Added `CodeIntelStore.query_dependency_graph(module, direction, max_depth)`
+- Switched `code.dependency_graph` handlers from `query_dependents` to `query_dependency_graph`
+- Added import graph replace behavior in `store_import_graph(...)` to avoid stale duplicate edges
+- Upgraded `query_impact(...)` to include dependency-driven impact expansion and optional test suggestions
+- Added coverage for dependency graph direction/depth/cycles and impact integration in tests
+
+### Validation Results
+- `ruff check ai/ tests/ scripts/` ✅ clean
+- `python -m pytest tests/test_code_intel.py -q --tb=short` ✅ 29 passed
+- `python -m pytest tests/test_mcp_drift.py -q --tb=short` ✅ 4 passed
+- `python -m pytest tests/ -x -q --tb=short` ⚠️ environment failure: missing `hypothesis` in `tests/test_properties.py`
+- `python scripts/index-code.py --incremental` ⚠️ executed, but embedding providers failed in this environment (Gemini key invalid, Cohere trial/rate-limit)
+
+### Notes
+- Checked for P73 contradiction before implementation: no P73 in-repo phase artifact found
+- P72 scope intentionally limited to dependency graph + impact alignment (no rename refactor, no multi-language expansion)
+
 ## Completed Phase: P71
 
 **P71 — Structural Analysis Enhancement** ✅ COMPLETED

@@ -551,8 +551,12 @@ def create_app():
                     from ai.code_intel.store import get_code_store
 
                     store = get_code_store()
-                    files = [f.strip() for f in changed_files.split(",")]
-                    result = store.query_impact(files, max_depth=max_depth)
+                    files = [f.strip() for f in changed_files.split(",") if f.strip()]
+                    result = store.query_impact(
+                        files,
+                        max_depth=max_depth,
+                        include_tests=include_tests,
+                    )
                     return result
                 except Exception as e:
                     return {"error": str(e), "impact": {}}
@@ -563,16 +567,26 @@ def create_app():
             async def _handler_dependency_graph(
                 module: str,
                 direction: str = "both",
+                max_depth: int = 3,
                 _tn=tool_name,
             ):
                 try:
                     from ai.code_intel.store import get_code_store
 
                     store = get_code_store()
-                    deps = store.query_dependents(module, max_depth=3)
-                    return {"module": module, "direction": direction, "dependents": deps}
+                    return store.query_dependency_graph(
+                        module, direction=direction, max_depth=max_depth
+                    )
                 except Exception as e:
-                    return {"error": str(e), "dependents": []}
+                    return {
+                        "error": str(e),
+                        "module": module,
+                        "direction": direction,
+                        "dependencies": [],
+                        "dependents": [],
+                        "edges": [],
+                        "circular": [],
+                    }
 
         elif tool_name == "code.find_callers":
 

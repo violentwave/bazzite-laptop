@@ -422,21 +422,28 @@ class ImportGraphBuilder:
         try:
             import grimp
 
-            graph = grimp.build_graph(str(self.project_root))
+            package_name = self.project_root.name
+            graph = grimp.build_graph(package_name)
             edges = []
-            for module, importers in graph.imports.items():
-                for importer in importers:
+            for importer in graph.modules:
+                for imported in graph.find_modules_directly_imported_by(importer):
                     edges.append(
                         {
                             "source": importer,
-                            "target": module,
+                            "target": imported,
+                            "import_type": "grimp",
                         }
                     )
+
+            circular_edges = self._detect_circular_edges(edges)
+            circular = [
+                {"source": source, "target": target} for source, target in sorted(circular_edges)
+            ]
 
             return {
                 "modules": list(graph.modules),
                 "edges": edges,
-                "circular": [],  # grimp doesn't expose circular directly
+                "circular": circular,
             }
         except Exception as e:
             logger.warning(f"grimp unavailable or failed ({e}), using AST-based fallback")
@@ -455,9 +462,7 @@ class ImportGraphBuilder:
                 content = py_file.read_text()
                 tree = ast.parse(content)
 
-                module_name = py_file.stem
-                if py_file.parent.name != "ai":
-                    module_name = f"{py_file.parent.name}.{module_name}"
+                module_name = self._module_name_from_path(py_file)
 
                 nodes.append(module_name)
 
@@ -467,7 +472,8 @@ class ImportGraphBuilder:
                             edges.append(
                                 {
                                     "source": module_name,
-                                    "target": alias.name.split(".")[0],
+                                    "target": alias.name,
+                                    "import_type": "ast-import",
                                 }
                             )
                     elif isinstance(node, ast.ImportFrom):
@@ -475,13 +481,67 @@ class ImportGraphBuilder:
                             edges.append(
                                 {
                                     "source": module_name,
-                                    "target": node.module.split(".")[0],
+                                    "target": node.module,
+                                    "import_type": "ast-from",
                                 }
                             )
             except Exception:
                 continue
 
-        return {"modules": nodes, "edges": edges, "circular": []}
+        circular_edges = self._detect_circular_edges(edges)
+        circular = [
+            {"source": source, "target": target} for source, target in sorted(circular_edges)
+        ]
+        return {"modules": sorted(set(nodes)), "edges": edges, "circular": circular}
+
+    def _module_name_from_path(self, py_file: Path) -> str:
+        """Map a Python file path to a dotted module name."""
+        rel = py_file.relative_to(self.project_root)
+        parts = list(rel.parts)
+        if parts[-1] == "__init__.py":
+            parts = parts[:-1]
+        else:
+            parts[-1] = parts[-1].replace(".py", "")
+
+        if not parts:
+            return self.project_root.name
+
+        return f"{self.project_root.name}." + ".".join(parts)
+
+    def _detect_circular_edges(self, edges: list[dict]) -> set[tuple[str, str]]:
+        """Return edges that participate in at least one cycle."""
+        adjacency: dict[str, set[str]] = {}
+        for edge in edges:
+            source = edge.get("source")
+            target = edge.get("target")
+            if not source or not target:
+                continue
+            adjacency.setdefault(source, set()).add(target)
+
+        def has_path(start: str, end: str) -> bool:
+            if start == end:
+                return True
+            stack = [start]
+            visited = set()
+            while stack:
+                node = stack.pop()
+                if node in visited:
+                    continue
+                visited.add(node)
+                for nxt in adjacency.get(node, set()):
+                    if nxt == end:
+                        return True
+                    if nxt not in visited:
+                        stack.append(nxt)
+            return False
+
+        circular_edges: set[tuple[str, str]] = set()
+        for source, targets in adjacency.items():
+            for target in targets:
+                if has_path(target, source):
+                    circular_edges.add((source, target))
+
+        return circular_edges
 
     def find_dependents(self, module: str, max_depth: int = 3) -> list[str]:
         """Find modules that depend on the given module."""

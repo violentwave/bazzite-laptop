@@ -203,17 +203,39 @@ class CodeIntelStore:
             if rel_records:
                 self._relationships.add(rel_records)
 
-    def store_import_graph(self, graph_data: dict) -> None:
-        """Store module-level import edges."""
+    def store_import_graph(self, graph_data: dict, replace: bool = True) -> None:
+        """Store module-level import edges.
+
+        Args:
+            graph_data: Graph payload from ImportGraphBuilder.
+            replace: If True, replace existing rows before inserting.
+        """
         edges = graph_data.get("edges", [])
+        circular_edges = {
+            (edge.get("source", ""), edge.get("target", ""))
+            for edge in graph_data.get("circular", [])
+            if edge.get("source") and edge.get("target")
+        }
+
+        if replace:
+            try:
+                # Delete all rows (portable LanceDB predicate).
+                self._import_graph.delete("source_module IS NOT NULL")
+            except Exception as e:
+                logger.debug("import_graph replace delete skipped: %s", e)
+
         records = []
         for edge in edges:
+            source = edge.get("source", "")
+            target = edge.get("target", "")
+            if not source or not target:
+                continue
             records.append(
                 {
-                    "source_module": edge.get("source", ""),
-                    "target_module": edge.get("target", ""),
-                    "import_type": "absolute",
-                    "is_circular": edge.get("source") == edge.get("target"),
+                    "source_module": source,
+                    "target_module": target,
+                    "import_type": edge.get("import_type", "absolute"),
+                    "is_circular": (source, target) in circular_edges,
                 }
             )
 
@@ -290,7 +312,9 @@ class CodeIntelStore:
             logger.warning(f"Failed to query dependents: {e}")
             return []
 
-    def query_impact(self, changed_files: list[str], max_depth: int = 3) -> dict:
+    def query_impact(
+        self, changed_files: list[str], max_depth: int = 3, include_tests: bool = True
+    ) -> dict:
         """Analyze impact of file changes.
 
         Uses targeted queries instead of full table scans.
@@ -298,13 +322,17 @@ class CodeIntelStore:
         try:
             impact = {
                 "direct_dependents": [],
+                "impacted_modules": [],
                 "co_changed": [],
+                "suggested_tests": [],
                 "confidence": {},
             }
 
             # Get relationships and history for direct impact
             rels_df = self._relationships.to_pandas()
             hist_df = self._change_history.to_pandas()
+            modules = self._modules_for_files(changed_files)
+            seen_dependents: set[tuple[str, str]] = set()
 
             for file_path in changed_files:
                 # Find relationships from nodes in this file
@@ -330,14 +358,138 @@ class CodeIntelStore:
                             except (json.JSONDecodeError, TypeError):
                                 pass
 
+            for module in modules:
+                deps = self.query_dependency_graph(module, direction="up", max_depth=max_depth)
+                for dep in deps.get("dependents", []):
+                    dependent = dep.get("module", "")
+                    if not dependent:
+                        continue
+                    edge_key = (dependent, module)
+                    if edge_key in seen_dependents:
+                        continue
+                    seen_dependents.add(edge_key)
+                    impact["direct_dependents"].append(
+                        {
+                            "source_id": dependent,
+                            "target_id": module,
+                            "rel_type": "imports",
+                            "depth": dep.get("depth", 1),
+                        }
+                    )
+                    impact["impacted_modules"].append(dependent)
+
+            if include_tests:
+                impact["suggested_tests"] = self.suggest_tests(changed_files)
+
             impact["co_changed"] = list(set(impact["co_changed"]))
+            impact["impacted_modules"] = sorted(set(impact["impacted_modules"]))
             impact["confidence"]["static"] = 0.8
             impact["confidence"]["historical"] = 0.5
+            impact["confidence"]["dependency_graph"] = 0.85 if impact["direct_dependents"] else 0.0
+            if include_tests:
+                impact["confidence"]["test_coverage"] = 0.75 if impact["suggested_tests"] else 0.25
 
             return impact
         except Exception as e:
             logger.warning(f"Failed to query impact: {e}")
-            return {"direct_dependents": [], "co_changed": [], "confidence": {}}
+            return {
+                "direct_dependents": [],
+                "impacted_modules": [],
+                "co_changed": [],
+                "suggested_tests": [],
+                "confidence": {},
+            }
+
+    def query_dependency_graph(
+        self, module: str, direction: str = "both", max_depth: int = 3
+    ) -> dict:
+        """Return dependency graph information from the import graph table."""
+        try:
+            df = self._import_graph.to_pandas()
+            if df.empty:
+                return {
+                    "module": module,
+                    "direction": direction,
+                    "dependencies": [],
+                    "dependents": [],
+                    "edges": [],
+                    "circular": [],
+                }
+
+            adjacency: dict[str, set[str]] = {}
+            reverse: dict[str, set[str]] = {}
+            circular_edges: set[tuple[str, str]] = set()
+
+            for _, row in df.iterrows():
+                source = str(row.get("source_module", ""))
+                target = str(row.get("target_module", ""))
+                if not source or not target:
+                    continue
+                adjacency.setdefault(source, set()).add(target)
+                reverse.setdefault(target, set()).add(source)
+                if bool(row.get("is_circular", False)):
+                    circular_edges.add((source, target))
+
+            canonical = self._resolve_module(adjacency, reverse, module)
+            if not canonical:
+                return {
+                    "module": module,
+                    "direction": direction,
+                    "dependencies": [],
+                    "dependents": [],
+                    "edges": [],
+                    "circular": [],
+                }
+
+            dependencies = []
+            dependents = []
+
+            if direction in {"down", "both"}:
+                dependencies = self._walk_graph(adjacency, canonical, max_depth)
+            if direction in {"up", "both"}:
+                dependents = self._walk_graph(reverse, canonical, max_depth)
+
+            edge_set = set()
+            for item in dependencies:
+                edge_set.add((canonical, item["module"]))
+            for item in dependents:
+                edge_set.add((item["module"], canonical))
+
+            edges = [
+                {
+                    "source": source,
+                    "target": target,
+                    "is_circular": (source, target) in circular_edges,
+                }
+                for source, target in sorted(edge_set)
+            ]
+            circular = [
+                {"source": source, "target": target}
+                for source, target in sorted(circular_edges)
+                if source == canonical
+                or target == canonical
+                or (source, target) in edge_set
+                or (target, source) in edge_set
+            ]
+
+            return {
+                "module": canonical,
+                "direction": direction,
+                "dependencies": dependencies,
+                "dependents": dependents,
+                "edges": edges,
+                "circular": circular,
+            }
+        except Exception as e:
+            logger.warning("Failed to query dependency graph: %s", e)
+            return {
+                "module": module,
+                "direction": direction,
+                "dependencies": [],
+                "dependents": [],
+                "edges": [],
+                "circular": [],
+            }
 
     def search_nodes(self, query: str, node_type: str | None = None, top_k: int = 10) -> list[dict]:
         """Semantic search over code nodes.
@@ -771,6 +923,89 @@ class CodeIntelStore:
             return file_hashes
         except Exception:
             return {}
+
+    def _modules_for_files(self, changed_files: list[str]) -> list[str]:
+        """Resolve changed file paths to module IDs."""
+        try:
+            nodes_df = self._code_nodes.to_pandas()
+        except Exception:
+            nodes_df = None
+
+        modules: set[str] = set()
+        for file_path in changed_files:
+            if nodes_df is not None and not nodes_df.empty:
+                module_rows = nodes_df[
+                    (nodes_df["node_type"] == "module")
+                    & (nodes_df["file_path"].str.contains(file_path, na=False, regex=False))
+                ]
+                for _, row in module_rows.iterrows():
+                    module_name = str(row.get("qualified_name", ""))
+                    if module_name:
+                        modules.add(module_name)
+
+            path = Path(file_path)
+            if path.suffix == ".py":
+                parts = list(path.parts)
+                if "ai" in parts:
+                    idx = parts.index("ai")
+                    rel_parts = parts[idx:]
+                    rel_parts[-1] = rel_parts[-1].replace(".py", "")
+                    if rel_parts[-1] == "__init__":
+                        rel_parts = rel_parts[:-1]
+                    if rel_parts:
+                        modules.add(".".join(rel_parts))
+
+        return sorted(modules)
+
+    def _resolve_module(
+        self, adjacency: dict[str, set[str]], reverse: dict[str, set[str]], module: str
+    ) -> str | None:
+        """Resolve a module name against graph keys with ai/non-ai compatibility."""
+        all_modules = set(adjacency) | set(reverse)
+        for targets in adjacency.values():
+            all_modules.update(targets)
+
+        candidates = [module]
+        if module.startswith("ai."):
+            candidates.append(module.removeprefix("ai."))
+        else:
+            candidates.append(f"ai.{module}")
+
+        for candidate in candidates:
+            if candidate in all_modules:
+                return candidate
+
+        # fallback suffix match for older indexes where ai prefix differs
+        for candidate in candidates:
+            for entry in all_modules:
+                if entry.endswith(f".{candidate}") or entry.endswith(
+                    f".{candidate.removeprefix('ai.')}"
+                ):
+                    return entry
+        return None
+
+    def _walk_graph(
+        self, graph: dict[str, set[str]], start: str, max_depth: int
+    ) -> list[dict[str, int | str]]:
+        """BFS traversal returning module-depth pairs."""
+        queue: list[tuple[str, int]] = [(start, 0)]
+        visited = {start}
+        results: list[dict[str, int | str]] = []
+
+        while queue:
+            module, depth = queue.pop(0)
+            if depth >= max_depth:
+                continue
+
+            for nxt in sorted(graph.get(module, set())):
+                if nxt in visited:
+                    continue
+                visited.add(nxt)
+                next_depth = depth + 1
+                results.append({"module": nxt, "depth": next_depth})
+                queue.append((nxt, next_depth))
+
+        return results
 
 
 _store_instance: CodeIntelStore | None = None

@@ -559,6 +559,10 @@ tools:
         pattern: "^(up|down|both)$"
         default: "both"
         required: false
+      max_depth:
+        type: integer
+        default: 3
+        required: false
 
   code.find_callers:
     description: "Find all functions that call a given function"
