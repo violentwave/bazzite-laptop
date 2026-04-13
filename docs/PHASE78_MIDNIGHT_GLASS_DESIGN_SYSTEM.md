@@ -489,6 +489,198 @@ Use sparingly for:
 - Dot: 8px circle (10px for Live with pulse)
 - Text: `--text-xs`
 
+### State Surfaces
+
+**Purpose**: Consistent empty, loading, error, and success states across all panels.
+
+#### Loading State
+
+```
+┌─────────────────────────────────────────────┐
+│                                             │
+│          ⏳ Loading...                      │
+│                                             │
+│    Fetching security scan results...        │
+│                                             │
+└─────────────────────────────────────────────┘
+```
+
+**Specs**:
+- Icon: Animated spinner (optional branded icon)
+- Icon color: `--accent-primary` or `--text-secondary`
+- Title: `--text-lg`, `--text-primary`, centered
+- Description: `--text-sm`, `--text-secondary`, centered
+- Animation: Subtle pulse or rotate, `--duration-slow`
+- Background: Inherit from parent container
+- Full-panel variant: Centered vertically and horizontally
+
+#### Empty State
+
+```
+┌─────────────────────────────────────────────┐
+│                                             │
+│               📭                            │
+│                                             │
+│         No alerts found                     │
+│                                             │
+│   Your security alerts will appear here     │
+│   when threats are detected.                │
+│                                             │
+│          [Run Manual Scan]                  │
+│                                             │
+└─────────────────────────────────────────────┘
+```
+
+**Specs**:
+- Icon: 48px, `--text-tertiary`
+- Title: `--text-xl`, `--text-primary`, centered
+- Description: `--text-base`, `--text-secondary`, centered, max-width 320px
+- Action button: Optional, centered below text
+- Background: Inherit from parent
+
+#### Error State
+
+```
+┌─────────────────────────────────────────────┐
+│                                             │
+│               ⚠️                            │
+│                                             │
+│         Failed to load data                 │
+│                                             │
+│   Unable to connect to the MCP bridge.      │
+│   Please check your connection and retry.   │
+│                                             │
+│          [Retry]  [View Logs]               │
+│                                             │
+└─────────────────────────────────────────────┘
+```
+
+**Specs**:
+- Icon: 48px, `--danger`
+- Title: `--text-xl`, `--text-primary`, centered
+- Description: `--text-base`, `--text-secondary`, centered
+- Error details: `--text-sm`, `--text-tertiary`, monospace, collapsible
+- Actions: Primary action (Retry) + Secondary action (dismiss/logs)
+- Border: Optional 1px `--danger` left border for inline errors
+
+#### Success State
+
+```
+┌─────────────────────────────────────────────┐
+│                                             │
+│               ✅                            │
+│                                             │
+│         Scan completed                      │
+│                                             │
+│   No threats detected in your system.       │
+│                                             │
+│                                             │
+└─────────────────────────────────────────────┘
+```
+
+**Specs**:
+- Icon: 48px, `--success`
+- Title: `--text-xl`, `--text-primary`, centered
+- Description: `--text-base`, `--text-secondary`, centered
+- Auto-dismiss: Optional, 3-5 seconds for toasts
+- Background: Subtle `--success` tint at 5% opacity (optional)
+
+#### Warning State
+
+```
+┌─────────────────────────────────────────────┐
+│ ⚠️ Warning                                  │
+├─────────────────────────────────────────────┤
+│ High CPU temperature detected (87°C)        │
+│                                             │
+│ Consider cleaning fans or improving airflow.│
+│                                             │
+│ [Dismiss]  [View Details]                   │
+└─────────────────────────────────────────────┘
+```
+
+**Specs**:
+- Icon: 20px, `--warning`, inline with title
+- Title: `--text-lg`, `--text-primary`
+- Description: `--text-base`, `--text-secondary`
+- Background: Subtle `--warning` tint at 10% opacity
+- Border: 1px `--warning` or left border accent
+- Actions: Dismiss + primary action
+
+#### Disconnected State
+
+```
+┌─────────────────────────────────────────────┐
+│                                             │
+│               🔌                            │
+│                                             │
+│         Connection lost                     │
+│                                             │
+│   The connection to the LLM proxy was       │
+│   interrupted. Reconnecting in 3s...        │
+│                                             │
+│          [Reconnect Now]                    │
+│                                             │
+└─────────────────────────────────────────────┘
+```
+
+**Specs**:
+- Icon: 48px, `--text-tertiary` or `--warning`
+- Title: `--text-xl`, `--text-primary`, centered
+- Description: `--text-base`, `--text-secondary`, centered
+- Auto-retry: Show countdown or progress
+- Manual action: Reconnect button
+- Banner variant: Compact bar at top of panel
+
+#### Blocked State
+
+```
+┌─────────────────────────────────────────────┐
+│ 🔒 Action Blocked                           │
+├─────────────────────────────────────────────┤
+│ This action requires 2FA verification.      │
+│                                             │
+│ Please authenticate to proceed with         │
+│ deleting the API key.                       │
+│                                             │
+│ [Enter 2FA Code]        [Cancel]            │
+└─────────────────────────────────────────────┘
+```
+
+**Specs**:
+- Icon: 20px, `--danger`
+- Title: `--text-lg`, `--text-primary`
+- Description: `--text-base`, `--text-secondary`
+- Background: Subtle `--danger` tint at 5% opacity
+- Border: 1px `--danger` left border
+- Actions: Required authentication input + cancel
+
+#### Offline State
+
+```
+┌─────────────────────────────────────────────┐
+│                                             │
+│               📡                            │
+│                                             │
+│         Service offline                     │
+│                                             │
+│   The Ollama embedding service is           │
+│   currently unavailable.                    │
+│                                             │
+│   Last seen: 2 hours ago                    │
+│                                             │
+│          [Start Service]                    │
+│                                             │
+└─────────────────────────────────────────────┘
+```
+
+**Specs**:
+- Icon: 48px, `--text-tertiary`
+- Title: `--text-xl`, `--text-tertiary`, centered
+- Description: `--text-base`, `--text-secondary`, centered
+- Metadata: Last seen timestamp, status history
+- Actions: Start/restart service (if applicable)
+
 ### Artifact Drawer Panel
 
 **Purpose**: Slide-out panel for file/artifact management

@@ -55,6 +55,60 @@ The UI should feel like a professional security operations tool:
 
 ## Trust Boundaries
 
+### Mermaid Trust Boundary Diagram
+
+```mermaid
+flowchart TB
+    subgraph UserSpace["🔒 USER SPACE (UI Layer)"]
+        direction TB
+        Chat["💬 Chat Workspace"]
+        Security["🛡️ Security Ops"]
+        Models["🤖 Models & Providers"]
+        Terminal["💻 Terminal"]
+        Projects["📊 Projects & Phases"]
+        Settings["⚙️ Settings (PIN-gated)"]
+    end
+
+    subgraph PublicZone["🟢 Public Zone"]
+        Chat
+    end
+
+    subgraph OperatorZone["🟡 Operator Zone"]
+        Security
+        Models
+        Terminal
+        Projects
+    end
+
+    subgraph PrivilegedZone["🔴 Privileged Zone"]
+        Settings
+    end
+
+    subgraph ServiceLayer["🔧 SERVICE LAYER"]
+        direction TB
+        MCP["MCP Bridge<br/>127.0.0.1:8766"]
+        LLM["LLM Proxy<br/>127.0.0.1:8767"]
+    end
+
+    subgraph SystemLayer["⚙️ SYSTEM SERVICES"]
+        direction TB
+        PhaseControl["Phase Control"]
+        SecurityAgents["Security Agents"]
+        IntelScraper["Intel Scraper"]
+    end
+
+    UserSpace -->|"API Calls"| ServiceLayer
+    ServiceLayer -->|"Internal"| SystemLayer
+
+    style PrivilegedZone fill:#1a1a25,stroke:#ef4444,stroke-width:3px
+    style OperatorZone fill:#1a1a25,stroke:#f59e0b,stroke-width:2px
+    style PublicZone fill:#1a1a25,stroke:#22c55e,stroke-width:2px
+    style ServiceLayer fill:#12121a,stroke:#6366f1,stroke-width:2px
+    style SystemLayer fill:#0a0a0f,stroke:#454555,stroke-width:2px
+```
+
+### ASCII Version (for text-only viewers)
+
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │                    USER SPACE (UI)                         │
@@ -627,13 +681,30 @@ OpenCode may NOT:
 ## Definition of Done
 
 - [x] Architecture documented (this doc)
-- [ ] Trust boundaries mapped
-- [ ] Panel inventory complete
-- [ ] Navigation model specified
-- [ ] Security model defined
-- [ ] Phase roadmap established
-- [ ] Repo docs created/updated
-- [ ] HANDOFF.md updated
+- [x] Trust boundaries mapped (Mermaid diagram + ASCII fallback)
+- [x] Panel inventory complete (6 primary panels specified)
+- [x] Navigation model specified (minimal shell + progressive disclosure)
+- [x] Security model defined (PIN + 2FA + Gmail alerts)
+- [x] Phase roadmap established (P77-P88 with dependencies)
+- [x] Repo docs created/updated
+- [x] HANDOFF.md updated
+
+## Closeout Notes
+
+**Status**: Ready for downstream execution (P79+)
+
+**Known Limitations**:
+- Tech stack selection deferred to P79
+- Visual mockups not included (per user-only sign-off rule)
+- FigJam/Canva URLs not verified (external to repo)
+
+**Verified Against Notion**:
+- ✅ Architecture requirements met
+- ✅ Trust boundaries visualized
+- ✅ Panel inventory matches P77 requirements
+- ✅ All 6 primary panels documented
+- ✅ Security tiers specified
+- ✅ Phase roadmap P77-P88 complete
 
 ## References
 

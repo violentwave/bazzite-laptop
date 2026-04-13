@@ -2,13 +2,29 @@
 
 Auto-generated cross-tool handoff. Updated by save-handoff.sh
 
-## Current Phase: P77/P78
+## Current Phase: P79 (Next)
 
-**P77 — UI Architecture + Contracts Baseline** 🔄 IN PROGRESS  
-**P78 — Midnight Glass Design System + Figma Mapping** 🔄 IN PROGRESS
+**P77 — UI Architecture + Contracts Baseline** ✅ COMPLETE  
+**P78 — Midnight Glass Design System + Figma Mapping** ✅ COMPLETE
 
 ### Summary
-Translating the Midnight Glass design corpus from Notion/FigJam/Canva into repo-native, implementation-facing documentation. Creating comprehensive UI architecture and design system specs for the Bazzite Unified Control Console.
+P77/P78 closeout complete. Implementation-facing documentation created for Bazzite Unified Control Console. Minimal improvements applied (Mermaid trust boundary diagram + explicit state surface specs). Ready for P79+ execution.
+
+### Files Delivered
+- `docs/PHASE77_UI_ARCHITECTURE.md` — UI architecture with Mermaid trust boundary diagram
+- `docs/PHASE78_MIDNIGHT_GLASS_DESIGN_SYSTEM.md` — Midnight Glass design system with state surfaces
+
+### Improvements Applied
+1. **P77**: Added Mermaid trust-boundary diagram with security zones (Public/Operator/Privileged)
+2. **P78**: Added explicit state surface specifications:
+   - Loading state
+   - Empty state
+   - Error state
+   - Success state
+   - Warning state
+   - Disconnected state
+   - Blocked state
+   - Offline state
 
 ### Design Direction (Locked)
 - **Theme**: Midnight Glass
@@ -18,27 +34,36 @@ Translating the Midnight Glass design corpus from Notion/FigJam/Canva into repo-
 - **Feel**: Security-first operator console
 - **Anti-patterns**: No gamer neon, no pink-forward retro, no cluttered SaaS dashboard
 
-### Files Created
-- `docs/PHASE77_UI_ARCHITECTURE.md` — UI architecture, trust boundaries, panel map, navigation
-- `docs/PHASE78_MIDNIGHT_GLASS_DESIGN_SYSTEM.md` — Midnight Glass tokens, components, rules
-
 ### Key Decisions Documented
 - Local-only, single-user architecture
 - Chat-first workflow with terminal as native companion
 - Minimal shell / progressive disclosure navigation
 - Collapsed icon rail (56px) default, expandable to 200px
 - PIN-gated settings + 2FA for dangerous actions
-- Glass effects reserved for overlays only (never full-glass UI)
+- Glass effects reserved for overlays only
 - Cyan accent reserved for live/focus states only
+- **Final design sign-off: user-only**
 
-### Design Sign-Off Status
-⚠️ **Design docs are implementation-facing specifications, not final visual approval.**  
-Final design sign-off remains **user-only** per hard rules.
+### Closeout Status
+- ✅ Architecture documented with visual trust boundary map
+- ✅ All 6 primary panels specified
+- ✅ Security model (PIN/2FA/Gmail) documented
+- ✅ Token system complete (colors, typography, spacing, motion)
+- ✅ Component rules for all UI kit elements
+- ✅ State surfaces (loading/empty/error/success/warning/disconnected/blocked/offline)
+- ✅ Phase roadmap P77-P88 established
+- ✅ Design sign-off authority clearly stated
 
-### Next Steps
-1. User review of P77/P78 documentation
-2. Iterate based on feedback
-3. Move to P79 (Shell + Navigation) when design direction approved
+### P79 Can Proceed Immediately
+P79 (Shell + Navigation) has all required inputs:
+- Architecture contract from P77
+- Design system from P78
+- Token specifications
+- Component rules
+- State surface patterns
+
+### Design Sign-Off Reminder
+⚠️ **Final visual design approval remains user-only.** OpenCode may implement from the documented specs, but any visual direction changes require explicit user approval.
 
 ---
 
