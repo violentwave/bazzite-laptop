@@ -212,7 +212,7 @@ Source: `configs/mcp-bridge-allowlist.yaml` + tools registered directly in serve
 | `logs.search` | python: `ai.log_intel` | `query` (string, max 500, required) | Semantic search across system logs |
 | `logs.stats` | python: `ai.log_intel` | — | Log pipeline statistics |
 
-### code.* (8 tools)
+### code.* (9 tools)
 
 | Tool | Source | Args | Description |
 |------|--------|------|-------------|
@@ -220,6 +220,7 @@ Source: `configs/mcp-bridge-allowlist.yaml` + tools registered directly in serve
 | `code.rag_query` | python: `ai.rag.code_query` | `question` (string, max 500, required) | Semantic search over indexed code |
 | `code.impact_analysis` | python: `ai.code_intel.store` | `changed_files`, `include_tests`, `max_depth` | Analyze impact of code changes |
 | `code.dependency_graph` | python: `ai.code_intel.store` | `module`, `direction` | Get dependency graph for a module |
+| `code.blast_radius` | python: `ai.code_intel.store` | `changed_files`, `max_depth` | Compute blast radius with hop depth |
 | `code.find_callers` | python: `ai.code_intel.store` | `function_name`, `include_indirect` | Find all callers of a function |
 | `code.suggest_tests` | python: `ai.code_intel.store` | `changed_files` | Suggest tests covering changed files |
 | `code.complexity_report` | python: `ai.code_intel.store` | `target`, `threshold` | Get complexity report for code |

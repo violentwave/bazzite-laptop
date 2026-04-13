@@ -1278,6 +1278,15 @@ async def _execute_python_tool(tool_name: str, tool_def: dict, args: dict) -> st
             result = store.query_dependency_graph(module, direction=direction, max_depth=depth)
             return _truncate(json.dumps(result, indent=2, default=str))
 
+        elif tool_name == "code.blast_radius":
+            from ai.code_intel.store import get_code_store  # noqa: PLC0415
+
+            store = get_code_store()
+            changed = [f.strip() for f in args.get("changed_files", "").split(",") if f.strip()]
+            depth = int(args.get("max_depth", 3))
+            result = store.query_blast_radius(changed, max_depth=depth)
+            return _truncate(json.dumps(result, indent=2, default=str))
+
         elif tool_name == "code.find_callers":
             from ai.code_intel.store import get_code_store  # noqa: PLC0415
 

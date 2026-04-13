@@ -781,6 +781,26 @@
 - **Notion**: P72 row pending final status/SHA sync
 - **Scope**: Dependency graph + impact alignment; no rename refactor or multi-language expansion
 
+### P73 — Impact Analysis
+- **Status**: Done
+- **Commit SHA**: —
+- **Finished**: 2026-04-13
+- **Repo Artifacts**:
+  - `ai/code_intel/store.py` — blast radius, weighted impact score, co-change analysis
+  - `ai/mcp_bridge/server.py` — new `code.blast_radius` handler + annotations
+  - `ai/mcp_bridge/tools.py` — new `code.blast_radius` dispatch path
+  - `configs/mcp-bridge-allowlist.yaml` — new `code.blast_radius` tool definition
+  - `scripts/index-code.py` — `--mine-history`, `--max-commits`
+  - `scripts/smoke-test-tools.py` — blast radius smoke entry
+  - `tests/test_dependency.py`
+  - `tests/test_impact.py`
+  - `docs/P73_PLAN.md`
+  - `docs/P73_COMPLETION_REPORT.md`
+  - `docs/AGENT.md` — code tool index updated
+  - `docs/USER-GUIDE.md` — code tool index updated
+- **Notion**: P73 row pending final status/SHA sync
+- **Scope**: Impact analysis only; no rename refactor or multi-language ingest
+
 ## Cross-Phase Documentation
 
 ### Hub Docs (docs/ root)

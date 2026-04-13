@@ -1,14 +1,14 @@
 # Phase Index — Bazzite AI Layer
 
-> Master index of all phases P0-P72. Generated 2026-04-13.
+> Master index of all phases P0-P73. Generated 2026-04-13.
 > Source of truth: Notion `Bazzite Phases` database + `git log`.
 
 ## Quick Stats
 
 | Metric | Value |
 |--------|-------|
-| Total Phases | P0-P72 (73 phases) |
-| Completed | P0-P72 |
+| Total Phases | P0-P73 (74 phases) |
+| Completed | P0-P73 |
 | In Progress | — |
 | Repo Docs | docs/*.md, docs/patterns/frontend/*.md, docs/frontend-capability-pack/*.md |
 | Notion DB | `398c13ed-47f6-4f7e-9e54-eb339b462c90` |
@@ -104,6 +104,7 @@
 | P70 | Phase Doc Overhaul | Done | 8b34ddb | 2026-04-12 | docs/PHASE_*.md | This page | Documentation |
 | P71 | Structural Analysis Enhancement | Done | — | 2026-04-12 | ai/code_intel/, scripts/index-code.py, tests/test_code_intel.py, docs/P71_*.md | Notion row | AST + store + MCP fixes |
 | P72 | Dependency Graph + Impact Alignment | Done | — | 2026-04-13 | ai/code_intel/parser.py, ai/code_intel/store.py, ai/mcp_bridge/{tools.py,server.py}, tests/test_code_intel.py, docs/P72_*.md | Notion row | Real dependency graph queries, cycles, and impact integration |
+| P73 | Impact Analysis | Done | — | 2026-04-13 | ai/code_intel/store.py, ai/mcp_bridge/{tools.py,server.py}, scripts/index-code.py, tests/{test_dependency.py,test_impact.py}, docs/P73_*.md | Notion row | Blast radius, weighted impact scoring, and co-change analysis |
 
 ## Notion Database Reference
 

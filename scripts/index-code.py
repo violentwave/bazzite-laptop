@@ -36,6 +36,17 @@ def main():
         type=str,
         help="Re-index a single file",
     )
+    parser.add_argument(
+        "--mine-history",
+        action="store_true",
+        help="Mine git change history only (or in addition to indexing)",
+    )
+    parser.add_argument(
+        "--max-commits",
+        type=int,
+        default=500,
+        help="Maximum commits to mine when --mine-history is used",
+    )
     args = parser.parse_args()
 
     code_parser = CodeParser(project_root=Path(__file__).parent.parent)
@@ -53,6 +64,15 @@ def main():
 
         store.update_incremental([str(file_path)], code_parser)
         print(f"Indexed {len(nodes)} nodes, {len(rels)} relationships")
+        if args.mine_history:
+            print(f"Mining change history (max_commits={args.max_commits})...")
+            store.mine_change_history(str(PROJECT_ROOT), max_commits=args.max_commits)
+        return
+
+    if args.mine_history and not args.incremental and not args.force:
+        print(f"Mining change history only (max_commits={args.max_commits})...")
+        store.mine_change_history(str(PROJECT_ROOT), max_commits=args.max_commits)
+        print("Change history mining complete")
         return
 
     # Force full reindex
@@ -69,7 +89,10 @@ def main():
         store.store_import_graph(graph)
 
         print("Mining change history...")
-        store.mine_change_history(str(PROJECT_ROOT))
+        if args.mine_history:
+            store.mine_change_history(str(PROJECT_ROOT), max_commits=args.max_commits)
+        else:
+            store.mine_change_history(str(PROJECT_ROOT))
 
         print(f"Indexed {len(nodes)} nodes, {len(rels)} relationships")
         return
@@ -116,6 +139,10 @@ def main():
     graph = ImportGraphBuilder().build()
     # Note: This adds new edges, doesn't replace. Full rebuild needed for import changes.
     store.store_import_graph(graph)
+
+    if args.mine_history:
+        print(f"Mining change history (max_commits={args.max_commits})...")
+        store.mine_change_history(str(PROJECT_ROOT), max_commits=args.max_commits)
 
     print(f"Indexed {len(changed_files)} changed files")
 

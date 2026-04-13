@@ -564,6 +564,21 @@ tools:
         default: 3
         required: false
 
+  code.blast_radius:
+    description: "Compute blast radius for changed files with hop depth"
+    source: python
+    module: ai.mcp_bridge.server
+    function: handle_code_blast_radius
+    args:
+      changed_files:
+        type: string
+        max_length: 1000
+        required: true
+      max_depth:
+        type: integer
+        default: 3
+        required: false
+
   code.find_callers:
     description: "Find all functions that call a given function"
     source: python

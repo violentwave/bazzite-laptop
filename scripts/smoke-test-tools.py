@@ -41,13 +41,16 @@ NEW_TOOLS: list[tuple[str, dict]] = [
     ("system.metrics_summary", {}),
     ("system.provider_status", {}),
     ("system.weekly_insights", {"limit": 2}),
-    ("system.create_tool", {
-        "name": "_smoke_test_probe",
-        "description": "smoke test probe",
-        "handler_code": "def _smoke_test_probe(**kwargs):\n    return {'ok': True}\n",
-        "parameters": [],
-        "created_by": "smoke-test",
-    }),
+    (
+        "system.create_tool",
+        {
+            "name": "_smoke_test_probe",
+            "description": "smoke test probe",
+            "handler_code": "def _smoke_test_probe(**kwargs):\n    return {'ok': True}\n",
+            "parameters": [],
+            "created_by": "smoke-test",
+        },
+    ),
     ("system.list_dynamic_tools", {}),
     # Knowledge / learning
     ("knowledge.task_patterns", {"query": "smoke test"}),
@@ -64,6 +67,7 @@ NEW_TOOLS: list[tuple[str, dict]] = [
     # Code intelligence
     ("code.impact_analysis", {"changed_files": "ai/config.py"}),
     ("code.dependency_graph", {"module": "ai.config", "max_depth": 1}),
+    ("code.blast_radius", {"changed_files": "ai/config.py", "max_depth": 2}),
     ("code.find_callers", {"function_name": "route_query"}),
     ("code.suggest_tests", {"changed_files": "ai/config.py"}),
     ("code.complexity_report", {"target": "ai/", "threshold": 10}),

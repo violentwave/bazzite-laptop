@@ -2,6 +2,8 @@
 
 import json
 import logging
+from collections import defaultdict, deque
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import lancedb
@@ -315,90 +317,91 @@ class CodeIntelStore:
     def query_impact(
         self, changed_files: list[str], max_depth: int = 3, include_tests: bool = True
     ) -> dict:
-        """Analyze impact of file changes.
-
-        Uses targeted queries instead of full table scans.
-        """
+        """Analyze impact of file changes using structural, dependency, and history signals."""
         try:
+            changed_files = [f for f in changed_files if f]
+            blast_radius = self.query_blast_radius(changed_files, max_depth=max_depth)
+            co_change = self._analyze_co_changes(changed_files, window_days=90)
+            impacted_modules = [m.get("module", "") for m in blast_radius.get("modules", [])]
+
+            suggested_tests: list[dict] = []
+            if include_tests:
+                suggested_tests = self.suggest_tests(
+                    changed_files,
+                    impacted_modules=[m for m in impacted_modules if m],
+                )
+
+            impact_score = self._compute_impact_score(
+                blast_radius=blast_radius,
+                co_change=co_change,
+                suggested_tests=suggested_tests,
+                include_tests=include_tests,
+            )
+
             impact = {
-                "direct_dependents": [],
-                "impacted_modules": [],
-                "co_changed": [],
-                "suggested_tests": [],
-                "confidence": {},
+                "changed_files": changed_files,
+                "blast_radius": blast_radius,
+                "direct_dependents": blast_radius.get("dependency_edges", []),
+                "impacted_modules": impacted_modules,
+                "co_change_analysis": co_change,
+                "co_changed": co_change.get("files", []),
+                "suggested_tests": suggested_tests,
+                "impact_score": impact_score,
+                "confidence": impact_score.get("signals", {}),
             }
-
-            # Get relationships and history for direct impact
-            rels_df = self._relationships.to_pandas()
-            hist_df = self._change_history.to_pandas()
-            modules = self._modules_for_files(changed_files)
-            seen_dependents: set[tuple[str, str]] = set()
-
-            for file_path in changed_files:
-                # Find relationships from nodes in this file
-                if not rels_df.empty:
-                    # Target: relationships where source is in changed file
-                    results = rels_df[rels_df["file_path"].str.contains(file_path, na=False)]
-                    for _, row in results.iterrows():
-                        impact["direct_dependents"].append(
-                            {
-                                "source_id": row["source_id"],
-                                "target_id": row["target_id"],
-                                "rel_type": row["rel_type"],
-                            }
-                        )
-
-                # Find co-changed files from history
-                if not hist_df.empty:
-                    for _, row in hist_df.iterrows():
-                        if file_path in str(row.get("file_path", "")):
-                            try:
-                                co_changed = json.loads(row.get("co_changed_files", "[]"))
-                                impact["co_changed"].extend(co_changed)
-                            except (json.JSONDecodeError, TypeError):
-                                pass
-
-            for module in modules:
-                deps = self.query_dependency_graph(module, direction="up", max_depth=max_depth)
-                for dep in deps.get("dependents", []):
-                    dependent = dep.get("module", "")
-                    if not dependent:
-                        continue
-                    edge_key = (dependent, module)
-                    if edge_key in seen_dependents:
-                        continue
-                    seen_dependents.add(edge_key)
-                    impact["direct_dependents"].append(
-                        {
-                            "source_id": dependent,
-                            "target_id": module,
-                            "rel_type": "imports",
-                            "depth": dep.get("depth", 1),
-                        }
-                    )
-                    impact["impacted_modules"].append(dependent)
-
-            if include_tests:
-                impact["suggested_tests"] = self.suggest_tests(changed_files)
-
-            impact["co_changed"] = list(set(impact["co_changed"]))
             impact["impacted_modules"] = sorted(set(impact["impacted_modules"]))
-            impact["confidence"]["static"] = 0.8
-            impact["confidence"]["historical"] = 0.5
-            impact["confidence"]["dependency_graph"] = 0.85 if impact["direct_dependents"] else 0.0
-            if include_tests:
-                impact["confidence"]["test_coverage"] = 0.75 if impact["suggested_tests"] else 0.25
-
             return impact
         except Exception as e:
             logger.warning(f"Failed to query impact: {e}")
             return {
+                "changed_files": changed_files,
+                "blast_radius": {"modules": [], "symbols": [], "max_depth": max_depth},
                 "direct_dependents": [],
                 "impacted_modules": [],
+                "co_change_analysis": {"window_days": 90, "files": [], "commits_analyzed": 0},
                 "co_changed": [],
                 "suggested_tests": [],
+                "impact_score": {"score": 0.0, "confidence": 0.0, "signals": {}},
                 "confidence": {},
             }
+
+    def query_blast_radius(self, changed_files: list[str], max_depth: int = 3) -> dict:
+        """Compute blast radius from dependency and structural relationships."""
+        modules = self._modules_for_files(changed_files)
+        module_impacts: dict[str, int] = {}
+        dependency_edges = []
+
+        for module in modules:
+            deps = self.query_dependency_graph(module, direction="up", max_depth=max_depth)
+            for dep in deps.get("dependents", []):
+                dependent = dep.get("module", "")
+                depth = int(dep.get("depth", 1))
+                if not dependent:
+                    continue
+                current = module_impacts.get(dependent)
+                if current is None or depth < current:
+                    module_impacts[dependent] = depth
+                dependency_edges.append(
+                    {
+                        "source_id": dependent,
+                        "target_id": module,
+                        "rel_type": "imports",
+                        "depth": depth,
+                    }
+                )
+
+        symbol_impacts = self._collect_structural_impacts(changed_files, max_depth)
+
+        return {
+            "max_depth": max_depth,
+            "changed_modules": modules,
+            "modules": [
+                {"module": module, "depth": depth}
+                for module, depth in sorted(module_impacts.items(), key=lambda item: item[1])
+            ],
+            "symbols": symbol_impacts,
+            "dependency_edges": dependency_edges,
+        }
 
     def query_dependency_graph(
         self, module: str, direction: str = "both", max_depth: int = 3
@@ -596,7 +599,11 @@ class CodeIntelStore:
             logger.warning(f"Failed to find callers: {e}")
             return []
 
-    def suggest_tests(self, changed_files: list[str]) -> list[dict]:
+    def suggest_tests(
+        self,
+        changed_files: list[str],
+        impacted_modules: list[str] | None = None,
+    ) -> list[dict]:
         """Suggest test files that cover the given changed files.
 
         Uses heuristics:
@@ -634,6 +641,7 @@ class CodeIntelStore:
 
             suggestions = []
             seen_tests = set()
+            impacted_modules = impacted_modules or []
 
             for _, test_node in test_files.iterrows():
                 test_file = test_node.get("file_path", "")
@@ -684,7 +692,15 @@ class CodeIntelStore:
                                 covers.append(symbol["qualified_name"])
                                 confidence = 0.7
 
+                if impacted_modules and test_name:
+                    for module in impacted_modules:
+                        module_tail = module.split(".")[-1]
+                        if module_tail and module_tail in test_name:
+                            covers.append(module)
+                            confidence = min(1.0, confidence + 0.15)
+
                 if covers:
+                    covers = sorted(set(covers))
                     seen_tests.add(test_file)
                     suggestions.append(
                         {
@@ -701,6 +717,182 @@ class CodeIntelStore:
         except Exception as e:
             logger.warning(f"Failed to suggest tests: {e}")
             return []
+
+    def _collect_structural_impacts(self, changed_files: list[str], max_depth: int) -> list[dict]:
+        """Collect impacted symbols by traversing reverse call/inherit/import edges."""
+        try:
+            nodes_df = self._code_nodes.to_pandas()
+            rels_df = self._relationships.to_pandas()
+            if nodes_df.empty or rels_df.empty:
+                return []
+
+            changed_nodes = set()
+            for file_path in changed_files:
+                matched = nodes_df[nodes_df["file_path"].str.contains(file_path, na=False)]
+                for _, row in matched.iterrows():
+                    node_id = str(row.get("node_id", ""))
+                    if node_id:
+                        changed_nodes.add(node_id)
+
+            if not changed_nodes:
+                return []
+
+            reverse_edges: dict[str, list[dict]] = defaultdict(list)
+            for _, row in rels_df.iterrows():
+                src = str(row.get("source_id", ""))
+                tgt = str(row.get("target_id", ""))
+                rel_type = str(row.get("rel_type", ""))
+                if src and tgt and rel_type in {"calls", "inherits", "imports"}:
+                    reverse_edges[tgt].append(
+                        {
+                            "source_id": src,
+                            "rel_type": rel_type,
+                            "file_path": row.get("file_path", ""),
+                            "line_number": int(row.get("line_number", 0) or 0),
+                        }
+                    )
+
+            queue = deque((node_id, 0) for node_id in changed_nodes)
+            visited = set(changed_nodes)
+            impacted: dict[str, dict] = {}
+
+            while queue:
+                target, depth = queue.popleft()
+                if depth >= max_depth:
+                    continue
+                for edge in reverse_edges.get(target, []):
+                    source = edge["source_id"]
+                    hop = depth + 1
+                    existing = impacted.get(source)
+                    if existing is None or hop < int(existing.get("depth", 99)):
+                        impacted[source] = {
+                            "symbol": source,
+                            "depth": hop,
+                            "rel_type": edge["rel_type"],
+                            "file_path": edge.get("file_path", ""),
+                            "line_number": edge.get("line_number", 0),
+                        }
+                    if source not in visited:
+                        visited.add(source)
+                        queue.append((source, hop))
+
+            return sorted(impacted.values(), key=lambda item: int(item.get("depth", 0)))
+        except Exception as e:
+            logger.warning("Failed to collect structural impacts: %s", e)
+            return []
+
+    def _analyze_co_changes(self, changed_files: list[str], window_days: int = 90) -> dict:
+        """Analyze historically co-changed files within a time window."""
+        try:
+            hist_df = self._change_history.to_pandas()
+            if hist_df.empty:
+                return {"window_days": window_days, "files": [], "commits_analyzed": 0}
+
+            cutoff = datetime.now(tz=UTC) - timedelta(days=window_days)
+            changed_set = set(changed_files)
+            file_stats: dict[str, dict] = {}
+            commits_seen = 0
+
+            for _, row in hist_df.iterrows():
+                timestamp_raw = str(row.get("timestamp", "") or "")
+                try:
+                    ts = datetime.fromisoformat(timestamp_raw.replace("Z", "+00:00"))
+                    if ts.tzinfo is None:
+                        ts = ts.replace(tzinfo=UTC)
+                except Exception:
+                    continue
+
+                if ts < cutoff:
+                    continue
+
+                try:
+                    co_files = json.loads(row.get("co_changed_files", "[]") or "[]")
+                except Exception:
+                    co_files = []
+                if not isinstance(co_files, list):
+                    continue
+
+                if not any(f in co_files for f in changed_files):
+                    continue
+
+                commits_seen += 1
+                for file_path in co_files:
+                    if not isinstance(file_path, str) or file_path in changed_set:
+                        continue
+                    stats = file_stats.setdefault(
+                        file_path,
+                        {"file": file_path, "count": 0, "last_seen": ts, "days_since_last": 9999},
+                    )
+                    stats["count"] += 1
+                    if ts > stats["last_seen"]:
+                        stats["last_seen"] = ts
+
+            for stats in file_stats.values():
+                delta = datetime.now(tz=UTC) - stats["last_seen"]
+                stats["days_since_last"] = delta.days
+                stats["last_seen"] = stats["last_seen"].date().isoformat()
+
+            ranked = sorted(
+                file_stats.values(),
+                key=lambda item: (-int(item["count"]), int(item["days_since_last"])),
+            )
+            return {
+                "window_days": window_days,
+                "files": ranked[:20],
+                "commits_analyzed": commits_seen,
+            }
+        except Exception as e:
+            logger.warning("Failed co-change analysis: %s", e)
+            return {"window_days": window_days, "files": [], "commits_analyzed": 0}
+
+    def _compute_impact_score(
+        self,
+        *,
+        blast_radius: dict,
+        co_change: dict,
+        suggested_tests: list[dict],
+        include_tests: bool,
+    ) -> dict:
+        """Compute weighted impact score and confidence."""
+        structural_count = len(blast_radius.get("symbols", []))
+        dependency_count = len(blast_radius.get("modules", []))
+        historical_count = len(co_change.get("files", []))
+        avg_test_conf = 0.0
+        if suggested_tests:
+            avg_test_conf = sum(float(t.get("confidence", 0.0)) for t in suggested_tests) / len(
+                suggested_tests
+            )
+
+        structural_signal = min(1.0, structural_count / 20.0)
+        dependency_signal = min(1.0, dependency_count / 20.0)
+        historical_signal = min(1.0, historical_count / 20.0)
+        test_signal = avg_test_conf if include_tests else 0.0
+
+        score = (
+            0.35 * structural_signal
+            + 0.30 * dependency_signal
+            + 0.20 * historical_signal
+            + 0.15 * test_signal
+        )
+
+        confidence_parts = [
+            1.0 if structural_count else 0.0,
+            1.0 if dependency_count else 0.0,
+            1.0 if co_change.get("commits_analyzed", 0) else 0.0,
+            (1.0 if suggested_tests else 0.0) if include_tests else 1.0,
+        ]
+        confidence = sum(confidence_parts) / len(confidence_parts)
+
+        return {
+            "score": round(score, 4),
+            "confidence": round(confidence, 4),
+            "signals": {
+                "structural": round(structural_signal, 4),
+                "dependency": round(dependency_signal, 4),
+                "historical": round(historical_signal, 4),
+                "tests": round(test_signal, 4),
+            },
+        }
 
     def get_complexity_report(self, target: str | None = None, threshold: int = 10) -> dict:
         """Get complexity report for code files or functions.

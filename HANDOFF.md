@@ -2,6 +2,49 @@
 
 Auto-generated cross-tool handoff. Updated by save-handoff.sh
 
+## Completed Phase: P73
+
+**P73 — Impact Analysis** ✅ COMPLETED
+
+### Summary
+Implemented blast-radius and weighted impact analysis by combining structural relationships, dependency graph traversal, and historical co-change signals. Exposed the new capability through `code.blast_radius` and aligned `code.impact_analysis` scoring outputs.
+
+### Files Created
+- `docs/P73_PLAN.md`
+- `docs/P73_COMPLETION_REPORT.md`
+- `tests/test_dependency.py`
+- `tests/test_impact.py`
+
+### Files Updated
+- `ai/code_intel/store.py`
+- `ai/mcp_bridge/server.py`
+- `ai/mcp_bridge/tools.py`
+- `configs/mcp-bridge-allowlist.yaml`
+- `scripts/index-code.py`
+- `scripts/smoke-test-tools.py`
+- `docs/AGENT.md`
+- `docs/USER-GUIDE.md`
+- `docs/PHASE_INDEX.md`
+- `docs/PHASE_ARTIFACT_REGISTER.md`
+
+### Delivered in P73
+- Added `query_blast_radius(changed_files, max_depth)` with hop depth output
+- Enhanced `query_impact(...)` to include:
+  - `blast_radius`
+  - `co_change_analysis` (time window)
+  - weighted `impact_score` and computed confidence signals
+- Added `code.blast_radius` MCP tool (allowlist + server + dispatch)
+- Added optional impacted-module hints to `suggest_tests(...)`
+- Added `scripts/index-code.py --mine-history --max-commits`
+
+### Validation Results
+- `ruff check ai/code_intel/ ai/mcp_bridge/ tests/` ✅ passed
+- `python -m pytest tests/test_code_intel.py tests/test_dependency.py tests/test_impact.py -v` ✅ 40 passed
+- `python scripts/index-code.py --mine-history --max-commits 100` ⚠️ completed, but `pydriller` not installed in this environment
+
+### Notes
+- P73 remained in-scope for impact analysis and MCP exposure only.
+
 ## Completed Phase: P72
 
 **P72 — Dependency Graph Expansion + Impact Analysis Alignment** ✅ COMPLETED

@@ -165,6 +165,7 @@ def create_app():
         # ── code intelligence ─────────────────────────────────────────────────
         "code.impact_analysis": {"readOnlyHint": True, "idempotentHint": True},
         "code.dependency_graph": {"readOnlyHint": True, "idempotentHint": True},
+        "code.blast_radius": {"readOnlyHint": True, "idempotentHint": True},
         "code.find_callers": {"readOnlyHint": True, "idempotentHint": True},
         "code.suggest_tests": {"readOnlyHint": True, "idempotentHint": True},
         "code.complexity_report": {"readOnlyHint": True, "idempotentHint": True},
@@ -586,6 +587,30 @@ def create_app():
                         "dependents": [],
                         "edges": [],
                         "circular": [],
+                    }
+
+        elif tool_name == "code.blast_radius":
+
+            @mcp.tool(name=tool_name, description=description, annotations=ann)
+            async def _handler_blast_radius(
+                changed_files: str,
+                max_depth: int = 3,
+                _tn=tool_name,
+            ):
+                try:
+                    from ai.code_intel.store import get_code_store
+
+                    store = get_code_store()
+                    files = [f.strip() for f in changed_files.split(",") if f.strip()]
+                    return store.query_blast_radius(files, max_depth=max_depth)
+                except Exception as e:
+                    return {
+                        "error": str(e),
+                        "max_depth": max_depth,
+                        "changed_modules": [],
+                        "modules": [],
+                        "symbols": [],
+                        "dependency_edges": [],
                     }
 
         elif tool_name == "code.find_callers":
