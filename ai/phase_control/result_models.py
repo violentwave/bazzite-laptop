@@ -71,6 +71,39 @@ class BackendRequest:
     timeout_seconds: int
     env_allowlist: list[str]
     artifacts_dir: str
+    preflight_summary: str = ""
+    preflight_record: dict[str, Any] | None = None
+
+
+@dataclass
+class PreflightRecord:
+    """Project-intelligence preflight record for execution gating."""
+
+    schema_version: str
+    generated_at: str
+    phase_context: dict[str, Any]
+    artifact_context: dict[str, Any]
+    code_context: dict[str, Any]
+    pattern_context: dict[str, Any]
+    health_signals: dict[str, Any]
+    gate: dict[str, Any]
+    summary: str
+    source_errors: list[str] = field(default_factory=list)
+
+    def to_dict(self) -> dict[str, Any]:
+        """Convert to a serializable dictionary."""
+        return {
+            "schema_version": self.schema_version,
+            "generated_at": self.generated_at,
+            "phase_context": self.phase_context,
+            "artifact_context": self.artifact_context,
+            "code_context": self.code_context,
+            "pattern_context": self.pattern_context,
+            "health_signals": self.health_signals,
+            "gate": self.gate,
+            "summary": self.summary,
+            "source_errors": list(self.source_errors),
+        }
 
 
 @dataclass

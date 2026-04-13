@@ -820,6 +820,22 @@
 - **Notion**: P74 row pending final status/SHA sync
 - **Scope**: Fusion layer via existing stores/surfaces only; no parallel platform
 
+### P75 — Project Intelligence Preflight + Execution Gating
+- **Status**: Done
+- **Commit SHA**: —
+- **Finished**: 2026-04-13
+- **Repo Artifacts**:
+  - `ai/phase_control/preflight.py` — preflight builder combining phase/artifact/code/pattern/health signals
+  - `ai/phase_control/result_models.py` — `PreflightRecord`, backend request preflight fields
+  - `ai/phase_control/policy.py` — `check_preflight_gate` policy decision
+  - `ai/phase_control/runner.py` — preflight-first execution gating and prompt-context injection
+  - `tests/test_phase_control_preflight.py`
+  - `tests/test_phase_control_runner.py` — preflight integration assertions
+  - `docs/P75_PLAN.md`
+  - `docs/P75_COMPLETION_REPORT.md`
+- **Notion**: P75 row pending final status/SHA sync
+- **Scope**: Phase-native preflight and gating only; no separate orchestration stack
+
 ## Cross-Phase Documentation
 
 ### Hub Docs (docs/ root)

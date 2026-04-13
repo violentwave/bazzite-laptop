@@ -73,3 +73,27 @@ def check_done_validation(summary: ValidationSummary) -> PolicyDecision:
             )
         ],
     )
+
+
+def check_preflight_gate(preflight: dict) -> PolicyDecision:
+    """Execution preflight gate; blocks when preflight marks execution unsafe."""
+    gate = preflight.get("gate", {}) if isinstance(preflight, dict) else {}
+    if gate.get("allowed", False):
+        warnings = gate.get("warnings", [])
+        return PolicyDecision(
+            allowed=True,
+            events=[
+                PolicyEvent(code="preflight_warning", message=str(warning))
+                for warning in warnings[:10]
+            ],
+        )
+
+    blockers = gate.get("blockers", [])
+    if not blockers:
+        blockers = ["preflight_blocked"]
+    return PolicyDecision(
+        allowed=False,
+        events=[
+            PolicyEvent(code="preflight_blocked", message=str(blocker)) for blocker in blockers[:10]
+        ],
+    )

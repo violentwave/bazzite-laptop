@@ -175,11 +175,13 @@ logs.anomalies — unacknowledged anomalies (threats, temp spikes, disk issues)
 logs.search (query) — semantic search across system logs
 logs.stats — log pipeline statistics
 
-code.* (8):
+code.* (10):
 code.search (query) — ripgrep pattern search over Python source
 code.rag_query (question) — semantic search over indexed code
+code.fused_context (question) — fused semantic + structural + artifact code context
 code.impact_analysis (file_path, [depth]) — analyze code changes and their downstream impact
 code.dependency_graph ([file_path], [depth]) — build AST-based import dependency graph
+code.blast_radius (changed_files, [max_depth]) — compute blast radius for changed files
 code.find_callers (function_name, [file_path]) — find all callers of a function
 code.suggest_tests (file_path, [test_type]) — suggest test cases based on code analysis
 code.complexity_report ([file_path], [threshold]) — cyclomatic complexity analysis

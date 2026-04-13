@@ -308,12 +308,13 @@ Module: `ai/orchestration/`
 | **P53** | Agent Orchestration Expansion | +6 | `ai-workflow-health.timer` (Every 6h) | `workflow_runs` | `ai/orchestration/`, `ai/workflows/` |
 | **P54** | Workflow Hardening + Observability | +3 | — | `workflow_steps` | `ai/orchestration/observer.py`, `ai/workflows/` |
 | **P55** | Notion/Slack Autonomous Control Plane | — | `phase-control.timer` (Every 15m) | — | `ai/phase_control/` |
+| **P75** | Project Intelligence Preflight + Execution Gating | — | — | — | `ai/phase_control/preflight.py`, `ai/phase_control/runner.py` |
 
 Read-only live probe:
 `./.venv/bin/python scripts/run-phase-control.py --smoke-test --database-id "$NOTION_PHASE_DATABASE_ID"`
 This validates Notion config, queries the phase database, and resolves the next eligible phase without mutating any rows.
 
-### Current State (Post-P55)
+### Current State (Post-P75)
 
 | Metric | Value |
 |--------|-------|

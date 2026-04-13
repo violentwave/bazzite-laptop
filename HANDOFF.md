@@ -2,6 +2,51 @@
 
 Auto-generated cross-tool handoff. Updated by save-handoff.sh
 
+## Completed Phase: P75
+
+**P75 — Project Intelligence Preflight + Execution Gating** ✅ COMPLETED
+
+### Summary
+Implemented a phase-native preflight + execution gate inside `PhaseControlRunner` so prompt execution now consumes a required intelligence record (phase state, artifacts, code context, patterns, health signals) before backend execution.
+
+### Files Created
+- `ai/phase_control/preflight.py`
+- `docs/P75_PLAN.md`
+- `docs/P75_COMPLETION_REPORT.md`
+- `tests/test_phase_control_preflight.py`
+
+### Files Updated
+- `ai/phase_control/result_models.py`
+- `ai/phase_control/policy.py`
+- `ai/phase_control/runner.py`
+- `tests/test_phase_control_runner.py`
+- `docs/AGENT.md`
+- `docs/PHASE_INDEX.md`
+- `docs/PHASE_ARTIFACT_REGISTER.md`
+
+### Delivered in P75
+- Added `PreflightRecord` model and backend request preflight fields.
+- Added unified preflight builder:
+  - phase context
+  - artifact context
+  - code fused + impact context
+  - task/knowledge/shared-context signals
+  - timer/pipeline/provider health
+- Added policy gate (`check_preflight_gate`) and integrated it into runner flow before backend execution.
+- Injected preflight summary into generated execution prompt context.
+- Persisted preflight summaries to `shared_context` for traceability.
+
+### Validation Results
+- `ruff check ai/phase_control/ tests/test_phase_control_runner.py tests/test_phase_control_preflight.py` ✅ passed
+- `python -m pytest tests/test_phase_control_runner.py tests/test_phase_control_preflight.py tests/test_phase_control_notion_sync.py tests/test_phase_control_state_machine.py -q --tb=short` ✅ 23 passed
+- `ruff check ai/ tests/ docs/` ⚠️ fails due pre-existing lint debt in `docs/zo-tools/**` (outside P75 scope)
+- `python -m pytest tests/ -q --tb=short` ⚠️ environment failure: missing `hypothesis`
+- `rg ...` command ⚠️ `rg` unavailable in environment; equivalent grep-based validation executed
+
+### Notes
+- Gating is now default in `PhaseControlRunner.run_once()` for phase execution attempts.
+- No separate orchestration stack was introduced; existing phase-control remains the execution authority.
+
 ## Completed Phase: P74
 
 **P74 — Code Intelligence Fusion Layer** ✅ COMPLETED

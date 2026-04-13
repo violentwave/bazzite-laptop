@@ -1,14 +1,14 @@
 # Phase Index — Bazzite AI Layer
 
-> Master index of all phases P0-P74. Generated 2026-04-13.
+> Master index of all phases P0-P75. Generated 2026-04-13.
 > Source of truth: Notion `Bazzite Phases` database + `git log`.
 
 ## Quick Stats
 
 | Metric | Value |
 |--------|-------|
-| Total Phases | P0-P74 (75 phases) |
-| Completed | P0-P74 |
+| Total Phases | P0-P75 (76 phases) |
+| Completed | P0-P75 |
 | In Progress | — |
 | Repo Docs | docs/*.md, docs/patterns/frontend/*.md, docs/frontend-capability-pack/*.md |
 | Notion DB | `398c13ed-47f6-4f7e-9e54-eb339b462c90` |
@@ -106,6 +106,7 @@
 | P72 | Dependency Graph + Impact Alignment | Done | — | 2026-04-13 | ai/code_intel/parser.py, ai/code_intel/store.py, ai/mcp_bridge/{tools.py,server.py}, tests/test_code_intel.py, docs/P72_*.md | Notion row | Real dependency graph queries, cycles, and impact integration |
 | P73 | Impact Analysis | Done | — | 2026-04-13 | ai/code_intel/store.py, ai/mcp_bridge/{tools.py,server.py}, scripts/index-code.py, tests/{test_dependency.py,test_impact.py}, docs/P73_*.md | Notion row | Blast radius, weighted impact scoring, and co-change analysis |
 | P74 | Code Intelligence Fusion Layer | Done | — | 2026-04-13 | ai/code_intel/store.py, ai/rag/code_query.py, ai/mcp_bridge/{tools.py,server.py}, configs/mcp-bridge-allowlist.yaml, tests/test_code_fusion.py, docs/P74_*.md | Notion row | Unified semantic+structural+artifact retrieval path |
+| P75 | Project Intelligence Preflight + Execution Gating | Done | — | 2026-04-13 | ai/phase_control/{preflight.py,runner.py,policy.py,result_models.py}, tests/test_phase_control_preflight.py, docs/P75_*.md | Notion row | Required preflight context + gate before phase execution |
 
 ## Notion Database Reference
 

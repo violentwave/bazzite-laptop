@@ -15,7 +15,13 @@ from uuid import uuid4
 from ai.phase_control.backends import ClaudeCodeBackend, CodexBackend, OpenCodeBackend
 from ai.phase_control.models import PhaseRow, PhaseStatus
 from ai.phase_control.notion_sync import InMemoryPhaseSync, PhaseSyncBackend
-from ai.phase_control.policy import check_approval, check_done_validation, check_ready_requirements
+from ai.phase_control.policy import (
+    check_approval,
+    check_done_validation,
+    check_preflight_gate,
+    check_ready_requirements,
+)
+from ai.phase_control.preflight import build_preflight_record
 from ai.phase_control.result_models import (
     BackendRequest,
     BackendResult,
@@ -70,13 +76,22 @@ class PhaseControlRunner:
         artifacts_dir = phase.artifacts_dir or str(
             Path(self.config.repo_path) / "artifacts" / "phase-control" / run_id
         )
+        preflight_summary = str(phase.metadata.get("preflight_summary", "") or "")
+        execution_prompt = phase.execution_prompt
+        if preflight_summary:
+            execution_prompt = (
+                "[Preflight Context]\n"
+                f"{preflight_summary}\n\n"
+                "[Execution Prompt]\n"
+                f"{phase.execution_prompt}"
+            )
         return BackendRequest(
             run_id=run_id,
             phase_name=phase.phase_name,
             phase_number=phase.phase_number,
             repo_path=self.config.repo_path,
             branch_name=phase.branch_name,
-            execution_prompt=phase.execution_prompt,
+            execution_prompt=execution_prompt,
             allowed_tools=phase.allowed_tools,
             validation_commands=phase.validation_commands,
             execution_mode=phase.execution_mode,
@@ -85,6 +100,8 @@ class PhaseControlRunner:
             timeout_seconds=phase.timeout_seconds,
             env_allowlist=phase.env_allowlist,
             artifacts_dir=artifacts_dir,
+            preflight_summary=preflight_summary,
+            preflight_record=phase.metadata.get("preflight_record"),
         )
 
     def _run_validations(self, commands: list[str]) -> ValidationSummary:
@@ -190,6 +207,33 @@ class PhaseControlRunner:
         response_status = "processed"
 
         try:
+            preflight = build_preflight_record(phase, repo_path=self.config.repo_path)
+            preflight_dict = preflight.to_dict()
+            phase.metadata["preflight_record"] = preflight_dict
+            phase.metadata["preflight_summary"] = preflight.summary
+
+            preflight_gate = check_preflight_gate(preflight_dict)
+            if not preflight_gate.allowed:
+                blocker = (
+                    "; ".join(event.message for event in preflight_gate.events)
+                    or "preflight blocked"
+                )
+                phase.blocker = blocker
+                phase.validation_summary = {"preflight": preflight_dict}
+                phase.summary = preflight.summary
+                self.sync_backend.update_phase(phase)
+                response_status = "preflight_blocked"
+                return {
+                    "status": response_status,
+                    "phase": phase.phase_number,
+                    "run_id": run_id,
+                    "phase_status": phase.status,
+                    "events": [
+                        {"code": event.code, "message": event.message}
+                        for event in preflight_gate.events
+                    ],
+                }
+
             transition_phase(
                 phase,
                 PhaseStatus.IN_PROGRESS,
@@ -230,7 +274,12 @@ class PhaseControlRunner:
 
             validation_summary = self._run_validations(phase.validation_commands)
             phase.validation_summary = validation_summary.to_dict()
-            phase.summary = result.summary
+            preflight_summary = str(phase.metadata.get("preflight_summary", "") or "")
+            phase.summary = (
+                f"{preflight_summary}\nBackend: {result.summary}"
+                if preflight_summary
+                else result.summary
+            )
 
             if result.status == BackendStatus.SUCCESS:
                 done_gate = check_done_validation(validation_summary)
