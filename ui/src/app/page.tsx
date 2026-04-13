@@ -1,6 +1,7 @@
 "use client";
 
 import { useShell } from "@/components/shell/ShellContext";
+import { ChatContainer } from "@/components/chat/ChatContainer";
 
 export default function Home() {
   const { activePanel } = useShell();
@@ -28,8 +29,14 @@ export default function Home() {
       </div>
 
       {/* Panel Content */}
-      <div className="flex-1 overflow-auto p-6">
-        <PanelContent panel={activePanel} />
+      <div className="flex-1 overflow-hidden">
+        {activePanel === "chat" ? (
+          <ChatContainer />
+        ) : (
+          <div className="h-full overflow-auto p-6">
+            <PanelContent panel={activePanel} />
+          </div>
+        )}
       </div>
     </div>
   );
@@ -219,7 +226,7 @@ function PanelStatus({ panel }: { panel: string }) {
             className="w-2 h-2 rounded-full"
             style={{ background: "var(--accent-primary)" }}
           />
-          P79 In Progress
+          P80 In Progress
         </div>
       );
     case "settings":
@@ -246,8 +253,6 @@ function PanelStatus({ panel }: { panel: string }) {
 
 function PanelContent({ panel }: { panel: string }) {
   switch (panel) {
-    case "chat":
-      return <ChatPlaceholder />;
     case "security":
       return <SecurityPlaceholder />;
     case "models":
@@ -263,66 +268,7 @@ function PanelContent({ panel }: { panel: string }) {
   }
 }
 
-// Placeholder Components for P79
-// These will be replaced with full implementations in P80-P85
-
-function ChatPlaceholder() {
-  return (
-    <div className="h-full flex flex-col items-center justify-center text-center">
-      <div
-        className="w-16 h-16 rounded-2xl flex items-center justify-center mb-6"
-        style={{ background: "var(--base-02)" }}
-      >
-        <svg
-          width="32"
-          height="32"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.5"
-          style={{ color: "var(--accent-primary)" }}
-        >
-          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-        </svg>
-      </div>
-      <h2
-        className="text-2xl font-semibold mb-3"
-        style={{ color: "var(--text-primary)" }}
-      >
-        Chat Workspace
-      </h2>
-      <p
-        className="max-w-md mb-6"
-        style={{ color: "var(--text-secondary)" }}
-      >
-        The chat workspace is coming in P80. This will be your primary
-        interaction surface with AI assistance, tool results, and conversation
-        history.
-      </p>
-      <div
-        className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm"
-        style={{
-          background: "var(--base-02)",
-          color: "var(--text-tertiary)",
-          border: "1px solid var(--base-04)",
-        }}
-      >
-        <span>Press</span>
-        <kbd
-          className="px-2 py-0.5 rounded text-xs"
-          style={{
-            background: "var(--base-03)",
-            border: "1px solid var(--base-04)",
-          }}
-        >
-          Ctrl+K
-        </kbd>
-        <span>to open the Command Palette</span>
-      </div>
-    </div>
-  );
-}
-
+// Placeholder Components for other panels
 function SecurityPlaceholder() {
   return (
     <div className="space-y-6">
@@ -539,11 +485,11 @@ function ProjectsPlaceholder() {
         </h4>
         <div className="space-y-3">
           {[
-            { phase: "P79", name: "UI Shell Bootstrap", status: "In Progress" },
+            { phase: "P80", name: "Chat Workspace", status: "In Progress" },
+            { phase: "P79", name: "UI Shell Bootstrap", status: "Complete" },
             { phase: "P78", name: "Midnight Glass Design", status: "Complete" },
             { phase: "P77", name: "UI Architecture", status: "Complete" },
-            { phase: "P76", name: "Ingestion Automation", status: "Complete" },
-          ].map((item, index) => (
+          ].map((item) => (
             <div
               key={item.phase}
               className="flex items-center justify-between py-2 border-b last:border-0"
