@@ -2,7 +2,7 @@
 
 Auto-generated cross-tool handoff. Updated by save-handoff.sh
 
-## Current Phase: P86 (Next)
+## Current Phase: P87 (Next)
 
 **P77 — UI Architecture + Contracts Baseline** ✅ COMPLETE  
 **P78 — Midnight Glass Design System + Figma Mapping** ✅ COMPLETE  
@@ -12,7 +12,8 @@ Auto-generated cross-tool handoff. Updated by save-handoff.sh
 **P82 — Provider + Model Discovery / Routing Console** ✅ COMPLETE  
 **P83 — Chat + MCP Workspace Integration** ✅ COMPLETE  
 **P84 — Security Ops Center** ✅ COMPLETE  
-**P85 — Interactive Shell Gateway** ✅ COMPLETE
+**P85 — Interactive Shell Gateway** ✅ COMPLETE  
+**P86 — Project + Workflow + Phase Panels** ✅ COMPLETE
 
 ### Summary
 P82 complete. Provider and model discovery console implemented with real-time health tracking, model catalog browsing, and task-type routing visualization. Integrates with P81 settings for automatic refresh and existing HealthTracker for provider state.
@@ -568,6 +569,116 @@ Implemented the Interactive Shell Gateway for the Unified Control Console. Provi
 - Session management patterns established
 - Audit logging in place
 - Handoff paths ready for workflow integration
+
+---
+
+## Completed Phase: P86
+
+**P86 — Project + Workflow + Phase Panels** ✅ COMPLETE
+
+### Summary
+Implemented the Project + Workflow + Phase workspace for the Unified Control Console. Makes project execution state a first-class operator surface by exposing current phase context, workflow runs, artifacts, preflight summaries, and recommended actions.
+
+### Backend Files Created
+
+**`ai/project_workflow_service.py`** (~400 lines):
+- Aggregates data from HANDOFF.md, phase docs, workflow runs, and artifacts
+- Generates recommendations based on project state
+- Integrates with P75 preflight intelligence
+- 4 MCP tools for project operations
+
+**`ai/mcp_bridge/tools.py`**:
+- Added 4 project tool handlers
+
+**`configs/mcp-bridge-allowlist.yaml`**:
+- Registered 4 project tools (context, workflow_history, phase_timeline, artifacts)
+
+### Frontend Files Created
+
+**`ui/src/components/project-workflow/`** (~900 lines):
+- `ProjectWorkflowContainer.tsx` — Main panel with 3-column layout
+- `CurrentPhaseHeader.tsx` — Phase context with readiness indicators
+- `WorkflowRunsPanel.tsx` — Recent workflow runs with status
+- `ArtifactHistoryPanel.tsx` — Recent artifacts list
+- `PhaseTimelinePanel.tsx` — Phase timeline visualization
+- `NextActionsPanel.tsx` — Recommended actions and quick links
+- `index.ts` — Component exports
+
+**`ui/src/hooks/useProjectWorkflow.ts`**:
+- React hook for project data
+- Parallel data fetching
+- Auto-refresh every 30 seconds
+- Utility functions (status colors, formatting)
+
+**`ui/src/types/project-workflow.ts`**:
+- TypeScript interfaces for PhaseInfo, WorkflowRun, ArtifactInfo
+- Status enums and types
+
+**`ui/src/app/page.tsx`**:
+- Updated to render `ProjectWorkflowContainer` for "projects" panel
+
+### Delivered in P86
+
+**Current Phase Context**:
+- Phase number, name, and status
+- Readiness indicator (ready/blocked/degraded)
+- Blockers list with dependency tracking
+- Next action recommendation
+- Backend and risk tier metadata
+
+**Workflow Runs**:
+- Recent runs with status indicators
+- Step counts and progress
+- Error message display
+- Relative timestamps
+
+**Artifact Tracking**:
+- Recent artifacts with file metadata
+- Source phase attribution
+- Size and timestamp formatting
+
+**Phase Timeline**:
+- Visual timeline of all phases
+- Status indicators per phase
+- Active phase highlighting
+- Scrollable history
+
+**Recommended Actions**:
+- Context-aware recommendations
+- Priority ordering
+- Quick links to chat, shell, security
+
+**Design Compliance**:
+- Midnight Glass design tokens throughout
+- 3-column responsive layout
+- Card-based organization
+- Status chips consistent with P82/P84
+
+### Validation Results
+- `ruff check ai/project_workflow_service.py` ✅ passed
+- `npx tsc --noEmit` ✅ Clean
+- 4 project MCP tools registered ✅
+
+### Integration Points
+- Reuses P75 preflight intelligence substrate
+- Reuses P81 audit logging patterns
+- Reuses P82 auto-refresh patterns (30s interval)
+- Reuses P83 panel integration patterns
+- Reuses P84 card-based layout patterns
+- Reuses P85 follow-up path conventions
+
+### Data Sources
+- HANDOFF.md for current phase detection
+- docs/P*_*.md for phase timeline
+- LanceDB workflow_runs table
+- artifacts/ directory for evidence
+
+### Next Phase Ready
+**P87 — Responsive Polish / Migration Prep** can proceed:
+- All 6 primary panels complete
+- Consistent design patterns established
+- Cross-panel navigation functional
+- Ready for responsive refinement
 
 ---
 

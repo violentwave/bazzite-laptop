@@ -6,6 +6,7 @@ import { SettingsContainer } from "@/components/settings/SettingsContainer";
 import { ProvidersContainer } from "@/components/providers/ProvidersContainer";
 import { SecurityContainer } from "@/components/security/SecurityContainer";
 import { ShellContainer } from "@/components/shell-gateway/ShellContainer";
+import { ProjectWorkflowContainer } from "@/components/project-workflow/ProjectWorkflowContainer";
 
 export default function Home() {
   const { activePanel } = useShell();
@@ -44,6 +45,8 @@ export default function Home() {
           <SecurityContainer />
         ) : activePanel === "terminal" ? (
           <ShellContainer />
+        ) : activePanel === "projects" ? (
+          <ProjectWorkflowContainer />
         ) : (
           <div className="h-full overflow-auto p-6">
             <PanelContent panel={activePanel} />

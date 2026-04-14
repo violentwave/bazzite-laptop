@@ -887,6 +887,29 @@ async def _execute_python_tool(tool_name: str, tool_def: dict, args: dict) -> st
             limit = args.get("limit", 100)
             return json.dumps(get_audit_log(session_id=session_id, limit=limit), indent=2)
 
+        # P86 Project + Workflow + Phase Panels tools
+        elif tool_name == "project.context":
+            from ai.project_workflow_service import get_project_context  # noqa: PLC0415
+
+            return json.dumps(get_project_context(), indent=2)
+
+        elif tool_name == "project.workflow_history":
+            from ai.project_workflow_service import get_workflow_history  # noqa: PLC0415
+
+            limit = args.get("limit", 20)
+            return json.dumps(get_workflow_history(limit=limit), indent=2)
+
+        elif tool_name == "project.phase_timeline":
+            from ai.project_workflow_service import get_phase_timeline  # noqa: PLC0415
+
+            return json.dumps(get_phase_timeline(), indent=2)
+
+        elif tool_name == "project.artifacts":
+            from ai.project_workflow_service import get_recent_artifacts  # noqa: PLC0415
+
+            limit = args.get("limit", 20)
+            return json.dumps(get_recent_artifacts(limit=limit), indent=2)
+
         elif tool_name == "code.search":
             query = args.get("query", "")
             repo_root = str(PROJECT_ROOT)

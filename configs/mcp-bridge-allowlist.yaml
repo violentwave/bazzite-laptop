@@ -386,6 +386,49 @@ tools:
         max: 500
         required: false
 
+  # P86 — Project + Workflow + Phase Panels
+  project.context:
+    description: "Get complete project context (current phase, workflows, artifacts, recommendations)"
+    source: python
+    module: "ai.project_workflow_service"
+    function: "get_project_context"
+    readOnly: true
+    args: null
+
+  project.workflow_history:
+    description: "Get workflow run history"
+    source: python
+    module: "ai.project_workflow_service"
+    function: "get_workflow_history"
+    readOnly: true
+    args:
+      limit:
+        type: integer
+        min: 1
+        max: 100
+        required: false
+
+  project.phase_timeline:
+    description: "Get phase timeline from documentation"
+    source: python
+    module: "ai.project_workflow_service"
+    function: "get_phase_timeline"
+    readOnly: true
+    args: null
+
+  project.artifacts:
+    description: "Get recent artifacts"
+    source: python
+    module: "ai.project_workflow_service"
+    function: "get_recent_artifacts"
+    readOnly: true
+    args:
+      limit:
+        type: integer
+        min: 1
+        max: 100
+        required: false
+
   code.search:
     description: "Search Python code in the repo by pattern (ripgrep/grep)"
     source: python
