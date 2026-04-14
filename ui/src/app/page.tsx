@@ -5,6 +5,7 @@ import { ChatContainer } from "@/components/chat/ChatContainer";
 import { SettingsContainer } from "@/components/settings/SettingsContainer";
 import { ProvidersContainer } from "@/components/providers/ProvidersContainer";
 import { SecurityContainer } from "@/components/security/SecurityContainer";
+import { ShellContainer } from "@/components/shell-gateway/ShellContainer";
 
 export default function Home() {
   const { activePanel } = useShell();
@@ -41,6 +42,8 @@ export default function Home() {
           <SettingsContainer />
         ) : activePanel === "security" ? (
           <SecurityContainer />
+        ) : activePanel === "terminal" ? (
+          <ShellContainer />
         ) : (
           <div className="h-full overflow-auto p-6">
             <PanelContent panel={activePanel} />

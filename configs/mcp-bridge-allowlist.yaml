@@ -293,6 +293,99 @@ tools:
         max_length: 64
         required: true
 
+  # P85 Interactive Shell Gateway tools
+  shell.create_session:
+    description: "Create a new interactive shell session"
+    source: python
+    module: "ai.shell_service"
+    function: "create_session"
+    args:
+      name:
+        type: string
+        max_length: 64
+        required: false
+      cwd:
+        type: string
+        max_length: 256
+        required: false
+
+  shell.list_sessions:
+    description: "List all shell sessions"
+    source: python
+    module: "ai.shell_service"
+    function: "list_sessions"
+    readOnly: true
+    args: null
+
+  shell.get_session:
+    description: "Get session details by ID"
+    source: python
+    module: "ai.shell_service"
+    function: "get_session"
+    readOnly: true
+    args:
+      session_id:
+        type: string
+        max_length: 16
+        required: true
+
+  shell.execute_command:
+    description: "Execute a command in a shell session"
+    source: python
+    module: "ai.shell_service"
+    function: "execute_command"
+    destructive: true
+    args:
+      session_id:
+        type: string
+        max_length: 16
+        required: true
+      command:
+        type: string
+        max_length: 4096
+        required: true
+
+  shell.terminate_session:
+    description: "Terminate a shell session"
+    source: python
+    module: "ai.shell_service"
+    function: "terminate_session"
+    destructive: true
+    args:
+      session_id:
+        type: string
+        max_length: 16
+        required: true
+
+  shell.get_context:
+    description: "Get session context (user, cwd, shell, idle time)"
+    source: python
+    module: "ai.shell_service"
+    function: "get_session_context"
+    readOnly: true
+    args:
+      session_id:
+        type: string
+        max_length: 16
+        required: true
+
+  shell.get_audit_log:
+    description: "Get shell audit log"
+    source: python
+    module: "ai.shell_service"
+    function: "get_audit_log"
+    readOnly: true
+    args:
+      session_id:
+        type: string
+        max_length: 16
+        required: false
+      limit:
+        type: integer
+        min: 1
+        max: 500
+        required: false
+
   code.search:
     description: "Search Python code in the repo by pattern (ripgrep/grep)"
     source: python

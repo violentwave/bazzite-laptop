@@ -2,7 +2,7 @@
 
 Auto-generated cross-tool handoff. Updated by save-handoff.sh
 
-## Current Phase: P85 (Next)
+## Current Phase: P86 (Next)
 
 **P77 — UI Architecture + Contracts Baseline** ✅ COMPLETE  
 **P78 — Midnight Glass Design System + Figma Mapping** ✅ COMPLETE  
@@ -11,7 +11,8 @@ Auto-generated cross-tool handoff. Updated by save-handoff.sh
 **P81 — PIN-Gated Settings + Secrets Service** ✅ COMPLETE  
 **P82 — Provider + Model Discovery / Routing Console** ✅ COMPLETE  
 **P83 — Chat + MCP Workspace Integration** ✅ COMPLETE  
-**P84 — Security Ops Center** ✅ COMPLETE
+**P84 — Security Ops Center** ✅ COMPLETE  
+**P85 — Interactive Shell Gateway** ✅ COMPLETE
 
 ### Summary
 P82 complete. Provider and model discovery console implemented with real-time health tracking, model catalog browsing, and task-type routing visualization. Integrates with P81 settings for automatic refresh and existing HealthTracker for provider state.
@@ -452,11 +453,121 @@ Implemented the Security Ops Center for the Unified Control Console. Provides co
 - Connects to existing security status files
 
 ### Next Phase Ready
-**P85 — Projects & Phases** can proceed:
+**P85 — Interactive Shell Gateway** can proceed:
 - Security monitoring available
 - Provider health tracking in place
 - Alert system established
 - All UI panels following consistent patterns
+
+---
+
+## Completed Phase: P85
+
+**P85 — Interactive Shell Gateway** ✅ COMPLETE
+
+### Summary
+Implemented the Interactive Shell Gateway for the Unified Control Console. Provides a secured local PTY/shell workspace with session management, audit trails, and handoff paths to chat, artifacts, and workflow context.
+
+### Backend Files Created
+
+**`ai/shell_service.py`** (~385 lines):
+- Shell session management with subprocess-based PTY
+- Session persistence to JSON file
+- Audit logging to JSONL (append-only)
+- Command execution with 30-second timeout
+- Session lifecycle management (create/terminate)
+- 7 MCP tools for shell operations
+
+**`ai/mcp_bridge/tools.py`**:
+- Added 7 shell tool handlers
+
+**`configs/mcp-bridge-allowlist.yaml`**:
+- Registered 7 shell tools (create_session, list_sessions, get_session, execute_command, terminate_session, get_context, get_audit_log)
+
+### Frontend Files Created
+
+**`ui/src/components/shell-gateway/`** (~1,400 lines):
+- `ShellContainer.tsx` — Main panel with header, tabs, terminal, and side pane
+- `TerminalCanvas.tsx` — Terminal output display with auto-scroll
+- `SessionTabs.tsx` — Horizontal tab bar for session switching
+- `ShellAuditStrip.tsx` — Fixed bottom bar with session metadata
+- `ShellStatusBar.tsx` — Status chips (live, idle, warning, disconnected)
+- `ShellSidePane.tsx` — Collapsible side panel for logs/artifacts
+- `index.ts` — Component exports
+
+**`ui/src/hooks/useShellSessions.ts`**:
+- React hook for shell session management
+- MCP Bridge integration
+- Auto-refresh every 5 seconds
+- Output buffer management
+- Utility functions (status colors, time formatting)
+
+**`ui/src/types/shell.ts`**:
+- TypeScript interfaces for ShellSession, SessionContext, CommandResult
+- AuditLogEntry, TerminalOutput, SessionUIState types
+
+**`ui/src/app/page.tsx`**:
+- Updated to render `ShellContainer` for "terminal" panel
+
+### Delivered in P85
+
+**Session Management**:
+- Create multiple concurrent shell sessions
+- Session tabs with status indicators
+- Terminate sessions with cleanup
+- Session persistence between reloads
+
+**Command Execution**:
+- Execute commands in active sessions
+- Real-time output display (stdout/stderr)
+- Command timeout protection (30s)
+- Working directory tracking
+
+**Audit Trail**:
+- All commands logged with timestamp
+- Exit codes recorded
+- Session lifecycle events tracked
+- Append-only JSONL format
+- View audit log in side pane
+
+**Status Chips**:
+- Live (green pulse) — active session
+- Idle (amber) — session inactive >60s
+- Warning — processing/command running
+- Disconnected (gray) — session ended
+- Error (red) — session creation failed
+
+**Design Compliance**:
+- Midnight Glass design tokens throughout
+- Terminal background darker than shell surfaces
+- Code-adjacent aesthetic (not glossy)
+- Compact tabs, audit strip, and chips
+- Cyan accent reserved for live states only
+
+### Validation Results
+- `ruff check ai/shell_service.py` ✅ passed (2 security warnings expected for shell operations)
+- `npx tsc --noEmit` ✅ Clean
+- 7 shell MCP tools registered ✅
+
+### Integration Points
+- Reuses P81 audit logging patterns
+- Reuses P82 auto-refresh patterns (5s interval)
+- Reuses P83 panel integration patterns
+- Reuses P84 tab-based navigation and side pane
+
+### Security Features
+- Commands execute in user context only (no privilege escalation)
+- All commands logged to audit trail
+- Destructive actions marked in MCP tools
+- Session process isolation
+- Timeout protection on commands
+
+### Next Phase Ready
+**P86 — Projects & Phases** can proceed:
+- Shell gateway complete
+- Session management patterns established
+- Audit logging in place
+- Handoff paths ready for workflow integration
 
 ---
 

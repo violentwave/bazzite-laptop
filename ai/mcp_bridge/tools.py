@@ -840,6 +840,53 @@ async def _execute_python_tool(tool_name: str, tool_def: dict, args: dict) -> st
             alert_id = args.get("alert_id", "")
             return json.dumps(acknowledge_alert(alert_id), indent=2)
 
+        # P85 Interactive Shell Gateway tools
+        elif tool_name == "shell.create_session":
+            from ai.shell_service import create_session  # noqa: PLC0415
+
+            name = args.get("name")
+            cwd = args.get("cwd")
+            return json.dumps(create_session(name=name, cwd=cwd), indent=2)
+
+        elif tool_name == "shell.list_sessions":
+            from ai.shell_service import list_sessions  # noqa: PLC0415
+
+            return json.dumps(list_sessions(), indent=2)
+
+        elif tool_name == "shell.get_session":
+            from ai.shell_service import get_session  # noqa: PLC0415
+
+            session_id = args.get("session_id", "")
+            result = get_session(session_id)
+            return json.dumps(result if result else {"error": "Session not found"}, indent=2)
+
+        elif tool_name == "shell.execute_command":
+            from ai.shell_service import execute_command  # noqa: PLC0415
+
+            session_id = args.get("session_id", "")
+            command = args.get("command", "")
+            return json.dumps(execute_command(session_id, command), indent=2)
+
+        elif tool_name == "shell.terminate_session":
+            from ai.shell_service import terminate_session  # noqa: PLC0415
+
+            session_id = args.get("session_id", "")
+            return json.dumps(terminate_session(session_id), indent=2)
+
+        elif tool_name == "shell.get_context":
+            from ai.shell_service import get_session_context  # noqa: PLC0415
+
+            session_id = args.get("session_id", "")
+            result = get_session_context(session_id)
+            return json.dumps(result if result else {"error": "Session not found"}, indent=2)
+
+        elif tool_name == "shell.get_audit_log":
+            from ai.shell_service import get_audit_log  # noqa: PLC0415
+
+            session_id = args.get("session_id")
+            limit = args.get("limit", 100)
+            return json.dumps(get_audit_log(session_id=session_id, limit=limit), indent=2)
+
         elif tool_name == "code.search":
             query = args.get("query", "")
             repo_root = str(PROJECT_ROOT)
