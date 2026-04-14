@@ -812,33 +812,175 @@ async def _execute_python_tool(tool_name: str, tool_def: dict, args: dict) -> st
 
         # P84 Security Ops Center tools
         elif tool_name == "security.ops_overview":
-            from ai.security_service import get_overview  # noqa: PLC0415
+            from ai.security_service import SECURITY_DIR, STATUS_FILE, get_overview  # noqa: PLC0415
 
-            return json.dumps(get_overview(), indent=2)
+            try:
+                result = get_overview()
+
+                # Check if critical files are missing
+                missing_files = []
+                if not STATUS_FILE.exists():
+                    missing_files.append("security status")
+                if not (SECURITY_DIR / "alerts.json").exists():
+                    missing_files.append("alerts data")
+
+                response = {
+                    "success": True,
+                    "data": result,
+                }
+
+                if missing_files:
+                    response["partial_data"] = True
+                    response["missing_sources"] = missing_files
+                    response["operator_action"] = (
+                        f"Some data sources unavailable: {', '.join(missing_files)}. "
+                        "Run security scans to generate initial data."
+                    )
+
+                return json.dumps(response, indent=2)
+            except Exception as e:
+                logger.error("security.ops_overview failed: %s", e)
+                return json.dumps(
+                    {
+                        "success": False,
+                        "error_code": "overview_unavailable",
+                        "error": "Failed to get security overview",
+                        "operator_action": "Check security service health and status files",
+                        "details": str(e),
+                    },
+                    indent=2,
+                )
 
         elif tool_name == "security.ops_alerts":
-            from ai.security_service import get_alerts  # noqa: PLC0415
+            from ai.security_service import ALERTS_FILE, get_alerts  # noqa: PLC0415
 
-            severity = args.get("severity")
-            limit = args.get("limit", 50)
-            return json.dumps(get_alerts(severity=severity, limit=limit), indent=2)
+            try:
+                severity = args.get("severity")
+                limit = args.get("limit", 50)
+
+                # Check if alerts file exists
+                if not ALERTS_FILE.exists():
+                    return json.dumps(
+                        {
+                            "success": False,
+                            "error_code": "alerts_file_unavailable",
+                            "error": "Alerts file not found",
+                            "operator_action": "Check security-alert.timer is enabled and running",
+                            "alerts_file_path": str(ALERTS_FILE),
+                        },
+                        indent=2,
+                    )
+
+                alerts = get_alerts(severity=severity, limit=limit)
+                return json.dumps(
+                    {
+                        "success": True,
+                        "alerts": alerts,
+                        "count": len(alerts),
+                    },
+                    indent=2,
+                )
+            except Exception as e:
+                logger.error("security.ops_alerts failed: %s", e)
+                return json.dumps(
+                    {
+                        "success": False,
+                        "error_code": "alerts_unavailable",
+                        "error": "Failed to get security alerts",
+                        "operator_action": "Check alerts file and security service health",
+                        "details": str(e),
+                    },
+                    indent=2,
+                )
 
         elif tool_name == "security.ops_findings":
-            from ai.security_service import get_findings  # noqa: PLC0415
+            from ai.security_service import CLAMAV_LOG_DIR, get_findings  # noqa: PLC0415
 
-            limit = args.get("limit", 20)
-            return json.dumps(get_findings(limit=limit), indent=2)
+            try:
+                limit = args.get("limit", 20)
+                findings = get_findings(limit=limit)
+
+                # Check if log directory is accessible
+                logs_available = CLAMAV_LOG_DIR.exists() and any(CLAMAV_LOG_DIR.glob("*.log"))
+
+                return json.dumps(
+                    {
+                        "success": True,
+                        "findings": findings,
+                        "count": len(findings),
+                        "logs_available": logs_available,
+                    },
+                    indent=2,
+                )
+            except Exception as e:
+                logger.error("security.ops_findings failed: %s", e)
+                return json.dumps(
+                    {
+                        "success": False,
+                        "error_code": "findings_unavailable",
+                        "error": "Failed to get scan findings",
+                        "operator_action": "Check ClamAV log directory permissions",
+                        "details": str(e),
+                    },
+                    indent=2,
+                )
 
         elif tool_name == "security.ops_provider_health":
             from ai.security_service import get_provider_health_issues  # noqa: PLC0415
 
-            return json.dumps(get_provider_health_issues(), indent=2)
+            try:
+                issues = get_provider_health_issues()
+                return json.dumps(
+                    {
+                        "success": True,
+                        "issues": issues,
+                        "count": len(issues),
+                    },
+                    indent=2,
+                )
+            except Exception as e:
+                logger.error("security.ops_provider_health failed: %s", e)
+                return json.dumps(
+                    {
+                        "success": False,
+                        "error_code": "provider_health_unavailable",
+                        "error": "Failed to get provider health issues",
+                        "operator_action": "Check LLM status file and provider service",
+                        "details": str(e),
+                    },
+                    indent=2,
+                )
 
         elif tool_name == "security.ops_acknowledge":
             from ai.security_service import acknowledge_alert  # noqa: PLC0415
 
-            alert_id = args.get("alert_id", "")
-            return json.dumps(acknowledge_alert(alert_id), indent=2)
+            try:
+                alert_id = args.get("alert_id", "")
+                if not alert_id:
+                    return json.dumps(
+                        {
+                            "success": False,
+                            "error_code": "alert_id_required",
+                            "error": "Alert ID is required",
+                            "operator_action": "Provide the alert_id to acknowledge",
+                        },
+                        indent=2,
+                    )
+
+                result = acknowledge_alert(alert_id)
+                return json.dumps(result, indent=2)
+            except Exception as e:
+                logger.error("security.ops_acknowledge failed: %s", e)
+                return json.dumps(
+                    {
+                        "success": False,
+                        "error_code": "acknowledge_failed",
+                        "error": "Failed to acknowledge alert",
+                        "operator_action": "Check alert ID and security service health",
+                        "details": str(e),
+                    },
+                    indent=2,
+                )
 
         # P85 Interactive Shell Gateway tools
         elif tool_name == "shell.create_session":
@@ -1783,99 +1925,226 @@ async def _execute_python_tool(tool_name: str, tool_def: dict, args: dict) -> st
 
         # P82 — Provider Service Tools
         elif tool_name == "providers.discover":
-            from ai.provider_service import get_provider_service  # noqa: PLC0415
-
-            service = get_provider_service()
-            providers = service.discover_providers()
-            return json.dumps(
-                [
-                    {
-                        "id": p.id,
-                        "name": p.name,
-                        "status": p.status,
-                        "is_configured": p.is_configured,
-                        "is_healthy": p.is_healthy,
-                        "is_local": p.is_local,
-                        "health_score": p.health_score,
-                        "models": [
-                            {"id": m.id, "name": m.name, "task_types": m.task_types}
-                            for m in p.models
-                        ],
-                        "last_error": p.last_error,
-                    }
-                    for p in providers
-                ],
-                indent=2,
+            from ai.provider_service import (  # noqa: PLC0415
+                LITELLM_CONFIG_PATH,
+                get_provider_service,
             )
+
+            try:
+                # Check config file exists
+                if not LITELLM_CONFIG_PATH.exists():
+                    return json.dumps(
+                        {
+                            "success": False,
+                            "error_code": "config_unavailable",
+                            "error": "LiteLLM configuration file not found",
+                            "operator_action": "Create litellm-config.yaml or verify permissions",
+                            "config_path": str(LITELLM_CONFIG_PATH),
+                        },
+                        indent=2,
+                    )
+
+                service = get_provider_service()
+                providers = service.discover_providers()
+
+                # Calculate counts
+                configured_count = sum(1 for p in providers if p.is_configured)
+                healthy_count = sum(1 for p in providers if p.is_healthy)
+                degraded_count = sum(1 for p in providers if p.status == "degraded")
+                blocked_count = sum(1 for p in providers if p.status == "blocked")
+
+                return json.dumps(
+                    {
+                        "success": True,
+                        "providers": [
+                            {
+                                "id": p.id,
+                                "name": p.name,
+                                "status": p.status,
+                                "is_configured": p.is_configured,
+                                "is_healthy": p.is_healthy,
+                                "is_local": p.is_local,
+                                "health_score": p.health_score,
+                                "models": [
+                                    {"id": m.id, "name": m.name, "task_types": m.task_types}
+                                    for m in p.models
+                                ],
+                                "last_error": p.last_error,
+                            }
+                            for p in providers
+                        ],
+                        "counts": {
+                            "total": len(providers),
+                            "configured": configured_count,
+                            "healthy": healthy_count,
+                            "degraded": degraded_count,
+                            "blocked": blocked_count,
+                        },
+                    },
+                    indent=2,
+                )
+            except Exception as e:
+                logger.error("providers.discover failed: %s", e)
+                return json.dumps(
+                    {
+                        "success": False,
+                        "error_code": "provider_discovery_failed",
+                        "error": "Failed to discover providers",
+                        "operator_action": "Check provider service health and configuration",
+                        "details": str(e),
+                    },
+                    indent=2,
+                )
 
         elif tool_name == "providers.models":
             from ai.provider_service import get_provider_service  # noqa: PLC0415
 
-            service = get_provider_service()
-            models = service.get_model_catalog()
-            return json.dumps(
-                [
+            try:
+                service = get_provider_service()
+                models = service.get_model_catalog()
+
+                return json.dumps(
                     {
-                        "id": m.id,
-                        "name": m.name,
-                        "provider": m.provider,
-                        "task_types": m.task_types,
-                    }
-                    for m in models
-                ],
-                indent=2,
-            )
+                        "success": True,
+                        "models": [
+                            {
+                                "id": m.id,
+                                "name": m.name,
+                                "provider": m.provider,
+                                "task_types": m.task_types,
+                            }
+                            for m in models
+                        ],
+                        "count": len(models),
+                    },
+                    indent=2,
+                )
+            except Exception as e:
+                logger.error("providers.models failed: %s", e)
+                return json.dumps(
+                    {
+                        "success": False,
+                        "error_code": "model_catalog_failed",
+                        "error": "Failed to get model catalog",
+                        "operator_action": "Check provider service health",
+                        "details": str(e),
+                    },
+                    indent=2,
+                )
 
         elif tool_name == "providers.routing":
             from ai.provider_service import get_provider_service  # noqa: PLC0415
 
-            service = get_provider_service()
-            routing = service.get_routing_config()
-            return json.dumps(
-                [
+            try:
+                service = get_provider_service()
+                routing = service.get_routing_config()
+
+                return json.dumps(
                     {
-                        "task_type": r.task_type,
-                        "task_label": r.task_label,
-                        "primary_provider": r.primary_provider,
-                        "fallback_chain": r.fallback_chain,
-                        "eligible_models": [
-                            {"id": m.id, "name": m.name, "provider": m.provider}
-                            for m in r.eligible_models
+                        "success": True,
+                        "routing": [
+                            {
+                                "task_type": r.task_type,
+                                "task_label": r.task_label,
+                                "primary_provider": r.primary_provider,
+                                "fallback_chain": r.fallback_chain,
+                                "eligible_models": [
+                                    {"id": m.id, "name": m.name, "provider": m.provider}
+                                    for m in r.eligible_models
+                                ],
+                                "health_state": r.health_state,
+                                "caveats": r.caveats,
+                            }
+                            for r in routing
                         ],
-                        "health_state": r.health_state,
-                        "caveats": r.caveats,
-                    }
-                    for r in routing
-                ],
-                indent=2,
-            )
+                    },
+                    indent=2,
+                )
+            except Exception as e:
+                logger.error("providers.routing failed: %s", e)
+                return json.dumps(
+                    {
+                        "success": False,
+                        "error_code": "routing_config_failed",
+                        "error": "Failed to get routing configuration",
+                        "operator_action": "Check LiteLLM configuration file",
+                        "details": str(e),
+                    },
+                    indent=2,
+                )
 
         elif tool_name == "providers.refresh":
             from ai.provider_service import get_provider_service  # noqa: PLC0415
 
-            service = get_provider_service()
-            result = service.refresh()
-            return json.dumps(result, indent=2)
+            try:
+                service = get_provider_service()
+                result = service.refresh()
+                return json.dumps(result, indent=2)
+            except Exception as e:
+                logger.error("providers.refresh failed: %s", e)
+                return json.dumps(
+                    {
+                        "success": False,
+                        "error_code": "refresh_failed",
+                        "error": "Failed to refresh provider data",
+                        "operator_action": "Check provider service health and file permissions",
+                        "details": str(e),
+                    },
+                    indent=2,
+                )
 
         elif tool_name == "providers.health":
             from ai.provider_service import get_provider_service  # noqa: PLC0415
 
-            service = get_provider_service()
-            tracker = service.get_health_tracker()
-            # Get all tracked providers
-            providers = service.discover_providers()
-            health_data = {}
-            for p in providers:
-                h = tracker.get(p.id)
-                health_data[p.id] = {
-                    "score": h.effective_score,
-                    "success_count": h.success_count,
-                    "failure_count": h.failure_count,
-                    "consecutive_failures": h.consecutive_failures,
-                    "is_disabled": h.is_disabled,
-                    "auth_broken": h.auth_broken,
-                }
-            return json.dumps(health_data, indent=2)
+            try:
+                service = get_provider_service()
+                tracker = service.get_health_tracker()
+                providers = service.discover_providers()
+
+                health_data = {}
+                auth_broken_providers = []
+                cooldown_providers = []
+
+                for p in providers:
+                    h = tracker.get(p.id)
+                    health_data[p.id] = {
+                        "score": h.effective_score,
+                        "success_count": h.success_count,
+                        "failure_count": h.failure_count,
+                        "consecutive_failures": h.consecutive_failures,
+                        "is_disabled": h.is_disabled,
+                        "auth_broken": h.auth_broken,
+                    }
+                    if h.auth_broken:
+                        auth_broken_providers.append(p.id)
+                    elif h.is_disabled:
+                        cooldown_providers.append(p.id)
+
+                return json.dumps(
+                    {
+                        "success": True,
+                        "health": health_data,
+                        "summary": {
+                            "auth_broken_count": len(auth_broken_providers),
+                            "auth_broken_providers": auth_broken_providers,
+                            "cooldown_count": len(cooldown_providers),
+                            "cooldown_providers": cooldown_providers,
+                        },
+                    },
+                    indent=2,
+                )
+            except Exception as e:
+                logger.error("providers.health failed: %s", e)
+                return json.dumps(
+                    {
+                        "success": False,
+                        "error_code": "health_data_failed",
+                        "error": "Failed to get provider health data",
+                        "operator_action": "Check health tracker and provider service",
+                        "details": str(e),
+                    },
+                    indent=2,
+                )
 
         else:
             return f"[Tool '{tool_name}' not implemented]"

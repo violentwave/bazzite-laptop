@@ -1051,6 +1051,22 @@
 - **Error Codes Added**: 15+ specific error codes including `pin_not_initialized`, `pin_invalid`, `pin_locked`, `keys_file_not_found`, `keys_file_permission_denied`, `settings_backend_unavailable`
 - **Key Improvement**: Settings panel no longer shows generic "Failed to fetch secrets" errors; instead shows precise operator-actionable messages
 
+### P92 — Providers + Security Surfaces Live Integration
+- **Status**: Done
+- **Commit SHA**: —
+- **Finished**: 2026-04-14
+- **Repo Artifacts**:
+  - `docs/P92_PLAN.md` — Implementation plan
+  - `ai/mcp_bridge/tools.py` — Enhanced 10 tool handlers (5 provider + 5 security) with structured error responses
+  - `ui/src/hooks/useProviders.ts` — Structured response handling, counts, healthSummary
+  - `ui/src/hooks/useSecurity.ts` — Structured response handling, partial data support
+  - `ui/src/components/providers/ProvidersContainer.tsx` — Auth broken banner, cooldown banner, degraded states
+  - `ui/src/components/security/SecurityContainer.tsx` — Partial data handling, degraded states
+- **Notion**: Mark P92 as Done with closeout summary
+- **Scope**: Live backend truth rendering with explicit degraded/manual states for provider and security surfaces
+- **Error Codes Added**: Provider: `config_unavailable`, `provider_discovery_failed`, `model_catalog_failed`, `routing_config_failed`, `health_data_failed`, `refresh_failed`; Security: `overview_unavailable`, `alerts_file_unavailable`, `alerts_unavailable`, `findings_unavailable`, `provider_health_unavailable`, `acknowledge_failed`
+- **Key Improvement**: Provider and security panels now show specific degraded/manual states (auth broken, cooldown, config missing) instead of generic fetch failures
+
 ## Cross-Phase Documentation
 
 ### Hub Docs (docs/ root)

@@ -123,6 +123,7 @@
 | P89 | Security Improvement + Remediation Closure | Done | — | 2026-04-14 | scripts/install-user-timers.sh, systemd/user/*.service, systemd/user/*.timer, ai/code_intel/store.py, docs/P76_SYSTEMD_SCOPE_REMEDIATION.md | Notion row | User-scoped timer/service remediation and security-run stability closure |
 | P90 | Console Runtime Recovery + Contract Reconciliation | Done | — | 2026-04-14 | docs/P90_CONSOLE_RUNTIME_RECOVERY_CONTRACT_RECONCILIATION.md, ui/src/lib/mcp-client.ts, ui/src/hooks/use*.ts, ui/next.config.ts, ai/project_workflow_service.py, tests/test_project_workflow_service.py, scripts/start-console-ui.sh | Notion row | MCP streamable-http contract reconciliation, panel runtime recovery, and UI startup workflow |
 | P91 | Settings, Secrets, and PIN End-to-End Hardening | Done | — | 2026-04-14 | docs/P91_SETTINGS_SECRETS_PIN_HARDENING.md, ai/mcp_bridge/tools.py, ui/src/components/settings/SettingsContainer.tsx | Notion row | Precise error codes for settings operations, improved PIN/secrets flow error handling |
+| P92 | Providers + Security Surfaces Live Integration | Done | — | 2026-04-14 | docs/P92_PLAN.md, ai/mcp_bridge/tools.py, ui/src/hooks/useProviders.ts, ui/src/hooks/useSecurity.ts, ui/src/components/providers/ProvidersContainer.tsx, ui/src/components/security/SecurityContainer.tsx | Notion row | Live backend truth rendering with explicit degraded/manual states for provider and security surfaces |
 
 ## Notion Database Reference
 

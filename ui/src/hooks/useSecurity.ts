@@ -12,6 +12,44 @@ import {
 } from "@/types/security";
 import { callMCPTool } from "@/lib/mcp-client";
 
+interface OverviewResponse {
+  success?: boolean;
+  data?: SecurityOverview;
+  partial_data?: boolean;
+  missing_sources?: string[];
+  operator_action?: string;
+  error_code?: string;
+  error?: string;
+}
+
+interface AlertsResponse {
+  success?: boolean;
+  alerts?: SecurityAlert[];
+  count?: number;
+  error_code?: string;
+  error?: string;
+  operator_action?: string;
+}
+
+interface FindingsResponse {
+  success?: boolean;
+  findings?: ScanFinding[];
+  count?: number;
+  logs_available?: boolean;
+  error_code?: string;
+  error?: string;
+  operator_action?: string;
+}
+
+interface ProviderIssuesResponse {
+  success?: boolean;
+  issues?: ProviderHealthIssue[];
+  count?: number;
+  error_code?: string;
+  error?: string;
+  operator_action?: string;
+}
+
 interface UseSecurityReturn {
   overview: SecurityOverview | null;
   alerts: SecurityAlert[];
@@ -20,9 +58,59 @@ interface UseSecurityReturn {
   systemHealth: SystemHealth | null;
   isLoading: boolean;
   error: string | null;
+  errorCode: string | null;
+  operatorAction: string | null;
+  partialData: boolean;
+  missingSources: string[];
   refresh: () => Promise<void>;
   acknowledgeAlert: (alertId: string) => Promise<AcknowledgeResponse>;
   lastRefresh: Date | null;
+}
+
+function formatSecurityError(
+  response: OverviewResponse | AlertsResponse | FindingsResponse | ProviderIssuesResponse
+): { message: string; code: string; action: string } {
+  const code = response.error_code || 'unknown_error';
+  const action = response.operator_action || 'Check MCP bridge and security service health';
+
+  switch (code) {
+    case 'overview_unavailable':
+      return {
+        message: response.error || 'Security overview unavailable',
+        code,
+        action,
+      };
+    case 'alerts_file_unavailable':
+      return {
+        message: 'Security alerts file not found',
+        code,
+        action: 'Check security-alert.timer is enabled and running',
+      };
+    case 'alerts_unavailable':
+      return {
+        message: response.error || 'Failed to load security alerts',
+        code,
+        action,
+      };
+    case 'findings_unavailable':
+      return {
+        message: response.error || 'Failed to load scan findings',
+        code,
+        action: 'Check ClamAV log directory permissions',
+      };
+    case 'provider_health_unavailable':
+      return {
+        message: response.error || 'Provider health data unavailable',
+        code,
+        action: 'Check LLM status file and provider service',
+      };
+    default:
+      return {
+        message: response.error || 'Security service error',
+        code,
+        action,
+      };
+  }
 }
 
 export function useSecurity(): UseSecurityReturn {
@@ -33,28 +121,94 @@ export function useSecurity(): UseSecurityReturn {
   const [systemHealth, setSystemHealth] = useState<SystemHealth | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [errorCode, setErrorCode] = useState<string | null>(null);
+  const [operatorAction, setOperatorAction] = useState<string | null>(null);
+  const [partialData, setPartialData] = useState(false);
+  const [missingSources, setMissingSources] = useState<string[]>([]);
   const [lastRefresh, setLastRefresh] = useState<Date | null>(null);
 
   const fetchAll = useCallback(async () => {
     setIsLoading(true);
     setError(null);
+    setErrorCode(null);
+    setOperatorAction(null);
+    setPartialData(false);
+    setMissingSources([]);
 
     try {
       // Fetch overview
       const overviewData = await callMCPTool("security.ops_overview");
-      setOverview((overviewData || null) as SecurityOverview | null);
+      const overviewResp = overviewData as OverviewResponse;
+
+      if (overviewResp.success === false) {
+        const err = formatSecurityError(overviewResp);
+        setError(err.message);
+        setErrorCode(err.code);
+        setOperatorAction(err.action);
+        setOverview(null);
+      } else {
+        setOverview(overviewResp.data || null);
+        if (overviewResp.partial_data) {
+          setPartialData(true);
+          setMissingSources(overviewResp.missing_sources || []);
+          setOperatorAction(overviewResp.operator_action || '');
+        }
+      }
 
       // Fetch alerts
       const alertsData = await callMCPTool("security.ops_alerts", { limit: 50 });
-      setAlerts(Array.isArray(alertsData) ? (alertsData as SecurityAlert[]) : []);
+      const alertsResp = alertsData as AlertsResponse;
+
+      if (alertsResp.success === false) {
+        // Don't overwrite overview error, just log partial failure
+        if (!error) {
+          const err = formatSecurityError(alertsResp);
+          setError(err.message);
+          setErrorCode(err.code);
+          setOperatorAction(err.action);
+        }
+        setPartialData(true);
+        setMissingSources(prev => [...prev, 'alerts']);
+        setAlerts([]);
+      } else {
+        setAlerts(alertsResp.alerts || []);
+      }
 
       // Fetch findings
       const findingsData = await callMCPTool("security.ops_findings", { limit: 20 });
-      setFindings(Array.isArray(findingsData) ? (findingsData as ScanFinding[]) : []);
+      const findingsResp = findingsData as FindingsResponse;
+
+      if (findingsResp.success === false) {
+        if (!error) {
+          const err = formatSecurityError(findingsResp);
+          setError(err.message);
+          setErrorCode(err.code);
+          setOperatorAction(err.action);
+        }
+        setPartialData(true);
+        setMissingSources(prev => [...prev, 'findings']);
+        setFindings([]);
+      } else {
+        setFindings(findingsResp.findings || []);
+      }
 
       // Fetch provider health issues
       const issuesData = await callMCPTool("security.ops_provider_health");
-      setProviderIssues(Array.isArray(issuesData) ? (issuesData as ProviderHealthIssue[]) : []);
+      const issuesResp = issuesData as ProviderIssuesResponse;
+
+      if (issuesResp.success === false) {
+        if (!error) {
+          const err = formatSecurityError(issuesResp);
+          setError(err.message);
+          setErrorCode(err.code);
+          setOperatorAction(err.action);
+        }
+        setPartialData(true);
+        setMissingSources(prev => [...prev, 'provider_health']);
+        setProviderIssues([]);
+      } else {
+        setProviderIssues(issuesResp.issues || []);
+      }
 
       // Fetch system health
       const healthData = await callMCPTool("security.status");
@@ -62,11 +216,10 @@ export function useSecurity(): UseSecurityReturn {
 
       setLastRefresh(new Date());
     } catch (err) {
-      setError(
-        err instanceof Error
-          ? `Security data load failed: ${err.message}`
-          : "Security data load failed"
-      );
+      const message = err instanceof Error ? err.message : 'Security service unavailable';
+      setError(`Cannot connect to security service: ${message}`);
+      setErrorCode('connection_failed');
+      setOperatorAction('Ensure MCP bridge is running on port 8766');
     } finally {
       setIsLoading(false);
     }
@@ -77,12 +230,22 @@ export function useSecurity(): UseSecurityReturn {
   }, [fetchAll]);
 
   const acknowledgeAlert = useCallback(async (alertId: string): Promise<AcknowledgeResponse> => {
-    const result = await callMCPTool("security.ops_acknowledge", { alert_id: alertId });
-    
-    // Refresh alerts after acknowledging
-    await fetchAll();
-    
-    return result as AcknowledgeResponse;
+    try {
+      const result = await callMCPTool("security.ops_acknowledge", { alert_id: alertId });
+
+      // Refresh alerts after acknowledging
+      await fetchAll();
+
+      return result as AcknowledgeResponse;
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Unknown error';
+      return {
+        success: false,
+        alert_id: '',
+        timestamp: new Date().toISOString(),
+        error: `Failed to acknowledge alert: ${message}`,
+      } as AcknowledgeResponse;
+    }
   }, [fetchAll]);
 
   useEffect(() => {
@@ -101,6 +264,10 @@ export function useSecurity(): UseSecurityReturn {
     systemHealth,
     isLoading,
     error,
+    errorCode,
+    operatorAction,
+    partialData,
+    missingSources,
     refresh,
     acknowledgeAlert,
     lastRefresh,

@@ -2,7 +2,7 @@
 
 Auto-generated cross-tool handoff. Updated by save-handoff.sh
 
-## Current Phase: P91 ✅ COMPLETE
+## Current Phase: P92 ✅ COMPLETE
 
 **P77 — UI Architecture + Contracts Baseline** ✅ COMPLETE  
 **P78 — Midnight Glass Design System + Figma Mapping** ✅ COMPLETE  
@@ -19,6 +19,7 @@ Auto-generated cross-tool handoff. Updated by save-handoff.sh
 **P89 — Security Improvement + Remediation Closure** ✅ COMPLETE  
 **P90 — Console Runtime Recovery + Contract Reconciliation** ✅ COMPLETE  
 **P91 — Settings, Secrets, and PIN End-to-End Hardening** ✅ COMPLETE  
+**P92 — Providers + Security Surfaces Live Integration** ✅ COMPLETE  
 **P76 — Systemd Scope Remediation** ✅ COMPLETE (host-side service fixes)
 
 ### P89 Closeout (2026-04-14)
@@ -28,39 +29,55 @@ Auto-generated cross-tool handoff. Updated by save-handoff.sh
 - `fedora-updates.service`, `release-watch.service`, and `rag-embed.service` all completed successfully in user scope.
 - Confirmed manual host-side remainder still open: `system-health.service` exits `1`, `logrotate.service` boot.log permission denied, Gemini/Cohere operator key/quota actions, firmware/efivarfs + staged deployment reboot checks.
 
-### P91 Closeout (2026-04-14)
+### P92 Closeout (2026-04-14)
 **Status**: ✅ COMPLETE
 
-**Problem Solved**:
-- Fixed "Failed to fetch secrets" generic errors with precise error codes
-- Resolved PIN setup failures with clear validation messages
-- Fixed PIN-required state not flowing cleanly through settings UX
+**Objective**: Make provider, model, routing, and security surfaces render live backend truth with structured degraded/manual states instead of blank fetch failures or generic error banners.
 
 **Backend Improvements**:
-- Enhanced all 8 settings MCP tools with specific error codes:
-  - PIN errors: `pin_not_initialized`, `pin_invalid`, `pin_locked`, `pin_validation_failed`, etc.
-  - Secrets errors: `keys_file_not_found`, `keys_file_permission_denied`, `secret_not_found`, etc.
-  - Backend errors: `settings_backend_unavailable`, `unlock_failed`, etc.
-- All tools now return structured responses with `success`, `error_code`, `error`, `operator_action`
-- Added input validation before processing in all handlers
-- Added specific exception handling (PermissionError, ValueError)
+- Enhanced 5 provider MCP tools with structured error responses:
+  - `providers.discover` — Returns `{success, providers, counts}` or `{success: false, error_code, error, operator_action}`
+  - `providers.models` — Returns `{success, models, count}` or error details
+  - `providers.routing` — Returns `{success, routing}` or error details
+  - `providers.health` — Returns `{success, health, summary}` with auth_broken/cooldown tracking
+  - `providers.refresh` — Returns success/error with details
+- Enhanced 5 security MCP tools with structured error responses:
+  - `security.ops_overview` — Returns `{success, data, partial_data?, missing_sources?}`
+  - `security.ops_alerts` — Returns `{success, alerts, count}` or `{success: false, error_code: "alerts_file_unavailable"}`
+  - `security.ops_findings` — Returns `{success, findings, count, logs_available}`
+  - `security.ops_provider_health` — Returns `{success, issues, count}`
+  - `security.ops_acknowledge` — Returns success/error with validation
+
+**Error Codes Added**:
+- Provider: `config_unavailable`, `provider_discovery_failed`, `model_catalog_failed`, `routing_config_failed`, `health_data_failed`, `refresh_failed`
+- Security: `overview_unavailable`, `alerts_file_unavailable`, `alerts_unavailable`, `findings_unavailable`, `provider_health_unavailable`, `acknowledge_failed`
 
 **Frontend Improvements**:
-- Updated `formatOperatorError()` to handle 15+ specific error codes with user-friendly messages
-- Enhanced `classifyBackendError()` to distinguish connection/timeout/permission errors
-- Improved `fetchPinStatus()` and `fetchSecrets()` to handle error responses properly
-- Added graceful handling for `keys_file_not_found` (shows empty list instead of error)
+- Updated `useProviders.ts` — Structured response types, error formatting, counts/healthSummary state
+- Updated `useSecurity.ts` — Structured response types, partial data handling, missingSources tracking
+- Updated `ProvidersContainer.tsx` — Error severity states, auth_broken banner, cooldown banner, partial data warnings
+- Updated `SecurityContainer.tsx` — Error severity states, partial data handling, operator action display
+
+**Key Features**:
+- Provider auth failures show specific banner with "Update API keys" action
+- Provider cooldown shows warning banner with "Auto-recovery in progress" message
+- Security partial data shows which sources are missing
+- Config unavailable shows specific operator action to create litellm-config.yaml
+- All error states include severity-based coloring (error=danger, warning=warning)
 
 **Files Modified**:
-- `ai/mcp_bridge/tools.py` — Enhanced 8 settings tool handlers
-- `ui/src/components/settings/SettingsContainer.tsx` — Improved error classification
+- `ai/mcp_bridge/tools.py` — Enhanced 10 tool handlers (5 provider + 5 security)
+- `ui/src/hooks/useProviders.ts` — Structured response handling, error state management
+- `ui/src/hooks/useSecurity.ts` — Structured response handling, partial data support
+- `ui/src/components/providers/ProvidersContainer.tsx` — Degraded states, auth/cooldown banners
+- `ui/src/components/security/SecurityContainer.tsx` — Degraded states, partial data handling
 
 **Validation**:
 - `ruff check ai/mcp_bridge/tools.py` ✅ PASS
 - `npx tsc --noEmit` (ui/) ✅ PASS
-- `npm run build` (ui/) ✅ PASS
+- `python -m pytest tests/test_mcp_drift.py` ✅ PASS (4/4)
 
-### P90 Closeout (2026-04-14)
+### P91 Closeout (2026-04-14)
 **Status**: ✅ COMPLETE
 
 **Runtime Contract Recovery**:

@@ -3,11 +3,121 @@
 import { useState } from "react";
 import { useSecurity } from "@/hooks/useSecurity";
 import { SecurityTab } from "@/types/security";
-import { SecurityOverview } from "./SecurityOverview";
+import { SecurityOverview as SecurityOverviewPanel } from "./SecurityOverview";
 import { AlertFeed } from "./AlertFeed";
 import { FindingsPanel } from "./FindingsPanel";
 import { HealthCluster } from "./HealthCluster";
 import { SecurityActionsPanel } from "./SecurityActionsPanel";
+
+function getErrorSeverity(errorCode: string | null): 'error' | 'warning' | 'info' {
+  if (!errorCode) return 'error';
+  if (errorCode === 'alerts_file_unavailable' || errorCode === 'findings_unavailable') return 'warning';
+  if (errorCode === 'connection_failed') return 'error';
+  return 'warning';
+}
+
+function ErrorState({
+  error,
+  errorCode,
+  operatorAction,
+  partialData,
+  missingSources,
+  onRetry,
+}: {
+  error: string;
+  errorCode: string | null;
+  operatorAction: string | null;
+  partialData: boolean;
+  missingSources: string[];
+  onRetry: () => void;
+}) {
+  const severity = getErrorSeverity(errorCode);
+
+  const colors = {
+    error: {
+      border: 'var(--danger)',
+      bg: 'rgba(239, 68, 68, 0.1)',
+      icon: 'var(--danger)',
+    },
+    warning: {
+      border: 'var(--warning)',
+      bg: 'rgba(245, 158, 11, 0.1)',
+      icon: 'var(--warning)',
+    },
+    info: {
+      border: 'var(--info)',
+      bg: 'rgba(59, 130, 246, 0.1)',
+      icon: 'var(--info)',
+    },
+  };
+
+  const c = colors[severity];
+
+  return (
+    <div className="h-full flex items-center justify-center p-6">
+      <div
+        className="max-w-md w-full p-6 rounded-xl border"
+        style={{
+          background: partialData ? 'var(--base-02)' : c.bg,
+          borderColor: partialData ? 'var(--warning)' : c.border,
+        }}
+      >
+        <div className="flex items-center gap-3 mb-4">
+          <svg
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke={partialData ? 'var(--warning)' : c.icon}
+            strokeWidth="2"
+          >
+            <circle cx="12" cy="12" r="10" />
+            <line x1="12" y1="8" x2="12" y2="12" />
+            <line x1="12" y1="16" x2="12.01" y2="16" />
+          </svg>
+          <h3 className="font-medium" style={{ color: "var(--text-primary)" }}>
+            {partialData ? 'Partial Security Data' : 'Security Data Unavailable'}
+          </h3>
+        </div>
+
+        <p className="mb-2" style={{ color: "var(--text-secondary)" }}>
+          {error}
+        </p>
+
+        {partialData && missingSources.length > 0 && (
+          <div className="mb-4">
+            <p className="text-sm" style={{ color: "var(--text-tertiary)" }}>
+              Unavailable sources: {missingSources.join(', ')}
+            </p>
+          </div>
+        )}
+
+        {operatorAction && (
+          <div
+            className="mb-4 p-3 rounded-lg text-sm"
+            style={{
+              background: "var(--base-01)",
+              color: "var(--text-secondary)",
+            }}
+          >
+            <strong>Action needed:</strong> {operatorAction}
+          </div>
+        )}
+
+        <button
+          onClick={onRetry}
+          className="px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+          style={{
+            background: "var(--accent-primary)",
+            color: "white",
+          }}
+        >
+          Retry
+        </button>
+      </div>
+    </div>
+  );
+}
 
 export function SecurityContainer() {
   const [activeTab, setActiveTab] = useState<SecurityTab>("overview");
@@ -18,12 +128,19 @@ export function SecurityContainer() {
     providerIssues,
     isLoading,
     error,
+    errorCode,
+    operatorAction,
+    partialData,
+    missingSources,
     refresh,
     acknowledgeAlert,
     lastRefresh,
   } = useSecurity();
 
-  if (isLoading && !overview) {
+  // Check if we have data despite errors
+  const hasData = overview || alerts.length > 0 || findings.length > 0;
+
+  if (isLoading && !hasData) {
     return (
       <div className="h-full flex items-center justify-center">
         <div className="text-center">
@@ -42,49 +159,17 @@ export function SecurityContainer() {
     );
   }
 
-  if (error) {
+  // Full error state - no data at all
+  if (error && !hasData) {
     return (
-      <div className="h-full flex items-center justify-center p-6">
-        <div
-          className="max-w-md w-full p-6 rounded-xl border"
-          style={{
-            background: "var(--base-02)",
-            borderColor: "var(--danger)",
-          }}
-        >
-          <div className="flex items-center gap-3 mb-4">
-            <svg
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              style={{ color: "var(--danger)" }}
-            >
-              <circle cx="12" cy="12" r="10" />
-              <line x1="12" y1="8" x2="12" y2="12" />
-              <line x1="12" y1="16" x2="12.01" y2="16" />
-            </svg>
-            <h3 className="font-medium" style={{ color: "var(--text-primary)" }}>
-              Failed to Load Security Data
-            </h3>
-          </div>
-          <p className="mb-4" style={{ color: "var(--text-secondary)" }}>
-            {error}
-          </p>
-          <button
-            onClick={refresh}
-            className="px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-            style={{
-              background: "var(--accent-primary)",
-              color: "white",
-            }}
-          >
-            Retry
-          </button>
-        </div>
-      </div>
+      <ErrorState
+        error={error}
+        errorCode={errorCode}
+        operatorAction={operatorAction}
+        partialData={partialData}
+        missingSources={missingSources}
+        onRetry={refresh}
+      />
     );
   }
 
@@ -149,7 +234,7 @@ export function SecurityContainer() {
         {/* Tab Content */}
         <div className="flex-1 overflow-auto p-6">
           {activeTab === "overview" && overview && (
-            <SecurityOverview data={overview} onRefresh={refresh} />
+            <SecurityOverviewPanel data={overview} onRefresh={refresh} />
           )}
           {activeTab === "alerts" && (
             <AlertFeed
