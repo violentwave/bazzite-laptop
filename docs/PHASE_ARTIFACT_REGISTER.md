@@ -1,7 +1,7 @@
 # Phase Artifact Register — Bazzite AI Layer
 
 > Per-phase inventory of repo artifacts and Notion references.
-> Generated 2026-04-12. Canonical source: `git log` + Notion API.
+> Generated 2026-04-14. Canonical source: `git log` + Notion API.
 
 ## Artifact Naming Conventions
 
@@ -1002,6 +1002,55 @@
 - **Notion**: Update P88 with final commit SHA and validation summary
 - **Scope**: End-to-end UI tranche validation, hardening findings, launch readiness package
 
+### P89 — Security Improvement + Remediation Closure
+- **Status**: Done
+- **Commit SHA**: —
+- **Finished**: 2026-04-14
+- **Repo Artifacts**:
+  - `scripts/install-user-timers.sh`
+  - `systemd/user/code-index.service`, `systemd/user/code-index.timer`
+  - `systemd/user/fedora-updates.service`, `systemd/user/fedora-updates.timer`
+  - `systemd/user/release-watch.service`, `systemd/user/release-watch.timer`
+  - `systemd/user/rag-embed.service`, `systemd/user/rag-embed.timer`
+  - `ai/code_intel/store.py`
+  - `docs/P76_SYSTEMD_SCOPE_REMEDIATION.md`
+- **Notion**: P89 Done with remediation validation summary
+- **Scope**: User-scoped systemd remediation closure and security-run stabilization under host/manual constraints
+
+### P90 — Console Runtime Recovery + Contract Reconciliation
+- **Status**: Done
+- **Commit SHA**: —
+- **Finished**: 2026-04-14
+- **Repo Artifacts**:
+  - `docs/P90_CONSOLE_RUNTIME_RECOVERY_CONTRACT_RECONCILIATION.md`
+  - `ui/src/lib/mcp-client.ts` — MCP streamable HTTP client
+  - `ui/src/hooks/useProviders.ts` — Provider panel hook
+  - `ui/src/hooks/useSecurity.ts` — Security panel hook
+  - `ui/src/hooks/useProjectWorkflow.ts` — Project/workflow panel hook
+  - `ui/src/hooks/useShellSessions.ts` — Shell panel hook
+  - `ui/src/components/settings/SettingsContainer.tsx` — Settings panel
+  - `ui/src/app/page.tsx` — Main shell
+  - `ui/next.config.ts` — Turbopack root configuration
+  - `ai/project_workflow_service.py` — Phase truth reconciliation
+  - `tests/test_project_workflow_service.py` — Regression tests
+  - `scripts/start-console-ui.sh` — UI startup helper
+- **Notion**: Mark P90 as Done with closeout summary
+- **Scope**: MCP streamable-http contract reconciliation, panel runtime fetch recovery, project-phase truth correction, and documented UI startup workflow
+- **Key Finding**: "Site can't be reached" was dev server not running (expected behavior), not a broken contract. UI requires active runtime via `./scripts/start-console-ui.sh`
+
+### P91 — Settings, Secrets, and PIN End-to-End Hardening
+- **Status**: Done
+- **Commit SHA**: —
+- **Finished**: 2026-04-14
+- **Repo Artifacts**:
+  - `docs/P91_SETTINGS_SECRETS_PIN_HARDENING.md` — Implementation documentation
+  - `ai/mcp_bridge/tools.py` — Enhanced 8 settings tool handlers with precise error codes
+  - `ui/src/components/settings/SettingsContainer.tsx` — Improved error state handling
+- **Notion**: Mark P91 as Done with closeout summary
+- **Scope**: Precise error codes for all settings operations (PIN setup, unlock, secrets), improved operator-visible error states, verified audit behavior
+- **Error Codes Added**: 15+ specific error codes including `pin_not_initialized`, `pin_invalid`, `pin_locked`, `keys_file_not_found`, `keys_file_permission_denied`, `settings_backend_unavailable`
+- **Key Improvement**: Settings panel no longer shows generic "Failed to fetch secrets" errors; instead shows precise operator-actionable messages
+
 ## Cross-Phase Documentation
 
 ### Hub Docs (docs/ root)
@@ -1011,8 +1060,8 @@
 | `CHANGELOG.md` | Version history | P88 |
 | `USER-GUIDE.md` | End-user guide | P88 |
 | `bazzite-ai-system-profile.md` | System identity for OpenCode | P69 |
-| `PHASE_INDEX.md` | Master phase index | P88 |
-| `PHASE_ARTIFACT_REGISTER.md` | Artifact inventory | P88 |
+| `PHASE_INDEX.md` | Master phase index | P90 |
+| `PHASE_ARTIFACT_REGISTER.md` | Artifact inventory | P90 |
 | `PHASE_DEPENDENCY_GRAPH.mmd` | Dependency visualization | P70 |
 | `PHASE_DELIVERY_TIMELINE.md` | Delivery timeline | P70 |
 | `ARCHITECTURE_EVOLUTION.md` | Architecture evolution | P70 |

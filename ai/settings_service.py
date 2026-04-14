@@ -54,6 +54,7 @@ MASKED_LENGTH = 4
 class AuditAction(Enum):
     """Types of actions that are audited."""
 
+    SETUP = "setup"
     UNLOCK = "unlock"
     REVEAL = "reveal"
     REPLACE = "replace"
@@ -149,8 +150,11 @@ class PINManager:
         """Check if a PIN has been configured."""
         return self._get_setting(PIN_HASH_KEY) is not None
 
-    def setup_pin(self, pin: str) -> bool:
+    def setup_pin(self, pin: str, *, allow_overwrite: bool = False) -> bool:
         """Set up a new PIN. Returns True if successful."""
+        if self.is_pin_set() and not allow_overwrite:
+            raise ValueError("PIN already initialized")
+
         if len(pin) < 4 or len(pin) > 6:
             raise ValueError("PIN must be 4-6 digits")
 
@@ -394,6 +398,66 @@ class SecretsService:
             return "****"
         return value[:MASKED_LENGTH] + "..." + value[-MASKED_LENGTH:]
 
+    def _validate_pin_for_sensitive_action(
+        self,
+        pin: str,
+        *,
+        action: AuditAction,
+        key_name: str | None = None,
+    ) -> tuple[bool, dict | None]:
+        """Validate PIN and return structured failure details when invalid."""
+        if not self.pin_manager.is_pin_set():
+            details = {
+                "success": False,
+                "error_code": "pin_not_initialized",
+                "error": "PIN not initialized",
+                "operator_action": "Set up PIN in settings before accessing secrets",
+            }
+            self.audit.log(action, key_name, success=False, details=details["error"])
+            return False, details
+
+        lockout = self.pin_manager.get_lockout_status()
+        if lockout["is_locked"]:
+            details = {
+                "success": False,
+                "error_code": "pin_locked",
+                "error": "PIN locked due to failed attempts",
+                "lockout": lockout,
+                "operator_action": "Wait for lockout to expire before retrying",
+            }
+            self.audit.log(AuditAction.LOCKOUT, key_name, success=False, details=details["error"])
+            self.audit.log(action, key_name, success=False, details=details["error"])
+            return False, details
+
+        if not self.pin_manager.verify_pin(pin):
+            lockout = self.pin_manager.get_lockout_status()
+            if lockout["is_locked"]:
+                details = {
+                    "success": False,
+                    "error_code": "pin_locked",
+                    "error": "PIN locked due to failed attempts",
+                    "lockout": lockout,
+                    "operator_action": "Wait for lockout to expire before retrying",
+                }
+                self.audit.log(
+                    AuditAction.LOCKOUT,
+                    key_name,
+                    success=False,
+                    details="Lockout threshold reached",
+                )
+            else:
+                details = {
+                    "success": False,
+                    "error_code": "pin_invalid",
+                    "error": "Invalid PIN",
+                    "lockout": lockout,
+                    "operator_action": "Retry with the configured PIN",
+                }
+            self.audit.log(action, key_name, success=False, details=details["error"])
+            return False, details
+
+        return True, None
+
     def list_secrets(self, include_values: bool = False) -> list[SecretEntry]:
         """List all secrets. If include_values is False, returns masked values."""
         keys = self._read_keys_file()
@@ -417,19 +481,31 @@ class SecretsService:
 
     def get_secret(self, key_name: str, pin: str) -> SecretEntry | None:
         """Get a single secret with full value (requires PIN)."""
-        # Verify PIN
-        if not self.pin_manager.verify_pin(pin):
-            self.audit.log(
-                AuditAction.REVEAL, key_name, success=False, details="PIN verification failed"
-            )
-            return None
+        result = self.reveal_secret_result(key_name, pin)
+        return result.get("entry")
+
+    def reveal_secret_result(self, key_name: str, pin: str) -> dict:
+        """Get a single secret with structured status details."""
+        ok, error = self._validate_pin_for_sensitive_action(
+            pin,
+            action=AuditAction.REVEAL,
+            key_name=key_name,
+        )
+        if not ok:
+            return error or {"success": False, "error": "PIN verification failed"}
 
         keys = self._read_keys_file()
         value = keys.get(key_name)
 
         if value is None:
-            self.audit.log(AuditAction.REVEAL, key_name, success=False, details="Key not found")
-            return None
+            details = {
+                "success": False,
+                "error_code": "secret_not_found",
+                "error": "Secret key not found",
+                "operator_action": "Choose an existing key from the list or set a new value",
+            }
+            self.audit.log(AuditAction.REVEAL, key_name, success=False, details=details["error"])
+            return details
 
         entry = SecretEntry(
             name=key_name,
@@ -441,19 +517,25 @@ class SecretsService:
         )
 
         self.audit.log(AuditAction.REVEAL, key_name, success=True)
-        return entry
+        return {
+            "success": True,
+            "entry": entry,
+        }
 
     def set_secret(self, key_name: str, value: str, pin: str) -> bool:
         """Set or update a secret (requires PIN)."""
-        # Verify PIN
-        if not self.pin_manager.verify_pin(pin):
-            self.audit.log(
-                AuditAction.REPLACE if key_name in self.SECRET_KEYS else AuditAction.ADD,
-                key_name,
-                success=False,
-                details="PIN verification failed",
-            )
-            return False
+        result = self.set_secret_result(key_name, value, pin)
+        return bool(result.get("success"))
+
+    def set_secret_result(self, key_name: str, value: str, pin: str) -> dict:
+        """Set or update a secret with structured status details."""
+        ok, error = self._validate_pin_for_sensitive_action(
+            pin,
+            action=AuditAction.REPLACE if key_name in self.SECRET_KEYS else AuditAction.ADD,
+            key_name=key_name,
+        )
+        if not ok:
+            return error or {"success": False, "error": "PIN verification failed"}
 
         # Read current keys
         keys = self._read_keys_file()
@@ -472,23 +554,38 @@ class SecretsService:
         # Trigger provider refresh hook (placeholder for P82)
         self._trigger_provider_refresh(key_name)
 
-        return True
+        return {
+            "success": True,
+            "action": action.value,
+        }
 
     def delete_secret(self, key_name: str, pin: str) -> bool:
         """Delete a secret (requires PIN)."""
-        # Verify PIN
-        if not self.pin_manager.verify_pin(pin):
-            self.audit.log(
-                AuditAction.DELETE, key_name, success=False, details="PIN verification failed"
-            )
-            return False
+        result = self.delete_secret_result(key_name, pin)
+        return bool(result.get("success"))
+
+    def delete_secret_result(self, key_name: str, pin: str) -> dict:
+        """Delete a secret with structured status details."""
+        ok, error = self._validate_pin_for_sensitive_action(
+            pin,
+            action=AuditAction.DELETE,
+            key_name=key_name,
+        )
+        if not ok:
+            return error or {"success": False, "error": "PIN verification failed"}
 
         # Read current keys
         keys = self._read_keys_file()
 
         if key_name not in keys:
-            self.audit.log(AuditAction.DELETE, key_name, success=False, details="Key not found")
-            return False
+            details = {
+                "success": False,
+                "error_code": "secret_not_found",
+                "error": "Secret key not found",
+                "operator_action": "Choose an existing key from the list",
+            }
+            self.audit.log(AuditAction.DELETE, key_name, success=False, details=details["error"])
+            return details
 
         # Delete key
         del keys[key_name]
@@ -501,7 +598,10 @@ class SecretsService:
         # Trigger provider refresh hook (placeholder for P82)
         self._trigger_provider_refresh(key_name)
 
-        return True
+        return {
+            "success": True,
+            "action": AuditAction.DELETE.value,
+        }
 
     def _trigger_provider_refresh(self, key_name: str) -> None:
         """Trigger a provider refresh when LLM keys change.
@@ -575,13 +675,27 @@ def unlock_settings(pin: str) -> dict:
     pm = get_pin_manager()
     audit = get_audit_logger()
 
+    if not pm.is_pin_set():
+        audit.log(AuditAction.UNLOCK, success=False, details="PIN not initialized")
+        return {
+            "success": False,
+            "error_code": "pin_not_initialized",
+            "error": "PIN not initialized",
+            "operator_action": "Set up PIN before unlocking settings",
+            "lockout": pm.get_lockout_status(),
+        }
+
     # Check lockout first
     lockout = pm.get_lockout_status()
     if lockout["is_locked"]:
+        audit.log(AuditAction.LOCKOUT, success=False, details="Unlock blocked by lockout")
+        audit.log(AuditAction.UNLOCK, success=False, details="PIN locked")
         return {
             "success": False,
+            "error_code": "pin_locked",
             "error": "PIN locked due to failed attempts",
             "lockout": lockout,
+            "operator_action": "Wait for lockout to expire before retrying",
         }
 
     # Verify PIN
@@ -595,9 +709,53 @@ def unlock_settings(pin: str) -> dict:
             "lockout": pm.get_lockout_status(),
         }
     else:
-        audit.log(AuditAction.UNLOCK, success=False)
+        lockout = pm.get_lockout_status()
+        if lockout["is_locked"]:
+            audit.log(AuditAction.LOCKOUT, success=False, details="Lockout threshold reached")
+            audit.log(AuditAction.UNLOCK, success=False, details="PIN locked")
+            return {
+                "success": False,
+                "error_code": "pin_locked",
+                "error": "PIN locked due to failed attempts",
+                "lockout": lockout,
+                "operator_action": "Wait for lockout to expire before retrying",
+            }
+
+        audit.log(AuditAction.UNLOCK, success=False, details="Invalid PIN")
         return {
             "success": False,
+            "error_code": "pin_invalid",
             "error": "Invalid PIN",
-            "lockout": pm.get_lockout_status(),
+            "lockout": lockout,
+            "operator_action": "Retry with the configured PIN",
+        }
+
+
+def setup_settings_pin(pin: str) -> dict:
+    """Set up settings PIN with audit trail and structured error details."""
+    pm = get_pin_manager()
+    audit = get_audit_logger()
+
+    try:
+        pm.setup_pin(pin)
+        audit.log(AuditAction.SETUP, success=True)
+        return {
+            "success": True,
+            "message": "PIN configured successfully",
+        }
+    except ValueError as e:
+        msg = str(e)
+        error_code = "pin_setup_failed"
+        operator_action = "Enter a valid 4-6 digit PIN"
+
+        if msg == "PIN already initialized":
+            error_code = "pin_already_initialized"
+            operator_action = "Use unlock flow with existing PIN"
+
+        audit.log(AuditAction.SETUP, success=False, details=msg)
+        return {
+            "success": False,
+            "error_code": error_code,
+            "error": msg,
+            "operator_action": operator_action,
         }

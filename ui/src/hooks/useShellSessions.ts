@@ -9,6 +9,7 @@ import {
   SessionStatus,
   TerminalOutput,
 } from "@/types/shell";
+import { callMCPTool } from "@/lib/mcp-client";
 
 interface UseShellSessionsReturn {
   sessions: ShellSession[];
@@ -25,27 +26,6 @@ interface UseShellSessionsReturn {
   getAuditLog: (sessionId?: string, limit?: number) => Promise<AuditLogEntry[]>;
 }
 
-const MCP_BRIDGE_URL = "http://127.0.0.1:8766/tools/call";
-
-async function callMCPTool(name: string, args?: Record<string, unknown>) {
-  const response = await fetch(MCP_BRIDGE_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ name, args }),
-  });
-
-  if (!response.ok) {
-    throw new Error(`MCP tool ${name} failed: ${response.statusText}`);
-  }
-
-  const text = await response.text();
-  try {
-    return JSON.parse(text);
-  } catch {
-    return text;
-  }
-}
-
 export function useShellSessions(): UseShellSessionsReturn {
   const [sessions, setSessions] = useState<ShellSession[]>([]);
   const [activeSession, setActiveSession] = useState<ShellSession | null>(null);
@@ -59,24 +39,29 @@ export function useShellSessions(): UseShellSessionsReturn {
     try {
       const data = await callMCPTool("shell.list_sessions");
       if (Array.isArray(data)) {
-        setSessions(data);
+        const sessionList = data as ShellSession[];
+        setSessions(sessionList);
         // Update active session if it exists in the list
         if (activeSession) {
-          const updated = data.find((s: ShellSession) => s.id === activeSession.id);
+          const updated = sessionList.find((s) => s.id === activeSession.id);
           if (updated) {
             setActiveSession(updated);
           }
         }
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to fetch sessions");
+      setError(
+        err instanceof Error
+          ? `Shell session refresh failed: ${err.message}`
+          : "Shell session refresh failed"
+      );
     }
   }, [activeSession]);
 
   const fetchSessionContext = useCallback(async (sessionId: string) => {
     try {
       const data = await callMCPTool("shell.get_context", { session_id: sessionId });
-      if (data && !data.error) {
+      if (data && typeof data === "object" && !("error" in data)) {
         setSessionContext(data as SessionContext);
       }
     } catch (err) {
@@ -88,7 +73,10 @@ export function useShellSessions(): UseShellSessionsReturn {
     setIsLoading(true);
     setError(null);
     try {
-      const session = await callMCPTool("shell.create_session", { name, cwd });
+      const session = (await callMCPTool("shell.create_session", {
+        name,
+        cwd,
+      })) as ShellSession;
       await refreshSessions();
       setActiveSession(session);
       

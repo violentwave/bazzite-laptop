@@ -2,12 +2,12 @@
 
 Auto-generated cross-tool handoff. Updated by save-handoff.sh
 
-## Current Phase: P90 (Gated)
+## Current Phase: P91 ✅ COMPLETE
 
 **P77 — UI Architecture + Contracts Baseline** ✅ COMPLETE  
 **P78 — Midnight Glass Design System + Figma Mapping** ✅ COMPLETE  
 **P79 — Frontend Shell Bootstrap** ✅ COMPLETE  
-**P80 — Auth, 2FA, Recovery, Gmail Notifications** ✅ COMPLETE  
+**P80 — Auth, 2FA, Recovery, Gmail Notifications** ⏸️ DEFERRED  
 **P81 — PIN-Gated Settings + Secrets Service** ✅ COMPLETE  
 **P82 — Provider + Model Discovery / Routing Console** ✅ COMPLETE  
 **P83 — Chat + MCP Workspace Integration** ✅ COMPLETE  
@@ -17,6 +17,8 @@ Auto-generated cross-tool handoff. Updated by save-handoff.sh
 **P87 — Newelle/PySide Migration + Compatibility Cutover** ✅ COMPLETE  
 **P88 — UI Hardening, Validation, Docs, Launch Handoff** ✅ COMPLETE  
 **P89 — Security Improvement + Remediation Closure** ✅ COMPLETE  
+**P90 — Console Runtime Recovery + Contract Reconciliation** ✅ COMPLETE  
+**P91 — Settings, Secrets, and PIN End-to-End Hardening** ✅ COMPLETE  
 **P76 — Systemd Scope Remediation** ✅ COMPLETE (host-side service fixes)
 
 ### P89 Closeout (2026-04-14)
@@ -25,6 +27,73 @@ Auto-generated cross-tool handoff. Updated by save-handoff.sh
 - `code-index.service` completed successfully in user scope (exit `0/SUCCESS`) without new Gemini/Cohere retry-storm logs in the latest run window.
 - `fedora-updates.service`, `release-watch.service`, and `rag-embed.service` all completed successfully in user scope.
 - Confirmed manual host-side remainder still open: `system-health.service` exits `1`, `logrotate.service` boot.log permission denied, Gemini/Cohere operator key/quota actions, firmware/efivarfs + staged deployment reboot checks.
+
+### P91 Closeout (2026-04-14)
+**Status**: ✅ COMPLETE
+
+**Problem Solved**:
+- Fixed "Failed to fetch secrets" generic errors with precise error codes
+- Resolved PIN setup failures with clear validation messages
+- Fixed PIN-required state not flowing cleanly through settings UX
+
+**Backend Improvements**:
+- Enhanced all 8 settings MCP tools with specific error codes:
+  - PIN errors: `pin_not_initialized`, `pin_invalid`, `pin_locked`, `pin_validation_failed`, etc.
+  - Secrets errors: `keys_file_not_found`, `keys_file_permission_denied`, `secret_not_found`, etc.
+  - Backend errors: `settings_backend_unavailable`, `unlock_failed`, etc.
+- All tools now return structured responses with `success`, `error_code`, `error`, `operator_action`
+- Added input validation before processing in all handlers
+- Added specific exception handling (PermissionError, ValueError)
+
+**Frontend Improvements**:
+- Updated `formatOperatorError()` to handle 15+ specific error codes with user-friendly messages
+- Enhanced `classifyBackendError()` to distinguish connection/timeout/permission errors
+- Improved `fetchPinStatus()` and `fetchSecrets()` to handle error responses properly
+- Added graceful handling for `keys_file_not_found` (shows empty list instead of error)
+
+**Files Modified**:
+- `ai/mcp_bridge/tools.py` — Enhanced 8 settings tool handlers
+- `ui/src/components/settings/SettingsContainer.tsx` — Improved error classification
+
+**Validation**:
+- `ruff check ai/mcp_bridge/tools.py` ✅ PASS
+- `npx tsc --noEmit` (ui/) ✅ PASS
+- `npm run build` (ui/) ✅ PASS
+
+### P90 Closeout (2026-04-14)
+**Status**: ✅ COMPLETE
+
+**Runtime Contract Recovery**:
+- Reconciled frontend MCP transport from stale `/tools/call` to streamable FastMCP `/mcp` JSON-RPC with session handshake and SSE payload parsing in `ui/src/lib/mcp-client.ts`.
+- Migrated settings/providers/security/projects/shell runtime hooks from direct broken fetches to shared `callMCPTool(...)` contract path.
+- Added clearer operator-visible panel errors to separate runtime integration failures from manual host/security boundaries.
+
+**Backend Truth Reconciliation**:
+- Corrected project-phase truth drift in `ai/project_workflow_service.py` by parsing handoff completion/current-phase markers instead of inferring truth from docs presence alone.
+- Added regression coverage in `tests/test_project_workflow_service.py` for gated current-phase and timeline reconciliation.
+
+**Developer Ergonomics**:
+- Fixed Next.js Turbopack workspace root warning via `turbopack.root` config in `ui/next.config.ts`.
+- Added `scripts/start-console-ui.sh` helper for clear UI startup workflow.
+- Documented that "site can't be reached" = dev server not running (expected behavior, not a bug).
+
+**Validation Completed**:
+- `ruff check ai/ tests/ scripts/` ✅ PASS
+- `.venv/bin/python -m pytest tests/ -x -q --tb=short` ✅ PASS (2133 passed, 183 skipped)
+- `npx tsc --noEmit` (from `ui/`) ✅ PASS
+- `npm run build` (from `ui/`) ✅ PASS
+- Live MCP smoke checks for all panel namespaces ✅ PASS
+- UI startup with `scripts/start-console-ui.sh` ✅ PASS (no warnings)
+
+**Key Finding**: The localhost UI requires an active dev server (`npm run dev`). When the server is running, `curl -I http://localhost:3000` returns 200 OK. The "site can't be reached" behavior was the dev server not running, not a broken contract. Use `./scripts/start-console-ui.sh` to start the UI.
+
+**Files Delivered**:
+- `docs/P90_CONSOLE_RUNTIME_RECOVERY_CONTRACT_RECONCILIATION.md`
+- `ui/src/lib/mcp-client.ts`, `ui/src/hooks/use*.ts`, `ui/src/components/settings/SettingsContainer.tsx`
+- `ui/next.config.ts` — Turbopack root fix
+- `ai/project_workflow_service.py` — Phase truth reconciliation
+- `tests/test_project_workflow_service.py`
+- `scripts/start-console-ui.sh` — UI startup helper
 
 ### Summary
 P76 remediation complete. Migrated 4 repo-owned scheduled jobs from system-scoped to user-scoped systemd units to resolve SELinux permission and namespace issues. See `docs/P76_SYSTEMD_SCOPE_REMEDIATION.md` for full details.

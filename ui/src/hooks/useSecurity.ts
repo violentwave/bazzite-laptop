@@ -10,6 +10,7 @@ import {
   AcknowledgeResponse,
   Severity,
 } from "@/types/security";
+import { callMCPTool } from "@/lib/mcp-client";
 
 interface UseSecurityReturn {
   overview: SecurityOverview | null;
@@ -22,27 +23,6 @@ interface UseSecurityReturn {
   refresh: () => Promise<void>;
   acknowledgeAlert: (alertId: string) => Promise<AcknowledgeResponse>;
   lastRefresh: Date | null;
-}
-
-const MCP_BRIDGE_URL = "http://127.0.0.1:8766/tools/call";
-
-async function callMCPTool(name: string, args?: Record<string, unknown>) {
-  const response = await fetch(MCP_BRIDGE_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ name, args }),
-  });
-
-  if (!response.ok) {
-    throw new Error(`MCP tool ${name} failed: ${response.statusText}`);
-  }
-
-  const text = await response.text();
-  try {
-    return JSON.parse(text);
-  } catch {
-    return text;
-  }
 }
 
 export function useSecurity(): UseSecurityReturn {
@@ -62,27 +42,31 @@ export function useSecurity(): UseSecurityReturn {
     try {
       // Fetch overview
       const overviewData = await callMCPTool("security.ops_overview");
-      setOverview(overviewData);
+      setOverview((overviewData || null) as SecurityOverview | null);
 
       // Fetch alerts
       const alertsData = await callMCPTool("security.ops_alerts", { limit: 50 });
-      setAlerts(alertsData || []);
+      setAlerts(Array.isArray(alertsData) ? (alertsData as SecurityAlert[]) : []);
 
       // Fetch findings
       const findingsData = await callMCPTool("security.ops_findings", { limit: 20 });
-      setFindings(findingsData || []);
+      setFindings(Array.isArray(findingsData) ? (findingsData as ScanFinding[]) : []);
 
       // Fetch provider health issues
       const issuesData = await callMCPTool("security.ops_provider_health");
-      setProviderIssues(issuesData || []);
+      setProviderIssues(Array.isArray(issuesData) ? (issuesData as ProviderHealthIssue[]) : []);
 
       // Fetch system health
       const healthData = await callMCPTool("security.status");
-      setSystemHealth(healthData);
+      setSystemHealth((healthData || null) as SystemHealth | null);
 
       setLastRefresh(new Date());
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to fetch security data");
+      setError(
+        err instanceof Error
+          ? `Security data load failed: ${err.message}`
+          : "Security data load failed"
+      );
     } finally {
       setIsLoading(false);
     }

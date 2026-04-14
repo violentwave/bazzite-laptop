@@ -1,14 +1,14 @@
 # Phase Index — Bazzite AI Layer
 
-> Master index of all phases P0-P88. Updated 2026-04-14.
+> Master index of all phases P0-P90. Updated 2026-04-14.
 > Source of truth: Notion `Bazzite Phases` database + `git log`.
 
 ## Quick Stats
 
 | Metric | Value |
 |--------|-------|
-| Total Phases | P0-P88 (89 phases) |
-| Completed | P0-P88 except deferred scopes |
+| Total Phases | P0-P91 (92 phases) |
+| Completed | P0-P91 except deferred scopes |
 | In Progress | — |
 | Repo Docs | docs/*.md, docs/patterns/frontend/*.md, docs/frontend-capability-pack/*.md |
 | Notion DB | `398c13ed-47f6-4f7e-9e54-eb339b462c90` |
@@ -120,6 +120,9 @@
 | P86 | Project + Workflow + Phase Panels | Done | ff56276 | 2026-04-13 | docs/P86_PROJECT_WORKFLOW_PHASE_PANELS.md, ai/project_workflow_service.py, ui/src/components/project-workflow/* | Notion row | Project context, workflow history, phase timeline |
 | P87 | Newelle/PySide Migration + Compatibility Cutover | Done | 877efdd | 2026-04-13 | docs/P87_MIGRATION_CUTOVER.md, docs/USER-GUIDE.md, docs/AGENT.md, docs/newelle-system-prompt.md | Notion row | Console-first UX cutover with fallback/rollback model |
 | P88 | UI Hardening, Validation, Docs, Launch Handoff | Done | — | 2026-04-14 | docs/P88_UI_HARDENING_LAUNCH_HANDOFF.md, docs/USER-GUIDE.md, docs/newelle-system-prompt.md | Notion row | Final UI tranche hardening, launch readiness, and deferred-risk reconciliation |
+| P89 | Security Improvement + Remediation Closure | Done | — | 2026-04-14 | scripts/install-user-timers.sh, systemd/user/*.service, systemd/user/*.timer, ai/code_intel/store.py, docs/P76_SYSTEMD_SCOPE_REMEDIATION.md | Notion row | User-scoped timer/service remediation and security-run stability closure |
+| P90 | Console Runtime Recovery + Contract Reconciliation | Done | — | 2026-04-14 | docs/P90_CONSOLE_RUNTIME_RECOVERY_CONTRACT_RECONCILIATION.md, ui/src/lib/mcp-client.ts, ui/src/hooks/use*.ts, ui/next.config.ts, ai/project_workflow_service.py, tests/test_project_workflow_service.py, scripts/start-console-ui.sh | Notion row | MCP streamable-http contract reconciliation, panel runtime recovery, and UI startup workflow |
+| P91 | Settings, Secrets, and PIN End-to-End Hardening | Done | — | 2026-04-14 | docs/P91_SETTINGS_SECRETS_PIN_HARDENING.md, ai/mcp_bridge/tools.py, ui/src/components/settings/SettingsContainer.tsx | Notion row | Precise error codes for settings operations, improved PIN/secrets flow error handling |
 
 ## Notion Database Reference
 

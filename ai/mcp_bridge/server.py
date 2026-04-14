@@ -214,6 +214,38 @@ def create_app():
             @mcp.tool(name=tool_name, description=description, annotations=ann)
             async def _handler_question(question: str, _tn=tool_name):
                 return await execute_tool(_tn, {"question": question})
+        elif set(arg_defs.keys()) == {"pin"}:
+
+            @mcp.tool(name=tool_name, description=description, annotations=ann)
+            async def _handler_pin(pin: str, _tn=tool_name):
+                return await execute_tool(_tn, {"pin": pin})
+        elif set(arg_defs.keys()) == {"key_name", "pin"}:
+
+            @mcp.tool(name=tool_name, description=description, annotations=ann)
+            async def _handler_key_pin(key_name: str, pin: str, _tn=tool_name):
+                return await execute_tool(_tn, {"key_name": key_name, "pin": pin})
+        elif set(arg_defs.keys()) == {"key_name", "value", "pin"}:
+
+            @mcp.tool(name=tool_name, description=description, annotations=ann)
+            async def _handler_key_value_pin(
+                key_name: str,
+                value: str,
+                pin: str,
+                _tn=tool_name,
+            ):
+                return await execute_tool(
+                    _tn,
+                    {
+                        "key_name": key_name,
+                        "value": value,
+                        "pin": pin,
+                    },
+                )
+        elif set(arg_defs.keys()) == {"limit"}:
+
+            @mcp.tool(name=tool_name, description=description, annotations=ann)
+            async def _handler_limit(limit: int = 100, _tn=tool_name):
+                return await execute_tool(_tn, {"limit": limit})
         elif "game" in arg_defs:
 
             @mcp.tool(name=tool_name, description=description, annotations=ann)

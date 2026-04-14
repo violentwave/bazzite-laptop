@@ -1432,90 +1432,354 @@ async def _execute_python_tool(tool_name: str, tool_def: dict, args: dict) -> st
         elif tool_name == "settings.pin_status":
             from ai.settings_service import get_pin_manager  # noqa: PLC0415
 
-            pm = get_pin_manager()
-            return json.dumps(
-                {
-                    "pin_is_set": pm.is_pin_set(),
-                    "lockout": pm.get_lockout_status(),
-                },
-                indent=2,
-            )
+            try:
+                pm = get_pin_manager()
+                return json.dumps(
+                    {
+                        "success": True,
+                        "pin_is_set": pm.is_pin_set(),
+                        "lockout": pm.get_lockout_status(),
+                    },
+                    indent=2,
+                )
+            except Exception as e:
+                return json.dumps(
+                    {
+                        "success": False,
+                        "error_code": "settings_backend_unavailable",
+                        "error": "Settings backend unavailable",
+                        "operator_action": "Check MCP bridge and settings service health",
+                        "details": str(e),
+                    },
+                    indent=2,
+                )
 
         elif tool_name == "settings.setup_pin":
-            from ai.settings_service import get_pin_manager  # noqa: PLC0415
+            from ai.settings_service import setup_settings_pin  # noqa: PLC0415
 
-            pm = get_pin_manager()
-            try:
-                pm.setup_pin(args["pin"])
+            pin = args.get("pin")
+            if not pin:
                 return json.dumps(
-                    {"success": True, "message": "PIN configured successfully"}, indent=2
+                    {
+                        "success": False,
+                        "error_code": "pin_required",
+                        "error": "PIN is required",
+                        "operator_action": "Provide a 4-6 digit PIN",
+                    },
+                    indent=2,
                 )
+
+            try:
+                return json.dumps(setup_settings_pin(pin), indent=2)
             except ValueError as e:
-                return json.dumps({"success": False, "error": str(e)}, indent=2)
+                return json.dumps(
+                    {
+                        "success": False,
+                        "error_code": "pin_validation_failed",
+                        "error": str(e),
+                        "operator_action": "Provide a valid 4-6 digit PIN containing only numbers",
+                    },
+                    indent=2,
+                )
+            except Exception as e:
+                return json.dumps(
+                    {
+                        "success": False,
+                        "error_code": "pin_setup_failed",
+                        "error": "Failed to set up PIN",
+                        "operator_action": "Check settings database permissions and try again",
+                        "details": str(e),
+                    },
+                    indent=2,
+                )
 
         elif tool_name == "settings.verify_pin":
             from ai.settings_service import unlock_settings  # noqa: PLC0415
 
-            result = unlock_settings(args["pin"])
-            return json.dumps(result, indent=2)
+            pin = args.get("pin")
+            if not pin:
+                return json.dumps(
+                    {
+                        "success": False,
+                        "error_code": "pin_required",
+                        "error": "PIN is required",
+                        "operator_action": "Enter your PIN to unlock settings",
+                    },
+                    indent=2,
+                )
+
+            try:
+                result = unlock_settings(pin)
+                return json.dumps(result, indent=2)
+            except Exception as e:
+                return json.dumps(
+                    {
+                        "success": False,
+                        "error_code": "unlock_failed",
+                        "error": "Failed to unlock settings",
+                        "operator_action": "Check settings service health and try again",
+                        "details": str(e),
+                    },
+                    indent=2,
+                )
 
         elif tool_name == "settings.list_secrets":
+            from ai.config import KEYS_ENV  # noqa: PLC0415
             from ai.settings_service import get_secrets_service  # noqa: PLC0415
 
-            service = get_secrets_service()
-            secrets = service.list_secrets(include_values=False)
-            return json.dumps(
-                [
+            try:
+                # Check if keys.env exists and is readable
+                if not KEYS_ENV.exists():
+                    return json.dumps(
+                        {
+                            "success": False,
+                            "error_code": "keys_file_not_found",
+                            "error": "API keys file not found",
+                            "operator_action": f"Create {KEYS_ENV} or add API keys",
+                            "keys_env_path": str(KEYS_ENV),
+                        },
+                        indent=2,
+                    )
+
+                service = get_secrets_service()
+                secrets = service.list_secrets(include_values=False)
+                return json.dumps(
+                    [
+                        {
+                            "name": s.name,
+                            "masked_value": s.masked_value,
+                            "category": s.category,
+                            "is_set": s.is_set,
+                        }
+                        for s in secrets
+                    ],
+                    indent=2,
+                )
+            except PermissionError as e:
+                return json.dumps(
                     {
-                        "name": s.name,
-                        "masked_value": s.masked_value,
-                        "category": s.category,
-                        "is_set": s.is_set,
-                    }
-                    for s in secrets
-                ],
-                indent=2,
-            )
+                        "success": False,
+                        "error_code": "keys_file_permission_denied",
+                        "error": "Permission denied reading API keys file",
+                        "operator_action": f"Check file permissions on {KEYS_ENV}",
+                        "details": str(e),
+                    },
+                    indent=2,
+                )
+            except Exception as e:
+                return json.dumps(
+                    {
+                        "success": False,
+                        "error_code": "secrets_unavailable",
+                        "error": "Failed to list secrets",
+                        "operator_action": "Check MCP bridge logs and settings service health",
+                        "details": str(e),
+                    },
+                    indent=2,
+                )
 
         elif tool_name == "settings.reveal_secret":
             from ai.settings_service import get_secrets_service  # noqa: PLC0415
 
-            service = get_secrets_service()
-            entry = service.get_secret(args["key_name"], args["pin"])
-            if entry:
+            key_name = args.get("key_name")
+            pin = args.get("pin")
+
+            if not key_name:
                 return json.dumps(
                     {
-                        "name": entry.name,
-                        "value": entry.value,
-                        "masked_value": entry.masked_value,
-                        "category": entry.category,
+                        "success": False,
+                        "error_code": "key_name_required",
+                        "error": "Secret key name is required",
+                        "operator_action": "Provide the name of the secret to reveal",
                     },
                     indent=2,
                 )
-            return json.dumps(
-                {"error": "Failed to reveal secret. Check PIN or key name."}, indent=2
-            )
+
+            if not pin:
+                return json.dumps(
+                    {
+                        "success": False,
+                        "error_code": "pin_required",
+                        "error": "PIN is required",
+                        "operator_action": "Enter your PIN to reveal secrets",
+                    },
+                    indent=2,
+                )
+
+            try:
+                service = get_secrets_service()
+                result = service.reveal_secret_result(key_name, pin)
+                if result.get("success"):
+                    entry = result["entry"]
+                    return json.dumps(
+                        {
+                            "name": entry.name,
+                            "value": entry.value,
+                            "masked_value": entry.masked_value,
+                            "category": entry.category,
+                        },
+                        indent=2,
+                    )
+                return json.dumps(result, indent=2)
+            except Exception as e:
+                return json.dumps(
+                    {
+                        "success": False,
+                        "error_code": "reveal_failed",
+                        "error": "Failed to reveal secret",
+                        "operator_action": "Check settings service health and try again",
+                        "details": str(e),
+                    },
+                    indent=2,
+                )
 
         elif tool_name == "settings.set_secret":
             from ai.settings_service import get_secrets_service  # noqa: PLC0415
 
-            service = get_secrets_service()
-            success = service.set_secret(args["key_name"], args["value"], args["pin"])
-            return json.dumps({"success": success}, indent=2)
+            key_name = args.get("key_name")
+            value = args.get("value")
+            pin = args.get("pin")
+
+            if not key_name:
+                return json.dumps(
+                    {
+                        "success": False,
+                        "error_code": "key_name_required",
+                        "error": "Secret key name is required",
+                        "operator_action": "Provide the name of the secret to set",
+                    },
+                    indent=2,
+                )
+
+            if value is None:
+                return json.dumps(
+                    {
+                        "success": False,
+                        "error_code": "value_required",
+                        "error": "Secret value is required",
+                        "operator_action": "Provide the secret value",
+                    },
+                    indent=2,
+                )
+
+            if not pin:
+                return json.dumps(
+                    {
+                        "success": False,
+                        "error_code": "pin_required",
+                        "error": "PIN is required",
+                        "operator_action": "Enter your PIN to modify secrets",
+                    },
+                    indent=2,
+                )
+
+            try:
+                service = get_secrets_service()
+                result = service.set_secret_result(key_name, value, pin)
+                return json.dumps(result, indent=2)
+            except PermissionError as e:
+                return json.dumps(
+                    {
+                        "success": False,
+                        "error_code": "keys_file_permission_denied",
+                        "error": "Permission denied writing API keys file",
+                        "operator_action": "Check file permissions on keys.env directory",
+                        "details": str(e),
+                    },
+                    indent=2,
+                )
+            except Exception as e:
+                return json.dumps(
+                    {
+                        "success": False,
+                        "error_code": "set_secret_failed",
+                        "error": "Failed to set secret",
+                        "operator_action": "Check settings service health and try again",
+                        "details": str(e),
+                    },
+                    indent=2,
+                )
 
         elif tool_name == "settings.delete_secret":
             from ai.settings_service import get_secrets_service  # noqa: PLC0415
 
-            service = get_secrets_service()
-            success = service.delete_secret(args["key_name"], args["pin"])
-            return json.dumps({"success": success}, indent=2)
+            key_name = args.get("key_name")
+            pin = args.get("pin")
+
+            if not key_name:
+                return json.dumps(
+                    {
+                        "success": False,
+                        "error_code": "key_name_required",
+                        "error": "Secret key name is required",
+                        "operator_action": "Provide the name of the secret to delete",
+                    },
+                    indent=2,
+                )
+
+            if not pin:
+                return json.dumps(
+                    {
+                        "success": False,
+                        "error_code": "pin_required",
+                        "error": "PIN is required",
+                        "operator_action": "Enter your PIN to delete secrets",
+                    },
+                    indent=2,
+                )
+
+            try:
+                service = get_secrets_service()
+                result = service.delete_secret_result(key_name, pin)
+                return json.dumps(result, indent=2)
+            except PermissionError as e:
+                return json.dumps(
+                    {
+                        "success": False,
+                        "error_code": "keys_file_permission_denied",
+                        "error": "Permission denied writing API keys file",
+                        "operator_action": "Check file permissions on keys.env directory",
+                        "details": str(e),
+                    },
+                    indent=2,
+                )
+            except Exception as e:
+                return json.dumps(
+                    {
+                        "success": False,
+                        "error_code": "delete_secret_failed",
+                        "error": "Failed to delete secret",
+                        "operator_action": "Check settings service health and try again",
+                        "details": str(e),
+                    },
+                    indent=2,
+                )
 
         elif tool_name == "settings.audit_log":
             from ai.settings_service import get_audit_logger  # noqa: PLC0415
 
-            audit = get_audit_logger()
-            entries = audit.get_recent(args.get("limit", 100))
-            return json.dumps(entries, indent=2)
+            try:
+                audit = get_audit_logger()
+                entries = audit.get_recent(args.get("limit", 100))
+                return json.dumps(
+                    {
+                        "success": True,
+                        "entries": entries,
+                        "count": len(entries),
+                    },
+                    indent=2,
+                )
+            except Exception as e:
+                return json.dumps(
+                    {
+                        "success": False,
+                        "error_code": "audit_log_unavailable",
+                        "error": "Failed to retrieve audit log",
+                        "operator_action": "Check settings service health and file permissions",
+                        "details": str(e),
+                    },
+                    indent=2,
+                )
 
         # P82 — Provider Service Tools
         elif tool_name == "providers.discover":

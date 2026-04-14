@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 
 interface PINUnlockProps {
-  onUnlock: (pin: string) => Promise<boolean>;
+  onUnlock: (pin: string) => Promise<{ success: boolean; error?: string }>;
   lockoutStatus: {
     is_locked: boolean;
     remaining_seconds: number;
@@ -29,9 +29,9 @@ export function PINUnlock({ onUnlock, lockoutStatus, onCancel }: PINUnlockProps)
 
     setIsSubmitting(true);
     try {
-      const success = await onUnlock(pin);
-      if (!success) {
-        setError('Invalid PIN. Please try again.');
+      const result = await onUnlock(pin);
+      if (!result.success) {
+        setError(result.error || 'Invalid PIN. Please try again.');
         setPin('');
       }
     } catch {

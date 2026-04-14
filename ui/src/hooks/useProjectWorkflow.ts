@@ -7,6 +7,7 @@ import {
   PhaseTimelineEntry,
   ArtifactInfo,
 } from "@/types/project-workflow";
+import { callMCPTool } from "@/lib/mcp-client";
 
 interface UseProjectWorkflowReturn {
   context: ProjectContext | null;
@@ -16,27 +17,6 @@ interface UseProjectWorkflowReturn {
   isLoading: boolean;
   error: string | null;
   refresh: () => Promise<void>;
-}
-
-const MCP_BRIDGE_URL = "http://127.0.0.1:8766/tools/call";
-
-async function callMCPTool(name: string, args?: Record<string, unknown>) {
-  const response = await fetch(MCP_BRIDGE_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ name, args }),
-  });
-
-  if (!response.ok) {
-    throw new Error(`MCP tool ${name} failed: ${response.statusText}`);
-  }
-
-  const text = await response.text();
-  try {
-    return JSON.parse(text);
-  } catch {
-    return text;
-  }
 }
 
 export function useProjectWorkflow(): UseProjectWorkflowReturn {
@@ -60,7 +40,7 @@ export function useProjectWorkflow(): UseProjectWorkflowReturn {
         callMCPTool("project.artifacts", { limit: 10 }),
       ]);
 
-      if (contextData && !contextData.error) {
+      if (contextData && typeof contextData === 'object' && !('error' in contextData)) {
         setContext(contextData as ProjectContext);
       }
 
@@ -76,7 +56,11 @@ export function useProjectWorkflow(): UseProjectWorkflowReturn {
         setArtifacts(artifactsData as ArtifactInfo[]);
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to fetch project data");
+      setError(
+        err instanceof Error
+          ? `Project data load failed: ${err.message}`
+          : "Project data load failed"
+      );
     } finally {
       setIsLoading(false);
     }
@@ -102,12 +86,17 @@ export function useProjectWorkflow(): UseProjectWorkflowReturn {
 
 /** Get status color for UI */
 export function getPhaseStatusColor(status: string | null): string {
-  switch (status?.toLowerCase()) {
+  const normalized = status?.toLowerCase().replace(/\s+/g, "_");
+  switch (normalized) {
     case "completed":
+    case "complete":
+    case "done":
       return "var(--success)";
     case "in_progress":
+    case "active":
       return "var(--live-cyan)";
     case "ready":
+    case "gated":
       return "var(--accent-primary)";
     case "blocked":
       return "var(--danger)";

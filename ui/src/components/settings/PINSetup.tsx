@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 
 interface PINSetupProps {
-  onSetup: (pin: string) => Promise<boolean>;
+  onSetup: (pin: string) => Promise<{ success: boolean; error?: string }>;
   onCancel: () => void;
 }
 
@@ -35,9 +35,9 @@ export function PINSetup({ onSetup, onCancel }: PINSetupProps) {
 
     setIsSubmitting(true);
     try {
-      const success = await onSetup(pin);
-      if (!success) {
-        setError('Failed to set PIN. Please try again.');
+      const result = await onSetup(pin);
+      if (!result.success) {
+        setError(result.error || 'Failed to set PIN. Please try again.');
       }
     } catch {
       setError('An error occurred. Please try again.');

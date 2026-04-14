@@ -190,7 +190,7 @@ function PanelStatus({ panel }: { panel: string }) {
             className="w-2 h-2 rounded-full"
             style={{ background: "var(--success)" }}
           />
-          System Secure
+          Live Signals
         </div>
       );
     case "models":
@@ -207,7 +207,7 @@ function PanelStatus({ panel }: { panel: string }) {
             className="w-2 h-2 rounded-full"
             style={{ background: "var(--accent-primary)" }}
           />
-          6 Providers
+          Runtime Data
         </div>
       );
     case "terminal":
@@ -224,7 +224,7 @@ function PanelStatus({ panel }: { panel: string }) {
             className="w-2 h-2 rounded-full"
             style={{ background: "var(--offline)" }}
           />
-          No Session
+          Session Managed
         </div>
       );
     case "projects":
@@ -241,7 +241,7 @@ function PanelStatus({ panel }: { panel: string }) {
             className="w-2 h-2 rounded-full"
             style={{ background: "var(--accent-primary)" }}
           />
-          P80 In Progress
+          Phase Sync
         </div>
       );
     case "settings":

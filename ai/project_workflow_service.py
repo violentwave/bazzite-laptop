@@ -105,28 +105,59 @@ class ProjectWorkflowService:
             return {"error": "HANDOFF.md not found"}
 
         try:
+            import re
+
             content = handoff_path.read_text()
-            # Extract current phase from the header
+            lines = content.split("\n")
+
             current_phase = {"number": None, "name": None, "status": "unknown"}
+            completed_phases: set[int] = set()
+            phase_catalog: dict[int, dict[str, Any]] = {}
 
-            for line in content.split("\n")[:50]:
-                if "Current Phase:" in line:
-                    # Format: "Current Phase: P86 (Next)" or similar
-                    import re
-
+            # Header section with current phase (usually at top)
+            for line in lines[:80]:
+                if line.startswith("## Current Phase:"):
                     match = re.search(r"P(\d+)", line)
                     if match:
                         current_phase["number"] = int(match.group(1))
-                if line.startswith("## Completed Phase: P"):
-                    import re
+                    status_match = re.search(r"\(([^)]+)\)", line)
+                    if status_match:
+                        current_phase["status"] = status_match.group(1).strip()
 
+            # Full phase list section: **P89 — Name** ✅ COMPLETE
+            phase_line = re.compile(r"\*\*P(\d+)\s*[-—]?\s*(.*?)\*\*")
+            for line in lines:
+                match = phase_line.search(line)
+                if not match:
+                    continue
+
+                phase_num = int(match.group(1))
+                phase_name = (match.group(2) or "").strip() or f"P{phase_num}"
+                is_complete = "✅ COMPLETE" in line.upper()
+
+                phase_catalog[phase_num] = {
+                    "number": phase_num,
+                    "name": phase_name,
+                    "is_complete": is_complete,
+                }
+                if is_complete:
+                    completed_phases.add(phase_num)
+
+                if current_phase.get("number") == phase_num:
+                    current_phase["name"] = phase_name
+
+            # Back-compat for older handoff style sections
+            for line in lines:
+                if line.startswith("## Completed Phase: P"):
                     match = re.search(r"P(\d+)", line)
                     if match:
-                        current_phase["completed"] = int(match.group(1))
+                        completed_phases.add(int(match.group(1)))
 
             # Find the most recently completed phase section
             return {
                 "current_phase": current_phase,
+                "completed_phases": sorted(completed_phases),
+                "phase_catalog": phase_catalog,
                 "last_updated": datetime.fromtimestamp(
                     handoff_path.stat().st_mtime, tz=UTC
                 ).isoformat(),
@@ -235,8 +266,11 @@ class ProjectWorkflowService:
         """Infer current phase from HANDOFF and phase docs."""
         handoff = self._read_handoff()
         phase_docs = self._read_phase_docs()
+        phase_catalog = handoff.get("phase_catalog", {})
+        completed_phases = set(handoff.get("completed_phases", []))
+        current_phase_meta = handoff.get("current_phase", {})
 
-        current_phase_num = handoff.get("current_phase", {}).get("number")
+        current_phase_num = current_phase_meta.get("number")
         if not current_phase_num and phase_docs:
             # Infer from most recent completed + 1
             completed = [p["number"] for p in phase_docs]
@@ -252,29 +286,41 @@ class ProjectWorkflowService:
             None,
         )
 
+        current_phase_status = str(current_phase_meta.get("status") or "planned").strip()
+        current_phase_status_lower = current_phase_status.lower()
+
         # Determine readiness based on dependencies
         readiness = "ready"
         blockers = []
 
-        # Check if previous phases are complete
-        if phase_docs:
-            prev_phases = [p["number"] for p in phase_docs if p["number"] < current_phase_num]
-            expected_prev = list(range(77, current_phase_num))  # P77 is first UI phase
-            missing = set(expected_prev) - set(prev_phases)
-            if missing:
-                readiness = "blocked"
-                blockers.append(
-                    f"Dependencies incomplete: P{', P'.join(map(str, sorted(missing)))}"
-                )
+        # Check if previous phases are complete (based on handoff truth, not docs-only)
+        expected_prev = list(range(77, current_phase_num))  # P77 is first UI phase
+        missing = set(expected_prev) - completed_phases
+        if missing:
+            readiness = "blocked"
+            blockers.append(f"Dependencies incomplete: P{', P'.join(map(str, sorted(missing)))}")
+
+        if "gated" in current_phase_status_lower:
+            readiness = "blocked"
+            blockers.append("Phase execution is currently gated in HANDOFF.md")
+        elif "blocked" in current_phase_status_lower:
+            readiness = "blocked"
 
         return PhaseInfo(
             phase_number=current_phase_num,
-            phase_name=phase_doc["name"] if phase_doc else f"P{current_phase_num}",
-            status="In Progress" if phase_doc else "Planned",
+            phase_name=(
+                phase_catalog.get(current_phase_num, {}).get("name")
+                or (phase_doc["name"] if phase_doc else f"P{current_phase_num}")
+            ),
+            status=current_phase_status if current_phase_status else "planned",
             dependencies=list(range(77, current_phase_num)),
             blockers=blockers,
             readiness=readiness,
-            next_action="Continue implementation" if readiness == "ready" else "Resolve blockers",
+            next_action=(
+                "Begin phase execution"
+                if readiness == "ready"
+                else "Resolve blockers/gates before execution"
+            ),
             execution_mode="safe",
             risk_tier="medium",
             backend="opencode",
@@ -362,22 +408,48 @@ class ProjectWorkflowService:
         docs = self._read_phase_docs()
         handoff = self._read_handoff()
         current = handoff.get("current_phase", {}).get("number")
+        current_status = str(handoff.get("current_phase", {}).get("status") or "").strip().lower()
+        completed_phases = set(handoff.get("completed_phases", []))
+        phase_catalog = handoff.get("phase_catalog", {})
+
+        docs_by_number = {doc["number"]: doc for doc in docs}
+        phase_numbers = set(docs_by_number)
+        phase_numbers.update(completed_phases)
+        if current:
+            phase_numbers.add(current)
 
         timeline = []
-        for doc in sorted(docs, key=lambda x: x["number"]):
-            status = "completed"
-            if current and doc["number"] == current:
-                status = "in_progress"
-            elif current and doc["number"] > current:
-                status = "planned"
+        for phase_number in sorted(phase_numbers):
+            doc = docs_by_number.get(phase_number)
+            status = "planned"
+
+            if phase_number in completed_phases:
+                status = "completed"
+            elif current and phase_number == current:
+                if "gated" in current_status:
+                    status = "ready"
+                elif "blocked" in current_status:
+                    status = "blocked"
+                elif "in progress" in current_status or "active" in current_status:
+                    status = "in_progress"
+                else:
+                    status = "ready"
+            elif current and phase_number < current and phase_number not in completed_phases:
+                status = "blocked"
+
+            phase_name = phase_catalog.get(phase_number, {}).get("name")
+            if not phase_name and doc:
+                phase_name = doc["name"]
+            if not phase_name:
+                phase_name = f"P{phase_number}"
 
             timeline.append(
                 {
-                    "number": doc["number"],
-                    "name": doc["name"],
+                    "number": phase_number,
+                    "name": phase_name,
                     "status": status,
-                    "doc_file": doc["doc_file"],
-                    "modified": doc["modified"],
+                    "doc_file": doc["doc_file"] if doc else "",
+                    "modified": doc["modified"] if doc else "",
                 }
             )
 

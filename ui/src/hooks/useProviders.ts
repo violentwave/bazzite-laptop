@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { ProviderInfo, ModelInfo, RoutingEntry, ProviderHealth } from '@/types/providers';
+import { callMCPTool } from '@/lib/mcp-client';
 
 interface UseProvidersReturn {
   providers: ProviderInfo[];
@@ -28,45 +29,25 @@ export function useProviders(): UseProvidersReturn {
     setError(null);
 
     try {
-      // Fetch providers
-      const providersRes = await fetch('http://127.0.0.1:8766/tools/call', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: 'providers.discover' }),
-      });
-      const providersData = await providersRes.json();
-      setProviders(providersData);
+      const [providersData, modelsData, routingData, healthData] = await Promise.all([
+        callMCPTool('providers.discover'),
+        callMCPTool('providers.models'),
+        callMCPTool('providers.routing'),
+        callMCPTool('providers.health'),
+      ]);
 
-      // Fetch models
-      const modelsRes = await fetch('http://127.0.0.1:8766/tools/call', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: 'providers.models' }),
-      });
-      const modelsData = await modelsRes.json();
-      setModels(modelsData);
-
-      // Fetch routing
-      const routingRes = await fetch('http://127.0.0.1:8766/tools/call', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: 'providers.routing' }),
-      });
-      const routingData = await routingRes.json();
-      setRouting(routingData);
-
-      // Fetch health
-      const healthRes = await fetch('http://127.0.0.1:8766/tools/call', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: 'providers.health' }),
-      });
-      const healthData = await healthRes.json();
-      setHealth(healthData);
+      setProviders(Array.isArray(providersData) ? (providersData as ProviderInfo[]) : []);
+      setModels(Array.isArray(modelsData) ? (modelsData as ModelInfo[]) : []);
+      setRouting(Array.isArray(routingData) ? (routingData as RoutingEntry[]) : []);
+      setHealth((healthData || {}) as Record<string, ProviderHealth>);
 
       setLastRefresh(new Date());
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch provider data');
+      setError(
+        err instanceof Error
+          ? `Providers integration failed: ${err.message}`
+          : 'Providers integration failed'
+      );
     } finally {
       setIsLoading(false);
     }
@@ -75,17 +56,16 @@ export function useProviders(): UseProvidersReturn {
   const refresh = useCallback(async () => {
     setIsLoading(true);
     try {
-      // Trigger refresh
-      await fetch('http://127.0.0.1:8766/tools/call', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: 'providers.refresh' }),
-      });
+      await callMCPTool('providers.refresh');
 
       // Re-fetch all data
       await fetchAll();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to refresh providers');
+      setError(
+        err instanceof Error
+          ? `Provider refresh failed: ${err.message}`
+          : 'Provider refresh failed'
+      );
     } finally {
       setIsLoading(false);
     }

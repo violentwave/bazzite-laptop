@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { PINSetup } from './PINSetup';
 import { PINUnlock } from './PINUnlock';
 import { SecretsList } from './SecretsList';
+import { callMCPTool } from '@/lib/mcp-client';
 
 interface Secret {
   name: string;
@@ -17,6 +18,120 @@ interface LockoutStatus {
   remaining_seconds: number;
   failed_attempts: number;
   max_attempts: number;
+}
+
+interface ToolResult {
+  success?: boolean;
+  error?: string;
+  error_code?: string;
+  operator_action?: string;
+  lockout?: LockoutStatus;
+  value?: string;
+}
+
+function formatOperatorError(prefix: string, data: ToolResult): string {
+  // PIN-related errors
+  if (data.error_code === 'pin_not_initialized') {
+    return 'PIN not initialized. Set up PIN to continue.';
+  }
+  if (data.error_code === 'pin_already_initialized') {
+    return 'PIN already set up. Use unlock flow with existing PIN.';
+  }
+  if (data.error_code === 'pin_invalid') {
+    return 'PIN invalid. Retry with the configured PIN.';
+  }
+  if (data.error_code === 'pin_locked') {
+    const seconds = data.lockout?.remaining_seconds ?? 0;
+    const minutes = Math.ceil(seconds / 60);
+    return `PIN locked. Wait ${minutes} minute${minutes !== 1 ? 's' : ''} before retrying.`;
+  }
+  if (data.error_code === 'pin_required') {
+    return 'PIN required. Enter your PIN to continue.';
+  }
+  if (data.error_code === 'pin_validation_failed') {
+    return `PIN validation failed: ${data.error || 'Enter a 4-6 digit PIN'}`;
+  }
+  if (data.error_code === 'pin_setup_failed') {
+    return `PIN setup failed: ${data.error || 'Check settings database permissions'}`;
+  }
+
+  // Secrets-related errors
+  if (data.error_code === 'secrets_unavailable') {
+    return 'Secrets unavailable. Check settings backend and keys file access.';
+  }
+  if (data.error_code === 'keys_file_not_found') {
+    return 'API keys file not found. Add API keys to enable secrets management.';
+  }
+  if (data.error_code === 'keys_file_permission_denied') {
+    return 'Permission denied accessing API keys file. Check file permissions.';
+  }
+  if (data.error_code === 'secret_not_found') {
+    return `Secret not found: ${data.error || 'Choose an existing key from the list'}`;
+  }
+  if (data.error_code === 'reveal_failed') {
+    return `Failed to reveal secret: ${data.error || 'Check settings service health'}`;
+  }
+  if (data.error_code === 'set_secret_failed') {
+    return `Failed to update secret: ${data.error || 'Check settings service health'}`;
+  }
+  if (data.error_code === 'delete_secret_failed') {
+    return `Failed to delete secret: ${data.error || 'Check settings service health'}`;
+  }
+
+  // Backend errors
+  if (data.error_code === 'settings_backend_unavailable') {
+    return 'Settings backend unavailable. Ensure MCP bridge is running.';
+  }
+  if (data.error_code === 'unlock_failed') {
+    return `Unlock failed: ${data.error || 'Check settings service health'}`;
+  }
+  if (data.error_code === 'audit_log_unavailable') {
+    return 'Audit log unavailable. Check settings service health.';
+  }
+
+  // Generic fallback
+  if (data.operator_action) {
+    return `${prefix}: ${data.error || 'Operator action required'} (${data.operator_action})`;
+  }
+  if (data.error) {
+    return `${prefix}: ${data.error}`;
+  }
+  return `${prefix}: operator action required`;
+}
+
+function classifyBackendError(err: unknown, context: 'settings' | 'secrets'): string {
+  const msg = err instanceof Error ? err.message : String(err);
+  const lowerMsg = msg.toLowerCase();
+
+  // Connection errors
+  if (lowerMsg.includes('failed to fetch') || lowerMsg.includes('network')) {
+    return `Cannot connect to MCP bridge. Ensure the bridge is running on port 8766.`;
+  }
+  if (lowerMsg.includes('timeout')) {
+    return `Request timed out. MCP bridge may be overloaded or unresponsive.`;
+  }
+
+  // MCP-specific errors
+  if (lowerMsg.includes('mcp') && lowerMsg.includes('not initialized')) {
+    return `MCP session not initialized. Refresh the page to reconnect.`;
+  }
+
+  // Context-specific messages
+  if (context === 'settings') {
+    if (lowerMsg.includes('permission') || lowerMsg.includes('access')) {
+      return `Settings permission denied. Check file permissions on settings database.`;
+    }
+    return `Settings backend error: ${msg}`;
+  }
+
+  if (context === 'secrets') {
+    if (lowerMsg.includes('permission') || lowerMsg.includes('access')) {
+      return `Secrets access denied. Check file permissions on keys.env.`;
+    }
+    return `Secrets service error: ${msg}`;
+  }
+
+  return `Backend error: ${msg}`;
 }
 
 export function SettingsContainer() {
@@ -39,15 +154,19 @@ export function SettingsContainer() {
 
   const fetchPinStatus = async () => {
     try {
-      const response = await fetch('http://127.0.0.1:8766/tools/call', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: 'settings.pin_status' }),
-      });
-      const data = await response.json();
-      setPinStatus(data);
+      const data = await callMCPTool('settings.pin_status');
+      if (data && typeof data === 'object') {
+        const result = data as ToolResult;
+        // Check if backend returned an error
+        if (result.success === false) {
+          setError(formatOperatorError('PIN status check failed', result));
+          return;
+        }
+        setError(null);
+        setPinStatus(data as { pin_is_set: boolean; lockout: LockoutStatus });
+      }
     } catch (err) {
-      setError('Failed to fetch PIN status');
+      setError(classifyBackendError(err, 'settings'));
     } finally {
       setIsLoading(false);
     }
@@ -55,61 +174,74 @@ export function SettingsContainer() {
 
   const fetchSecrets = async () => {
     try {
-      const response = await fetch('http://127.0.0.1:8766/tools/call', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: 'settings.list_secrets' }),
-      });
-      const data = await response.json();
-      setSecrets(data);
+      const data = await callMCPTool('settings.list_secrets');
+      // Success: data is an array of secrets
+      if (Array.isArray(data)) {
+        setSecrets(data as Secret[]);
+        setError(null);
+        return;
+      }
+
+      // Error: data is an error object
+      if (data && typeof data === 'object') {
+        const result = data as ToolResult;
+        if (result.success === false) {
+          // Check for specific error codes that don't require showing an error
+          if (result.error_code === 'keys_file_not_found') {
+            // Keys file doesn't exist yet - show empty secrets list
+            setSecrets([]);
+            setError(null);
+            return;
+          }
+          setError(formatOperatorError('Secrets unavailable', result));
+          return;
+        }
+      }
+
+      // Unknown response format
+      setSecrets([]);
     } catch (err) {
-      setError('Failed to fetch secrets');
+      setError(classifyBackendError(err, 'secrets'));
     }
   };
 
-  const handleSetupPIN = async (pin: string): Promise<boolean> => {
+  const handleSetupPIN = async (pin: string): Promise<{ success: boolean; error?: string }> => {
     try {
-      const response = await fetch('http://127.0.0.1:8766/tools/call', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: 'settings.setup_pin',
-          arguments: { pin },
-        }),
-      });
-      const data = await response.json();
+      const data = (await callMCPTool('settings.setup_pin', { pin })) as ToolResult;
       if (data.success) {
+        setError(null);
         setShowSetup(false);
         await fetchPinStatus();
-        return true;
+        return { success: true };
       }
-      return false;
-    } catch {
-      return false;
+      const msg = formatOperatorError('PIN setup failed', data);
+      setError(msg);
+      return { success: false, error: msg };
+    } catch (err) {
+      const msg = classifyBackendError(err, 'settings');
+      setError(msg);
+      return { success: false, error: msg };
     }
   };
 
-  const handleUnlock = async (pin: string): Promise<boolean> => {
+  const handleUnlock = async (pin: string): Promise<{ success: boolean; error?: string }> => {
     try {
-      const response = await fetch('http://127.0.0.1:8766/tools/call', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: 'settings.verify_pin',
-          arguments: { pin },
-        }),
-      });
-      const data = await response.json();
+      const data = (await callMCPTool('settings.verify_pin', { pin })) as ToolResult;
       if (data.success) {
+        setError(null);
         setIsUnlocked(true);
         setShowUnlock(false);
         await fetchPinStatus();
-        return true;
+        return { success: true };
       }
+      const msg = formatOperatorError('Unlock failed', data);
+      setError(msg);
       await fetchPinStatus();
-      return false;
-    } catch {
-      return false;
+      return { success: false, error: msg };
+    } catch (err) {
+      const msg = classifyBackendError(err, 'settings');
+      setError(msg);
+      return { success: false, error: msg };
     }
   };
 
@@ -124,20 +256,18 @@ export function SettingsContainer() {
     if (!pin) return null;
 
     try {
-      const response = await fetch('http://127.0.0.1:8766/tools/call', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: 'settings.reveal_secret',
-          arguments: { key_name: keyName, pin },
-        }),
-      });
-      const data = await response.json();
+      const data = (await callMCPTool('settings.reveal_secret', {
+        key_name: keyName,
+        pin,
+      })) as ToolResult;
       if (data.value) {
+        setError(null);
         return data.value;
       }
+      setError(formatOperatorError('Reveal failed', data));
       return null;
-    } catch {
+    } catch (err) {
+      setError(classifyBackendError(err, 'secrets'));
       return null;
     }
   };
@@ -152,21 +282,20 @@ export function SettingsContainer() {
     if (!pin) return false;
 
     try {
-      const response = await fetch('http://127.0.0.1:8766/tools/call', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: 'settings.set_secret',
-          arguments: { key_name: keyName, value, pin },
-        }),
-      });
-      const data = await response.json();
+      const data = (await callMCPTool('settings.set_secret', {
+        key_name: keyName,
+        value,
+        pin,
+      })) as ToolResult;
       if (data.success) {
+        setError(null);
         await fetchSecrets();
         return true;
       }
+      setError(formatOperatorError('Secret update failed', data));
       return false;
-    } catch {
+    } catch (err) {
+      setError(classifyBackendError(err, 'secrets'));
       return false;
     }
   };
@@ -181,21 +310,19 @@ export function SettingsContainer() {
     if (!pin) return false;
 
     try {
-      const response = await fetch('http://127.0.0.1:8766/tools/call', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: 'settings.delete_secret',
-          arguments: { key_name: keyName, pin },
-        }),
-      });
-      const data = await response.json();
+      const data = (await callMCPTool('settings.delete_secret', {
+        key_name: keyName,
+        pin,
+      })) as ToolResult;
       if (data.success) {
+        setError(null);
         await fetchSecrets();
         return true;
       }
+      setError(formatOperatorError('Secret delete failed', data));
       return false;
-    } catch {
+    } catch (err) {
+      setError(classifyBackendError(err, 'secrets'));
       return false;
     }
   };
