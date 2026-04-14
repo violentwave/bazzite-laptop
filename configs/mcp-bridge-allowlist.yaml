@@ -234,6 +234,65 @@ tools:
     module: "ai.mcp_bridge.tools"
     args: null
 
+  # P84 Security Ops Center tools
+  security.ops_overview:
+    description: "Get security ops overview with summary counts and status"
+    source: python
+    module: "ai.security_service"
+    function: "get_overview"
+    readOnly: true
+    args: null
+
+  security.ops_alerts:
+    description: "Get security alerts with optional severity filtering"
+    source: python
+    module: "ai.security_service"
+    function: "get_alerts"
+    readOnly: true
+    args:
+      severity:
+        type: string
+        pattern: "^(critical|high|medium|low|info)$"
+        required: false
+      limit:
+        type: integer
+        min: 1
+        max: 100
+        required: false
+
+  security.ops_findings:
+    description: "Get recent scan findings"
+    source: python
+    module: "ai.security_service"
+    function: "get_findings"
+    readOnly: true
+    args:
+      limit:
+        type: integer
+        min: 1
+        max: 50
+        required: false
+
+  security.ops_provider_health:
+    description: "Get provider health issues and auth failures"
+    source: python
+    module: "ai.security_service"
+    function: "get_provider_health_issues"
+    readOnly: true
+    args: null
+
+  security.ops_acknowledge:
+    description: "Acknowledge a security alert by ID"
+    source: python
+    module: "ai.security_service"
+    function: "acknowledge_alert"
+    destructive: true
+    args:
+      alert_id:
+        type: string
+        max_length: 64
+        required: true
+
   code.search:
     description: "Search Python code in the repo by pattern (ripgrep/grep)"
     source: python

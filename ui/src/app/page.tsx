@@ -4,6 +4,7 @@ import { useShell } from "@/components/shell/ShellContext";
 import { ChatContainer } from "@/components/chat/ChatContainer";
 import { SettingsContainer } from "@/components/settings/SettingsContainer";
 import { ProvidersContainer } from "@/components/providers/ProvidersContainer";
+import { SecurityContainer } from "@/components/security/SecurityContainer";
 
 export default function Home() {
   const { activePanel } = useShell();
@@ -38,6 +39,8 @@ export default function Home() {
           <ProvidersContainer />
         ) : activePanel === "settings" ? (
           <SettingsContainer />
+        ) : activePanel === "security" ? (
+          <SecurityContainer />
         ) : (
           <div className="h-full overflow-auto p-6">
             <PanelContent panel={activePanel} />
@@ -260,7 +263,7 @@ function PanelStatus({ panel }: { panel: string }) {
 function PanelContent({ panel }: { panel: string }) {
   switch (panel) {
     case "security":
-      return <SecurityPlaceholder />;
+      return <SecurityContainer />;
     case "models":
       return <ModelsPlaceholder />;
     case "terminal":

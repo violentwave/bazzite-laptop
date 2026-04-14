@@ -810,6 +810,36 @@ async def _execute_python_tool(tool_name: str, tool_def: dict, args: dict) -> st
                 }
             )
 
+        # P84 Security Ops Center tools
+        elif tool_name == "security.ops_overview":
+            from ai.security_service import get_overview  # noqa: PLC0415
+
+            return json.dumps(get_overview(), indent=2)
+
+        elif tool_name == "security.ops_alerts":
+            from ai.security_service import get_alerts  # noqa: PLC0415
+
+            severity = args.get("severity")
+            limit = args.get("limit", 50)
+            return json.dumps(get_alerts(severity=severity, limit=limit), indent=2)
+
+        elif tool_name == "security.ops_findings":
+            from ai.security_service import get_findings  # noqa: PLC0415
+
+            limit = args.get("limit", 20)
+            return json.dumps(get_findings(limit=limit), indent=2)
+
+        elif tool_name == "security.ops_provider_health":
+            from ai.security_service import get_provider_health_issues  # noqa: PLC0415
+
+            return json.dumps(get_provider_health_issues(), indent=2)
+
+        elif tool_name == "security.ops_acknowledge":
+            from ai.security_service import acknowledge_alert  # noqa: PLC0415
+
+            alert_id = args.get("alert_id", "")
+            return json.dumps(acknowledge_alert(alert_id), indent=2)
+
         elif tool_name == "code.search":
             query = args.get("query", "")
             repo_root = str(PROJECT_ROOT)
