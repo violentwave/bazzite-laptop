@@ -116,9 +116,11 @@ for unit in "${UNITS[@]}"; do
     echo "✓ Installed ${unit}.service and ${unit}.timer"
 done
 
-# Set permissions (user units don't need special SELinux handling)
-chmod 644 "$SYSTEMD_USER_DIR"/*.service "$SYSTEMD_USER_DIR"/*.timer
-echo "✓ Set permissions on unit files"
+# Set permissions only on units managed by this script
+for unit in "${UNITS[@]}"; do
+    chmod 644 "$SYSTEMD_USER_DIR/${unit}.service" "$SYSTEMD_USER_DIR/${unit}.timer"
+done
+echo "✓ Set permissions on managed unit files"
 
 # ─────────────────────────────────────────────────────────────
 # Reload and enable
@@ -217,6 +219,11 @@ echo "User units installed to: $SYSTEMD_USER_DIR"
 echo ""
 echo "VALIDATION COMMANDS:"
 echo "  systemctl --user list-timers"
+echo "  systemctl --user daemon-reload"
+echo "  systemctl --user start rag-embed.service"
+echo "  journalctl --user -u rag-embed.service -n 80 --no-pager"
+echo "  systemctl --user start code-index.service"
+echo "  journalctl --user -u code-index.service -n 120 --no-pager"
 echo "  systemctl --user status code-index.service --no-pager"
 echo "  journalctl --user -u code-index.service -n 50 --no-pager"
 echo ""

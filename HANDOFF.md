@@ -2,12 +2,12 @@
 
 Auto-generated cross-tool handoff. Updated by save-handoff.sh
 
-## Current Phase: P89 (Next)
+## Current Phase: P90 (Gated)
 
 **P77 — UI Architecture + Contracts Baseline** ✅ COMPLETE  
 **P78 — Midnight Glass Design System + Figma Mapping** ✅ COMPLETE  
 **P79 — Frontend Shell Bootstrap** ✅ COMPLETE  
-**P80** → Auth, 2FA, Recovery, Gmail Notifications (deferred, placeholder created)  
+**P80 — Auth, 2FA, Recovery, Gmail Notifications** ✅ COMPLETE  
 **P81 — PIN-Gated Settings + Secrets Service** ✅ COMPLETE  
 **P82 — Provider + Model Discovery / Routing Console** ✅ COMPLETE  
 **P83 — Chat + MCP Workspace Integration** ✅ COMPLETE  
@@ -16,10 +16,23 @@ Auto-generated cross-tool handoff. Updated by save-handoff.sh
 **P86 — Project + Workflow + Phase Panels** ✅ COMPLETE  
 **P87 — Newelle/PySide Migration + Compatibility Cutover** ✅ COMPLETE  
 **P88 — UI Hardening, Validation, Docs, Launch Handoff** ✅ COMPLETE  
+**P89 — Security Improvement + Remediation Closure** ✅ COMPLETE  
 **P76 — Systemd Scope Remediation** ✅ COMPLETE (host-side service fixes)
+
+### P89 Closeout (2026-04-14)
+- Created and completed P89 in Notion (`Status=Done`) with full security-remediation validation summary.
+- Installed/validated user-scoped repo timers and services via `./scripts/install-user-timers.sh`.
+- `code-index.service` completed successfully in user scope (exit `0/SUCCESS`) without new Gemini/Cohere retry-storm logs in the latest run window.
+- `fedora-updates.service`, `release-watch.service`, and `rag-embed.service` all completed successfully in user scope.
+- Confirmed manual host-side remainder still open: `system-health.service` exits `1`, `logrotate.service` boot.log permission denied, Gemini/Cohere operator key/quota actions, firmware/efivarfs + staged deployment reboot checks.
 
 ### Summary
 P76 remediation complete. Migrated 4 repo-owned scheduled jobs from system-scoped to user-scoped systemd units to resolve SELinux permission and namespace issues. See `docs/P76_SYSTEMD_SCOPE_REMEDIATION.md` for full details.
+
+### Follow-up (2026-04-14)
+- Fixed `systemd/user/rag-embed.service` `ExecStart` to use real module `ai.log_intel.ingest --all` (previous target `ai.rag.embed_pipeline` did not exist).
+- Hardened `ai/code_intel/store.py` so indexing paths route through `_embed_or_zero()` and use local `provider="ollama"`; if unavailable, they degrade to zero vectors after one failure.
+- This removes long retry/fail loops when Gemini keys are invalid or Cohere is quota/rate-limited.
 
 ### Files Delivered (P76)
 - `docs/P76_SYSTEMD_SCOPE_REMEDIATION.md` — Root cause analysis and remediation documentation

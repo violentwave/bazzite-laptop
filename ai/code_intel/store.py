@@ -36,7 +36,7 @@ class CodeIntelStore:
             return [0.0] * 768
 
         try:
-            vector = embed(text)
+            vector = embed(text, provider="ollama")
             self._embedding_enabled = True
             return vector
         except Exception as e:
@@ -254,10 +254,7 @@ class CodeIntelStore:
             for commit in pydriller.Git(repo_path).traverse(max_commits=max_commits):
                 files_changed = [m.new_path for m in commit.modifications if m.new_path]
 
-                try:
-                    vector = embed(commit.msg)
-                except Exception:
-                    vector = [0.0] * 768
+                vector = self._embed_or_zero(commit.msg)
 
                 records.append(
                     {

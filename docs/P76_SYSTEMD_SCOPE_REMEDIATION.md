@@ -1,6 +1,6 @@
 # P76 — Systemd Scope Remediation
 
-**Date:** 2026-04-13  
+**Date:** 2026-04-13 (updated 2026-04-14)  
 **Phase:** P76 ( remediation follow-up to ingestion reliability work )  
 **Machine:** Acer Predator G3-571 on Bazzite/Fedora Atomic  
 **Boot Stack:** GRUB+shim (not systemd-boot)
@@ -14,6 +14,8 @@ This document addresses host-side systemd/service design issues causing repo-own
 **What was fixed:**
 - Created user-scoped unit files for 4 repo-owned scheduled jobs
 - Provided migration script and validation procedures
+- Follow-up: corrected `rag-embed.service` to a valid repo entrypoint (`ai.log_intel.ingest --all`)
+- Follow-up: hardened code-index embedding behavior to use local Ollama embeddings (or zero-vectors) instead of cloud retry storms when provider auth/quota fails
 
 **What remains manual:**
 - API key rotation for security-audit.service
@@ -102,6 +104,23 @@ systemd/user/
 2. Removed `ProtectHome`, `ReadWritePaths`, `ProtectSystem` hardening (not needed in user context)
 3. Conservative resource limits preserved (`Nice=10` or `Nice=19`)
 4. Same `OnCalendar` schedules as before
+
+### Follow-up Fixes (2026-04-14)
+
+1. `rag-embed.service` no longer references the non-existent module `ai.rag.embed_pipeline`.
+   It now runs:
+
+```ini
+ExecStart=%h/projects/bazzite-laptop/.venv/bin/python -m ai.log_intel.ingest --all
+```
+
+2. `ai/code_intel/store.py` now routes indexing-time embeddings through `_embed_or_zero()` everywhere, and `_embed_or_zero()` uses `provider="ollama"`.
+   This prevents Gemini/Cohere retry storms during scheduled indexing. If Ollama is unavailable, indexing degrades to zero vectors after one failure.
+
+3. `scripts/install-user-timers.sh` now sets permissions only on managed timer/service files.
+   This avoids chmod failures when unrelated user unit files exist in `~/.config/systemd/user/`.
+
+4. Validation pass confirmed user-scope services complete successfully (`code-index`, `fedora-updates`, `release-watch`, `rag-embed`).
 
 ---
 
