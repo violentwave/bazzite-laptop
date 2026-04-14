@@ -2,7 +2,7 @@
 
 Auto-generated cross-tool handoff. Updated by save-handoff.sh
 
-## Current Phase: P88 (Next)
+## Current Phase: P89 (Next)
 
 **P77 — UI Architecture + Contracts Baseline** ✅ COMPLETE  
 **P78 — Midnight Glass Design System + Figma Mapping** ✅ COMPLETE  
@@ -15,6 +15,7 @@ Auto-generated cross-tool handoff. Updated by save-handoff.sh
 **P85 — Interactive Shell Gateway** ✅ COMPLETE  
 **P86 — Project + Workflow + Phase Panels** ✅ COMPLETE  
 **P87 — Newelle/PySide Migration + Compatibility Cutover** ✅ COMPLETE  
+**P88 — UI Hardening, Validation, Docs, Launch Handoff** ✅ COMPLETE  
 **P76 — Systemd Scope Remediation** ✅ COMPLETE (host-side service fixes)
 
 ### Summary
@@ -78,6 +79,33 @@ Rollback documentation primacy if console fails core operator workflows (chat/se
 - Docs audit for stale primary language (`Newelle`, `PySide`, `primary interface`, `cutover`, `rollback`)
 - `ruff check docs/` (non-blocking for pre-existing doc debt)
 - Verified no claims that Newelle/PySide were removed
+
+## Completed Phase: P88
+
+**P88 — UI Hardening, Validation, Docs, Launch Handoff** ✅ COMPLETE
+
+### Summary
+Validated the full Unified Control Console tranche (P81-P87), reconciled launch truth across docs/handoff/phase indices, fixed Newelle tool-catalog drift that broke MCP drift validation, and produced a launch-ready local operator handoff with explicit ready/partial/deferred boundaries.
+
+### Files Delivered (P88)
+- `docs/P88_UI_HARDENING_LAUNCH_HANDOFF.md` — end-to-end validation checklist, evidence summary, hardening findings, launch checklist, deferred-risk log, and next tranche recommendation
+- `docs/newelle-system-prompt.md` — added missing `security.ops_*`, `settings.*`, `providers.*`, `shell.*`, `project.*` tool entries
+- `docs/USER-GUIDE.md` — added P88 launch status section (ready/partial/deferred)
+- `docs/PHASE_INDEX.md` — updated through P88, reconciled commit metadata for P77-P87
+- `docs/PHASE_ARTIFACT_REGISTER.md` — reconciled P77-P87 commit/status metadata and added P88 entry
+- `docs/PHASE77_UI_ARCHITECTURE.md` / `docs/PHASE78_MIDNIGHT_GLASS_DESIGN_SYSTEM.md` — status normalized to complete
+- `CHANGELOG.md` — P87 commit finalized and P88 entry added
+
+### Validation (P88)
+- `npx tsc --noEmit` (ui) ✅
+- `.venv/bin/python -m pytest tests/ -q --tb=short` ✅ (2131 passed, 183 skipped)
+- `ruff check docs/ || true` ⚠️ pre-existing `docs/zo-tools/*` lint debt remains out-of-scope
+
+### Launch Stance
+- **Ready now**: Unified Control Console local launch for core workflows
+- **Partial but acceptable**: identity hardening beyond PIN-gated settings
+- **Deferred**: P80 auth/2FA/recovery/Gmail runtime completion
+- **Fallback/secondary**: Newelle fallback, PySide secondary status surface
 
 ### Summary
 P82 complete. Provider and model discovery console implemented with real-time health tracking, model catalog browsing, and task-type routing visualization. Integrates with P81 settings for automatic refresh and existing HealthTracker for provider state.

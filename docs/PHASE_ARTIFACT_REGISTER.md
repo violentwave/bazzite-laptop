@@ -858,7 +858,7 @@
 
 ### P77 — UI Architecture + Contracts Baseline
 - **Status**: Done
-- **Commit SHA**: —
+- **Commit SHA**: `0af6fb3`
 - **Finished**: 2026-04-13
 - **Repo Artifacts**:
   - `docs/PHASE77_UI_ARCHITECTURE.md` — UI architecture specification
@@ -873,7 +873,7 @@
 
 ### P78 — Midnight Glass Design System + Figma Mapping
 - **Status**: Done
-- **Commit SHA**: —
+- **Commit SHA**: `0af6fb3`
 - **Finished**: 2026-04-13
 - **Repo Artifacts**:
   - `docs/PHASE78_MIDNIGHT_GLASS_DESIGN_SYSTEM.md` — Design system specification
@@ -900,7 +900,7 @@
 
 ### P79 — Frontend Shell Bootstrap
 - **Status**: Done
-- **Commit SHA**: —
+- **Commit SHA**: `dadd5fa`
 - **Finished**: 2026-04-13
 - **Repo Artifacts**:
   - `docs/P79_UI_SHELL_BOOTSTRAP.md`
@@ -920,7 +920,7 @@
 
 ### P81 — PIN-Gated Settings + Secrets Service
 - **Status**: Done
-- **Commit SHA**: `4a8f2ba`, `3cde9df`
+- **Commit SHA**: `06c8f21`
 - **Finished**: 2026-04-13
 - **Repo Artifacts**:
   - `ai/settings_service.py`
@@ -930,7 +930,7 @@
 
 ### P82 — Provider + Model Discovery / Routing Console
 - **Status**: Done
-- **Commit SHA**: —
+- **Commit SHA**: `4461ec8`
 - **Finished**: 2026-04-13
 - **Repo Artifacts**:
   - `ai/provider_service.py`
@@ -950,7 +950,7 @@
 
 ### P84 — Security Ops Center
 - **Status**: Done
-- **Commit SHA**: —
+- **Commit SHA**: `812225c`
 - **Finished**: 2026-04-13
 - **Repo Artifacts**:
   - `docs/P84_SECURITY_OPS_CENTER.md`
@@ -960,7 +960,7 @@
 
 ### P85 — Interactive Shell Gateway
 - **Status**: Done
-- **Commit SHA**: —
+- **Commit SHA**: `75be187`
 - **Finished**: 2026-04-13
 - **Repo Artifacts**:
   - `docs/P85_INTERACTIVE_SHELL_GATEWAY.md`
@@ -970,25 +970,37 @@
 
 ### P86 — Project + Workflow + Phase Panels
 - **Status**: Done
-- **Commit SHA**: —
+- **Commit SHA**: `ff56276`
 - **Finished**: 2026-04-13
 - **Repo Artifacts**:
   - `docs/P86_PROJECT_WORKFLOW_PHASE_PANELS.md`
   - `ai/project_workflow_service.py`
   - `ui/src/components/project-workflow/*`
-- **Notion**: Ensure P86 is marked Done
+- **Notion**: P86 Done
 
 ### P87 — Newelle/PySide Migration + Compatibility Cutover
 - **Status**: Done
-- **Commit SHA**: —
+- **Commit SHA**: `877efdd`
 - **Finished**: 2026-04-13
 - **Repo Artifacts**:
   - `docs/P87_MIGRATION_CUTOVER.md`
   - `docs/USER-GUIDE.md` (console-first cutover language)
   - `docs/AGENT.md` (Newelle fallback role)
   - `docs/newelle-system-prompt.md` (compatibility role preface)
-- **Notion**: Update P87 with decisions, validation summary, and commit SHA after commit
+- **Notion**: P87 Done
 - **Scope**: Documentation truth, compatibility model, rollback model, deprecation guidance
+
+### P88 — UI Hardening, Validation, Docs, Launch Handoff
+- **Status**: Done
+- **Commit SHA**: —
+- **Finished**: 2026-04-14
+- **Repo Artifacts**:
+  - `docs/P88_UI_HARDENING_LAUNCH_HANDOFF.md`
+  - `docs/USER-GUIDE.md` (P88 launch stance section)
+  - `docs/newelle-system-prompt.md` (tool-catalog drift reconciliation)
+  - `docs/PHASE_INDEX.md`, `docs/PHASE_ARTIFACT_REGISTER.md`, `CHANGELOG.md`, `HANDOFF.md`
+- **Notion**: Update P88 with final commit SHA and validation summary
+- **Scope**: End-to-end UI tranche validation, hardening findings, launch readiness package
 
 ## Cross-Phase Documentation
 
@@ -996,11 +1008,11 @@
 | Doc | Purpose | Last Updated |
 |-----|---------|--------------|
 | `AGENT.md` | Agent reference (MCP tools, paths, rules) | P87 |
-| `CHANGELOG.md` | Version history | P52 |
-| `USER-GUIDE.md` | End-user guide | P87 |
+| `CHANGELOG.md` | Version history | P88 |
+| `USER-GUIDE.md` | End-user guide | P88 |
 | `bazzite-ai-system-profile.md` | System identity for OpenCode | P69 |
-| `PHASE_INDEX.md` | Master phase index | P70 |
-| `PHASE_ARTIFACT_REGISTER.md` | Artifact inventory | P70 |
+| `PHASE_INDEX.md` | Master phase index | P88 |
+| `PHASE_ARTIFACT_REGISTER.md` | Artifact inventory | P88 |
 | `PHASE_DEPENDENCY_GRAPH.mmd` | Dependency visualization | P70 |
 | `PHASE_DELIVERY_TIMELINE.md` | Delivery timeline | P70 |
 | `ARCHITECTURE_EVOLUTION.md` | Architecture evolution | P70 |

@@ -1,6 +1,6 @@
 # P77 — UI Architecture + Contracts Baseline
 
-**Status**: Ready  
+**Status**: Complete  
 **Dependencies**: P76  
 **Risk Tier**: High  
 **Backend**: opencode  

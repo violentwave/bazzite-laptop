@@ -5,7 +5,7 @@ All significant changes. Format: date · deliverables · deltas · commit.
 ---
 
 ## Phase 87 — Newelle/PySide Migration + Compatibility Cutover
-**Date:** 2026-04-13 · **Commit:** pending
+**Date:** 2026-04-13 · **Commit:** 877efdd
 
 **Deliverables:**
 - `docs/P87_MIGRATION_CUTOVER.md` — primary-UX threshold, parallel-run model, compatibility boundaries, rollback triggers/path, deprecation matrix
@@ -17,6 +17,27 @@ All significant changes. Format: date · deliverables · deltas · commit.
 **Notes:**
 - P80 (Auth/2FA/Recovery/Gmail) remains explicitly deferred
 - Newelle and PySide remain supported fallback/secondary surfaces; no runtime removal in P87
+
+---
+
+## Phase 88 — UI Hardening, Validation, Docs, Launch Handoff
+**Date:** 2026-04-14 · **Commit:** pending
+
+**Deliverables:**
+- Added `docs/P88_UI_HARDENING_LAUNCH_HANDOFF.md` with end-to-end validation checklist, evidence summary, hardening findings, launch checklist, deferred-risk log, and tranche launch stance
+- Reconciled phase-status drift by marking P77/P78 docs complete
+- Updated `docs/newelle-system-prompt.md` tool routing catalog to include `security.ops_*`, `settings.*`, `providers.*`, `shell.*`, and `project.*` tools required by drift validation
+- Updated launch-truth guidance in `docs/USER-GUIDE.md` with explicit P88 ready/partial/deferred state
+- Updated phase tracking docs (`HANDOFF.md`, `docs/PHASE_INDEX.md`, `docs/PHASE_ARTIFACT_REGISTER.md`) for P88 closeout and P86/P87/P88 consistency
+
+**Validation:**
+- `npx tsc --noEmit` (ui) passed
+- `.venv/bin/python -m pytest tests/ -q --tb=short` passed (2131 passed, 183 skipped)
+- `ruff check docs/ || true` still reports pre-existing `docs/zo-tools/*` lint debt (out of P88 scope)
+
+**Notes:**
+- P80 remains deferred and is not marked complete
+- Unified Control Console is launch-ready locally for the current tranche; Newelle/PySide remain fallback/secondary per P87
 
 ---
 

@@ -26,6 +26,13 @@ P80 (auth/2FA/recovery/Gmail) remains deferred unless completed in a separate ph
 | Newelle | Fallback | Voice/chat fallback and quick tool execution |
 | PySide tray | Secondary | At-a-glance status and lightweight checks |
 
+### Launch Status (P88)
+
+- **Ready now**: Unified Control Console local launch for core operator workflows (P81-P87)
+- **Partial but acceptable**: identity hardening beyond PIN-gated settings
+- **Deferred**: P80 auth/2FA/recovery/Gmail runtime flows
+- **Fallback posture**: Newelle supported as fallback, PySide tray supported as secondary status surface
+
 ### Architecture
 
 ```

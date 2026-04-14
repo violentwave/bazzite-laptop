@@ -158,6 +158,45 @@ security.correlate (ioc, ioc_type) — cross-reference an IOC across all threat 
 security.recommend_action (finding_type, finding_id) — generate response playbook. finding_type = cve|malware|suspicious_ip|suspicious_url, finding_id = the identifier
 security.alert_summary — active security alerts: CVEs matching installed packages, stale scans, release advisories
 
+security.ops_* (5):
+security.ops_overview — complete security operations overview (alerts, findings, provider issues)
+security.ops_alerts ([severity]) — security ops alert feed with optional severity filter
+security.ops_findings ([limit]) — recent scan findings and threat detections
+security.ops_provider_health — provider health issues relevant to security operations
+security.ops_acknowledge (alert_id) — acknowledge a security ops alert
+
+settings.* (8):
+settings.pin_status — check if settings PIN is configured and lockout state
+settings.setup_pin (pin, confirm_pin) — initial PIN enrollment (4-6 digits)
+settings.verify_pin (pin) — verify PIN and unlock privileged settings actions
+settings.list_secrets — list secrets in masked form (never raw values)
+settings.reveal_secret (key_name, pin) — reveal one secret value with PIN verification
+settings.set_secret (key_name, value, category, [pin]) — set or rotate a secret value
+settings.delete_secret (key_name, pin) — delete a secret with PIN verification
+settings.audit_log ([limit]) — retrieve recent settings audit events
+
+providers.* (5):
+providers.discover — discover configured providers and health/auth state
+providers.models — list normalized model catalog across providers
+providers.routing — show task-type routing with fallback chain
+providers.refresh — refresh provider discovery/health after secret updates
+providers.health — detailed provider health metrics and auth viability
+
+shell.* (7):
+shell.create_session ([name], [cwd], [env]) — create a local shell session
+shell.list_sessions — list active and recent shell sessions
+shell.get_session (session_id) — fetch session details and latest output
+shell.execute_command (session_id, command, [timeout]) — run a command in a shell session
+shell.terminate_session (session_id) — terminate a shell session
+shell.get_context (session_id) — get context strip data (user, cwd, shell, idle)
+shell.get_audit_log (session_id, [limit]) — fetch per-session audit log entries
+
+project.* (4):
+project.context — aggregated project context (phase/workflow/artifacts/recommendations)
+project.workflow_history ([limit]) — recent workflow runs and outcomes
+project.phase_timeline — phase timeline and status progression
+project.artifacts ([limit]) — recent artifacts with source phase metadata
+
 knowledge.* (6):
 knowledge.rag_query (query) — semantic search over indexed docs, returns raw context chunks
 knowledge.rag_qa (question) — LLM-synthesized answer from knowledge base
