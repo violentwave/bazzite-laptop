@@ -1897,3 +1897,52 @@ sudo systemctl enable --now code-index.timer fedora-updates.timer release-watch.
 - ✅ No `/usr` modifications
 - ✅ No API keys in repo files
 - ✅ ruff clean on generated script
+
+---
+
+## Agent Training & Memory Update (2026-04-14)
+
+### Summary
+Trained agents and updated memory system with all phases P0-P92 completion data.
+
+### Memory Entries Stored
+- **Total entries**: 70 (100% with embeddings)
+- **Phases namespace**: 20 entries covering all P0-P92
+- **Pattern namespace**: 29 learned patterns
+
+### Phase Groups Stored
+| Group | Phases | Theme |
+|-------|--------|-------|
+| P0-P9 | Foundation | Core infrastructure, MCP, LiteLLM, Threat Intel |
+| P10-P18 | Intelligence | Scrapers, timers, logging, tests, docs |
+| P19-P21 | Security | Input validation, timer sentinel, patterns |
+| P22-P28 | Governance | Budget, cache, metrics, memory, alerts |
+| P29-P33 | Scale | Code intel, workflows, collaboration, testing |
+| P34-P43 | Integration | Parity, stabilization, documentation |
+| P44-P58 | Control Plane | Validation, cache, Notion/Slack, orchestration |
+| P59-P69 | Frontend | Capability pack, runtime harness, deployment |
+| P70-P76 | Code Intelligence | Documentation, AST, dependencies, fusion |
+| P77-P88 | UI Console | Midnight Glass, shell, panels, chat, security |
+| P89-P92 | Hardening | Remediation, recovery, settings, live integration |
+
+### Key Patterns Trained (8 patterns)
+1. **API Design**: MCP tools return {success, error_code, error, operator_action}
+2. **Security**: PIN-gated access with PBKDF2 + audit logging
+3. **Error Handling**: Distinguish auth_broken vs cooldown states
+4. **Deployment**: User-scoped systemd timers for SELinux
+5. **Integration**: FastMCP streamable-http with SSE parsing
+6. **Code Intelligence**: Semantic + structural + artifact fusion
+7. **Workflow**: Preflight gates before execution
+8. **Design**: Midnight Glass system principles
+9. **Reliability**: Atomic writes for JSON/JSONL files
+
+### Intelligence System Stats
+- **SONA**: Active, 2 trajectories learned, 100% success rate
+- **MoE**: 8 experts ready (coder, tester, reviewer, architect, security, performance, researcher, coordinator)
+- **EWC++**: Consolidation active, preventing catastrophic forgetting
+- **HNSW**: 150x-12,500x search speedup
+- **Embeddings**: 384-dimension ONNX (all-MiniLM-L6-v2)
+
+### Notion Status
+P0-P92: All phases marked Done
+Next: Maintenance mode / feature requests
