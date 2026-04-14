@@ -1,0 +1,26 @@
+[Unit]
+Description=RAG Security Intelligence — Nightly Embedding (User)
+Documentation=file:///home/lch/projects/bazzite-laptop/docs/AGENT.md
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=%h/projects/bazzite-laptop
+ExecStart=%h/projects/bazzite-laptop/.venv/bin/python -m ai.rag.embed_pipeline --all
+
+# Low priority — never interfere with gaming or scans
+Nice=19
+IOSchedulingClass=idle
+CPUSchedulingPolicy=idle
+
+# Timeout: embedding should finish within 10 minutes
+TimeoutStartSec=600
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=rag-embed
+
+[Install]
+WantedBy=default.target

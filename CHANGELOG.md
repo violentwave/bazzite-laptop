@@ -4,6 +4,22 @@ All significant changes. Format: date · deliverables · deltas · commit.
 
 ---
 
+## Phase 87 — Newelle/PySide Migration + Compatibility Cutover
+**Date:** 2026-04-13 · **Commit:** pending
+
+**Deliverables:**
+- `docs/P87_MIGRATION_CUTOVER.md` — primary-UX threshold, parallel-run model, compatibility boundaries, rollback triggers/path, deprecation matrix
+- Updated `docs/USER-GUIDE.md` to make Unified Control Console the primary documented UX
+- Updated `docs/AGENT.md` Newelle integration section to fallback role
+- Updated `docs/newelle-system-prompt.md` with P87 compatibility preface
+- Updated phase tracking docs (`HANDOFF.md`, `docs/PHASE_INDEX.md`, `docs/PHASE_ARTIFACT_REGISTER.md`) for P86/P87 truth alignment
+
+**Notes:**
+- P80 (Auth/2FA/Recovery/Gmail) remains explicitly deferred
+- Newelle and PySide remain supported fallback/secondary surfaces; no runtime removal in P87
+
+---
+
 ## Phase 21 — Code Knowledge Base Expansion
 **Date:** 2026-04-03 · **Commit:** 7eb5906
 

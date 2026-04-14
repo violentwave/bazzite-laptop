@@ -56,7 +56,7 @@ systemctl --user start bazzite-mcp-bridge.service bazzite-llm-proxy.service
 ## Documentation Index
 
 - [Agent Reference](docs/AGENT.md) — Detailed architecture, tools, and system reference
-- [User Guide](docs/USER-GUIDE.md) — End-user instructions for Newelle AI assistant
+- [User Guide](docs/USER-GUIDE.md) — Console-first operator guide with Newelle/PySide fallback roles
 - [Changelog](docs/CHANGELOG.md) — Version history and release notes
 - [Verified Dependencies](docs/verified-deps.md) — Audited dependency versions
 

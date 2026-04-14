@@ -1,5 +1,5 @@
 # Bazzite AI Layer — User Guide
-<!-- System: Acer Predator G3-571 | Bazzite 43 | Last updated: 2026-04-04 -->
+<!-- System: Acer Predator G3-571 | Bazzite 43 | Last updated: 2026-04-13 -->
 
 Complete reference for operating, maintaining, and troubleshooting the AI
 enhancement layer on this Bazzite gaming laptop.
@@ -10,16 +10,29 @@ enhancement layer on this Bazzite gaming laptop.
 
 The Bazzite AI Layer adds cloud-powered threat intelligence, RAG-based
 knowledge search, LLM routing, and system monitoring to the base Bazzite
-security/gaming setup. Everything routes through **Newelle** (Flatpak GTK4
-AI chat/voice assistant) as the primary interface.
+security/gaming setup.
+
+**Primary operator interface**: Unified Control Console (P83-P86 panel set)
+**Fallback interface**: Newelle (Flatpak GTK4 chat/voice)
+**Secondary status surface**: PySide6 tray app
+
+P80 (auth/2FA/recovery/Gmail) remains deferred unless completed in a separate phase.
+
+### Interface Roles (P87 Cutover)
+
+| Surface | Role | Use for |
+|---|---|---|
+| Unified Control Console | Primary | Daily operator workflows: chat, security, providers, shell, phase/workflow context |
+| Newelle | Fallback | Voice/chat fallback and quick tool execution |
+| PySide tray | Secondary | At-a-glance status and lightweight checks |
 
 ### Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│                  Newelle (Flatpak GTK4)                  │
-│                AI chat / voice assistant                 │
-│       LLM: localhost:8767    MCP: localhost:8766         │
+│     Unified Control Console (Primary Operator UX)      │
+│     Newelle (Fallback Chat/Voice Client)               │
+│       LLM: localhost:8767    MCP: localhost:8766        │
 └─────────┬──────────────────────┬────────────────────────┘
           │                      │
     ┌─────▼──────┐        ┌──────▼──────────────┐
@@ -85,14 +98,12 @@ curl -s http://127.0.0.1:8767/health
 curl -s http://127.0.0.1:8767/v1/models | python3 -m json.tool
 ```
 
-### First interaction
+### First interaction (Primary path)
 
-Open Newelle and type:
+Open the Unified Control Console and use the Chat panel for your first run,
+for example: `Run a health check`.
 
-> "Run a health check"
-
-Newelle will call 5 system tools in parallel and return a concise summary
-covering disk, CPU temps, GPU, memory, and security status.
+Fallback path: run the same request in Newelle if the console is unavailable.
 
 ---
 
@@ -138,11 +149,13 @@ systemctl list-timers --all | grep -E "clamav|system-health|rag-embed|security-a
 
 ### Morning briefing
 
-Paste the prompt from `docs/morning-briefing-prompt.md` into Newelle as a
-scheduled task at ~08:30 AM. It calls 7 tools in a single batch and returns
-a structured briefing covering security, health, updates, and action items.
+Primary: run the briefing workflow from the Unified Control Console workflow/project surfaces.
 
-### Tray app
+Fallback: paste `docs/morning-briefing-prompt.md` into Newelle as a scheduled
+task at ~08:30 AM. It calls 7 tools in a single batch and returns a structured
+briefing covering security, health, updates, and action items.
+
+### Tray app (secondary surface)
 
 The PySide6/Qt6 tray app runs in the system tray with 4 dashboard tabs:
 
@@ -159,7 +172,7 @@ Launch manually if needed:
 bash scripts/start-security-tray-qt.sh
 ```
 
-### Common Newelle commands
+### Common Newelle fallback commands
 
 | Say this                          | Newelle calls              |
 |-----------------------------------|----------------------------|
@@ -181,8 +194,10 @@ bash scripts/start-security-tray-qt.sh
 
 ## 4. MCP Tools Reference (96 tools)
 
-All tools are accessible through Newelle via the MCP bridge. They are read-only
-(no system mutations). Output is truncated to 4 KB and paths are redacted.
+Tools are exposed through the MCP bridge and consumed by the Unified Control Console
+as primary UX, with Newelle as a supported fallback client. Tool outputs are
+read-only unless explicitly destructive-marked in tool metadata. Output is
+truncated to 4 KB and paths are redacted.
 
 > **Input Validation**: The MCP bridge validates all tool arguments before execution.
 > Malicious inputs (SQL injection, command injection, path traversal) are blocked.

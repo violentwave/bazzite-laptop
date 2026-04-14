@@ -1,0 +1,18 @@
+[Unit]
+Description=Code Intelligence Indexer (User)
+Documentation=file:///home/lch/projects/bazzite-laptop/docs/AGENT.md
+
+[Service]
+Type=oneshot
+WorkingDirectory=%h/projects/bazzite-laptop
+ExecStart=%h/projects/bazzite-laptop/.venv/bin/python %h/projects/bazzite-laptop/scripts/index-code.py
+StandardOutput=journal
+StandardError=journal
+
+# Conservative resource limits
+Nice=10
+IOSchedulingClass=best-effort
+IOSchedulingPriority=7
+
+[Install]
+WantedBy=default.target

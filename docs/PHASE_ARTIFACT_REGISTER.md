@@ -857,9 +857,9 @@
   - Graceful degradation when external systems unavailable
 
 ### P77 — UI Architecture + Contracts Baseline
-- **Status**: Ready
+- **Status**: Done
 - **Commit SHA**: —
-- **Finished**: —
+- **Finished**: 2026-04-13
 - **Repo Artifacts**:
   - `docs/PHASE77_UI_ARCHITECTURE.md` — UI architecture specification
 - **Notion**: P77 row exists with objective
@@ -872,9 +872,9 @@
   - Security-first operator console feel
 
 ### P78 — Midnight Glass Design System + Figma Mapping
-- **Status**: Planned
+- **Status**: Done
 - **Commit SHA**: —
-- **Finished**: —
+- **Finished**: 2026-04-13
 - **Repo Artifacts**:
   - `docs/PHASE78_MIDNIGHT_GLASS_DESIGN_SYSTEM.md` — Design system specification
 - **Notion**: P78 row exists with objective
@@ -898,14 +898,106 @@
   - Cyan reserved for live/focus states only
   - Final design sign-off is user-only
 
+### P79 — Frontend Shell Bootstrap
+- **Status**: Done
+- **Commit SHA**: —
+- **Finished**: 2026-04-13
+- **Repo Artifacts**:
+  - `docs/P79_UI_SHELL_BOOTSTRAP.md`
+  - `ui/src/components/shell/*`
+  - `ui/src/app/page.tsx`
+- **Notion**: P79 row should be Done
+- **Scope**: Console shell frame, icon rail, command palette, notifications
+
+### P80 — Auth, 2FA, Recovery, Gmail Notifications
+- **Status**: Deferred
+- **Commit SHA**: —
+- **Finished**: —
+- **Repo Artifacts**:
+  - Placeholder only (deferred per roadmap reconciliation)
+- **Notion**: P80 should remain deferred/placeholder
+- **Scope**: Deferred; not claimed as complete
+
+### P81 — PIN-Gated Settings + Secrets Service
+- **Status**: Done
+- **Commit SHA**: `4a8f2ba`, `3cde9df`
+- **Finished**: 2026-04-13
+- **Repo Artifacts**:
+  - `ai/settings_service.py`
+  - `ui/src/components/settings/*`
+  - `configs/mcp-bridge-allowlist.yaml` (settings tools)
+- **Notion**: P81 Done
+
+### P82 — Provider + Model Discovery / Routing Console
+- **Status**: Done
+- **Commit SHA**: —
+- **Finished**: 2026-04-13
+- **Repo Artifacts**:
+  - `ai/provider_service.py`
+  - `ui/src/components/providers/*`
+  - `ui/src/hooks/useProviders.ts`
+- **Notion**: P82 Done
+
+### P83 — Chat + MCP Workspace Integration
+- **Status**: Done
+- **Commit SHA**: `79af39a`
+- **Finished**: 2026-04-13
+- **Repo Artifacts**:
+  - `docs/P83_CHAT_WORKSPACE.md`
+  - `ui/src/components/chat/*`
+  - `ui/src/hooks/useChat.ts`
+- **Notion**: P83 Done (reconciled from original P80)
+
+### P84 — Security Ops Center
+- **Status**: Done
+- **Commit SHA**: —
+- **Finished**: 2026-04-13
+- **Repo Artifacts**:
+  - `docs/P84_SECURITY_OPS_CENTER.md`
+  - `ai/security_service.py`
+  - `ui/src/components/security/*`
+- **Notion**: P84 Done
+
+### P85 — Interactive Shell Gateway
+- **Status**: Done
+- **Commit SHA**: —
+- **Finished**: 2026-04-13
+- **Repo Artifacts**:
+  - `docs/P85_INTERACTIVE_SHELL_GATEWAY.md`
+  - `ai/shell_service.py`
+  - `ui/src/components/shell-gateway/*`
+- **Notion**: P85 Done
+
+### P86 — Project + Workflow + Phase Panels
+- **Status**: Done
+- **Commit SHA**: —
+- **Finished**: 2026-04-13
+- **Repo Artifacts**:
+  - `docs/P86_PROJECT_WORKFLOW_PHASE_PANELS.md`
+  - `ai/project_workflow_service.py`
+  - `ui/src/components/project-workflow/*`
+- **Notion**: Ensure P86 is marked Done
+
+### P87 — Newelle/PySide Migration + Compatibility Cutover
+- **Status**: Done
+- **Commit SHA**: —
+- **Finished**: 2026-04-13
+- **Repo Artifacts**:
+  - `docs/P87_MIGRATION_CUTOVER.md`
+  - `docs/USER-GUIDE.md` (console-first cutover language)
+  - `docs/AGENT.md` (Newelle fallback role)
+  - `docs/newelle-system-prompt.md` (compatibility role preface)
+- **Notion**: Update P87 with decisions, validation summary, and commit SHA after commit
+- **Scope**: Documentation truth, compatibility model, rollback model, deprecation guidance
+
 ## Cross-Phase Documentation
 
 ### Hub Docs (docs/ root)
 | Doc | Purpose | Last Updated |
 |-----|---------|--------------|
-| `AGENT.md` | Agent reference (MCP tools, paths, rules) | P65 |
+| `AGENT.md` | Agent reference (MCP tools, paths, rules) | P87 |
 | `CHANGELOG.md` | Version history | P52 |
-| `USER-GUIDE.md` | End-user guide | P18 |
+| `USER-GUIDE.md` | End-user guide | P87 |
 | `bazzite-ai-system-profile.md` | System identity for OpenCode | P69 |
 | `PHASE_INDEX.md` | Master phase index | P70 |
 | `PHASE_ARTIFACT_REGISTER.md` | Artifact inventory | P70 |

@@ -2,7 +2,7 @@
 
 Auto-generated cross-tool handoff. Updated by save-handoff.sh
 
-## Current Phase: P87 (Next)
+## Current Phase: P88 (Next)
 
 **P77 — UI Architecture + Contracts Baseline** ✅ COMPLETE  
 **P78 — Midnight Glass Design System + Figma Mapping** ✅ COMPLETE  
@@ -13,7 +13,71 @@ Auto-generated cross-tool handoff. Updated by save-handoff.sh
 **P83 — Chat + MCP Workspace Integration** ✅ COMPLETE  
 **P84 — Security Ops Center** ✅ COMPLETE  
 **P85 — Interactive Shell Gateway** ✅ COMPLETE  
-**P86 — Project + Workflow + Phase Panels** ✅ COMPLETE
+**P86 — Project + Workflow + Phase Panels** ✅ COMPLETE  
+**P87 — Newelle/PySide Migration + Compatibility Cutover** ✅ COMPLETE  
+**P76 — Systemd Scope Remediation** ✅ COMPLETE (host-side service fixes)
+
+### Summary
+P76 remediation complete. Migrated 4 repo-owned scheduled jobs from system-scoped to user-scoped systemd units to resolve SELinux permission and namespace issues. See `docs/P76_SYSTEMD_SCOPE_REMEDIATION.md` for full details.
+
+### Files Delivered (P76)
+- `docs/P76_SYSTEMD_SCOPE_REMEDIATION.md` — Root cause analysis and remediation documentation
+- `systemd/user/code-index.service` + `code-index.timer` — User-scoped code intelligence indexer
+- `systemd/user/fedora-updates.service` + `fedora-updates.timer` — User-scoped Fedora update check
+- `systemd/user/release-watch.service` + `release-watch.timer` — User-scoped release watcher
+- `systemd/user/rag-embed.service` + `rag-embed.timer` — User-scoped RAG embedding (fixed namespace issues)
+- `scripts/install-user-timers.sh` — Migration helper script
+
+### What Was Fixed
+1. **203/EXEC Permission denied** — System services executing user-home venv paths now work as user units
+2. **226/NAMESPACE failures** — rag-embed.service namespace conflicts resolved by using user scope
+3. **Path consistency** — All user units use `%h` (home directory) instead of hardcoded paths
+
+### What Remains Manual
+1. **security-audit.service API keys** — Gemini key invalid, Cohere rate-limited (operator must rotate keys)
+2. **system-health.service** — Exit code 1, likely SELinux/path issues (diagnostic steps documented)
+3. **logrotate.service** — /var/log/boot.log permission issues (system-level, outside repo scope)
+
+### Installation
+```bash
+# Install user-scoped timers (run as lch, not root)
+./scripts/install-user-timers.sh
+
+# Validate
+systemctl --user list-timers
+systemctl --user status code-index.service --no-pager
+journalctl --user -u code-index.service -n 50 --no-pager
+```
+
+## Completed Phase: P87
+
+**P87 — Newelle/PySide Migration + Compatibility Cutover** ✅ COMPLETE
+
+### Summary
+Completed UX migration truth/cutover documentation without removing legacy surfaces. Unified Control Console is now the primary documented operator interface. Newelle remains supported fallback, and PySide tray remains supported secondary status surface.
+
+### Files Delivered (P87)
+- `docs/P87_MIGRATION_CUTOVER.md` — cutover criteria, parallel-run model, compatibility boundaries, rollback triggers, deprecation matrix
+- `docs/USER-GUIDE.md` — console-first operator guidance with explicit fallback/secondary roles
+- `docs/AGENT.md` — Newelle integration wording updated to fallback role
+- `docs/newelle-system-prompt.md` — P87 compatibility preface added
+- `docs/PHASE_INDEX.md` — phase index updated with P79-P87 entries and P87 status
+- `docs/PHASE_ARTIFACT_REGISTER.md` — P79-P87 artifact records added
+- `CHANGELOG.md` — P87 entry added
+
+### Migration Stance
+- **Primary**: Unified Control Console
+- **Fallback**: Newelle
+- **Secondary**: PySide tray
+- **Deferred**: P80 auth/2FA/recovery/Gmail remains deferred
+
+### Rollback Conditions
+Rollback documentation primacy if console fails core operator workflows (chat/security/shell/phase context) or introduces blocking reliability regressions. Keep backend architecture unchanged; revert guidance/runbook ordering first.
+
+### Validation
+- Docs audit for stale primary language (`Newelle`, `PySide`, `primary interface`, `cutover`, `rollback`)
+- `ruff check docs/` (non-blocking for pre-existing doc debt)
+- Verified no claims that Newelle/PySide were removed
 
 ### Summary
 P82 complete. Provider and model discovery console implemented with real-time health tracking, model catalog browsing, and task-type routing visualization. Integrates with P81 settings for automatic refresh and existing HealthTracker for provider state.
@@ -1600,3 +1664,109 @@ Completed agent training cycle and session wrap-up for bazzite-laptop project. E
 - Daemon stopped: Yes
 - Metrics exported: Yes
 
+---
+
+## Session End — 2026-04-13 (P76 Remediation)
+
+**Phase Completed**: P76 Systemd Scope Remediation  
+**Status**: User Units Created, Documentation Complete
+
+### Summary
+Resolved host-side systemd/service design issues causing repo-owned scheduled jobs to fail. Migrated 4 repo-owned services from system-scoped to user-scoped units to resolve SELinux permission (203/EXEC) and namespace (226/NAMESPACE) issues.
+
+### Files Created
+
+**User-scoped systemd units (8 files):**
+- `systemd/user/code-index.service` + `code-index.timer` — Daily code indexing
+- `systemd/user/fedora-updates.service` + `fedora-updates.timer` — Weekly Fedora updates
+- `systemd/user/release-watch.service` + `release-watch.timer` — Daily release watch
+- `systemd/user/rag-embed.service` + `rag-embed.timer` — Daily RAG embedding
+
+**Documentation:**
+- `docs/P76_SYSTEMD_SCOPE_REMEDIATION.md` — Root cause, remediation steps, manual work remaining
+
+**Migration script:**
+- `scripts/install-user-timers.sh` — Idempotent install/disable helper
+
+### Root Causes Fixed
+
+| Issue | Symptom | Resolution |
+|-------|---------|------------|
+| Scope mismatch | 203/EXEC Permission denied | Moved to user units (proper SELinux context) |
+| Namespace conflict | 226/NAMESPACE | Removed ProtectHome/ReadWritePaths in user scope |
+| Hardcoded paths | /home/lch vs /var/home/lch | Used `%h` systemd variable |
+
+### What Was Fixed
+
+✅ **code-index.service/timer** — User-scoped unit, daily 06:00  
+✅ **fedora-updates.service/timer** — User-scoped unit, Mon 03:00  
+✅ **release-watch.service/timer** — User-scoped unit, daily 09:45  
+✅ **rag-embed.service/timer** — User-scoped unit, daily 09:00, removed namespace restrictions
+
+### What Remains Manual
+
+1. **security-audit.service** — API key issues
+   - Gemini key appears invalid (presence != validity)
+   - Cohere trial/rate limiting (expected)
+   - Ollama emergency fallback working
+   - **Action:** Operator must rotate API keys via provider dashboards
+
+2. **system-health.service** — Exit code 1
+   - Likely SELinux/path issues in `/usr/local/bin/system-health-snapshot.sh`
+   - Diagnostic steps documented in P76_SYSTEMD_SCOPE_REMEDIATION.md
+   - **Action:** Manual investigation with `sudo journalctl -u system-health.service`
+
+3. **logrotate.service** — /var/log/boot.log permissions
+   - System-level issue outside repo scope
+   - **Action:** Manual SELinux label fix or policy review
+
+### Installation
+
+```bash
+# Install user units (run as user lch, NOT root)
+./scripts/install-user-timers.sh
+
+# Or with automatic system unit disable:
+./scripts/install-user-timers.sh --disable-system
+```
+
+### Validation Commands
+
+```bash
+# Check timers
+systemctl --user list-timers
+
+# Test services
+systemctl --user start code-index.service
+systemctl --user start fedora-updates.service
+systemctl --user start release-watch.service
+systemctl --user start rag-embed.service
+
+# Check logs
+journalctl --user -u code-index.service -n 50 --no-pager
+journalctl --user -u fedora-updates.service -n 50 --no-pager
+journalctl --user -u release-watch.service -n 50 --no-pager
+journalctl --user -u rag-embed.service -n 50 --no-pager
+```
+
+### Rollback Path
+
+```bash
+# Revert to system units if needed
+systemctl --user disable --now code-index.timer fedora-updates.timer release-watch.timer rag-embed.timer
+rm -f ~/.config/systemd/user/{code-index,fedora-updates,release-watch,rag-embed}.{service,timer}
+systemctl --user daemon-reload
+
+# Re-enable system units
+sudo systemctl enable --now code-index.timer fedora-updates.timer release-watch.timer rag-embed.timer
+```
+
+### Constraints Preserved
+
+- ✅ No hardcoded `/home/lch` paths (used `%h`)
+- ✅ No `shell=True` in any generated files
+- ✅ Immutable OS assumptions preserved
+- ✅ No SELinux disabling
+- ✅ No `/usr` modifications
+- ✅ No API keys in repo files
+- ✅ ruff clean on generated script

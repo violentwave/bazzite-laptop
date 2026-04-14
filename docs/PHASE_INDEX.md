@@ -1,14 +1,14 @@
 # Phase Index — Bazzite AI Layer
 
-> Master index of all phases P0-P75. Generated 2026-04-13.
+> Master index of all phases P0-P87. Updated 2026-04-13.
 > Source of truth: Notion `Bazzite Phases` database + `git log`.
 
 ## Quick Stats
 
 | Metric | Value |
 |--------|-------|
-| Total Phases | P0-P75 (76 phases) |
-| Completed | P0-P75 |
+| Total Phases | P0-P87 (88 phases) |
+| Completed | P0-P87 except deferred scopes |
 | In Progress | — |
 | Repo Docs | docs/*.md, docs/patterns/frontend/*.md, docs/frontend-capability-pack/*.md |
 | Notion DB | `398c13ed-47f6-4f7e-9e54-eb339b462c90` |
@@ -108,8 +108,17 @@
 | P74 | Code Intelligence Fusion Layer | Done | — | 2026-04-13 | ai/code_intel/store.py, ai/rag/code_query.py, ai/mcp_bridge/{tools.py,server.py}, configs/mcp-bridge-allowlist.yaml, tests/test_code_fusion.py, docs/P74_*.md | Notion row | Unified semantic+structural+artifact retrieval path |
 | P75 | Project Intelligence Preflight + Execution Gating | Done | — | 2026-04-13 | ai/phase_control/{preflight.py,runner.py,policy.py,result_models.py}, tests/test_phase_control_preflight.py, docs/P75_*.md | Notion row | Required preflight context + gate before phase execution |
 | P76 | Ingestion Reliability + Continuous Learning Automation | Done | 38b8ea7 | 2026-04-13 | ai/phase_control/{closeout.py,closeout_targets.py}, tests/test_phase_control_closeout.py, docs/P76_*.md | Notion row | Automated closeout ingestion with retry, dead-letter, coverage tracking |
-| P77 | UI Architecture + Contracts Baseline | Ready | — | — | docs/PHASE77_UI_ARCHITECTURE.md | Notion row | Bazzite Unified Control Console architecture |
-| P78 | Midnight Glass Design System + Figma Mapping | Planned | — | — | docs/PHASE78_MIDNIGHT_GLASS_DESIGN_SYSTEM.md | Notion row | Midnight Glass visual system, tokens, components |
+| P77 | UI Architecture + Contracts Baseline | Done | — | 2026-04-13 | docs/PHASE77_UI_ARCHITECTURE.md | Notion row | Bazzite Unified Control Console architecture |
+| P78 | Midnight Glass Design System + Figma Mapping | Done | — | 2026-04-13 | docs/PHASE78_MIDNIGHT_GLASS_DESIGN_SYSTEM.md | Notion row | Midnight Glass visual system, tokens, components |
+| P79 | Frontend Shell Bootstrap | Done | — | 2026-04-13 | docs/P79_UI_SHELL_BOOTSTRAP.md, ui/src/components/shell/* | Notion row | Shell frame, icon rail, command palette |
+| P80 | Auth, 2FA, Recovery, Gmail Notifications | Deferred | — | — | Placeholder only | Notion row | Deferred per roadmap reconciliation |
+| P81 | PIN-Gated Settings + Secrets Service | Done | 4a8f2ba, 3cde9df | 2026-04-13 | ai/settings_service.py, ui/src/components/settings/*, docs/HANDOFF | Notion row | PIN auth, masked secrets, audit logging |
+| P82 | Provider + Model Discovery / Routing Console | Done | — | 2026-04-13 | ai/provider_service.py, ui/src/components/providers/* | Notion row | Provider health, model catalog, routing console |
+| P83 | Chat + MCP Workspace Integration | Done | 79af39a | 2026-04-13 | docs/P83_CHAT_WORKSPACE.md, ui/src/components/chat/* | Notion row | Streaming chat + inline MCP tool results |
+| P84 | Security Ops Center | Done | — | 2026-04-13 | docs/P84_SECURITY_OPS_CENTER.md, ui/src/components/security/* | Notion row | Security overview, alerts, findings, provider health |
+| P85 | Interactive Shell Gateway | Done | — | 2026-04-13 | docs/P85_INTERACTIVE_SHELL_GATEWAY.md, ai/shell_service.py, ui/src/components/shell-gateway/* | Notion row | Local shell sessions with audit strip |
+| P86 | Project + Workflow + Phase Panels | Done | — | 2026-04-13 | docs/P86_PROJECT_WORKFLOW_PHASE_PANELS.md, ai/project_workflow_service.py, ui/src/components/project-workflow/* | Notion row | Project context, workflow history, phase timeline |
+| P87 | Newelle/PySide Migration + Compatibility Cutover | Done | — | 2026-04-13 | docs/P87_MIGRATION_CUTOVER.md, docs/USER-GUIDE.md, docs/AGENT.md, docs/newelle-system-prompt.md | Notion row | Console-first UX cutover with fallback/rollback model |
 
 ## Notion Database Reference
 

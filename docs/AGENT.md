@@ -46,6 +46,8 @@
 
 ## Architecture
 
+Primary operator UX is the Unified Control Console (P83-P87). Newelle and PySide remain supported compatibility surfaces.
+
 ```
                     ┌─────────────────┐
                     │   Newelle        │
@@ -618,7 +620,12 @@ Agents share context via `HANDOFF.md` in the project root.
 
 ## Newelle Integration
 
-Newelle (Flatpak GTK4) is the AI chat/voice UI.
+Newelle (Flatpak GTK4) is a supported fallback AI chat/voice UI.
+
+P87 cutover stance:
+- Primary documented operator UX: Unified Control Console
+- Fallback conversational UX: Newelle
+- Secondary status UX: PySide tray
 
 - **LLM**: `http://127.0.0.1:8767/v1/` (`model="fast"`)
 - **MCP**: `http://127.0.0.1:8766/mcp` (96 tools)
