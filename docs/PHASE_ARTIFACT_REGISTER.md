@@ -1265,6 +1265,21 @@
 | Validation | `python -m pytest tests/test_mcp_tools.py` | Core tests pass |
 | Validation | `cd ui && npx tsc --noEmit` | TypeScript pass |
 
+### P107 — UI Feature Wiring Completion
+- **Status**: Done
+- **Finished**: 2026-04-15
+
+| Type | Path | Description |
+|------|------|-------------|
+| Plan | `docs/P107_PLAN.md` | UI wiring analysis |
+| Analysis | Browser-native dialogs | ✅ All replaced with themed modals |
+| Analysis | Settings audit log | ✅ Wired to `settings.audit_log` |
+| Analysis | Chat health indicators | ✅ Present with real MCP calls |
+| Analysis | Terminal mock artifacts | ✅ None - all real backend |
+| Analysis | Retry guards | ✅ Present in all panels |
+| Analysis | Placeholders | ✅ All legitimate input hints |
+| Analysis | Coming Soon | ✅ None found |
+
 ## Cross-Phase Documentation
 
 ### Hub Docs (docs/ root)

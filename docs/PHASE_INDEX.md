@@ -138,7 +138,8 @@
 | P103 | MCP Tool Marketplace + Tool Pack Import/Export | Done | 8c9b2e5 | 2026-04-15 | docs/P103_PLAN.md, ai/mcp_bridge/marketplace/* | Notion row | Tool pack validation, import/export, staging, installation |
 | P104 | Advanced Tool Analytics + Optimization | Done | 63cad68 | 2026-04-15 | docs/P104_PLAN.md, ai/mcp_bridge/analytics_advanced/* | Notion row | Anomaly detection, cost analysis, latency reporting, forecasting |
 | P105 | External MCP Federation Governance | Done | c2866b6 | 2026-04-15 | docs/P105_PLAN.md, ai/mcp_bridge/federation/* | Notion row | External MCP server discovery, trust scoring, policy enforcement |
-| P106 | Full Browser Runtime Evidence Rebaseline | Done | (pending commit) | 2026-04-15 | docs/P106_PLAN.md, docs/evidence/p106/* | Notion row | Browser runtime evidence for all panels, P101-P105 verification |
+| P106 | Full Browser Runtime Evidence Rebaseline | Done | 0975fcb | 2026-04-15 | docs/P106_PLAN.md, docs/evidence/p106/* | Notion row | Browser runtime evidence for all panels, 169 tools verified |
+| P107 | UI Feature Wiring Completion | Done | (pending) | 2026-04-15 | docs/P107_PLAN.md | Notion row | Analyzed UI wiring - all browser dialogs replaced, audit wired, retry guards present |
 
 ## Notion Database Reference
 
