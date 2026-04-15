@@ -10,7 +10,7 @@ Auto-generated cross-tool handoff. Updated by save-handoff.sh
 - **Branch:** master
 - **Launch Gate:** PASSED — console is launch-ready
 - **Security Status:** All vulnerabilities patched (0 Python CVEs, 0 npm CVEs)
-- **Latest Commit:** P104 Advanced Tool Analytics (63cad68)
+- **Latest Commit:** P105 External MCP Federation (c2866b6)
 
 ## Open Tasks
 
@@ -20,6 +20,7 @@ Auto-generated cross-tool handoff. Updated by save-handoff.sh
 - Create P102 Notion database entry (phase completed - Dynamic Tool Discovery)
 - Create P103 Notion database entry (phase completed - MCP Tool Marketplace)
 - Create P104 Notion database entry (phase completed - Advanced Tool Analytics)
+- Create P105 Notion database entry (phase completed - External MCP Federation)
 
 ## P102 Update — Dynamic Tool Discovery (2026-04-15)
 
@@ -86,6 +87,29 @@ Auto-generated cross-tool handoff. Updated by save-handoff.sh
   - `tool.optimization.forecast` - Generate usage forecasting report
 - **Tests:** 18 passing in `tests/test_p104_advanced_tool_analytics.py`
 - **Ruff:** All checks passed on new code
+
+## P105 Update — External MCP Federation Governance (2026-04-15)
+
+**Status:** Complete  
+**Files:** docs/P105_PLAN.md  
+**MCP Tools:** 6 new tools (169 total)
+
+### Deliverables
+- **Federation Module** (`ai/mcp_bridge/federation/`): 5 files
+  - `models.py` - ExternalServerIdentity, TrustState, CapabilityMap, PolicyDecision
+  - `discovery.py` - Read-only discovery/inventory of external MCP servers
+  - `trust.py` - Trust scoring based on server characteristics
+  - `policy.py` - Default-deny policy evaluation with audit logging
+- **6 New MCP Tools:**
+  - `tool.federation.discover` - Discover external MCP server by URL
+  - `tool.federation.list_servers` - List all discovered external MCP servers
+  - `tool.federation.inspect_server` - Inspect external MCP server details
+  - `tool.federation.audit` - Get federation audit log
+  - `tool.federation.trust_score` - Calculate trust score for external server
+  - `tool.federation.disable` - Disable/remove external MCP server
+- **Tests:** 35 passing in `tests/test_p105_mcp_federation.py`
+- **Ruff:** All checks passed on new code
+- **Security:** Read-only federation, default-deny policy, no remote execution, audit logging
 
 ## Notion P99/P100/P101 Update
 
