@@ -132,7 +132,7 @@ export function SecurityOverview({ data }: SecurityOverviewProps) {
       </div>
 
       {/* Recent Alerts */}
-      {data.recent_alerts.length > 0 && (
+      {data.recent_alerts?.length > 0 && (
         <div
           className="rounded-xl border overflow-hidden"
           style={{
@@ -152,7 +152,7 @@ export function SecurityOverview({ data }: SecurityOverviewProps) {
             </h3>
           </div>
           <div className="divide-y" style={{ borderColor: "var(--base-04)" }}>
-            {data.recent_alerts.slice(0, 5).map((alert) => (
+            {data.recent_alerts?.slice(0, 5).map((alert) => (
               <div
                 key={alert.id}
                 className="px-6 py-4 flex items-start gap-4 hover:bg-base-03 transition-colors"

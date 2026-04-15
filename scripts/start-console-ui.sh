@@ -75,6 +75,13 @@ done
 # Pre-flight checks
 # ─────────────────────────────────────────────────────────────
 
+# Check for accidental root-level frontend package pollution
+if [[ -d "$REPO_DIR/node_modules/tailwindcss" ]] || grep -q '"tailwindcss"' "$REPO_DIR/package.json" 2>/dev/null; then
+    echo "ERROR: Root-level tailwindcss found. This breaks Turbopack."
+    echo "Run: cd $REPO_DIR && npm uninstall tailwindcss @tailwindcss/postcss"
+    exit 1
+fi
+
 # Check UI directory exists
 if [[ ! -d "$UI_DIR" ]]; then
     echo "ERROR: UI directory not found at $UI_DIR"

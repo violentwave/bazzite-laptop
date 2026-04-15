@@ -4,6 +4,22 @@ All significant changes. Format: date · deliverables · deltas · commit.
 
 ---
 
+## Phase 112 — UI Dev Runtime / Turbopack Launch Crash Remediation
+**Date:** 2026-04-15 · **Commit:** pending
+
+**Deliverables:**
+- Fixed Turbopack dev server crash by neutralizing root-level tailwindcss dependencies.
+- Added deterministic preflight check to `scripts/start-console-ui.sh` to prevent root-level frontend package pollution.
+- Re-rooted Turbopack via `ui/next.config.ts` (`root: __dirname`).
+- Fixed React component crash in `SecurityOverview.tsx` (TypeError reading 'length' of undefined `recent_alerts`).
+
+**Validation:**
+- `npx tsc --noEmit` and `npm run build` in `ui/` passed.
+- `ruff check ai/ tests/ scripts/` passed.
+- UI browser compilation with `next dev --turbo` succeeds without crash.
+
+---
+
 ## Phase 111 — Final Production Acceptance Gate
 **Date:** 2026-04-15 · **Commit:** pending
 

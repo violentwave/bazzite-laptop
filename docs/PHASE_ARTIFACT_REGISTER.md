@@ -1330,6 +1330,16 @@
 | Documentation | `HANDOFF.md`, `PHASE_INDEX.md` | Phase consolidation |
 | Documentation | `CHANGELOG.md`, `USER-GUIDE.md` | Launch tracking |
 
+### P112 — UI Dev Runtime / Turbopack Launch Crash Remediation
+- **Status**: Done
+- **Finished**: 2026-04-15
+
+| Type | Path | Description |
+|------|------|-------------|
+| Script | `scripts/start-console-ui.sh` | Added root-level tailwind pollution check |
+| Config | `ui/next.config.ts` | Re-rooted Turbopack to `__dirname` |
+| UI Component | `ui/src/components/security/SecurityOverview.tsx` | Fixed component crash on undefined `recent_alerts` |
+
 ## Cross-Phase Documentation
 
 ### Hub Docs (docs/ root)

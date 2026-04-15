@@ -144,6 +144,7 @@
 | P109 | Production-Grade Settings & Secrets UX | Done | b0dc074 | 2026-04-15 | docs/P109_PLAN.md | Notion row | Analysis confirms production-grade UX already implemented |
 | P110 | Tool Control Center UI | Done | 60c5daf | 2026-04-15 | docs/P110_PLAN.md, ui/src/components/tool-control/* | Notion row | Unified UI for governance, discovery, marketplace, optimization, federation |
 | P111 | Final Production Acceptance Gate | Done | pending | 2026-04-15 | docs/P111_PLAN.md, docs/P111_FINAL_ACCEPTANCE_REPORT.md | Notion row | Comprehensive system acceptance validation |
+| P112 | UI Dev Runtime / Turbopack Launch Crash Remediation | Done | pending | 2026-04-15 | scripts/start-console-ui.sh, ui/next.config.ts, ui/src/components/security/SecurityOverview.tsx | Notion row | Fixed Next.js Turbopack dev server crash due to tailwind root pollution |
 
 ## Notion Database Reference
 
