@@ -141,7 +141,8 @@
 | P106 | Full Browser Runtime Evidence Rebaseline | Done | 0975fcb | 2026-04-15 | docs/P106_PLAN.md, docs/evidence/p106/* | Notion row | Browser runtime evidence for all panels, 169 tools verified |
 | P107 | UI Feature Wiring Completion | Done | bfd174c | 2026-04-15 | docs/P107_PLAN.md | Notion row | Analyzed UI wiring - all browser dialogs replaced |
 | P108 | Persistent Shell Gateway Upgrade | Done | 9975b42 | 2026-04-15 | docs/P108_PLAN.md, ai/shell_service.py | Notion row | Persistent sessions with CWD, audit logging, 23 tests pass |
-| P109 | Production-Grade Settings & Secrets UX | Done | — | 2026-04-15 | docs/P109_PLAN.md | Notion row | Analysis confirms production-grade UX already implemented |
+| P109 | Production-Grade Settings & Secrets UX | Done | b0dc074 | 2026-04-15 | docs/P109_PLAN.md | Notion row | Analysis confirms production-grade UX already implemented |
+| P110 | Tool Control Center UI | Done | 60c5daf | 2026-04-15 | docs/P110_PLAN.md, ui/src/components/tool-control/* | Notion row | Unified UI for governance, discovery, marketplace, optimization, federation |
 
 ## Notion Database Reference
 
