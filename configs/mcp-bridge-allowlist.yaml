@@ -1940,3 +1940,206 @@ tools:
       readOnly: false
       destructive: false
       openWorld: false
+
+  # ============================================================================
+  # P103: MCP Tool Marketplace + Tool Pack Import/Export
+  # ============================================================================
+
+  tool.pack_validate:
+    description: "Validate a tool pack manifest and files without installing or executing code"
+    source: python
+    module: ai.mcp_bridge.tool_marketplace_handlers
+    function: "handle_tool_pack_validate"
+    args:
+      pack_id:
+        type: string
+        required: false
+        max_length: 128
+        description: "Pack ID to validate (if already staged)"
+      manifest:
+        type: object
+        required: false
+        description: "Manifest data to validate before staging"
+      pack_path:
+        type: string
+        required: false
+        max_length: 512
+        description: "Path to pack directory"
+    annotations:
+      readOnly: true
+      idempotent: true
+      openWorld: false
+
+  tool.pack_export:
+    description: "Export selected dynamic/registered tool metadata into a portable local pack"
+    source: python
+    module: ai.mcp_bridge.tool_marketplace_handlers
+    function: "handle_tool_pack_export"
+    args:
+      pack_id:
+        type: string
+        required: true
+        max_length: 128
+        description: "Target pack ID (e.g., 'org.example.tools')"
+      name:
+        type: string
+        required: true
+        max_length: 128
+        description: "Human-readable pack name"
+      version:
+        type: string
+        required: false
+        default: "1.0.0"
+        max_length: 32
+        description: "Pack version"
+      description:
+        type: string
+        required: false
+        max_length: 500
+        description: "Pack description"
+      author:
+        type: string
+        required: false
+        max_length: 128
+        description: "Pack author"
+      tools:
+        type: array
+        required: true
+        description: "List of tool names to include"
+      include_source:
+        type: boolean
+        required: false
+        default: true
+        description: "Include handler source files"
+    annotations:
+      readOnly: false
+      destructive: false
+      openWorld: false
+
+  tool.pack_import:
+    description: "Import a local pack into a staging area only after validation"
+    source: python
+    module: ai.mcp_bridge.tool_marketplace_handlers
+    function: "handle_tool_pack_import"
+    args:
+      source_path:
+        type: string
+        required: false
+        max_length: 512
+        description: "Path to pack directory"
+      manifest:
+        type: object
+        required: false
+        description: "Manifest data (JSON object)"
+      skip_validation:
+        type: boolean
+        required: false
+        default: false
+        description: "Skip validation (not recommended)"
+    annotations:
+      readOnly: false
+      destructive: false
+      openWorld: false
+
+  tool.pack_list:
+    description: "List staged/installed packs and validation state"
+    source: python
+    module: ai.mcp_bridge.tool_marketplace_handlers
+    function: "handle_tool_pack_list"
+    args:
+      state_filter:
+        type: string
+        required: false
+        enum: ["staged", "validated", "installed", "disabled"]
+        description: "Filter by pack state"
+      risk_tier:
+        type: string
+        required: false
+        enum: ["low", "medium", "high", "critical"]
+        description: "Filter by risk tier"
+      search:
+        type: string
+        required: false
+        max_length: 256
+        description: "Search in pack name/description"
+      include_removed:
+        type: boolean
+        required: false
+        default: false
+        description: "Include removed packs"
+      include_details:
+        type: boolean
+        required: false
+        default: false
+        description: "Include full details"
+    annotations:
+      readOnly: true
+      idempotent: true
+      openWorld: false
+
+  tool.pack_install:
+    description: "Install a validated pack into the dynamic registry/allowlist path using P102 mechanisms"
+    source: python
+    module: ai.mcp_bridge.tool_marketplace_handlers
+    function: "handle_tool_pack_install"
+    args:
+      pack_id:
+        type: string
+        required: true
+        max_length: 128
+        description: "Pack ID to install"
+      force:
+        type: boolean
+        required: false
+        default: false
+        description: "Force installation even with warnings"
+      dry_run:
+        type: boolean
+        required: false
+        default: false
+        description: "Preview changes without installing"
+      request_approval:
+        type: boolean
+        required: false
+        default: false
+        description: "Request approval for high-risk packs"
+    annotations:
+      readOnly: false
+      destructive: false
+      openWorld: false
+
+  tool.pack_remove:
+    description: "Remove or disable an installed pack safely, preserving audit history"
+    source: python
+    module: ai.mcp_bridge.tool_marketplace_handlers
+    function: "handle_tool_pack_remove"
+    args:
+      pack_id:
+        type: string
+        required: true
+        max_length: 128
+        description: "Pack ID to remove"
+      disable_only:
+        type: boolean
+        required: false
+        default: false
+        description: "Disable instead of remove"
+      preserve_allowlist:
+        type: boolean
+        required: false
+        default: false
+        description: "Keep allowlist entries"
+      preserve_audit:
+        type: boolean
+        required: false
+        default: true
+        description: "Preserve audit trail"
+      reason:
+        type: string
+        required: false
+        max_length: 512
+        description: "Reason for removal"
+    annotations:
+      readOnly: false
+      destructive: true
+      openWorld: false

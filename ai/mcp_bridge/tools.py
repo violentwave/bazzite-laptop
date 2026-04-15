@@ -2267,6 +2267,55 @@ async def _execute_python_tool(tool_name: str, tool_def: dict, args: dict) -> st
             result = await handle_tool_watch(args)
             return result
 
+        # P103: MCP Tool Marketplace
+        elif tool_name == "tool.pack_validate":
+            from ai.mcp_bridge.tool_marketplace_handlers import (
+                handle_tool_pack_validate,  # noqa: PLC0415
+            )
+
+            result = await handle_tool_pack_validate(args)
+            return result
+
+        elif tool_name == "tool.pack_export":
+            from ai.mcp_bridge.tool_marketplace_handlers import (
+                handle_tool_pack_export,  # noqa: PLC0415
+            )
+
+            result = await handle_tool_pack_export(args)
+            return result
+
+        elif tool_name == "tool.pack_import":
+            from ai.mcp_bridge.tool_marketplace_handlers import (
+                handle_tool_pack_import,  # noqa: PLC0415
+            )
+
+            result = await handle_tool_pack_import(args)
+            return result
+
+        elif tool_name == "tool.pack_list":
+            from ai.mcp_bridge.tool_marketplace_handlers import (
+                handle_tool_pack_list,  # noqa: PLC0415
+            )
+
+            result = await handle_tool_pack_list(args)
+            return result
+
+        elif tool_name == "tool.pack_install":
+            from ai.mcp_bridge.tool_marketplace_handlers import (
+                handle_tool_pack_install,  # noqa: PLC0415
+            )
+
+            result = await handle_tool_pack_install(args)
+            return result
+
+        elif tool_name == "tool.pack_remove":
+            from ai.mcp_bridge.tool_marketplace_handlers import (
+                handle_tool_pack_remove,  # noqa: PLC0415
+            )
+
+            result = await handle_tool_pack_remove(args)
+            return result
+
         else:
             return f"[Tool '{tool_name}' not implemented]"
 
