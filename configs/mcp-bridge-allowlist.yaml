@@ -1371,7 +1371,106 @@ tools:
         description: "PIN to verify"
     annotations:
       readOnly: true
-      idempotent: false
+      destructive: false
+      openWorld: false
+
+  tool.federation.discover:
+    description: "Discover external MCP server by URL"
+    source: python
+    module: ai.mcp_bridge.tool_federation_handlers
+    function: "handle_tool_federation_discover"
+    args:
+      url:
+        type: string
+        required: true
+        description: "Server URL to discover"
+      name:
+        type: string
+        required: false
+        description: "Optional server name"
+      description:
+        type: string
+        required: false
+        description: "Server description"
+    annotations:
+      readOnly: true
+      destructive: false
+      openWorld: false
+
+  tool.federation.list_servers:
+    description: "List all discovered external MCP servers"
+    source: python
+    module: ai.mcp_bridge.tool_federation_handlers
+    function: "handle_tool_federation_list_servers"
+    args: {}
+    annotations:
+      readOnly: true
+      destructive: false
+      openWorld: false
+
+  tool.federation.inspect_server:
+    description: "Inspect external MCP server details"
+    source: python
+    module: ai.mcp_bridge.tool_federation_handlers
+    function: "handle_tool_federation_inspect_server"
+    args:
+      server_id:
+        type: string
+        required: true
+        description: "Server ID to inspect"
+    annotations:
+      readOnly: true
+      destructive: false
+      openWorld: false
+
+  tool.federation.audit:
+    description: "Get federation audit log"
+    source: python
+    module: ai.mcp_bridge.tool_federation_handlers
+    function: "handle_tool_federation_audit"
+    args:
+      server_id:
+        type: string
+        required: false
+        description: "Filter by server ID"
+      limit:
+        type: integer
+        required: false
+        default: 100
+        description: "Maximum entries"
+    annotations:
+      readOnly: true
+      destructive: false
+      openWorld: false
+
+  tool.federation.trust_score:
+    description: "Calculate trust score for external server"
+    source: python
+    module: ai.mcp_bridge.tool_federation_handlers
+    function: "handle_tool_federation_trust_score"
+    args:
+      server_id:
+        type: string
+        required: true
+        description: "Server ID"
+    annotations:
+      readOnly: true
+      destructive: false
+      openWorld: false
+
+  tool.federation.disable:
+    description: "Disable/remove external MCP server from federation"
+    source: python
+    module: ai.mcp_bridge.tool_federation_handlers
+    function: "handle_tool_federation_disable"
+    args:
+      server_id:
+        type: string
+        required: true
+        description: "Server ID to disable"
+    annotations:
+      readOnly: false
+      destructive: true
       openWorld: false
 
   settings.list_secrets:

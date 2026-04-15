@@ -2364,6 +2364,54 @@ async def _execute_python_tool(tool_name: str, tool_def: dict, args: dict) -> st
             result = await handle_tool_optimization_forecast(args)
             return result
 
+        elif tool_name == "tool.federation.discover":
+            from ai.mcp_bridge.tool_federation_handlers import (
+                handle_tool_federation_discover,  # noqa: PLC0415
+            )
+
+            result = await handle_tool_federation_discover(args)
+            return result
+
+        elif tool_name == "tool.federation.list_servers":
+            from ai.mcp_bridge.tool_federation_handlers import (
+                handle_tool_federation_list_servers,  # noqa: PLC0415
+            )
+
+            result = await handle_tool_federation_list_servers(args)
+            return result
+
+        elif tool_name == "tool.federation.inspect_server":
+            from ai.mcp_bridge.tool_federation_handlers import (
+                handle_tool_federation_inspect_server,  # noqa: PLC0415
+            )
+
+            result = await handle_tool_federation_inspect_server(args)
+            return result
+
+        elif tool_name == "tool.federation.audit":
+            from ai.mcp_bridge.tool_federation_handlers import (
+                handle_tool_federation_audit,  # noqa: PLC0415
+            )
+
+            result = await handle_tool_federation_audit(args)
+            return result
+
+        elif tool_name == "tool.federation.trust_score":
+            from ai.mcp_bridge.tool_federation_handlers import (
+                handle_tool_federation_trust_score,  # noqa: PLC0415
+            )
+
+            result = await handle_tool_federation_trust_score(args)
+            return result
+
+        elif tool_name == "tool.federation.disable":
+            from ai.mcp_bridge.tool_federation_handlers import (
+                handle_tool_federation_disable,  # noqa: PLC0415
+            )
+
+            result = await handle_tool_federation_disable(args)
+            return result
+
         else:
             return f"[Tool '{tool_name}' not implemented]"
 
