@@ -2226,6 +2226,47 @@ async def _execute_python_tool(tool_name: str, tool_def: dict, args: dict) -> st
             result = await handle_notion_query_database(args)
             return json.dumps(result, indent=2)
 
+        # P102: Dynamic Tool Discovery
+        elif tool_name == "tool.discover":
+            from ai.mcp_bridge.tool_discovery_handlers import handle_tool_discover  # noqa: PLC0415
+
+            result = await handle_tool_discover(args)
+            return result
+
+        elif tool_name == "tool.register":
+            from ai.mcp_bridge.tool_discovery_handlers import handle_tool_register  # noqa: PLC0415
+
+            result = await handle_tool_register(args)
+            return result
+
+        elif tool_name == "tool.unregister":
+            from ai.mcp_bridge.tool_discovery_handlers import (
+                handle_tool_unregister,  # noqa: PLC0415
+            )
+
+            result = await handle_tool_unregister(args)
+            return result
+
+        elif tool_name == "tool.reload":
+            from ai.mcp_bridge.tool_discovery_handlers import handle_tool_reload  # noqa: PLC0415
+
+            result = await handle_tool_reload(args)
+            return result
+
+        elif tool_name == "tool.registry_stats":
+            from ai.mcp_bridge.tool_discovery_handlers import (
+                handle_tool_registry_stats,  # noqa: PLC0415
+            )
+
+            result = await handle_tool_registry_stats(args)
+            return result
+
+        elif tool_name == "tool.watch":
+            from ai.mcp_bridge.tool_discovery_handlers import handle_tool_watch  # noqa: PLC0415
+
+            result = await handle_tool_watch(args)
+            return result
+
         else:
             return f"[Tool '{tool_name}' not implemented]"
 

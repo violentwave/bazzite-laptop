@@ -5,18 +5,38 @@ Auto-generated cross-tool handoff. Updated by save-handoff.sh
 ## Current State
 
 - **Last Tool:** opencode
-- **Last Updated:** 2026-04-15T05:45:00Z
+- **Last Updated:** 2026-04-15T07:00:00Z
 - **Project:** bazzite-laptop
 - **Branch:** master
 - **Launch Gate:** PASSED — console is launch-ready
 - **Security Status:** All vulnerabilities patched (0 Python CVEs, 0 npm CVEs)
-- **Latest Commit:** f1cbb94 (security fixes)
+- **Latest Commit:** P102 Dynamic Tool Discovery (uncommitted)
 
 ## Open Tasks
 
 - Rotate the Figma PAT that was exposed in the P96 prompt (security priority)
 - Manually create missing Midnight Glass artifacts in Figma (API cannot create files)
 - Create P101 Notion database entry (phase completed, needs tracking)
+- Create P102 Notion database entry (phase completed - Dynamic Tool Discovery)
+
+## P102 Update — Dynamic Tool Discovery (2026-04-15)
+
+**Status:** Complete  
+**Files:** docs/P102_PLAN.md  
+**MCP Tools:** 6 new tools (151 total)
+
+### Deliverables
+- **Tool Discovery Engine** (`ai/mcp_bridge/discovery.py`): AST-based code inspection for auto-discovering tools from Python modules
+- **Dynamic Tool Registry** (`ai/mcp_bridge/dynamic_registry.py`): Runtime tool registration with hot-reload capability
+- **6 New MCP Tools:**
+  - `tool.discover` - Discover tools in Python modules
+  - `tool.register` - Register tools dynamically
+  - `tool.unregister` - Unregister dynamic tools
+  - `tool.reload` - Hot-reload allowlist
+  - `tool.registry_stats` - Registry statistics
+  - `tool.watch` - Control file watcher
+- **Tests:** 416 lines in `tests/test_p102_dynamic_tool_discovery.py`
+- **Ruff:** All checks passed on new code
 
 ## Notion P99/P100/P101 Update
 
@@ -35,6 +55,11 @@ Auto-generated cross-tool handoff. Updated by save-handoff.sh
 - Fixed JSON serialization in notion tool handlers (dict → JSON string for redact_secrets)
 
 ## Recent Sessions
+
+### 2026-04-15T07:00:00Z — opencode
+**P102 Complete: Dynamic Tool Discovery**
+
+Implemented runtime tool registration without service restarts. Created Tool Discovery Engine (AST-based code inspection), Dynamic Tool Registry (singleton with hot-reload), and 6 new MCP tools (tool.discover, tool.register, tool.unregister, tool.reload, tool.registry_stats, tool.watch). Total tools: 151. Files: ai/mcp_bridge/discovery.py, dynamic_registry.py, tool_discovery_handlers.py. Tests: 416 lines. All ruff clean. Documentation: docs/P102_PLAN.md.
 
 ### 2026-04-15T05:45:00Z — opencode
 Security vulnerability remediation complete: Analyzed and fixed all 11 Python vulnerabilities (2 high, 9 moderate) and 6 Node.js vulnerabilities (1 critical, 3 high, 2 moderate). Updated cryptography 46.0.6→46.0.7 (CVE-2026-39892), requests 2.32.5→2.33.0 (CVE-2026-25645), pillow 12.1.1→12.2.0 (CVE-2026-40192), protobuf 3.19.6→5.29.6 (CVE-2025-4565, CVE-2026-0994), pytest 9.0.2→9.0.3 (CVE-2025-71176), langchain-core 1.2.25→1.2.28 (CVE-2026-40087), pip 25.1.1→26.0. Fixed npm packages via `npm audit fix`: axios, hono, path-to-regexp, follow-redirects, brace-expansion, @hono/node-server. All pip-audit and npm audit now report 0 vulnerabilities. Commits: f1cbb94 (security fixes). GitHub: All changes pushed to origin/master.

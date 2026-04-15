@@ -1799,3 +1799,144 @@ tools:
       readOnly: true
       idempotent: true
       openWorld: false
+
+  # ============================================================================
+  # P102: Dynamic Tool Discovery
+  # ============================================================================
+
+  tool.discover:
+    description: "Discover tools in a Python module by inspecting code"
+    source: python
+    module: ai.mcp_bridge.tool_discovery_handlers
+    function: "handle_tool_discover"
+    args:
+      module_path:
+        type: string
+        required: true
+        max_length: 256
+        description: "Path to Python file or directory (relative to project root)"
+      pattern:
+        type: string
+        required: false
+        max_length: 128
+        description: "Optional regex pattern to filter function names"
+      include_source_info:
+        type: boolean
+        required: false
+        default: true
+        description: "Include file paths and line numbers in output"
+    annotations:
+      readOnly: true
+      idempotent: true
+      openWorld: false
+
+  tool.register:
+    description: "Register a tool dynamically at runtime"
+    source: python
+    module: ai.mcp_bridge.tool_discovery_handlers
+    function: "handle_tool_register"
+    args:
+      name:
+        type: string
+        required: false
+        max_length: 128
+        description: "Tool name (e.g., custom.my_tool)"
+      description:
+        type: string
+        required: false
+        max_length: 500
+        description: "Tool description"
+      module:
+        type: string
+        required: false
+        max_length: 128
+        description: "Python module path (e.g., ai.custom.handlers)"
+      function:
+        type: string
+        required: false
+        max_length: 128
+        description: "Function name within module"
+      auto_discover:
+        type: boolean
+        required: false
+        default: false
+        description: "If true, discover from module instead of manual definition"
+    annotations:
+      readOnly: false
+      destructive: false
+      openWorld: false
+
+  tool.unregister:
+    description: "Unregister a dynamically registered tool"
+    source: python
+    module: ai.mcp_bridge.tool_discovery_handlers
+    function: "handle_tool_unregister"
+    args:
+      name:
+        type: string
+        required: true
+        max_length: 128
+        description: "Tool name to unregister"
+    annotations:
+      readOnly: false
+      destructive: true
+      openWorld: false
+
+  tool.reload:
+    description: "Hot-reload the tool allowlist from disk"
+    source: python
+    module: ai.mcp_bridge.tool_discovery_handlers
+    function: "handle_tool_reload"
+    args:
+      force:
+        type: boolean
+        required: false
+        default: false
+        description: "Force reload even if file hasn't changed"
+      dry_run:
+        type: boolean
+        required: false
+        default: false
+        description: "Preview changes without applying"
+    annotations:
+      readOnly: false
+      destructive: false
+      openWorld: false
+
+  tool.registry_stats:
+    description: "Get dynamic tool registry statistics"
+    source: python
+    module: ai.mcp_bridge.tool_discovery_handlers
+    function: "handle_tool_registry_stats"
+    args:
+      include_definitions:
+        type: boolean
+        required: false
+        default: false
+        description: "Include full tool definitions in output"
+    annotations:
+      readOnly: true
+      idempotent: true
+      openWorld: false
+
+  tool.watch:
+    description: "Control the allowlist file watcher"
+    source: python
+    module: ai.mcp_bridge.tool_discovery_handlers
+    function: "handle_tool_watch"
+    args:
+      action:
+        type: string
+        required: false
+        default: "status"
+        enum: ["start", "stop", "status"]
+        description: "Action to perform"
+      interval:
+        type: number
+        required: false
+        default: 10.0
+        description: "Check interval in seconds (for start action)"
+    annotations:
+      readOnly: false
+      destructive: false
+      openWorld: false
