@@ -1280,6 +1280,20 @@
 | Analysis | Placeholders | ✅ All legitimate input hints |
 | Analysis | Coming Soon | ✅ None found |
 
+### P108 — Persistent Shell Gateway Upgrade
+- **Status**: Done
+- **Finished**: 2026-04-15
+
+| Type | Path | Description |
+|------|------|-------------|
+| Plan | `docs/P108_PLAN.md` | Shell gateway analysis |
+| Backend | `ai/shell_service.py` | Persistent session manager |
+| Tests | `tests/test_shell_service.py` | 23 passing tests |
+| Security | Blocked commands | rm -rf, sudo, su, mkfs, dd, fork bomb, chmod -R |
+| Features | CWD persistence | Working |
+| Features | Audit logging | JSONL format |
+| Features | Session limit | 10 max |
+
 ## Cross-Phase Documentation
 
 ### Hub Docs (docs/ root)

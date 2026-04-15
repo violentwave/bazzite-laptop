@@ -10,12 +10,29 @@ Auto-generated cross-tool handoff. Updated by save-handoff.sh
 - **Branch:** master
 - **Launch Gate:** PASSED — console is launch-ready
 - **Security Status:** All vulnerabilities patched (0 Python CVEs, 0 npm CVEs)
-- **Latest Commit:** P107 UI Feature Wiring Completion
+- **Latest Commit:** P108 Persistent Shell Gateway Upgrade
 
 ## Open Tasks
 
 - Rotate the Figma PAT that was exposed in the P96 prompt (security priority)
 - Manually create missing Midnight Glass artifacts in Figma (API cannot create files)
+
+## P108 Update — Persistent Shell Gateway Upgrade (2026-04-15)
+
+**Status:** Complete  
+**Files:** docs/P108_PLAN.md, ai/shell_service.py
+
+### Implementation Summary
+- **Session Management:** Persistent subprocess sessions with CWD persistence
+- **Security:** Command blocklist (rm -rf, sudo, su, mkfs, dd, fork bomb)
+- **Audit:** JSONL format logging
+- **Tests:** 23 passing tests
+- **UI Integration:** Terminal shows cwd/session status
+
+### Validation
+- pytest shell_service: ✅ 23 passed
+- ruff check: ✅ Pass
+- TypeScript: ✅ Pass
 
 ## P107 Update — UI Feature Wiring Completion (2026-04-15)
 

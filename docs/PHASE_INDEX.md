@@ -139,7 +139,8 @@
 | P104 | Advanced Tool Analytics + Optimization | Done | 63cad68 | 2026-04-15 | docs/P104_PLAN.md, ai/mcp_bridge/analytics_advanced/* | Notion row | Anomaly detection, cost analysis, latency reporting, forecasting |
 | P105 | External MCP Federation Governance | Done | c2866b6 | 2026-04-15 | docs/P105_PLAN.md, ai/mcp_bridge/federation/* | Notion row | External MCP server discovery, trust scoring, policy enforcement |
 | P106 | Full Browser Runtime Evidence Rebaseline | Done | 0975fcb | 2026-04-15 | docs/P106_PLAN.md, docs/evidence/p106/* | Notion row | Browser runtime evidence for all panels, 169 tools verified |
-| P107 | UI Feature Wiring Completion | Done | (pending) | 2026-04-15 | docs/P107_PLAN.md | Notion row | Analyzed UI wiring - all browser dialogs replaced, audit wired, retry guards present |
+| P107 | UI Feature Wiring Completion | Done | bfd174c | 2026-04-15 | docs/P107_PLAN.md | Notion row | Analyzed UI wiring - all browser dialogs replaced |
+| P108 | Persistent Shell Gateway Upgrade | Done | (pending) | 2026-04-15 | docs/P108_PLAN.md, ai/shell_service.py | Notion row | Persistent sessions with CWD, audit logging, 23 tests pass |
 
 ## Notion Database Reference
 
