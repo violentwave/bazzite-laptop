@@ -1308,6 +1308,28 @@
 | Tests | `tests/test_settings_service.py` | 4 passing tests |
 | Tests | `tests/test_config.py` | 22 passing tests |
 
+### P110 — Tool Control Center UI
+- **Status**: Done
+- **Finished**: 2026-04-15
+
+| Type | Path | Description |
+|------|------|-------------|
+| Plan | `docs/P110_PLAN.md` | Tool Control Center UI plan |
+| Frontend | `ui/src/components/tool-control/` | Unified UI tabs for 36 tools |
+| Frontend | `ui/src/app/page.tsx` | Tools routing and panel |
+| Frontend | `ui/src/components/shell/IconRail.tsx` | Tools nav item |
+
+### P111 — Final Production Acceptance Gate
+- **Status**: Done
+- **Finished**: 2026-04-15
+
+| Type | Path | Description |
+|------|------|-------------|
+| Plan | `docs/P111_PLAN.md` | Acceptance validation plan |
+| Evidence | `docs/P111_FINAL_ACCEPTANCE_REPORT.md` | Full system acceptance |
+| Documentation | `HANDOFF.md`, `PHASE_INDEX.md` | Phase consolidation |
+| Documentation | `CHANGELOG.md`, `USER-GUIDE.md` | Launch tracking |
+
 ## Cross-Phase Documentation
 
 ### Hub Docs (docs/ root)
