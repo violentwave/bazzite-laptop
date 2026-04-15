@@ -842,6 +842,18 @@ def create_app():
                 except Exception as e:
                     return {"error": str(e), "reports": [], "count": 0}
 
+        elif "page_id" in arg_defs:
+
+            @mcp.tool(name=tool_name, description=description, annotations=ann)
+            async def _handler_page_id(page_id: str, _tn=tool_name):
+                return await execute_tool(_tn, {"page_id": page_id})
+
+        elif "database_id" in arg_defs:
+
+            @mcp.tool(name=tool_name, description=description, annotations=ann)
+            async def _handler_database_id(database_id: str, _tn=tool_name):
+                return await execute_tool(_tn, {"database_id": database_id})
+
         # Built-in health tool (MCP protocol)
 
     @mcp.tool(name="health", description="Bridge health check")

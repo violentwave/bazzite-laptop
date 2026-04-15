@@ -1,0 +1,81 @@
+{
+  "captured_at": "2026-04-14T21:32:09.823Z",
+  "url": "http://127.0.0.1:3000",
+  "panels": [
+    {
+      "id": "chat",
+      "nav_title": "Chat",
+      "expected_header": "Chat Workspace",
+      "observed_header": "Chat Workspace",
+      "checks": {
+        "Type a message": false,
+        "Live": true
+      },
+      "screenshot": "docs/evidence/p99/screenshots/chat.png"
+    },
+    {
+      "id": "settings",
+      "nav_title": "Settings",
+      "expected_header": "Settings",
+      "observed_header": "Settings",
+      "checks": {
+        "Unlock Settings": false,
+        "Set Up PIN": true,
+        "PIN Protection Required": true
+      },
+      "screenshot": "docs/evidence/p99/screenshots/settings.png"
+    },
+    {
+      "id": "models",
+      "nav_title": "Models",
+      "expected_header": "Models & Providers",
+      "observed_header": "Models & Providers",
+      "checks": {
+        "Providers & Models": true,
+        "Health": true,
+        "Models": true,
+        "Routing": true
+      },
+      "screenshot": "docs/evidence/p99/screenshots/models.png"
+    },
+    {
+      "id": "security",
+      "nav_title": "Security",
+      "expected_header": "Security Ops Center",
+      "observed_header": "Security Ops Center",
+      "checks": {
+        "Overview": false,
+        "Alerts": false,
+        "Findings": false,
+        "Health": false,
+        "Quick Actions": false
+      },
+      "screenshot": "docs/evidence/p99/screenshots/security.png"
+    },
+    {
+      "id": "projects",
+      "nav_title": "Projects",
+      "expected_header": "Projects & Phases",
+      "observed_header": "Projects & Phases",
+      "checks": {
+        "Current": true,
+        "Timeline": true,
+        "Workflow": true,
+        "Actions": true
+      },
+      "screenshot": "docs/evidence/p99/screenshots/projects.png"
+    },
+    {
+      "id": "terminal",
+      "nav_title": "Terminal",
+      "expected_header": "Terminal",
+      "observed_header": "Terminal",
+      "checks": {
+        "Interactive Shell": true,
+        "New Session": true,
+        "Session": true
+      },
+      "screenshot": "docs/evidence/p99/screenshots/terminal.png"
+    }
+  ]
+}

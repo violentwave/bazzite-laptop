@@ -25,7 +25,9 @@ export function ShellSidePane({
 
   useEffect(() => {
     if (activeTab === "logs" && session) {
-      getAuditLog(session.id, 20).then(setAuditEntries);
+      getAuditLog(session.id, 20)
+        .then(setAuditEntries)
+        .catch(() => setAuditEntries([]));
     }
   }, [activeTab, session, getAuditLog]);
 
@@ -136,6 +138,8 @@ function AuditLogView({
                 color:
                   entry.action === "command_executed"
                     ? "var(--accent-primary)"
+                    : entry.action === "command_blocked"
+                    ? "var(--danger)"
                     : entry.action === "session_terminated"
                     ? "var(--danger)"
                     : "var(--text-secondary)",
@@ -189,26 +193,16 @@ function ArtifactsView({ session }: { session: ShellSession | null }) {
     );
   }
 
-  // Placeholder for artifact files
-  const artifacts = session.command_history.length > 0
-    ? [
-        {
-          name: "command-history.txt",
-          type: "text",
-          size: `${session.command_history.length} commands`,
-          time: "Current session",
-        },
-      ]
-    : [];
+  const commands = session.command_history || [];
 
-  if (artifacts.length === 0) {
+  if (commands.length === 0) {
     return (
       <div className="p-4 text-center">
         <p className="text-sm" style={{ color: "var(--text-tertiary)" }}>
-          No artifacts generated yet
+          No command records for this session yet
         </p>
         <p className="text-xs mt-1" style={{ color: "var(--text-tertiary)" }}>
-          Artifacts will appear here when available
+          Artifact streaming is not wired in backend; this view shows command history only.
         </p>
       </div>
     );
@@ -216,10 +210,13 @@ function ArtifactsView({ session }: { session: ShellSession | null }) {
 
   return (
     <div className="p-2 space-y-1">
-      {artifacts.map((artifact, index) => (
+      <p className="text-xs px-2 pb-2" style={{ color: "var(--text-tertiary)" }}>
+        Showing command history summary (no dedicated artifact backend channel).
+      </p>
+      {commands.slice(-20).reverse().map((command, index) => (
         <div
           key={index}
-          className="flex items-center gap-3 p-3 rounded cursor-pointer transition-colors"
+          className="flex items-center gap-3 p-3 rounded"
           style={{
             background: "var(--base-02)",
           }}
@@ -249,13 +246,13 @@ function ArtifactsView({ session }: { session: ShellSession | null }) {
               className="text-xs font-medium truncate"
               style={{ color: "var(--text-primary)" }}
             >
-              {artifact.name}
+              {command}
             </div>
             <div
               className="text-xs"
               style={{ color: "var(--text-tertiary)" }}
             >
-              {artifact.size}
+              Session command history
             </div>
           </div>
 
@@ -264,7 +261,11 @@ function ArtifactsView({ session }: { session: ShellSession | null }) {
             className="text-xs"
             style={{ color: "var(--text-tertiary)" }}
           >
-            {artifact.time}
+            {new Date(session.updated_at).toLocaleTimeString([], {
+              hour: "2-digit",
+              minute: "2-digit",
+              second: "2-digit",
+            })}
           </div>
         </div>
       ))}

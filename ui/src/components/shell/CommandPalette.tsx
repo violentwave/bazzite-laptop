@@ -7,26 +7,17 @@ interface Command {
   id: string;
   title: string;
   shortcut?: string;
-  icon?: React.ReactNode;
   category: string;
-  action: () => void;
+  panel?: string;
 }
 
-// Placeholder commands - to be populated from MCP tools in future phases
-const placeholderCommands: Command[] = [
-  { id: "goto-chat", title: "Go to Chat", shortcut: "⌘1", category: "Navigation", action: () => {} },
-  { id: "goto-security", title: "Go to Security", shortcut: "⌘2", category: "Navigation", action: () => {} },
-  { id: "goto-models", title: "Go to Models", shortcut: "⌘3", category: "Navigation", action: () => {} },
-  { id: "goto-terminal", title: "Go to Terminal", shortcut: "⌘4", category: "Navigation", action: () => {} },
-  { id: "goto-projects", title: "Go to Projects", shortcut: "⌘5", category: "Navigation", action: () => {} },
-  { id: "goto-settings", title: "Go to Settings", shortcut: "⌘6", category: "Navigation", action: () => {} },
-  { id: "security-status", title: "Check Security Status", category: "Tools", action: () => {} },
-  { id: "system-health", title: "System Health Check", category: "Tools", action: () => {} },
-  { id: "gpu-status", title: "GPU Status", category: "Tools", action: () => {} },
-  { id: "run-security-audit", title: "Run Security Audit", category: "Agents", action: () => {} },
-  { id: "timer-health", title: "Check Timer Health", category: "Agents", action: () => {} },
-  { id: "toggle-theme", title: "Toggle Dark/Light Theme", category: "Settings", action: () => {} },
-  { id: "open-settings", title: "Open Settings", shortcut: "⌘,", category: "Settings", action: () => {} },
+const commands: Command[] = [
+  { id: "goto-chat", title: "Go to Chat", shortcut: "⌘1", category: "Navigation", panel: "chat" },
+  { id: "goto-security", title: "Go to Security", shortcut: "⌘2", category: "Navigation", panel: "security" },
+  { id: "goto-models", title: "Go to Models", shortcut: "⌘3", category: "Navigation", panel: "models" },
+  { id: "goto-terminal", title: "Go to Terminal", shortcut: "⌘4", category: "Navigation", panel: "terminal" },
+  { id: "goto-projects", title: "Go to Projects", shortcut: "⌘5", category: "Navigation", panel: "projects" },
+  { id: "goto-settings", title: "Go to Settings", shortcut: "⌘6", category: "Navigation", panel: "settings" },
 ];
 
 export function CommandPalette() {
@@ -35,7 +26,7 @@ export function CommandPalette() {
   const [selectedIndex, setSelectedIndex] = useState(0);
 
   // Filter commands based on search
-  const filteredCommands = placeholderCommands.filter((cmd) =>
+  const filteredCommands = commands.filter((cmd) =>
     cmd.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
     cmd.category.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -95,13 +86,10 @@ export function CommandPalette() {
   }, [handleKeyDown]);
 
   const executeCommand = (command: Command) => {
-    // Handle navigation commands
-    if (command.id.startsWith("goto-")) {
-      const panel = command.id.replace("goto-", "");
-      setActivePanel(panel);
+    if (command.panel) {
+      setActivePanel(command.panel);
     }
-    
-    command.action();
+
     closeCommandPalette();
     setSearchQuery("");
   };
@@ -176,7 +164,7 @@ export function CommandPalette() {
                 </div>
 
                 {/* Commands */}
-                {commands.map((command, idx) => {
+                {commands.map((command) => {
                   const globalIndex = filteredCommands.findIndex(
                     (c) => c.id === command.id
                   );
@@ -231,7 +219,7 @@ export function CommandPalette() {
             <span>↑↓ Navigate</span>
             <span>↵ Select</span>
           </div>
-          <span>{filteredCommands.length} commands</span>
+          <span>{filteredCommands.length} navigation commands</span>
         </div>
       </div>
     </div>

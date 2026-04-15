@@ -33,6 +33,8 @@ export interface CommandResult {
   stderr?: string;
   exit_code?: number;
   error?: string;
+  error_detail?: string;
+  operator_action?: string;
 }
 
 /** Audit log entry */

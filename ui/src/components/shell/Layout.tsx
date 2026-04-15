@@ -84,12 +84,6 @@ function AuditStrip() {
           <span style={{ color: "var(--text-tertiary)" }}>
             {formatTime(lastEntry.timestamp)}
           </span>
-          <button
-            className="hover:underline"
-            style={{ color: "var(--accent-primary)" }}
-          >
-            History
-          </button>
         </>
       )}
     </div>

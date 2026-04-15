@@ -3,6 +3,7 @@
 import importlib
 import sys
 from pathlib import Path
+from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -200,6 +201,32 @@ class TestMainModule:
         main_path = Path(__file__).parent.parent / "ai" / "mcp_bridge" / "__main__.py"
         source = main_path.read_text()
         assert 'scope="threat_intel"' in source or "scope='threat_intel'" in source
+
+    def test_main_passes_cors_middleware_to_run(self):
+        """Bridge startup should attach localhost-only CORS middleware."""
+        from ai.mcp_bridge import __main__ as main_module
+
+        fake_app = MagicMock()
+
+        with (
+            patch(
+                "argparse.ArgumentParser.parse_args",
+                return_value=SimpleNamespace(bind="127.0.0.1", port=8766),
+            ),
+            patch("ai.config.load_keys", return_value=True),
+            patch("ai.mcp_bridge.server._assert_localhost"),
+            patch("ai.mcp_bridge.server.create_app", return_value=fake_app),
+            patch("signal.signal"),
+        ):
+            main_module.main()
+
+        fake_app.run.assert_called_once()
+        run_kwargs = fake_app.run.call_args.kwargs
+        assert run_kwargs["transport"] == "streamable-http"
+        assert run_kwargs["host"] == "127.0.0.1"
+        assert run_kwargs["port"] == 8766
+        assert "middleware" in run_kwargs
+        assert len(run_kwargs["middleware"]) == 1
 
 
 # ---------------------------------------------------------------------------

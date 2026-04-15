@@ -41,8 +41,10 @@ try:
     )
 except Exception:  # noqa: BLE001
     load_keys = None  # type: ignore[assignment]
+
     class AllProvidersExhausted(Exception):  # type: ignore[misc]
         """Sentinel — never raised when import succeeds."""
+
     route_chat = None  # type: ignore[assignment]
     route_query_stream = None  # type: ignore[assignment]
     reset_health_scores = None  # type: ignore[assignment]
@@ -61,6 +63,7 @@ def _init_sentry() -> None:
     """
     try:
         import sentry_sdk  # noqa: PLC0415
+
         keys = load_keys("monitoring")
         dsn = keys.get("SENTRY_DSN", "")
         if dsn:
@@ -78,6 +81,7 @@ DEFAULT_PORT = int(os.environ.get("LLM_PROXY_PORT", "8767"))
 _LLM_STATUS_FILE = Path.home() / "security" / "llm-status.json"
 _STATUS_WRITE_INTERVAL_S = 300  # 5 minutes
 _status_timer: threading.Timer | None = None
+LOCAL_ORIGIN_REGEX = r"^https?://(localhost|127\.0\.0\.1)(:\d+)?$"
 
 
 def _write_llm_status() -> None:
@@ -143,11 +147,13 @@ async def _stream_response(task_type: str, messages: list[dict]) -> AsyncGenerat
                 "object": "chat.completion.chunk",
                 "created": int(time.time()),
                 "model": f"bazzite-router/{task_type}",
-                "choices": [{
-                    "index": 0,
-                    "delta": {"content": chunk},
-                    "finish_reason": None,
-                }],
+                "choices": [
+                    {
+                        "index": 0,
+                        "delta": {"content": chunk},
+                        "finish_reason": None,
+                    }
+                ],
             }
             yield f"data: {json.dumps(data)}\n\n"
     except AllProvidersExhausted:
@@ -158,16 +164,18 @@ async def _stream_response(task_type: str, messages: list[dict]) -> AsyncGenerat
             "object": "chat.completion.chunk",
             "created": int(time.time()),
             "model": f"bazzite-router/{task_type}",
-            "choices": [{
-                "index": 0,
-                "delta": {
-                    "content": (
-                        "All providers are temporarily unavailable."
-                        " Please try again in 30 seconds."
-                    ),
-                },
-                "finish_reason": "stop",
-            }],
+            "choices": [
+                {
+                    "index": 0,
+                    "delta": {
+                        "content": (
+                            "All providers are temporarily unavailable."
+                            " Please try again in 30 seconds."
+                        ),
+                    },
+                    "finish_reason": "stop",
+                }
+            ],
         }
         yield f"data: {json.dumps(exhausted_data)}\n\n"
         yield "data: [DONE]\n\n"
@@ -181,14 +189,16 @@ async def _stream_response(task_type: str, messages: list[dict]) -> AsyncGenerat
             "object": "chat.completion.chunk",
             "created": int(time.time()),
             "model": f"bazzite-router/{task_type}",
-            "choices": [{
-                "index": 0,
-                "delta": {
-                    "content": f"\n\n[Stream interrupted: {type(e).__name__}. "
-                    "Please regenerate.]",
-                },
-                "finish_reason": "error",
-            }],
+            "choices": [
+                {
+                    "index": 0,
+                    "delta": {
+                        "content": f"\n\n[Stream interrupted: {type(e).__name__}. "
+                        "Please regenerate.]",
+                    },
+                    "finish_reason": "error",
+                }
+            ],
         }
         yield f"data: {json.dumps(error_data)}\n\n"
         yield "data: [DONE]\n\n"
@@ -200,11 +210,13 @@ async def _stream_response(task_type: str, messages: list[dict]) -> AsyncGenerat
         "object": "chat.completion.chunk",
         "created": int(time.time()),
         "model": f"bazzite-router/{task_type}",
-        "choices": [{
-            "index": 0,
-            "delta": {},
-            "finish_reason": "stop",
-        }],
+        "choices": [
+            {
+                "index": 0,
+                "delta": {},
+                "finish_reason": "stop",
+            }
+        ],
     }
     yield f"data: {json.dumps(final)}\n\n"
     yield "data: [DONE]\n\n"
@@ -216,6 +228,8 @@ def create_app():
         reset_health_scores()
 
     from starlette.applications import Starlette
+    from starlette.middleware import Middleware
+    from starlette.middleware.cors import CORSMiddleware
     from starlette.requests import Request
     from starlette.responses import JSONResponse, StreamingResponse
     from starlette.routing import Route
@@ -255,8 +269,8 @@ def create_app():
             try:
                 contexts = retrieve_relevant_context(user_message)
                 if contexts:
-                    context_text = (
-                        "Relevant context from past conversations:\n" + "\n".join(contexts)
+                    context_text = "Relevant context from past conversations:\n" + "\n".join(
+                        contexts
                     )
                     messages = list(messages)
                     if messages and messages[0].get("role") == "system":
@@ -287,36 +301,44 @@ def create_app():
                 except Exception as _mem_exc:  # noqa: BLE001
                     logger.debug("Memory storage skipped: %s", _mem_exc)
 
-            return JSONResponse({
-                "id": f"chatcmpl-{int(time.time())}",
-                "object": "chat.completion",
-                "created": int(time.time()),
-                "model": f"bazzite-router/{task_type}",
-                "choices": [{
-                    "index": 0,
-                    "message": {"role": "assistant", "content": result},
-                    "finish_reason": "stop",
-                }],
-                "usage": {"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0},
-            })
+            return JSONResponse(
+                {
+                    "id": f"chatcmpl-{int(time.time())}",
+                    "object": "chat.completion",
+                    "created": int(time.time()),
+                    "model": f"bazzite-router/{task_type}",
+                    "choices": [
+                        {
+                            "index": 0,
+                            "message": {"role": "assistant", "content": result},
+                            "finish_reason": "stop",
+                        }
+                    ],
+                    "usage": {"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0},
+                }
+            )
         except AllProvidersExhausted:
-            return JSONResponse({
-                "id": "chatcmpl-error",
-                "object": "chat.completion",
-                "created": int(time.time()),
-                "model": f"bazzite-router/{task_type}",
-                "choices": [{
-                    "index": 0,
-                    "message": {
-                        "role": "assistant",
-                        "content": (
-                            "All providers are temporarily unavailable."
-                            " Please try again in 30 seconds."
-                        ),
-                    },
-                    "finish_reason": "stop",
-                }],
-            })
+            return JSONResponse(
+                {
+                    "id": "chatcmpl-error",
+                    "object": "chat.completion",
+                    "created": int(time.time()),
+                    "model": f"bazzite-router/{task_type}",
+                    "choices": [
+                        {
+                            "index": 0,
+                            "message": {
+                                "role": "assistant",
+                                "content": (
+                                    "All providers are temporarily unavailable."
+                                    " Please try again in 30 seconds."
+                                ),
+                            },
+                            "finish_reason": "stop",
+                        }
+                    ],
+                }
+            )
         except Exception as e:
             logger.error("Router query failed: %s", e)
             return JSONResponse(
@@ -338,11 +360,24 @@ def create_app():
     async def health(request: Request):
         return JSONResponse({"status": "ok", "service": "bazzite-llm-proxy"})
 
-    return Starlette(routes=[
-        Route("/v1/chat/completions", chat_completions, methods=["POST"]),
-        Route("/v1/models", list_models, methods=["GET"]),
-        Route("/health", health, methods=["GET"]),
-    ])
+    cors_middleware = [
+        Middleware(
+            CORSMiddleware,
+            allow_origin_regex=LOCAL_ORIGIN_REGEX,
+            allow_methods=["GET", "POST", "OPTIONS"],
+            allow_headers=["*"],
+            max_age=600,
+        )
+    ]
+
+    return Starlette(
+        routes=[
+            Route("/v1/chat/completions", chat_completions, methods=["POST"]),
+            Route("/v1/models", list_models, methods=["GET"]),
+            Route("/health", health, methods=["GET"]),
+        ],
+        middleware=cors_middleware,
+    )
 
 
 def main():

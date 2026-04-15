@@ -4,7 +4,8 @@ import { useReducer, useCallback, useRef, useState, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { Message, Conversation, Attachment, ContextPin, TokenUsage } from '@/types/chat';
 import { streamChatCompletion } from '@/lib/llm-client';
-import { executeTool, formatToolResult } from '@/lib/mcp-client';
+import { checkLLMProxyHealth } from '@/lib/llm-client';
+import { checkMCPBridgeHealth, executeTool, formatToolResult } from '@/lib/mcp-client';
 
 interface ChatState {
   messages: Message[];
@@ -100,6 +101,8 @@ export function useChat() {
   const [state, dispatch] = useReducer(chatReducer, initialState);
   const abortControllerRef = useRef<(() => void) | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const streamingContentRef = useRef('');
+  const assistantIdRef = useRef<string | null>(null);
 
   // Scroll to bottom when messages change
   useEffect(() => {
@@ -109,6 +112,26 @@ export function useChat() {
   const sendMessage = useCallback(
     async (content: string) => {
       if (!content.trim() && state.attachedFiles.length === 0) return;
+
+      const [llmHealthy, mcpHealthy] = await Promise.all([
+        checkLLMProxyHealth(),
+        checkMCPBridgeHealth(),
+      ]);
+
+      if (!llmHealthy) {
+        dispatch({
+          type: 'SET_ERROR',
+          payload: 'LLM proxy unavailable. Ensure bazzite-llm-proxy.service is running on 127.0.0.1:8767.',
+        });
+        return;
+      }
+
+      if (!mcpHealthy) {
+        dispatch({
+          type: 'SET_ERROR',
+          payload: 'MCP bridge unavailable. Tool execution will fail until bazzite-mcp-bridge.service is running on 127.0.0.1:8766.',
+        });
+      }
 
       // Create user message
       const userMessage: Message = {
@@ -129,6 +152,7 @@ export function useChat() {
 
       // Create placeholder for assistant message
       const assistantMessageId = uuidv4();
+      assistantIdRef.current = assistantMessageId;
       const assistantMessage: Message = {
         id: assistantMessageId,
         role: 'assistant',
@@ -140,6 +164,7 @@ export function useChat() {
       dispatch({ type: 'ADD_MESSAGE', payload: assistantMessage });
       dispatch({ type: 'SET_STREAMING', payload: true });
       dispatch({ type: 'CLEAR_STREAMING_CONTENT' });
+      streamingContentRef.current = '';
 
       try {
         // Get all messages for context
@@ -150,9 +175,11 @@ export function useChat() {
           allMessages,
           {
             onChunk: (chunk) => {
+              streamingContentRef.current += chunk;
               dispatch({ type: 'APPEND_STREAMING_CONTENT', payload: chunk });
             },
             onComplete: (fullResponse) => {
+              streamingContentRef.current = '';
               dispatch({ type: 'SET_STREAMING', payload: false });
               dispatch({
                 type: 'UPDATE_MESSAGE',
@@ -170,13 +197,15 @@ export function useChat() {
               checkAndExecuteTools(fullResponse, assistantMessageId);
             },
             onError: (error) => {
+              const partialContent = streamingContentRef.current;
+              streamingContentRef.current = '';
               dispatch({ type: 'SET_STREAMING', payload: false });
               dispatch({
                 type: 'UPDATE_MESSAGE',
                 payload: {
                   id: assistantMessageId,
                   updates: {
-                    content: state.streamingContent || 'Error: Failed to get response',
+                    content: partialContent || 'Error: Failed to get response',
                     isStreaming: false,
                     error: error.message,
                   },
@@ -208,7 +237,7 @@ export function useChat() {
         });
       }
     },
-    [state.messages, state.attachedFiles, state.currentModel, state.streamingContent]
+    [state.messages, state.attachedFiles, state.currentModel]
   );
 
   const checkAndExecuteTools = useCallback(
@@ -290,7 +319,24 @@ export function useChat() {
       abortControllerRef.current();
       abortControllerRef.current = null;
     }
+    // Finalize the current assistant message with whatever content was streamed
+    const partialContent = streamingContentRef.current;
+    if (partialContent && assistantIdRef.current) {
+      dispatch({
+        type: 'UPDATE_MESSAGE',
+        payload: {
+          id: assistantIdRef.current,
+          updates: {
+            content: partialContent,
+            isStreaming: false,
+          },
+        },
+      });
+      streamingContentRef.current = '';
+      assistantIdRef.current = null;
+    }
     dispatch({ type: 'SET_STREAMING', payload: false });
+    dispatch({ type: 'CLEAR_STREAMING_CONTENT' });
   }, []);
 
   const addAttachment = useCallback((file: File) => {

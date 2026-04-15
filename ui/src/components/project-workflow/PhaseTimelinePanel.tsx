@@ -65,6 +65,21 @@ export function PhaseTimelinePanel({ timeline, isLoading }: PhaseTimelinePanelPr
             const statusColor = getPhaseStatusColor(phase.status);
             const isLast = index === sortedTimeline.length - 1;
 
+            // Notion status badge when it differs from local status
+            const notionBadge = phase.notion_status &&
+              phase.notion_status.toLowerCase() !== phase.status.toLowerCase() ? (
+              <span
+                className="text-[10px] px-1 rounded"
+                style={{
+                  background: "var(--base-03)",
+                  color: "var(--accent-primary)",
+                }}
+                title={`Notion: ${phase.notion_status}`}
+              >
+                N
+              </span>
+            ) : null;
+
             return (
               <div key={phase.number} className="flex items-start gap-3">
                 {/* Timeline Line */}
@@ -75,6 +90,8 @@ export function PhaseTimelinePanel({ timeline, isLoading }: PhaseTimelinePanelPr
                       background:
                         phase.status === "in_progress"
                           ? statusColor
+                          : phase.status === "deferred"
+                          ? "var(--warning)"
                           : "var(--base-02)",
                       borderColor: statusColor,
                     }}
@@ -91,7 +108,8 @@ export function PhaseTimelinePanel({ timeline, isLoading }: PhaseTimelinePanelPr
                 <div
                   className="flex-1 pb-3"
                   style={{
-                    opacity: phase.status === "planned" ? 0.6 : 1,
+                    opacity:
+                      phase.status === "planned" ? 0.6 : 1,
                   }}
                 >
                   <div className="flex items-center gap-2 mb-0.5">
@@ -101,7 +119,7 @@ export function PhaseTimelinePanel({ timeline, isLoading }: PhaseTimelinePanelPr
                     >
                       P{phase.number}
                     </span>
-                    {phase.status === "in_progress" && (
+                    {(phase.status === "in_progress") && (
                       <span
                         className="text-[10px] px-1.5 py-0.5 rounded"
                         style={{
@@ -112,6 +130,18 @@ export function PhaseTimelinePanel({ timeline, isLoading }: PhaseTimelinePanelPr
                         Active
                       </span>
                     )}
+                    {phase.status === "deferred" && (
+                      <span
+                        className="text-[10px] px-1.5 py-0.5 rounded"
+                        style={{
+                          background: "var(--base-03)",
+                          color: "var(--warning)",
+                        }}
+                      >
+                        Deferred
+                      </span>
+                    )}
+                    {notionBadge}
                   </div>
                   <p
                     className="text-xs truncate"

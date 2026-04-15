@@ -1,0 +1,204 @@
+{
+  "captured_at": "2026-04-14T21:32:46.410Z",
+  "panels": [
+    {
+      "id": "chat",
+      "header": "Chat Workspace",
+      "h2s": [
+        "Welcome to Bazzite Control Console"
+      ],
+      "h3s": [],
+      "buttons": [
+        "Search⌘K",
+        "Run security auditCheck system security status",
+        "System health checkView CPU, GPU, and memory stats",
+        "Analyze codeGet insights on your codebase",
+        "What can you do?Learn about available commands"
+      ],
+      "bodyText": [
+        "Chat Workspace",
+        "Live",
+        "Welcome to Bazzite Control Console",
+        "Your AI-powered operator console for Bazzite. Ask me anything or try one of these suggestions.",
+        "Run security audit",
+        "Check system security status",
+        "System health check",
+        "View CPU, GPU, and memory stats",
+        "Analyze code",
+        "Get insights on your codebase",
+        "What can you do?",
+        "Learn about available commands",
+        "Ctrl+K",
+        "Command palette",
+        "Shift+Enter",
+        "New line",
+        "Shift + Enter for new line",
+        "Max file size: 10MB"
+      ]
+    },
+    {
+      "id": "settings",
+      "header": "Settings",
+      "h2s": [],
+      "h3s": [
+        "PIN Protection Required"
+      ],
+      "buttons": [
+        "Search⌘K",
+        "Set Up PIN",
+        "Set Up PIN"
+      ],
+      "bodyText": [
+        "Settings",
+        "PIN Required",
+        "Settings",
+        "Manage API keys and sensitive configuration",
+        "Set Up PIN",
+        "Cannot connect to MCP bridge. Ensure the bridge is running on port 8766.",
+        "PIN Protection Required",
+        "You need to set up a PIN before you can manage sensitive settings. This protects your API keys and other secrets.",
+        "Set Up PIN",
+        "No recent actions"
+      ]
+    },
+    {
+      "id": "models",
+      "header": "Models & Providers",
+      "h2s": [],
+      "h3s": [
+        "Connection Failed"
+      ],
+      "buttons": [
+        "Search⌘K",
+        "Refresh",
+        "Health0",
+        "Models0",
+        "Routing0",
+        "Retry"
+      ],
+      "bodyText": [
+        "Models & Providers",
+        "Runtime Data",
+        "Providers & Models",
+        "0 configured · 0 healthy",
+        "Refresh",
+        "Health0",
+        "Models0",
+        "Routing0",
+        "Connection Failed",
+        "Cannot connect to provider service: Failed to fetch",
+        "Action needed: Ensure MCP bridge is running on port 8766",
+        "Retry",
+        "0/ 0",
+        "Configured",
+        "0/ 0",
+        "Healthy",
+        "0/ 0",
+        "Degraded",
+        "0/ 0",
+        "Blocked",
+        "Provider",
+        "Status",
+        "Health Score",
+        "Models",
+        "Last Error"
+      ]
+    },
+    {
+      "id": "security",
+      "header": "Security Ops Center",
+      "h2s": [],
+      "h3s": [
+        "Security Data Unavailable"
+      ],
+      "buttons": [
+        "Search⌘K",
+        "Retry"
+      ],
+      "bodyText": [
+        "Security Ops Center",
+        "Live Signals",
+        "Security Data Unavailable",
+        "Cannot connect to security service: Failed to fetch",
+        "Action needed: Ensure MCP bridge is running on port 8766",
+        "Retry"
+      ]
+    },
+    {
+      "id": "projects",
+      "header": "Projects & Phases",
+      "h2s": [
+        "Projects & Workflow"
+      ],
+      "h3s": [
+        "Current Phase",
+        "Recommended Actions",
+        "Phase Timeline",
+        "Recent Workflow Runs",
+        "Recent Artifacts"
+      ],
+      "buttons": [
+        "Search⌘K",
+        "Refresh",
+        "💬Open Chat",
+        "💻Open Shell",
+        "🛡️Security Ops"
+      ],
+      "bodyText": [
+        "Projects & Phases",
+        "Phase Sync",
+        "Projects & Workflow",
+        "Local only",
+        "Refresh",
+        "Project data load failed: Failed to fetch",
+        "CURRENT PHASE",
+        "No active phase detected. Check HANDOFF.md for phase status.",
+        "RECOMMENDED ACTIONS",
+        "Awaiting project context.",
+        "Quick Links",
+        "💬",
+        "Open Chat",
+        "💻",
+        "Open Shell",
+        "🛡️",
+        "Security Ops",
+        "PHASE TIMELINE",
+        "No phase documentation found",
+        "RECENT WORKFLOW RUNS",
+        "0",
+        "No recent workflow runs",
+        "RECENT ARTIFACTS",
+        "0",
+        "No artifacts generated yet"
+      ]
+    },
+    {
+      "id": "terminal",
+      "header": "Terminal",
+      "h2s": [
+        "Interactive Shell"
+      ],
+      "h3s": [
+        "No Active Session"
+      ],
+      "buttons": [
+        "Search⌘K",
+        "Show Sidebar",
+        "+ New Session"
+      ],
+      "bodyText": [
+        "Terminal",
+        "Session Managed",
+        "Interactive Shell",
+        "Error",
+        "Show Sidebar",
+        "+ New Session",
+        "No Active Session",
+        "Create a new shell session to start executing commands in the terminal workspace.",
+        "Press \"+ New Session\" to begin",
+        "No active session",
+        "--:--"
+      ]
+    }
+  ]
+}

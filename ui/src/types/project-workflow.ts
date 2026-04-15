@@ -1,9 +1,10 @@
-/** Project + Workflow + Phase Panels types */
+/** Project + Workflow + Phase Panels types (P93 truth integration) */
 
-export type PhaseStatus = "planned" | "ready" | "in_progress" | "completed" | "blocked";
-export type ReadinessStatus = "ready" | "blocked" | "degraded" | "unknown";
+export type PhaseStatus = "planned" | "ready" | "in_progress" | "completed" | "blocked" | "deferred" | "cancelled";
+export type ReadinessStatus = "ready" | "blocked" | "degraded" | "deferred" | "in_progress" | "unknown";
 export type WorkflowStatus = "pending" | "running" | "completed" | "failed" | "cancelled";
 export type PreflightGateStatus = "pass" | "fail" | "warn";
+export type NotionSyncStatus = "synced" | "stale" | "unavailable" | "degraded";
 
 /** Current phase information */
 export interface PhaseInfo {
@@ -15,6 +16,15 @@ export interface PhaseInfo {
   next_action: string | null;
   risk_tier: string | null;
   backend: string | null;
+  /** Notion status override when available */
+  notion_status?: string | null;
+}
+
+/** Latest completed phase summary */
+export interface LatestCompletedPhase {
+  phase_number: number;
+  phase_name: string;
+  status: string;
 }
 
 /** Workflow run summary */
@@ -47,16 +57,22 @@ export interface PhaseTimelineEntry {
   status: PhaseStatus;
   doc_file: string;
   modified: string;
+  /** Notion status when available */
+  notion_status?: string | null;
 }
 
 /** Complete project context */
 export interface ProjectContext {
+  success: boolean;
   current_phase: PhaseInfo | null;
+  latest_completed_phase: LatestCompletedPhase | null;
   workflow_count: number;
   artifact_count: number;
   recommendations: string[];
   preflight_status: PreflightGateStatus;
   generated_at: string;
+  notion_sync_status: NotionSyncStatus;
+  notion_sync_message: string;
 }
 
 /** Preflight summary from P75 */

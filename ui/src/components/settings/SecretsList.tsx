@@ -30,6 +30,7 @@ export function SecretsList({
   const [editingKey, setEditingKey] = useState<string | null>(null);
   const [editValue, setEditValue] = useState('');
   const [isLoading, setIsLoading] = useState<Record<string, boolean>>({});
+  const [deleteConfirmKey, setDeleteConfirmKey] = useState<string | null>(null);
 
   const groupedSecrets = secrets.reduce((acc, secret) => {
     if (!acc[secret.category]) {
@@ -84,13 +85,15 @@ export function SecretsList({
       return;
     }
 
-    if (!confirm(`Are you sure you want to delete ${keyName}?`)) {
+    if (deleteConfirmKey !== keyName) {
+      setDeleteConfirmKey(keyName);
       return;
     }
 
     setIsLoading((prev) => ({ ...prev, [keyName]: true }));
     try {
       await onDelete(keyName);
+      setDeleteConfirmKey(null);
     } finally {
       setIsLoading((prev) => ({ ...prev, [keyName]: false }));
     }
@@ -250,16 +253,22 @@ export function SecretsList({
                         disabled={isLoading[secret.name] || !secret.is_set}
                         className="p-2 rounded-lg transition-colors disabled:opacity-50"
                         style={{
-                          background: 'var(--base-03)',
+                          background:
+                            deleteConfirmKey === secret.name ? 'rgba(239, 68, 68, 0.2)' : 'var(--base-03)',
                           color: 'var(--danger)',
                         }}
-                        title="Delete"
+                        title={deleteConfirmKey === secret.name ? 'Click again to confirm' : 'Delete'}
                       >
                         <TrashIcon />
                       </button>
                     </>
                   )}
                 </div>
+                {deleteConfirmKey === secret.name && (
+                  <div className="text-xs mt-1" style={{ color: 'var(--warning)' }}>
+                    Click delete again to confirm removal.
+                  </div>
+                )}
               </div>
             ))}
           </div>

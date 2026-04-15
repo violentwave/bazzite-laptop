@@ -10,7 +10,7 @@ Provides:
 - Provider state refresh hooks
 
 Security model:
-- PIN is hashed with bcrypt and stored in ~/.config/bazzite-ai/settings.db
+- PIN is hashed with PBKDF2-SHA256 and stored in ~/.config/bazzite-ai/settings.db
 - Secrets are never returned in full to the browser
 - All reveal/update operations require fresh PIN verification
 - Audit log tracks: unlock, reveal, replace, add, delete, failure
@@ -100,7 +100,7 @@ class SecretEntry:
 
 
 class PINManager:
-    """Manages PIN authentication with bcrypt-like hashing."""
+    """Manages PIN authentication with PBKDF2-SHA256 hashing."""
 
     def __init__(self, db_path: Path = SETTINGS_DB):
         self.db_path = db_path

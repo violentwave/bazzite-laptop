@@ -14,39 +14,14 @@ interface Notification {
   };
 }
 
-// Placeholder notifications - to be connected to real-time events in future phases
-const placeholderNotifications: Notification[] = [
-  {
-    id: "1",
-    type: "high",
-    title: "Phase P76 Complete",
-    message: "Ingestion automation successfully implemented",
-    timestamp: "2 min ago",
-    action: { label: "View" },
-  },
-  {
-    id: "2",
-    type: "medium",
-    title: "Timer Warning",
-    message: "health.timer hasn't run in 24 hours",
-    timestamp: "15 min ago",
-    action: { label: "Check" },
-  },
-  {
-    id: "3",
-    type: "low",
-    title: "Provider Switched",
-    message: "Switched from OpenRouter to Groq due to latency",
-    timestamp: "1 hour ago",
-  },
-];
+const notifications: Notification[] = [];
 
 export function NotificationsPanel() {
   const { isNotificationsOpen, toggleNotifications } = useShell();
 
   if (!isNotificationsOpen) return null;
 
-  const criticalCount = placeholderNotifications.filter(
+  const criticalCount = notifications.filter(
     (n) => n.type === "critical" || n.type === "high"
   ).length;
 
@@ -86,13 +61,6 @@ export function NotificationsPanel() {
         </div>
         <div className="flex items-center gap-2">
           <button
-            className="p-1.5 rounded hover:bg-base-03 transition-colors"
-            style={{ color: "var(--text-tertiary)" }}
-            title="Settings"
-          >
-            <SettingsIcon />
-          </button>
-          <button
             onClick={toggleNotifications}
             className="p-1.5 rounded hover:bg-base-03 transition-colors"
             style={{ color: "var(--text-tertiary)" }}
@@ -105,16 +73,19 @@ export function NotificationsPanel() {
 
       {/* Notification List */}
       <div className="flex-1 overflow-y-auto">
-        {placeholderNotifications.length === 0 ? (
+        {notifications.length === 0 ? (
           <div
             className="flex flex-col items-center justify-center h-full px-4 text-center"
             style={{ color: "var(--text-secondary)" }}
           >
             <BellIcon className="mb-2 opacity-50" />
             <p>No notifications</p>
+            <p className="text-xs mt-2" style={{ color: "var(--text-tertiary)" }}>
+              Real-time notification streaming is not wired in this build.
+            </p>
           </div>
         ) : (
-          placeholderNotifications.map((notification) => (
+          notifications.map((notification) => (
             <NotificationItem
               key={notification.id}
               notification={notification}
@@ -123,23 +94,11 @@ export function NotificationsPanel() {
         )}
       </div>
 
-      {/* Footer */}
       <div
-        className="flex items-center justify-between px-4 py-3 border-t"
-        style={{ borderColor: "var(--base-04)" }}
+        className="px-4 py-3 border-t text-xs"
+        style={{ borderColor: "var(--base-04)", color: "var(--text-tertiary)" }}
       >
-        <button
-          className="text-sm hover:underline"
-          style={{ color: "var(--text-secondary)" }}
-        >
-          Mark all read
-        </button>
-        <button
-          className="text-sm hover:underline"
-          style={{ color: "var(--accent-primary)" }}
-        >
-          History
-        </button>
+        When backend event feeds are available, notifications will appear here.
       </div>
     </div>
   );
@@ -240,24 +199,6 @@ function BellIcon({ className }: { className?: string }) {
     >
       <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
       <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
-    </svg>
-  );
-}
-
-function SettingsIcon() {
-  return (
-    <svg
-      width="16"
-      height="16"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.47a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
-      <circle cx="12" cy="12" r="3" />
     </svg>
   );
 }

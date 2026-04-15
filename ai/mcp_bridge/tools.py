@@ -94,18 +94,41 @@ def _validate_args(tool_def: dict, args: dict) -> None:
                 raise ValueError(f"Argument '{arg_name}' is required")
             continue
 
-        if not isinstance(value, str):
-            raise ValueError(f"Argument '{arg_name}' must be a string")
+        arg_type = constraints.get("type", "string")
+
+        if arg_type in {"string", "str"}:
+            if not isinstance(value, str):
+                raise ValueError(f"Argument '{arg_name}' must be a string")
+        elif arg_type in {"integer", "int"}:
+            if not isinstance(value, int) or isinstance(value, bool):
+                raise ValueError(f"Argument '{arg_name}' must be an integer")
+        elif arg_type in {"number", "float"}:
+            if not isinstance(value, (int, float)) or isinstance(value, bool):
+                raise ValueError(f"Argument '{arg_name}' must be a number")
+        elif arg_type in {"bool", "boolean"}:
+            if not isinstance(value, bool):
+                raise ValueError(f"Argument '{arg_name}' must be a boolean")
+        else:
+            if not isinstance(value, str):
+                raise ValueError(f"Argument '{arg_name}' must be a string")
 
         # Pattern validation (regex)
         pattern = constraints.get("pattern")
-        if pattern and not re.match(pattern, value):
+        if pattern and isinstance(value, str) and not re.match(pattern, value):
             raise ValueError(f"Argument '{arg_name}' does not match pattern '{pattern}'")
 
         # Length validation
         max_length = constraints.get("max_length")
-        if max_length and len(value) > max_length:
+        if max_length and isinstance(value, str) and len(value) > max_length:
             raise ValueError(f"Argument '{arg_name}' exceeds max length {max_length}")
+
+        min_value = constraints.get("min")
+        max_value = constraints.get("max")
+        if isinstance(value, (int, float)) and not isinstance(value, bool):
+            if min_value is not None and value < min_value:
+                raise ValueError(f"Argument '{arg_name}' must be >= {min_value}")
+            if max_value is not None and value > max_value:
+                raise ValueError(f"Argument '{arg_name}' must be <= {max_value}")
 
 
 def _load_allowlist() -> dict:
@@ -982,7 +1005,7 @@ async def _execute_python_tool(tool_name: str, tool_def: dict, args: dict) -> st
                     indent=2,
                 )
 
-        # P85 Interactive Shell Gateway tools
+        # P85/P94 Interactive Shell Gateway tools
         elif tool_name == "shell.create_session":
             from ai.shell_service import create_session  # noqa: PLC0415
 
@@ -999,8 +1022,7 @@ async def _execute_python_tool(tool_name: str, tool_def: dict, args: dict) -> st
             from ai.shell_service import get_session  # noqa: PLC0415
 
             session_id = args.get("session_id", "")
-            result = get_session(session_id)
-            return json.dumps(result if result else {"error": "Session not found"}, indent=2)
+            return json.dumps(get_session(session_id), indent=2)
 
         elif tool_name == "shell.execute_command":
             from ai.shell_service import execute_command  # noqa: PLC0415
@@ -1019,8 +1041,7 @@ async def _execute_python_tool(tool_name: str, tool_def: dict, args: dict) -> st
             from ai.shell_service import get_session_context  # noqa: PLC0415
 
             session_id = args.get("session_id", "")
-            result = get_session_context(session_id)
-            return json.dumps(result if result else {"error": "Session not found"}, indent=2)
+            return json.dumps(get_session_context(session_id), indent=2)
 
         elif tool_name == "shell.get_audit_log":
             from ai.shell_service import get_audit_log  # noqa: PLC0415
@@ -2145,6 +2166,65 @@ async def _execute_python_tool(tool_name: str, tool_def: dict, args: dict) -> st
                     },
                     indent=2,
                 )
+
+        # P96 Figma Design Reconciliation tools
+        elif tool_name == "figma.list_teams":
+            from ai.figma_service import figma_list_teams  # noqa: PLC0415
+
+            result = figma_list_teams()
+            return json.dumps(result, indent=2)
+
+        elif tool_name == "figma.list_projects":
+            from ai.figma_service import figma_list_projects  # noqa: PLC0415
+
+            team_id = args.get("team_id", "")
+            result = figma_list_projects(team_id)
+            return json.dumps(result, indent=2)
+
+        elif tool_name == "figma.list_project_files":
+            from ai.figma_service import figma_list_project_files  # noqa: PLC0415
+
+            project_id = args.get("project_id", "")
+            result = figma_list_project_files(project_id)
+            return json.dumps(result, indent=2)
+
+        elif tool_name == "figma.get_file":
+            from ai.figma_service import figma_get_file  # noqa: PLC0415
+
+            file_key = args.get("file_key", "")
+            result = figma_get_file(file_key)
+            return json.dumps(result, indent=2)
+
+        elif tool_name == "figma.find_project":
+            from ai.figma_service import figma_find_project  # noqa: PLC0415
+
+            project_name = args.get("project_name", "Bazzite")
+            result = figma_find_project(project_name)
+            return json.dumps(result, indent=2)
+
+        elif tool_name == "figma.reconcile":
+            from ai.figma_service import figma_reconcile  # noqa: PLC0415
+
+            project_name = args.get("project_name", "Bazzite")
+            artifact_names = args.get("artifact_names")
+            result = figma_reconcile(project_name, artifact_names)
+            return json.dumps(result, indent=2)
+
+        elif tool_name == "notion.search":
+            result = await handle_notion_search(args)
+            return json.dumps(result, indent=2)
+
+        elif tool_name == "notion.get_page":
+            result = await handle_notion_get_page(args)
+            return json.dumps(result, indent=2)
+
+        elif tool_name == "notion.get_page_content":
+            result = await handle_notion_get_page_content(args)
+            return json.dumps(result, indent=2)
+
+        elif tool_name == "notion.query_database":
+            result = await handle_notion_query_database(args)
+            return json.dumps(result, indent=2)
 
         else:
             return f"[Tool '{tool_name}' not implemented]"

@@ -69,6 +69,12 @@ class TestAllowlistVsCode:
             "intel.ingest_pending",
             "workflow.history_steps",
             "workflow.cancel",
+            "figma.list_teams",
+            "figma.list_projects",
+            "figma.list_project_files",
+            "figma.get_file",
+            "figma.find_project",
+            "figma.reconcile",
         }
         missing = [
             name for name in allowlist if name not in prompt_text and name not in known_missing

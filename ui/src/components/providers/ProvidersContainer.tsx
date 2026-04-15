@@ -214,16 +214,7 @@ export function ProvidersContainer() {
             <span style={{ color: 'var(--danger)' }}>
               <strong>Authentication failed</strong> for {healthSummary.auth_broken_count} provider
               {healthSummary.auth_broken_count !== 1 ? 's' : ''}: {healthSummary.auth_broken_providers.join(', ')}.{' '}
-              <a
-                href="#"
-                onClick={(e) => {
-                  e.preventDefault();
-                  // Would open settings panel
-                }}
-                style={{ textDecoration: 'underline' }}
-              >
-                Update API keys
-              </a>
+              Open the Settings panel to update API keys.
             </span>
           </div>
         </div>
@@ -278,7 +269,7 @@ export function ProvidersContainer() {
         />
         <TabButton
           label="Routing"
-          count={routing.length || 5}
+          count={routing.length}
           isActive={activeTab === 'routing'}
           onClick={() => setActiveTab('routing')}
         />

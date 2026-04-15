@@ -1,15 +1,16 @@
 # Phase Index — Bazzite AI Layer
 
-> Master index of all phases P0-P90. Updated 2026-04-14.
+> Master index of all phases P0-P99. Updated 2026-04-14.
 > Source of truth: Notion `Bazzite Phases` database + `git log`.
 
 ## Quick Stats
 
 | Metric | Value |
 |--------|-------|
-| Total Phases | P0-P91 (92 phases) |
-| Completed | P0-P91 except deferred scopes |
-| In Progress | — |
+| Total Phases | P0-P99 (100 phases) |
+| Completed | P0-P99 except P80 (deferred) |
+| In Progress | None |
+| Deferred | P80 (Auth, 2FA, Recovery, Gmail) |
 | Repo Docs | docs/*.md, docs/patterns/frontend/*.md, docs/frontend-capability-pack/*.md |
 | Notion DB | `398c13ed-47f6-4f7e-9e54-eb339b462c90` |
 
@@ -124,6 +125,15 @@
 | P90 | Console Runtime Recovery + Contract Reconciliation | Done | — | 2026-04-14 | docs/P90_CONSOLE_RUNTIME_RECOVERY_CONTRACT_RECONCILIATION.md, ui/src/lib/mcp-client.ts, ui/src/hooks/use*.ts, ui/next.config.ts, ai/project_workflow_service.py, tests/test_project_workflow_service.py, scripts/start-console-ui.sh | Notion row | MCP streamable-http contract reconciliation, panel runtime recovery, and UI startup workflow |
 | P91 | Settings, Secrets, and PIN End-to-End Hardening | Done | — | 2026-04-14 | docs/P91_SETTINGS_SECRETS_PIN_HARDENING.md, ai/mcp_bridge/tools.py, ui/src/components/settings/SettingsContainer.tsx | Notion row | Precise error codes for settings operations, improved PIN/secrets flow error handling |
 | P92 | Providers + Security Surfaces Live Integration | Done | — | 2026-04-14 | docs/P92_PLAN.md, ai/mcp_bridge/tools.py, ui/src/hooks/useProviders.ts, ui/src/hooks/useSecurity.ts, ui/src/components/providers/ProvidersContainer.tsx, ui/src/components/security/SecurityContainer.tsx | Notion row | Live backend truth rendering with explicit degraded/manual states for provider and security surfaces |
+| P93 | Project, Workflow, and Phase Truth Integration | Done | — | 2026-04-14 | docs/P93_PLAN.md, ai/project_workflow_service.py, ui/src/components/project-workflow/*, ui/src/hooks/useProjectWorkflow.ts, ui/src/types/project-workflow.ts, tests/test_project_workflow_service.py | Notion row | HANDOFF truth integration with Notion parity, deferred phase handling, degraded sync states |
+| P94 | Shell Gateway End-to-End Runtime Recovery | Done | — | 2026-04-14 | docs/P94_PLAN.md, ai/shell_service.py, ai/mcp_bridge/tools.py, ui/src/components/shell-gateway/*, ui/src/hooks/useShellSessions.ts, tests/test_shell_service.py | Notion row | Removed shell=True, precise error states, command allowlisting, session limit, atomic writes, disconnected/error UI |
+| P95 | Full Console Acceptance + Launch Gate | Done | — | 2026-04-14 | docs/P95_PLAN.md, ui/src/hooks/useChat.ts, ui/src/hooks/useProviders.ts, ui/src/hooks/useSecurity.ts, ui/src/hooks/useProjectWorkflow.ts, ui/src/hooks/useShellSessions.ts, ui/src/components/security/SecurityActionsPanel.tsx, ui/src/components/providers/ProvidersContainer.tsx, ui/src/components/shell-gateway/ShellContainer.tsx, ui/src/components/project-workflow/CurrentPhaseHeader.tsx, ui/src/types/shell.ts, ai/settings_service.py | Notion row | Console acceptance pass across 6 panels, stale closure fix, chat abort fix, null safety, launch gate with debt classification |
+| P96 | Figma MCP + Design Artifact Reconciliation | Done | — | 2026-04-14 | docs/P96_PLAN.md, ai/figma_service.py, tests/test_figma_service.py, ai/mcp_bridge/tools.py, configs/mcp-bridge-allowlist.yaml, ai/config.py | Notion row | Figma REST API integration with 6 MCP tools, Midnight Glass artifact reconciliation, read-only API limitations documented |
+| P97 | Live UI Reality Reconciliation + Figma Parity | Done | — | 2026-04-14 | docs/P97_PLAN.md, docs/P97_RECONCILIATION.md, ui/src/components/settings/SettingsContainer.tsx, ui/src/components/settings/SecretsList.tsx, ui/src/components/security/SecurityActionsPanel.tsx, ui/src/components/security/SecurityContainer.tsx, ui/src/hooks/useChat.ts, ui/src/hooks/useProjectWorkflow.ts, ui/src/hooks/useShellSessions.ts, ai/mcp_bridge/tools.py, ai/project_workflow_service.py, tests/test_mcp_tools_validation.py, tests/test_project_workflow_service.py | Notion row missing (API row-create permission denial) | Reality-based reconciliation pass correcting claimed-vs-actual mismatches from P89-P95, restoring live project context truth, and wiring P96-parity flows |
+| P98 | Console UX Debt Burn-Down + Figma Parity | Done | — | 2026-04-14 | docs/P98_PLAN.md, docs/P98_DEBT_BURNDOWN.md, ui/src/components/shell/CommandPalette.tsx, ui/src/components/shell/NotificationsPanel.tsx, ui/src/components/shell/TopBar.tsx, ui/src/components/shell/Layout.tsx, ui/src/components/security/AlertFeed.tsx | Notion row `342f793e-df7b-8194-b4ad-f799da9ea776` | Removed misleading non-functional affordances and placeholder runtime surfaces while preserving explicit degraded states |
+| P99 | Live Console Evidence Rebaseline + Trust Restore | Done | — | 2026-04-14 | docs/P99_PLAN.md, docs/P99_EVIDENCE_BASELINE.md, docs/evidence/p99/* | Notion row pending manual creation | Browser-verified localhost evidence baseline established; remaining defects explicitly classified with runtime proof |
+| P100 | Browser-to-Local Service Connectivity Recovery | Done | — | 2026-04-14 | docs/P100_PLAN.md, docs/P100_CONNECTIVITY_DIAGNOSIS.md, ai/mcp_bridge/__main__.py, ai/llm_proxy.py, tests/test_llm_proxy.py, tests/test_mcp_server.py | Notion row pending manual creation | Fixed browser CORS block: added localhost-only CORS middleware to MCP bridge and LLM proxy, restored browser-to-local-service connectivity |
+| P99 | Live Console Evidence Rebaseline + Trust Restore | Done | — | 2026-04-14 | docs/P99_PLAN.md, docs/P99_EVIDENCE_BASELINE.md, docs/evidence/p99/panel-evidence.json, docs/evidence/p99/panel-visible-text.json, docs/evidence/p99/screenshots/* | Notion row pending manual creation | Browser-verified localhost evidence baseline established; remaining defects explicitly classified with runtime proof |
 
 ## Notion Database Reference
 

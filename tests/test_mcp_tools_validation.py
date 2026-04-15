@@ -1,6 +1,5 @@
 """Unit tests for ai/mcp_bridge/tools.py — tool validation and execution."""
 
-
 import pytest
 
 
@@ -11,11 +10,7 @@ class TestToolArgumentValidation:
         """Missing required argument raises ValueError."""
         from ai.mcp_bridge.tools import _validate_args
 
-        tool_def = {
-            "args": {
-                "query": {"required": True}
-            }
-        }
+        tool_def = {"args": {"query": {"required": True}}}
 
         with pytest.raises(ValueError, match="required"):
             _validate_args(tool_def, {})
@@ -24,11 +19,7 @@ class TestToolArgumentValidation:
         """Missing optional argument is allowed."""
         from ai.mcp_bridge.tools import _validate_args
 
-        tool_def = {
-            "args": {
-                "limit": {"required": False}
-            }
-        }
+        tool_def = {"args": {"limit": {"required": False}}}
 
         _validate_args(tool_def, {})  # Should not raise
 
@@ -36,14 +27,7 @@ class TestToolArgumentValidation:
         """Argument pattern constraint enforces regex match."""
         from ai.mcp_bridge.tools import _validate_args
 
-        tool_def = {
-            "args": {
-                "cve_id": {
-                    "pattern": r"^CVE-\d{4}-\d{4,}$",
-                    "required": True
-                }
-            }
-        }
+        tool_def = {"args": {"cve_id": {"pattern": r"^CVE-\d{4}-\d{4,}$", "required": True}}}
 
         # Valid CVE
         _validate_args(tool_def, {"cve_id": "CVE-2024-1234"})
@@ -56,11 +40,7 @@ class TestToolArgumentValidation:
         """Argument max_length constraint is enforced."""
         from ai.mcp_bridge.tools import _validate_args
 
-        tool_def = {
-            "args": {
-                "query": {"max_length": 100, "required": True}
-            }
-        }
+        tool_def = {"args": {"query": {"max_length": 100, "required": True}}}
 
         # Within limit
         _validate_args(tool_def, {"query": "x" * 50})
@@ -73,14 +53,27 @@ class TestToolArgumentValidation:
         """Non-string arguments are rejected."""
         from ai.mcp_bridge.tools import _validate_args
 
-        tool_def = {
-            "args": {
-                "count": {"required": True}
-            }
-        }
+        tool_def = {"args": {"count": {"required": True}}}
 
         with pytest.raises(ValueError, match="must be a string"):
             _validate_args(tool_def, {"count": 42})
+
+    def test_integer_typed_argument_accepts_int(self):
+        """Integer-typed args accept int values."""
+        from ai.mcp_bridge.tools import _validate_args
+
+        tool_def = {"args": {"limit": {"type": "integer", "required": True, "min": 1, "max": 100}}}
+
+        _validate_args(tool_def, {"limit": 50})
+
+    def test_integer_typed_argument_rejects_string(self):
+        """Integer-typed args reject string values."""
+        from ai.mcp_bridge.tools import _validate_args
+
+        tool_def = {"args": {"limit": {"type": "integer", "required": True}}}
+
+        with pytest.raises(ValueError, match="must be an integer"):
+            _validate_args(tool_def, {"limit": "50"})
 
 
 class TestBridgeRateLimiting:

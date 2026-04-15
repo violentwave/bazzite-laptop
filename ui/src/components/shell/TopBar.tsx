@@ -80,11 +80,6 @@ export function TopBar() {
           title="Notifications"
         >
           <BellIcon />
-          {/* Notification badge - hidden when no notifications */}
-          <span
-            className="absolute top-1 right-1 w-2 h-2 rounded-full"
-            style={{ background: "var(--danger)" }}
-          />
         </button>
 
         {/* User / Settings */}

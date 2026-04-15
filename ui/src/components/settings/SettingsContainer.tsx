@@ -141,8 +141,12 @@ export function SettingsContainer() {
   } | null>(null);
   const [secrets, setSecrets] = useState<Secret[]>([]);
   const [isUnlocked, setIsUnlocked] = useState(false);
+  const [actionPin, setActionPin] = useState('');
   const [showSetup, setShowSetup] = useState(false);
   const [showUnlock, setShowUnlock] = useState(false);
+  const [showAuditLog, setShowAuditLog] = useState(false);
+  const [auditLog, setAuditLog] = useState<Array<Record<string, unknown>>>([]);
+  const [auditLoading, setAuditLoading] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -230,6 +234,7 @@ export function SettingsContainer() {
       if (data.success) {
         setError(null);
         setIsUnlocked(true);
+        setActionPin(pin);
         setShowUnlock(false);
         await fetchPinStatus();
         return { success: true };
@@ -250,15 +255,15 @@ export function SettingsContainer() {
       setShowUnlock(true);
       return null;
     }
-
-    // For demo purposes - in real implementation, would get PIN from a modal
-    const pin = prompt('Enter your PIN to reveal the secret:');
-    if (!pin) return null;
+    if (!actionPin) {
+      setError('Action PIN required. Enter PIN in the security strip to reveal secrets.');
+      return null;
+    }
 
     try {
       const data = (await callMCPTool('settings.reveal_secret', {
         key_name: keyName,
-        pin,
+        pin: actionPin,
       })) as ToolResult;
       if (data.value) {
         setError(null);
@@ -277,15 +282,16 @@ export function SettingsContainer() {
       setShowUnlock(true);
       return false;
     }
-
-    const pin = prompt('Enter your PIN to update the secret:');
-    if (!pin) return false;
+    if (!actionPin) {
+      setError('Action PIN required. Enter PIN in the security strip to update secrets.');
+      return false;
+    }
 
     try {
       const data = (await callMCPTool('settings.set_secret', {
         key_name: keyName,
         value,
-        pin,
+        pin: actionPin,
       })) as ToolResult;
       if (data.success) {
         setError(null);
@@ -306,13 +312,15 @@ export function SettingsContainer() {
       return false;
     }
 
-    const pin = prompt('Enter your PIN to delete the secret:');
-    if (!pin) return false;
+    if (!actionPin) {
+      setError('Action PIN required. Enter PIN in the security strip to delete secrets.');
+      return false;
+    }
 
     try {
       const data = (await callMCPTool('settings.delete_secret', {
         key_name: keyName,
-        pin,
+        pin: actionPin,
       })) as ToolResult;
       if (data.success) {
         setError(null);
@@ -324,6 +332,28 @@ export function SettingsContainer() {
     } catch (err) {
       setError(classifyBackendError(err, 'secrets'));
       return false;
+    }
+  };
+
+  const handleViewAuditLog = async () => {
+    setAuditLoading(true);
+    try {
+      const data = (await callMCPTool('settings.audit_log')) as {
+        success?: boolean;
+        entries?: Array<Record<string, unknown>>;
+        error?: string;
+        error_code?: string;
+      };
+      if (data.success === false) {
+        setError(formatOperatorError('Audit log unavailable', data));
+        return;
+      }
+      setAuditLog(data.entries || []);
+      setShowAuditLog(true);
+    } catch (err) {
+      setError(classifyBackendError(err, 'settings'));
+    } finally {
+      setAuditLoading(false);
     }
   };
 
@@ -493,14 +523,44 @@ export function SettingsContainer() {
             </button>
           </div>
         ) : (
-          <SecretsList
-            secrets={secrets}
-            onReveal={handleRevealSecret}
-            onUpdate={handleUpdateSecret}
-            onDelete={handleDeleteSecret}
-            isUnlocked={isUnlocked}
-            onRequestUnlock={() => setShowUnlock(true)}
-          />
+          <>
+            {isUnlocked && (
+              <div
+                className="mb-4 p-3 rounded-lg border"
+                style={{
+                  background: 'var(--base-02)',
+                  borderColor: 'var(--base-04)',
+                }}
+              >
+                <label
+                  className="block text-xs mb-2"
+                  style={{ color: 'var(--text-tertiary)' }}
+                >
+                  Action PIN (used for reveal/update/delete)
+                </label>
+                <input
+                  type="password"
+                  value={actionPin}
+                  onChange={(e) => setActionPin(e.target.value)}
+                  className="w-full max-w-xs px-3 py-2 rounded-md text-sm outline-none"
+                  style={{
+                    background: 'var(--base-03)',
+                    border: '1px solid var(--base-04)',
+                    color: 'var(--text-primary)',
+                  }}
+                  placeholder="Enter PIN"
+                />
+              </div>
+            )}
+            <SecretsList
+              secrets={secrets}
+              onReveal={handleRevealSecret}
+              onUpdate={handleUpdateSecret}
+              onDelete={handleDeleteSecret}
+              isUnlocked={isUnlocked}
+              onRequestUnlock={() => setShowUnlock(true)}
+            />
+          </>
         )}
       </div>
 
@@ -519,11 +579,69 @@ export function SettingsContainer() {
             <span>Settings unlocked</span>
           </div>
           <button
+            onClick={() => {
+              void handleViewAuditLog();
+            }}
+            disabled={auditLoading}
             className="hover:underline"
             style={{ color: 'var(--accent-primary)' }}
           >
-            View Audit Log
+            {auditLoading ? 'Loading Audit Log...' : 'View Audit Log'}
           </button>
+        </div>
+      )}
+
+      {showAuditLog && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60">
+          <div
+            className="w-full max-w-3xl max-h-[80vh] overflow-hidden rounded-xl border"
+            style={{
+              background: 'var(--base-01)',
+              borderColor: 'var(--base-04)',
+            }}
+          >
+            <div
+              className="flex items-center justify-between px-4 py-3 border-b"
+              style={{ borderColor: 'var(--base-04)' }}
+            >
+              <h3 className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
+                Settings Audit Log
+              </h3>
+              <button
+                onClick={() => setShowAuditLog(false)}
+                className="text-xs px-2 py-1 rounded"
+                style={{ background: 'var(--base-03)', color: 'var(--text-secondary)' }}
+              >
+                Close
+              </button>
+            </div>
+            <div className="max-h-[65vh] overflow-auto p-4">
+              {auditLog.length === 0 ? (
+                <p className="text-sm" style={{ color: 'var(--text-tertiary)' }}>
+                  No audit entries yet.
+                </p>
+              ) : (
+                <div className="space-y-2">
+                  {auditLog.map((entry, idx) => (
+                    <div
+                      key={`${String(entry.timestamp || idx)}-${idx}`}
+                      className="p-3 rounded border text-xs"
+                      style={{
+                        background: 'var(--base-02)',
+                        borderColor: 'var(--base-04)',
+                        color: 'var(--text-secondary)',
+                      }}
+                    >
+                      <div><strong>Time:</strong> {String(entry.timestamp || 'unknown')}</div>
+                      <div><strong>Action:</strong> {String(entry.action || 'unknown')}</div>
+                      <div><strong>Key:</strong> {String(entry.key_name || 'n/a')}</div>
+                      <div><strong>Success:</strong> {String(entry.success ?? false)}</div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       )}
     </div>

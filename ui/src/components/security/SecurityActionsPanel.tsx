@@ -6,12 +6,18 @@ import { getSeverityColor } from "@/hooks/useSecurity";
 interface SecurityActionsPanelProps {
   overview: SecurityOverview | null;
   onRefresh: () => void;
+  onRunQuickScan: () => Promise<void>;
+  onRunHealthCheck: () => Promise<void>;
+  actionMessage: string | null;
   isLoading: boolean;
 }
 
 export function SecurityActionsPanel({
   overview,
   onRefresh,
+  onRunQuickScan,
+  onRunHealthCheck,
+  actionMessage,
   isLoading,
 }: SecurityActionsPanelProps) {
   return (
@@ -28,13 +34,17 @@ export function SecurityActionsPanel({
           <ActionButton
             icon={<ScanIcon />}
             label="Run Quick Scan"
-            onClick={() => {/* Trigger via MCP */}}
+            onClick={() => {
+              void onRunQuickScan();
+            }}
             disabled={isLoading}
           />
           <ActionButton
             icon={<HealthIcon />}
             label="System Health Check"
-            onClick={() => {/* Trigger via MCP */}}
+            onClick={() => {
+              void onRunHealthCheck();
+            }}
             disabled={isLoading}
           />
           <ActionButton
@@ -117,19 +127,10 @@ export function SecurityActionsPanel({
         >
           Resources
         </h3>
-        <div className="space-y-2">
-          <ResourceLink
-            label="View Scan History"
-            onClick={() => {/* Navigate to scan history */}}
-          />
-          <ResourceLink
-            label="Check CVE Database"
-            onClick={() => {/* Navigate to CVE page */}}
-          />
-          <ResourceLink
-            label="Provider Settings"
-            onClick={() => {/* Navigate to providers */}}
-          />
+        <div className="space-y-2 text-sm" style={{ color: "var(--text-secondary)" }}>
+          <p>Use Alerts tab for active incidents and acknowledgement.</p>
+          <p>Use Findings tab for scan output and threat details.</p>
+          <p>Use Providers panel for API key and routing changes.</p>
         </div>
       </div>
 
@@ -138,6 +139,11 @@ export function SecurityActionsPanel({
         className="pt-4 border-t"
         style={{ borderColor: "var(--base-04)" }}
       >
+        {actionMessage && (
+          <p className="text-xs mb-2" style={{ color: "var(--text-secondary)" }}>
+            {actionMessage}
+          </p>
+        )}
         <p className="text-xs" style={{ color: "var(--text-tertiary)" }}>
           Last updated: {overview?.generated_at
             ? new Date(overview.generated_at).toLocaleTimeString()
@@ -159,11 +165,13 @@ function ActionButton({
   label,
   onClick,
   disabled,
+  badge,
 }: {
   icon: React.ReactNode;
   label: string;
   onClick: () => void;
   disabled?: boolean;
+  badge?: string;
 }) {
   return (
     <button
@@ -172,11 +180,19 @@ function ActionButton({
       className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 hover:bg-base-03"
       style={{
         background: "var(--base-02)",
-        color: "var(--text-primary)",
+        color: badge ? "var(--text-tertiary)" : "var(--text-primary)",
       }}
     >
       <span style={{ color: "var(--text-secondary)" }}>{icon}</span>
       {label}
+      {badge && (
+        <span
+          className="text-[10px] px-1.5 py-0.5 rounded ml-auto"
+          style={{ background: "var(--base-03)", color: "var(--text-tertiary)" }}
+        >
+          {badge}
+        </span>
+      )}
     </button>
   );
 }
@@ -202,24 +218,6 @@ function SummaryRow({
         {count}
       </span>
     </div>
-  );
-}
-
-function ResourceLink({
-  label,
-  onClick,
-}: {
-  label: string;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      onClick={onClick}
-      className="w-full text-left text-sm py-1 transition-colors hover:underline"
-      style={{ color: "var(--accent-primary)" }}
-    >
-      {label}
-    </button>
   );
 }
 

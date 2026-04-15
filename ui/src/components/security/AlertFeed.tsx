@@ -254,13 +254,12 @@ function AlertCard({
               className="mt-3 pt-3 border-t"
               style={{ borderColor: "var(--base-04)" }}
             >
-              <a
-                href="#"
-                className="text-sm hover:underline"
-                style={{ color: "var(--accent-primary)" }}
-              >
-                View related: {alert.related_action}
-              </a>
+              <p className="text-sm" style={{ color: "var(--accent-primary)" }}>
+                Related action: {alert.related_action}
+              </p>
+              <p className="text-xs mt-1" style={{ color: "var(--text-tertiary)" }}>
+                Action deep-links are not wired; run this from the relevant panel.
+              </p>
             </div>
           )}
         </div>

@@ -12,10 +12,12 @@ import pytest
 @pytest.fixture()
 def mock_router():
     """Mock ai.router functions."""
-    with patch("ai.llm_proxy.route_chat", new_callable=AsyncMock) as route_chat, \
-         patch("ai.llm_proxy.route_query_stream") as route_stream, \
-         patch("ai.llm_proxy.get_health_snapshot") as health, \
-         patch("ai.llm_proxy.get_usage_stats") as usage:
+    with (
+        patch("ai.llm_proxy.route_chat", new_callable=AsyncMock) as route_chat,
+        patch("ai.llm_proxy.route_query_stream") as route_stream,
+        patch("ai.llm_proxy.get_health_snapshot") as health,
+        patch("ai.llm_proxy.get_usage_stats") as usage,
+    ):
         route_chat.return_value = "Mock response from router"
 
         async def mock_stream(task_type, messages):
@@ -38,6 +40,7 @@ def mock_router():
 def app(mock_router):
     """Create test app instance."""
     from ai.llm_proxy import create_app
+
     return create_app()
 
 
@@ -45,6 +48,7 @@ def app(mock_router):
 def client(app):
     """Create Starlette test client."""
     from starlette.testclient import TestClient
+
     return TestClient(app)
 
 
@@ -254,6 +258,27 @@ class TestHealthEndpoint:
         assert data["status"] == "ok"
         assert data["service"] == "bazzite-llm-proxy"
 
+    def test_health_includes_localhost_cors_header(self, client):
+        """Local UI origins should be allowed by CORS middleware."""
+        response = client.get("/health", headers={"Origin": "http://127.0.0.1:3000"})
+        assert response.status_code == 200
+        assert response.headers.get("access-control-allow-origin") == "http://127.0.0.1:3000"
+
+    def test_chat_preflight_is_accepted(self, client):
+        """Browser preflight requests for chat endpoint should succeed."""
+        response = client.options(
+            "/v1/chat/completions",
+            headers={
+                "Origin": "http://127.0.0.1:3000",
+                "Access-Control-Request-Method": "POST",
+                "Access-Control-Request-Headers": "content-type",
+            },
+        )
+        assert response.status_code == 200
+        assert response.headers.get("access-control-allow-origin") == "http://127.0.0.1:3000"
+        allow_methods = response.headers.get("access-control-allow-methods", "")
+        assert "POST" in allow_methods
+
 
 class TestLocalhostBinding:
     """Tests for localhost-only binding enforcement."""
@@ -290,6 +315,7 @@ class TestStatusWriter:
 
         # Monkey-patch status file path to temp directory
         import ai.llm_proxy
+
         original_path = ai.llm_proxy._LLM_STATUS_FILE
         ai.llm_proxy._LLM_STATUS_FILE = tmp_path / "llm-status.json"
 

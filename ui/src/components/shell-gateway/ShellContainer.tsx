@@ -30,11 +30,12 @@ export function ShellContainer() {
 
   const handleCreateSession = useCallback(async () => {
     try {
-      await createSession(`Session ${sessions.length + 1}`);
+      const timestamp = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+      await createSession(`Session ${timestamp}`);
     } catch (err) {
       console.error("Failed to create session:", err);
     }
-  }, [createSession, sessions.length]);
+  }, [createSession]);
 
   const handleExecuteCommand = useCallback(async () => {
     if (!activeSession || !commandInput.trim()) return;
@@ -161,7 +162,7 @@ export function ShellContainer() {
                 />
                 <button
                   onClick={handleExecuteCommand}
-                  disabled={!commandInput.trim()}
+                  disabled={!commandInput.trim() || isLoading}
                   className="px-3 py-1 text-xs rounded transition-colors disabled:opacity-50"
                   style={{
                     background: commandInput.trim() ? "var(--accent-primary)" : "var(--base-03)",
@@ -171,6 +172,22 @@ export function ShellContainer() {
                   Run
                 </button>
               </div>
+            </div>
+          )}
+          {activeSession && activeSession.status !== "active" && activeSession.status !== "idle" && (
+            <div
+              className="px-4 py-2 border-t text-xs"
+              style={{
+                background: "var(--base-01)",
+                borderColor: "var(--base-04)",
+                color: "var(--text-tertiary)",
+              }}
+            >
+              {activeSession.status === "disconnected"
+                ? "Session disconnected — terminate and create a new session to continue"
+                : activeSession.status === "error"
+                ? `Session error — terminate and create a new session`
+                : `Session ${activeSession.status} — no commands accepted`}
             </div>
           )}
 

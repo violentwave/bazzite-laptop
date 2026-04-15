@@ -62,6 +62,9 @@ KEY_SCOPES: dict[str, set[str]] = {
         "NOTION_API_KEY",
         "NOTION_PHASE_DATABASE_ID",
     },
+    "figma": {
+        "FIGMA_PAT",
+    },
 }
 
 # ── Key Loading ──

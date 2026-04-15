@@ -12,7 +12,6 @@ interface TerminalCanvasProps {
 export function TerminalCanvas({ output, session, isLoading }: TerminalCanvasProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // Auto-scroll to bottom when output changes
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
@@ -61,13 +60,16 @@ export function TerminalCanvas({ output, session, isLoading }: TerminalCanvasPro
             color: "var(--text-tertiary)",
           }}
         >
-          Press "+ New Session" to begin
+          Press &quot;+ New Session&quot; to begin
         </div>
       </div>
     );
   }
 
   if (session.status === "error") {
+    const errorDetail = String(
+      session.metadata?.error || "Failed to create shell session"
+    );
     return (
       <div
         className="flex-1 flex flex-col items-center justify-center p-8"
@@ -98,11 +100,68 @@ export function TerminalCanvas({ output, session, isLoading }: TerminalCanvasPro
           Session Error
         </h3>
         <p
-          className="text-sm text-center max-w-md"
+          className="text-sm text-center max-w-md mb-4"
           style={{ color: "var(--text-secondary)" }}
         >
-          {String(session.metadata?.error || "Failed to create shell session. Please try again.")}
+          {errorDetail}
         </p>
+        <div
+          className="text-xs px-4 py-2 rounded-lg"
+          style={{
+            background: "var(--base-02)",
+            color: "var(--text-tertiary)",
+          }}
+        >
+          Terminate this session and create a new one to continue
+        </div>
+      </div>
+    );
+  }
+
+  if (session.status === "disconnected") {
+    return (
+      <div
+        className="flex-1 flex flex-col items-center justify-center p-8"
+        style={{ background: "var(--base-00)" }}
+      >
+        <div
+          className="w-16 h-16 rounded-xl flex items-center justify-center mb-6"
+          style={{ background: "var(--base-02)" }}
+        >
+          <svg
+            width="32"
+            height="32"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            style={{ color: "var(--text-tertiary)" }}
+          >
+            <circle cx="12" cy="12" r="10" />
+            <line x1="4.93" y1="4.93" x2="19.07" y2="19.07" />
+          </svg>
+        </div>
+        <h3
+          className="text-lg font-medium mb-2"
+          style={{ color: "var(--text-primary)" }}
+        >
+          Session Disconnected
+        </h3>
+        <p
+          className="text-sm text-center max-w-md mb-4"
+          style={{ color: "var(--text-secondary)" }}
+        >
+          The shell process for this session is no longer running. Command history is preserved but no new commands can be executed.
+        </p>
+        <div
+          className="text-xs px-4 py-2 rounded-lg"
+          style={{
+            background: "var(--base-02)",
+            color: "var(--text-tertiary)",
+          }}
+        >
+          Terminate this session and create a new one to continue
+        </div>
       </div>
     );
   }

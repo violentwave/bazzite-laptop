@@ -1511,3 +1511,291 @@ tools:
       readOnly: true
       idempotent: true
       openWorld: false
+
+  # P96 Figma Design Reconciliation tools
+  figma.list_teams:
+    description: "List Figma teams accessible to the configured PAT"
+    source: python
+    module: ai.figma_service
+    function: "figma_list_teams"
+    readOnly: true
+    args: null
+    annotations:
+      readOnly: true
+      idempotent: true
+      openWorld: true
+
+  figma.list_projects:
+    description: "List projects in a Figma team"
+    source: python
+    module: ai.figma_service
+    function: "figma_list_projects"
+    readOnly: true
+    args:
+      team_id:
+        type: string
+        max_length: 64
+        required: true
+
+  figma.list_project_files:
+    description: "List files in a Figma project"
+    source: python
+    module: ai.figma_service
+    function: "figma_list_project_files"
+    readOnly: true
+    args:
+      project_id:
+        type: string
+        max_length: 64
+        required: true
+
+  figma.get_file:
+    description: "Get metadata for a Figma file by key"
+    source: python
+    module: ai.figma_service
+    function: "figma_get_file"
+    readOnly: true
+    args:
+      file_key:
+        type: string
+        max_length: 64
+        required: true
+
+  figma.find_project:
+    description: "Find a Figma project by name across accessible teams"
+    source: python
+    module: ai.figma_service
+    function: "figma_find_project"
+    readOnly: true
+    args:
+      project_name:
+        type: string
+        max_length: 128
+        required: false
+
+  figma.reconcile:
+    description: "Reconcile Midnight Glass Design Lab artifacts against Figma project contents"
+    source: python
+    module: ai.figma_service
+    function: "figma_reconcile"
+    readOnly: true
+    args:
+      project_name:
+        type: string
+        max_length: 128
+        required: false
+      artifact_names:
+        type: array
+        required: false
+
+  # P101 — MCP Tool Governance + Analytics Platform
+  tool.analytics.summary:
+    description: "Get usage summary for time range"
+    source: python
+    module: ai.mcp_bridge.tools_governance
+    function: "tool_analytics_summary"
+    args:
+      hours:
+        type: int
+        required: false
+        default: 24
+        max: 168
+    annotations:
+      readOnly: true
+      idempotent: true
+      openWorld: false
+
+  tool.analytics.ranking:
+    description: "Get tool rankings by metric (invocations, errors, latency, cost)"
+    source: python
+    module: ai.mcp_bridge.tools_governance
+    function: "tool_analytics_ranking"
+    args:
+      metric:
+        type: string
+        required: false
+        default: "invocations"
+        enum: ["invocations", "errors", "latency", "cost"]
+      limit:
+        type: int
+        required: false
+        default: 20
+        max: 100
+    annotations:
+      readOnly: true
+      idempotent: true
+      openWorld: false
+
+  tool.analytics.trends:
+    description: "Get usage trend analysis"
+    source: python
+    module: ai.mcp_bridge.tools_governance
+    function: "tool_analytics_trends"
+    args:
+      tool_name:
+        type: string
+        required: false
+        max_length: 128
+      periods:
+        type: int
+        required: false
+        default: 7
+        max: 30
+    annotations:
+      readOnly: true
+      idempotent: true
+      openWorld: false
+
+  tool.governance.audit:
+    description: "Run permission/security audit on a tool"
+    source: python
+    module: ai.mcp_bridge.tools_governance
+    function: "tool_governance_audit"
+    args:
+      tool_name:
+        type: string
+        required: true
+        max_length: 128
+    annotations:
+      readOnly: true
+      idempotent: true
+      openWorld: false
+
+  tool.governance.score:
+    description: "Get security score for a tool"
+    source: python
+    module: ai.mcp_bridge.tools_governance
+    function: "tool_governance_score"
+    args:
+      tool_name:
+        type: string
+        required: true
+        max_length: 128
+    annotations:
+      readOnly: true
+      idempotent: true
+      openWorld: false
+
+  tool.governance.policies:
+    description: "List or manage governance policies"
+    source: python
+    module: ai.mcp_bridge.tools_governance
+    function: "tool_governance_policies"
+    args:
+      action:
+        type: string
+        required: false
+        default: "list"
+        enum: ["list", "add", "remove"]
+      policy_id:
+        type: string
+        required: false
+        max_length: 64
+      policy_data:
+        type: object
+        required: false
+    annotations:
+      readOnly: false
+      idempotent: false
+      openWorld: false
+
+  tool.lifecycle.status:
+    description: "Get lifecycle state of a tool"
+    source: python
+    module: ai.mcp_bridge.tools_governance
+    function: "tool_lifecycle_status"
+    args:
+      tool_name:
+        type: string
+        required: true
+        max_length: 128
+    annotations:
+      readOnly: true
+      idempotent: true
+      openWorld: false
+
+  tool.lifecycle.deprecate:
+    description: "Deprecate a tool"
+    source: python
+    module: ai.mcp_bridge.tools_governance
+    function: "tool_lifecycle_deprecate"
+    args:
+      tool_name:
+        type: string
+        required: true
+        max_length: 128
+      replacement_tool:
+        type: string
+        required: false
+        max_length: 128
+      sunset_days:
+        type: int
+        required: false
+        default: 30
+        max: 365
+      reason:
+        type: string
+        required: false
+        max_length: 512
+    annotations:
+      readOnly: false
+      idempotent: false
+      openWorld: false
+      destructive: true
+
+  tool.lifecycle.list:
+    description: "List tools by lifecycle state"
+    source: python
+    module: ai.mcp_bridge.tools_governance
+    function: "tool_lifecycle_list"
+    args:
+      state_filter:
+        type: string
+        required: false
+        enum: ["active", "deprecated", "legacy", "retired"]
+    annotations:
+      readOnly: true
+      idempotent: true
+      openWorld: false
+
+  tool.monitoring.health:
+    description: "Get health status of a tool"
+    source: python
+    module: ai.mcp_bridge.tools_governance
+    function: "tool_monitoring_health"
+    args:
+      tool_name:
+        type: string
+        required: true
+        max_length: 128
+    annotations:
+      readOnly: true
+      idempotent: true
+      openWorld: false
+
+  tool.monitoring.alerts:
+    description: "Get active monitoring alerts"
+    source: python
+    module: ai.mcp_bridge.tools_governance
+    function: "tool_monitoring_alerts"
+    args:
+      min_severity:
+        type: string
+        required: false
+        default: "medium"
+        enum: ["low", "medium", "high", "critical"]
+    annotations:
+      readOnly: true
+      idempotent: true
+      openWorld: false
+
+  tool.monitoring.report:
+    description: "Generate comprehensive monitoring report"
+    source: python
+    module: ai.mcp_bridge.tools_governance
+    function: "tool_monitoring_report"
+    args: null
+    annotations:
+      readOnly: true
+      idempotent: true
+      openWorld: false

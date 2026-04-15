@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useSecurity } from "@/hooks/useSecurity";
 import { SecurityTab } from "@/types/security";
+import { callMCPTool } from "@/lib/mcp-client";
 import { SecurityOverview as SecurityOverviewPanel } from "./SecurityOverview";
 import { AlertFeed } from "./AlertFeed";
 import { FindingsPanel } from "./FindingsPanel";
@@ -121,6 +122,7 @@ function ErrorState({
 
 export function SecurityContainer() {
   const [activeTab, setActiveTab] = useState<SecurityTab>("overview");
+  const [actionMessage, setActionMessage] = useState<string | null>(null);
   const {
     overview,
     alerts,
@@ -139,6 +141,37 @@ export function SecurityContainer() {
 
   // Check if we have data despite errors
   const hasData = overview || alerts.length > 0 || findings.length > 0;
+
+  const runQuickScan = async () => {
+    try {
+      const result = (await callMCPTool("security.run_scan", {
+        scan_type: "quick",
+      })) as { message?: string };
+      setActionMessage(result?.message || "Quick scan requested.");
+      await refresh();
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Failed to trigger quick scan";
+      setActionMessage(`Quick scan failed: ${message}`);
+    }
+  };
+
+  const runHealthCheck = async () => {
+    try {
+      const result = (await callMCPTool("security.run_health")) as {
+        message?: string;
+        error?: string;
+      };
+      if (result?.error) {
+        setActionMessage(`Health check failed: ${result.error}`);
+      } else {
+        setActionMessage(result?.message || "Health snapshot requested.");
+      }
+      await refresh();
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Failed to trigger health check";
+      setActionMessage(`Health check failed: ${message}`);
+    }
+  };
 
   if (isLoading && !hasData) {
     return (
@@ -267,6 +300,9 @@ export function SecurityContainer() {
         <SecurityActionsPanel
           overview={overview}
           onRefresh={refresh}
+          onRunQuickScan={runQuickScan}
+          onRunHealthCheck={runHealthCheck}
+          actionMessage={actionMessage}
           isLoading={isLoading}
         />
       </div>

@@ -6,6 +6,7 @@ import {
   WorkflowRun,
   PhaseTimelineEntry,
   ArtifactInfo,
+  NotionSyncStatus,
 } from "@/types/project-workflow";
 import { callMCPTool } from "@/lib/mcp-client";
 
@@ -32,7 +33,7 @@ export function useProjectWorkflow(): UseProjectWorkflowReturn {
     setError(null);
 
     try {
-      // Fetch all data in parallel
+      let hasError = false;
       const [contextData, workflowsData, timelineData, artifactsData] = await Promise.all([
         callMCPTool("project.context"),
         callMCPTool("project.workflow_history", { limit: 10 }),
@@ -40,20 +41,42 @@ export function useProjectWorkflow(): UseProjectWorkflowReturn {
         callMCPTool("project.artifacts", { limit: 10 }),
       ]);
 
-      if (contextData && typeof contextData === 'object' && !('error' in contextData)) {
-        setContext(contextData as ProjectContext);
+      if (contextData && typeof contextData === "object") {
+        if ("error" in contextData) {
+          setError(String((contextData as Record<string, unknown>).error || "Context load failed"));
+          hasError = true;
+        } else if ("success" in contextData && (contextData as Record<string, unknown>).success === false) {
+          setError(String((contextData as Record<string, unknown>).error || "Context load failed"));
+          hasError = true;
+        } else {
+          setContext(contextData as ProjectContext);
+        }
       }
 
       if (Array.isArray(workflowsData)) {
         setWorkflows(workflowsData as WorkflowRun[]);
+      } else if (workflowsData && typeof workflowsData === "object" && "error" in (workflowsData as Record<string, unknown>)) {
+        if (!hasError) {
+          setError(
+            String((workflowsData as Record<string, unknown>).error || "Workflow history unavailable")
+          );
+          hasError = true;
+        }
       }
 
       if (Array.isArray(timelineData)) {
         setTimeline(timelineData as PhaseTimelineEntry[]);
+      } else if (timelineData && typeof timelineData === "object" && "error" in (timelineData as Record<string, unknown>)) {
+        if (!hasError) {
+          setError(String((timelineData as Record<string, unknown>).error || "Timeline unavailable"));
+          hasError = true;
+        }
       }
 
       if (Array.isArray(artifactsData)) {
         setArtifacts(artifactsData as ArtifactInfo[]);
+      } else if (artifactsData && typeof artifactsData === "object" && "error" in (artifactsData as Record<string, unknown>)) {
+        // Artifacts failure is non-critical, just log
       }
     } catch (err) {
       setError(
@@ -66,10 +89,9 @@ export function useProjectWorkflow(): UseProjectWorkflowReturn {
     }
   }, []);
 
-  // Load data on mount and refresh periodically
   useEffect(() => {
     refresh();
-    const interval = setInterval(refresh, 30000); // Refresh every 30 seconds
+    const interval = setInterval(refresh, 30000);
     return () => clearInterval(interval);
   }, [refresh]);
 
@@ -100,6 +122,10 @@ export function getPhaseStatusColor(status: string | null): string {
       return "var(--accent-primary)";
     case "blocked":
       return "var(--danger)";
+    case "deferred":
+      return "var(--warning)";
+    case "cancelled":
+      return "var(--text-tertiary)";
     case "planned":
     default:
       return "var(--text-tertiary)";
@@ -115,6 +141,24 @@ export function getReadinessColor(status: string): string {
       return "var(--danger)";
     case "degraded":
       return "var(--warning)";
+    case "deferred":
+      return "var(--warning)";
+    case "in_progress":
+      return "var(--live-cyan)";
+    default:
+      return "var(--text-tertiary)";
+  }
+}
+
+/** Get Notion sync status color */
+export function getNotionSyncColor(status: NotionSyncStatus): string {
+  switch (status) {
+    case "synced":
+      return "var(--success)";
+    case "stale":
+    case "degraded":
+      return "var(--warning)";
+    case "unavailable":
     default:
       return "var(--text-tertiary)";
   }

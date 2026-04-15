@@ -31,15 +31,44 @@ export function NextActionsPanel({ recommendations, isLoading }: NextActionsPane
     );
   }
 
-  // If no recommendations, provide defaults
-  const actions =
-    recommendations.length > 0
-      ? recommendations
-      : [
-          "Initialize phase documentation",
-          "Run preflight validation",
-          "Create execution plan",
-        ];
+  // Show real recommendations from backend. When none available,
+  // show contextual placeholder rather than fake defaults.
+  const actions = recommendations;
+
+  if (actions.length === 0) {
+    return (
+      <div
+        className="p-4 rounded-lg border"
+        style={{
+          background: "var(--base-02)",
+          borderColor: "var(--base-04)",
+        }}
+      >
+        <h3
+          className="text-xs font-medium uppercase tracking-wide mb-3"
+          style={{ color: "var(--text-tertiary)" }}
+        >
+          Recommended Actions
+        </h3>
+        <p className="text-sm" style={{ color: "var(--text-tertiary)" }}>
+          Awaiting project context.
+        </p>
+        <div className="mt-4 pt-4 border-t" style={{ borderColor: "var(--base-04)" }}>
+          <h4
+            className="text-xs font-medium mb-2"
+            style={{ color: "var(--text-tertiary)" }}
+          >
+            Quick Links
+          </h4>
+          <div className="flex flex-wrap gap-2">
+            <QuickLink label="Open Chat" icon="💬" />
+            <QuickLink label="Open Shell" icon="💻" />
+            <QuickLink label="Security Ops" icon="🛡️" />
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div

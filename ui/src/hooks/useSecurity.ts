@@ -139,6 +139,7 @@ export function useSecurity(): UseSecurityReturn {
       // Fetch overview
       const overviewData = await callMCPTool("security.ops_overview");
       const overviewResp = overviewData as OverviewResponse;
+      let hasError = false;
 
       if (overviewResp.success === false) {
         const err = formatSecurityError(overviewResp);
@@ -146,6 +147,7 @@ export function useSecurity(): UseSecurityReturn {
         setErrorCode(err.code);
         setOperatorAction(err.action);
         setOverview(null);
+        hasError = true;
       } else {
         setOverview(overviewResp.data || null);
         if (overviewResp.partial_data) {
@@ -160,12 +162,12 @@ export function useSecurity(): UseSecurityReturn {
       const alertsResp = alertsData as AlertsResponse;
 
       if (alertsResp.success === false) {
-        // Don't overwrite overview error, just log partial failure
-        if (!error) {
+        if (!hasError) {
           const err = formatSecurityError(alertsResp);
           setError(err.message);
           setErrorCode(err.code);
           setOperatorAction(err.action);
+          hasError = true;
         }
         setPartialData(true);
         setMissingSources(prev => [...prev, 'alerts']);
@@ -179,11 +181,12 @@ export function useSecurity(): UseSecurityReturn {
       const findingsResp = findingsData as FindingsResponse;
 
       if (findingsResp.success === false) {
-        if (!error) {
+        if (!hasError) {
           const err = formatSecurityError(findingsResp);
           setError(err.message);
           setErrorCode(err.code);
           setOperatorAction(err.action);
+          hasError = true;
         }
         setPartialData(true);
         setMissingSources(prev => [...prev, 'findings']);
@@ -197,11 +200,12 @@ export function useSecurity(): UseSecurityReturn {
       const issuesResp = issuesData as ProviderIssuesResponse;
 
       if (issuesResp.success === false) {
-        if (!error) {
+        if (!hasError) {
           const err = formatSecurityError(issuesResp);
           setError(err.message);
           setErrorCode(err.code);
           setOperatorAction(err.action);
+          hasError = true;
         }
         setPartialData(true);
         setMissingSources(prev => [...prev, 'provider_health']);

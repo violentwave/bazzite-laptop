@@ -9,6 +9,9 @@ import sys
 logger = logging.getLogger("ai.mcp_bridge")
 
 
+LOCAL_ORIGIN_REGEX = r"^https?://(localhost|127\.0\.0\.1)(:\d+)?$"
+
+
 def main() -> None:
     """Start the MCP bridge server."""
     parser = argparse.ArgumentParser(description="Bazzite MCP Bridge")
@@ -36,11 +39,25 @@ def main() -> None:
         logger.error("Failed to load threat_intel keys -- exiting")
         sys.exit(1)
 
+    from starlette.middleware import Middleware  # noqa: PLC0415
+    from starlette.middleware.cors import CORSMiddleware  # noqa: PLC0415
+
     from ai.mcp_bridge.server import _assert_localhost, create_app  # noqa: PLC0415
 
     _assert_localhost(args.bind)
 
     app = create_app()
+
+    cors_middleware = [
+        Middleware(
+            CORSMiddleware,
+            allow_origin_regex=LOCAL_ORIGIN_REGEX,
+            allow_methods=["GET", "POST", "DELETE", "OPTIONS"],
+            allow_headers=["*"],
+            expose_headers=["mcp-session-id"],
+            max_age=600,
+        )
+    ]
 
     # SIGTERM handler for graceful shutdown
     def _sigterm_handler(signum, frame):
@@ -50,7 +67,12 @@ def main() -> None:
     signal.signal(signal.SIGTERM, _sigterm_handler)
 
     logger.info("MCP bridge starting on %s:%d", args.bind, args.port)
-    app.run(transport="streamable-http", host=args.bind, port=args.port)
+    app.run(
+        transport="streamable-http",
+        host=args.bind,
+        port=args.port,
+        middleware=cors_middleware,
+    )
 
 
 if __name__ == "__main__":

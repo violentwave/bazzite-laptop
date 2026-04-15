@@ -1067,6 +1067,134 @@
 - **Error Codes Added**: Provider: `config_unavailable`, `provider_discovery_failed`, `model_catalog_failed`, `routing_config_failed`, `health_data_failed`, `refresh_failed`; Security: `overview_unavailable`, `alerts_file_unavailable`, `alerts_unavailable`, `findings_unavailable`, `provider_health_unavailable`, `acknowledge_failed`
 - **Key Improvement**: Provider and security panels now show specific degraded/manual states (auth broken, cooldown, config missing) instead of generic fetch failures
 
+### P93 — Project, Workflow, and Phase Truth Integration
+- **Status**: Done
+- **Commit SHA**: —
+- **Finished**: 2026-04-14
+- **Repo Artifacts**:
+  - `docs/P93_PLAN.md` — Implementation plan and closeout report
+  - `ai/project_workflow_service.py` — Full rewrite of truth aggregation: HANDOFF parsing, Notion integration, deferred handling, recommendation logic
+  - `ui/src/types/project-workflow.ts` — Added NotionSyncStatus, LatestCompletedPhase, deferred types
+  - `ui/src/hooks/useProjectWorkflow.ts` — Handle success field, Notion sync status, deferred colors
+  - `ui/src/components/project-workflow/ProjectWorkflowContainer.tsx` — Notion sync badge, latest completed, degraded state banner
+  - `ui/src/components/project-workflow/CurrentPhaseHeader.tsx` — Latest completed phase, deferred/in_progress handling, Notion badge
+  - `ui/src/components/project-workflow/PhaseTimelinePanel.tsx` — Deferred badge, Notion status per phase
+  - `ui/src/components/project-workflow/NextActionsPanel.tsx` — Removed hardcoded defaults, show awaiting state
+  - `tests/test_project_workflow_service.py` — Full rewrite for P93 truth tests (10/10 passing)
+- **Notion**: Mark P93 as Done with closeout summary
+- **Scope**: Make project/workflow/phase panel reflect current HANDOFF + Notion truth, eliminating stale phase badges and placeholder project state
+- **Key Improvement**: Current phase correctly inferred from HANDOFF (P92 COMPLETE → P93 ready); deferred phases (P80) don't block; Notion sync status displayed explicitly
+
+### P94 — Shell Gateway End-to-End Runtime Recovery
+
+| Type | Path | Description |
+|------|------|-------------|
+| Plan | `docs/P94_PLAN.md` | Phase plan and problem analysis |
+| Backend | `ai/shell_service.py` | Complete runtime recovery: shell=True removal, command allowlisting, atomic writes, session limit, precise error states |
+| Backend | `ai/mcp_bridge/tools.py` | Shell handler cleanup (consistent error shapes) |
+| Frontend | `ui/src/hooks/useShellSessions.ts` | Structured error handling, error response parsing |
+| Frontend | `ui/src/components/shell-gateway/TerminalCanvas.tsx` | Disconnected/error session states |
+| Frontend | `ui/src/components/shell-gateway/ShellContainer.tsx` | Status bar for inactive sessions, loading state |
+| Frontend | `ui/src/components/shell-gateway/ShellSidePane.tsx` | Blocked command display, error handling |
+| Config | `configs/mcp-bridge-allowlist.yaml` | Existing shell tool definitions (unchanged) |
+| Types | `ui/src/types/shell.ts` | Unchanged — already complete from P85 |
+| Test | `tests/test_shell_service.py` | 23 tests: atomic writes, allowlisting, session lifecycle, command execution, audit log |
+
+### P95 — Full Console Acceptance + Launch Gate
+
+| Type | Path | Description |
+|------|------|-------------|
+| Plan | `docs/P95_PLAN.md` | Acceptance report and launch gate classification |
+| Hook | `ui/src/hooks/useChat.ts` | Fixed abort ghost state (streamingContentRef), removed stale closure |
+| Hook | `ui/src/hooks/useProviders.ts` | Fixed stale closure error overwrite (hasError flag) |
+| Hook | `ui/src/hooks/useSecurity.ts` | Fixed stale closure error overwrite (hasError flag) |
+| Hook | `ui/src/hooks/useProjectWorkflow.ts` | Added success=false check, error handling for sub-requests |
+| Hook | `ui/src/hooks/useShellSessions.ts` | Added isLoading during command execution |
+| Frontend | `ui/src/components/security/SecurityActionsPanel.tsx` | "Coming Soon" badges on stubbed actions |
+| Frontend | `ui/src/components/providers/ProvidersContainer.tsx` | Fixed hardcoded routing count |
+| Frontend | `ui/src/components/shell-gateway/ShellContainer.tsx` | Timestamp-based session names |
+| Frontend | `ui/src/components/project-workflow/CurrentPhaseHeader.tsx` | Null status fallback |
+| Types | `ui/src/types/shell.ts` | Added error_detail, operator_action to CommandResult |
+| Backend | `ai/settings_service.py` | Corrected docstring (PBKDF2-SHA256, not bcrypt) |
+
+### P96 — Figma MCP + Design Artifact Reconciliation
+
+| Type | Path | Description |
+|------|------|-------------|
+| Plan | `docs/P96_PLAN.md` | Figma integration plan, API limitations, reconciliation workflow |
+| Service | `ai/figma_service.py` | Figma REST API integration (list teams, projects, files, find project, reconcile) |
+| Tests | `tests/test_figma_service.py` | 18 test cases covering PAT handling, API operations, reconciliation |
+| Config | `configs/mcp-bridge-allowlist.yaml` | 6 new Figma tool definitions (readOnly, idempotent) |
+| Config | `ai/config.py` | `FIGMA_PAT` added to `KEY_SCOPES` |
+| Handler | `ai/mcp_bridge/tools.py` | 6 Figma tool handlers (figma.list_teams, figma.list_projects, figma.list_project_files, figma.get_file, figma.find_project, figma.reconcile) |
+
+### P97 — Live UI Reality Reconciliation + Figma Parity
+
+| Type | Path | Description |
+|------|------|-------------|
+| Plan | `docs/P97_PLAN.md` | Phase plan, scope, pre-flight baseline, and reconciliation goals |
+| Evidence | `docs/P97_RECONCILIATION.md` | Claimed-vs-actual matrix with root cause and validation results |
+| Frontend | `ui/src/components/settings/SettingsContainer.tsx` | Removed prompt flow, added in-panel action PIN, wired audit log modal |
+| Frontend | `ui/src/components/settings/SecretsList.tsx` | Replaced browser confirm with two-step in-panel delete confirmation |
+| Frontend | `ui/src/components/security/SecurityActionsPanel.tsx` | Replaced placeholder actions with wired callbacks and action feedback |
+| Frontend | `ui/src/components/security/SecurityContainer.tsx` | Wired quick scan and health check MCP actions |
+| Hook | `ui/src/hooks/useChat.ts` | Added MCP/LLM health preflight before message send |
+| Hook | `ui/src/hooks/useProjectWorkflow.ts` | Fixed stale-closure-style error arbitration with local `hasError` |
+| Hook | `ui/src/hooks/useShellSessions.ts` | Persisted active shell session id in localStorage |
+| Backend | `ai/mcp_bridge/tools.py` | Added typed arg validation support (`string/int/integer/number/boolean`) |
+| Backend | `ai/project_workflow_service.py` | Restored project context truth path: HANDOFF recent-session fallback parsing + workflow run retrieval fix |
+| Tests | `tests/test_mcp_tools_validation.py` | Added integer-type validation tests for bridge arg handling |
+| Tests | `tests/test_project_workflow_service.py` | Verified context inference and timeline behavior after parser/runtime fix |
+
+### P98 — Console UX Debt Burn-Down + Figma Parity
+
+| Type | Path | Description |
+|------|------|-------------|
+| Plan | `docs/P98_PLAN.md` | Phase scope, pre-flight baseline, and validation plan |
+| Evidence | `docs/P98_DEBT_BURNDOWN.md` | Runtime-truth debt matrix with fixes, validations, and retained debt |
+| Frontend | `ui/src/components/shell/CommandPalette.tsx` | Removed non-functional placeholder commands; navigation-only command set |
+| Frontend | `ui/src/components/shell/NotificationsPanel.tsx` | Removed fabricated notifications; explicit non-wired stream state |
+| Frontend | `ui/src/components/shell/TopBar.tsx` | Removed always-on fake notification badge |
+| Frontend | `ui/src/components/shell/Layout.tsx` | Removed non-functional audit history button |
+| Frontend | `ui/src/components/security/AlertFeed.tsx` | Replaced fake related-action deep-link with truthful informational copy |
+| Validation | `.venv/bin/ruff check ai/ tests/ scripts/` | Lint pass |
+| Validation | `cd ui && npx tsc --noEmit` | TypeScript pass |
+| Validation | `.venv/bin/python -m pytest tests/ -q --tb=short` | Full suite pass (`2188 passed, 183 skipped`) |
+
+### P99 — Live Console Evidence Rebaseline + Trust Restore
+
+| Type | Path | Description |
+|------|------|-------------|
+| Plan | `docs/P99_PLAN.md` | Quality verification plan with source-of-truth order and pre-flight evidence |
+| Evidence | `docs/P99_EVIDENCE_BASELINE.md` | Panel-by-panel validation matrix with explicit debt classification |
+| Evidence | `docs/evidence/p99/panel-evidence.json` | Structured panel header/check/screenshot linkage captured from live localhost |
+| Evidence | `docs/evidence/p99/panel-visible-text.json` | Captured visible panel text for reproducible behavior notes |
+| Evidence | `docs/evidence/p99/screenshots/chat.png` | Live chat panel screenshot |
+| Evidence | `docs/evidence/p99/screenshots/settings.png` | Live settings panel screenshot |
+| Evidence | `docs/evidence/p99/screenshots/models.png` | Live providers panel screenshot |
+| Evidence | `docs/evidence/p99/screenshots/security.png` | Live security panel screenshot |
+| Evidence | `docs/evidence/p99/screenshots/projects.png` | Live projects panel screenshot |
+| Evidence | `docs/evidence/p99/screenshots/terminal.png` | Live terminal panel screenshot |
+| Validation | `cd ui && npx tsc --noEmit` | TypeScript pass |
+| Validation | `.venv/bin/python -m pytest tests/ -q --tb=short` | Full suite pass (`2188 passed, 183 skipped`) |
+| Validation | `.venv/bin/ruff check ai/ tests/ scripts/` | Ruff pass for required Python paths |
+
+### P100 — Browser-to-Local Service Connectivity Recovery
+
+| Type | Path | Description |
+|------|------|-------------|
+| Plan | `docs/P100_PLAN.md` | Runtime recovery plan with root cause and fix summary |
+| Evidence | `docs/P100_CONNECTIVITY_DIAGNOSIS.md` | Full connectivity diagnosis with request path, error, root cause, fix, and validation |
+| Backend | `ai/mcp_bridge/__main__.py` | Added CORS middleware (localhost-only regex) to bridge startup |
+| Backend | `ai/llm_proxy.py` | Added CORS middleware (localhost-only regex) to Starlette app |
+| Tests | `tests/test_llm_proxy.py` | Added CORS header and preflight acceptance tests |
+| Tests | `tests/test_mcp_server.py` | Added middleware-passing verification test |
+| Validation | `curl -i -H "Origin: http://127.0.0.1:3000" http://127.0.0.1:8766/health` | CORS `access-control-allow-origin: http://127.0.0.1:3000` confirmed |
+| Validation | `curl -i -H "Origin: http://127.0.0.1:3000" http://127.0.0.1:8767/health` | CORS `access-control-allow-origin: http://127.0.0.1:3000` confirmed |
+| Validation | `.venv/bin/ruff check ai/mcp_bridge/__main__.py ai/llm_proxy.py tests/test_llm_proxy.py tests/test_mcp_server.py` | All lint checks pass |
+| Validation | `.venv/bin/python -m pytest tests/test_llm_proxy.py tests/test_mcp_server.py` | 32 passed, 1 skipped |
+| Validation | `cd ui && npx tsc --noEmit` | TypeScript pass |
+
 ## Cross-Phase Documentation
 
 ### Hub Docs (docs/ root)
@@ -1076,8 +1204,8 @@
 | `CHANGELOG.md` | Version history | P88 |
 | `USER-GUIDE.md` | End-user guide | P88 |
 | `bazzite-ai-system-profile.md` | System identity for OpenCode | P69 |
-| `PHASE_INDEX.md` | Master phase index | P90 |
-| `PHASE_ARTIFACT_REGISTER.md` | Artifact inventory | P90 |
+| `PHASE_INDEX.md` | Master phase index | P100 |
+| `PHASE_ARTIFACT_REGISTER.md` | Artifact inventory | P100 |
 | `PHASE_DEPENDENCY_GRAPH.mmd` | Dependency visualization | P70 |
 | `PHASE_DELIVERY_TIMELINE.md` | Delivery timeline | P70 |
 | `ARCHITECTURE_EVOLUTION.md` | Architecture evolution | P70 |

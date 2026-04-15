@@ -1,6 +1,6 @@
 "use client";
 
-import { PhaseInfo } from "@/types/project-workflow";
+import { PhaseInfo, LatestCompletedPhase } from "@/types/project-workflow";
 import {
   getPhaseStatusColor,
   getReadinessColor,
@@ -8,10 +8,15 @@ import {
 
 interface CurrentPhaseHeaderProps {
   phase: PhaseInfo | null;
+  latestCompleted: LatestCompletedPhase | null;
   isLoading: boolean;
 }
 
-export function CurrentPhaseHeader({ phase, isLoading }: CurrentPhaseHeaderProps) {
+export function CurrentPhaseHeader({
+  phase,
+  latestCompleted,
+  isLoading,
+}: CurrentPhaseHeaderProps) {
   if (isLoading) {
     return (
       <div
@@ -95,8 +100,22 @@ export function CurrentPhaseHeader({ phase, isLoading }: CurrentPhaseHeaderProps
               className="w-1.5 h-1.5 rounded-full"
               style={{ background: statusColor }}
             />
-            {phase.status}
+            {phase.readiness === "deferred" ? "Deferred" : (phase.status ?? "Unknown")}
           </div>
+          {/* Notion status override badge */}
+          {phase.notion_status && phase.notion_status !== phase.status && (
+            <div
+              className="flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px]"
+              style={{
+                background: "var(--base-03)",
+                color: "var(--accent-primary)",
+                border: "1px solid var(--base-04)",
+              }}
+              title={`Notion status: ${phase.notion_status}`}
+            >
+              Notion: {phase.notion_status}
+            </div>
+          )}
         </div>
         <h4
           className="text-base font-medium"
@@ -115,6 +134,10 @@ export function CurrentPhaseHeader({ phase, isLoading }: CurrentPhaseHeaderProps
               ? "rgba(34, 197, 94, 0.1)"
               : phase.readiness === "blocked"
               ? "rgba(239, 68, 68, 0.1)"
+              : phase.readiness === "deferred"
+              ? "rgba(234, 179, 8, 0.1)"
+              : phase.readiness === "in_progress"
+              ? "rgba(6, 182, 212, 0.1)"
               : "var(--base-03)",
         }}
       >
@@ -127,6 +150,10 @@ export function CurrentPhaseHeader({ phase, isLoading }: CurrentPhaseHeaderProps
             ? "Ready to Execute"
             : phase.readiness === "blocked"
             ? "Blocked"
+            : phase.readiness === "deferred"
+            ? "Deferred"
+            : phase.readiness === "in_progress"
+            ? "In Progress"
             : "Not Ready"}
         </span>
       </div>
@@ -173,6 +200,35 @@ export function CurrentPhaseHeader({ phase, isLoading }: CurrentPhaseHeaderProps
           <p className="text-sm" style={{ color: "var(--text-primary)" }}>
             {phase.next_action}
           </p>
+        </div>
+      )}
+
+      {/* Latest Completed Phase */}
+      {latestCompleted && (
+        <div
+          className="mt-3 pt-3 border-t flex items-center gap-2 text-xs"
+          style={{ borderColor: "var(--base-04)" }}
+        >
+          <span
+            className="w-1.5 h-1.5 rounded-full"
+            style={{ background: "var(--success)" }}
+          />
+          <span style={{ color: "var(--text-tertiary)" }}>
+            Latest completed:
+          </span>
+          <span
+            className="font-mono"
+            style={{ color: "var(--text-secondary)" }}
+          >
+            P{latestCompleted.phase_number}
+          </span>
+          <span style={{ color: "var(--text-tertiary)" }}>—</span>
+          <span
+            className="truncate"
+            style={{ color: "var(--text-secondary)" }}
+          >
+            {latestCompleted.phase_name}
+          </span>
         </div>
       )}
 

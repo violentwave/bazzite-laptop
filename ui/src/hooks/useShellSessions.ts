@@ -11,6 +11,8 @@ import {
 } from "@/types/shell";
 import { callMCPTool } from "@/lib/mcp-client";
 
+const SHELL_ACTIVE_SESSION_KEY = "bazzite.shell.activeSessionId";
+
 interface UseShellSessionsReturn {
   sessions: ShellSession[];
   activeSession: ShellSession | null;
@@ -26,46 +28,100 @@ interface UseShellSessionsReturn {
   getAuditLog: (sessionId?: string, limit?: number) => Promise<AuditLogEntry[]>;
 }
 
+function isErrorResponse(data: unknown): data is { error: string; error_detail?: string; operator_action?: string } {
+  return (
+    typeof data === "object" &&
+    data !== null &&
+    "error" in data &&
+    typeof (data as Record<string, unknown>).error === "string"
+  );
+}
+
+function extractError(data: unknown, fallback: string): string {
+  if (isErrorResponse(data)) {
+    return data.error_detail || data.error || fallback;
+  }
+  return fallback;
+}
+
 export function useShellSessions(): UseShellSessionsReturn {
   const [sessions, setSessions] = useState<ShellSession[]>([]);
-  const [activeSession, setActiveSession] = useState<ShellSession | null>(null);
+  const [activeSession, setActiveSessionRaw] = useState<ShellSession | null>(null);
   const [sessionContext, setSessionContext] = useState<SessionContext | null>(null);
   const [output, setOutput] = useState<TerminalOutput[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const outputRef = useRef<TerminalOutput[]>([]);
 
+  const persistActiveSessionId = useCallback((sessionId: string | null) => {
+    if (typeof window === "undefined") {
+      return;
+    }
+    if (sessionId) {
+      window.localStorage.setItem(SHELL_ACTIVE_SESSION_KEY, sessionId);
+    } else {
+      window.localStorage.removeItem(SHELL_ACTIVE_SESSION_KEY);
+    }
+  }, []);
+
+  const getPersistedActiveSessionId = useCallback((): string | null => {
+    if (typeof window === "undefined") {
+      return null;
+    }
+    return window.localStorage.getItem(SHELL_ACTIVE_SESSION_KEY);
+  }, []);
+
+  const mergeSession = useCallback((updated: ShellSession) => {
+    setSessions((prev) => prev.map((s) => (s.id === updated.id ? updated : s)));
+    setActiveSessionRaw((prev) => (prev?.id === updated.id ? updated : prev));
+  }, []);
+
   const refreshSessions = useCallback(async () => {
     try {
+      setError(null);
       const data = await callMCPTool("shell.list_sessions");
       if (Array.isArray(data)) {
         const sessionList = data as ShellSession[];
         setSessions(sessionList);
-        // Update active session if it exists in the list
-        if (activeSession) {
-          const updated = sessionList.find((s) => s.id === activeSession.id);
-          if (updated) {
-            setActiveSession(updated);
+        setActiveSessionRaw((prev) => {
+          const persistedId = getPersistedActiveSessionId();
+          if (persistedId) {
+            const persisted = sessionList.find((s) => s.id === persistedId);
+            if (persisted) {
+              return persisted;
+            }
+            persistActiveSessionId(null);
           }
-        }
+          if (!prev) return null;
+          const updated = sessionList.find((s) => s.id === prev.id);
+          return updated || prev;
+        });
+      } else if (isErrorResponse(data)) {
+        setError(extractError(data, "Failed to list sessions"));
       }
     } catch (err) {
       setError(
         err instanceof Error
-          ? `Shell session refresh failed: ${err.message}`
-          : "Shell session refresh failed"
+          ? `Shell unavailable: ${err.message}`
+          : "Shell service unavailable"
       );
     }
-  }, [activeSession]);
+  }, [getPersistedActiveSessionId, persistActiveSessionId]);
 
   const fetchSessionContext = useCallback(async (sessionId: string) => {
     try {
       const data = await callMCPTool("shell.get_context", { session_id: sessionId });
-      if (data && typeof data === "object" && !("error" in data)) {
+      if (isErrorResponse(data)) {
+        console.warn("Session context error:", extractError(data, "Context unavailable"));
+        setSessionContext(null);
+        return;
+      }
+      if (data && typeof data === "object" && "session_id" in data) {
         setSessionContext(data as SessionContext);
       }
     } catch (err) {
-      console.error("Failed to fetch session context:", err);
+      console.warn("Failed to fetch session context:", err);
+      setSessionContext(null);
     }
   }, []);
 
@@ -73,14 +129,17 @@ export function useShellSessions(): UseShellSessionsReturn {
     setIsLoading(true);
     setError(null);
     try {
-      const session = (await callMCPTool("shell.create_session", {
-        name,
-        cwd,
-      })) as ShellSession;
+      const data = await callMCPTool("shell.create_session", { name, cwd });
+      if (isErrorResponse(data)) {
+        const errMsg = extractError(data as Record<string, unknown>, "Failed to create session");
+        setError(errMsg);
+        throw new Error(errMsg);
+      }
+      const session = data as ShellSession;
       await refreshSessions();
-      setActiveSession(session);
-      
-      // Add system message
+      setActiveSessionRaw(session);
+      persistActiveSessionId(session.id);
+
       const systemOutput: TerminalOutput = {
         type: "system",
         content: `Session created: ${session.name} (${session.id})`,
@@ -88,18 +147,32 @@ export function useShellSessions(): UseShellSessionsReturn {
       };
       outputRef.current = [systemOutput];
       setOutput(outputRef.current);
-      
+
+      if (session.status === "error") {
+        setError(
+          String(session.metadata?.error || "Session created in error state")
+        );
+        const errOutput: TerminalOutput = {
+          type: "error",
+          content: `Session error: ${String(session.metadata?.error || "unknown error")}`,
+          timestamp: new Date().toISOString(),
+        };
+        outputRef.current = [...outputRef.current, errOutput];
+        setOutput(outputRef.current);
+      }
+
       return session;
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to create session");
+      const msg = err instanceof Error ? err.message : "Failed to create session";
+      setError(msg);
       throw err;
     } finally {
       setIsLoading(false);
     }
-  }, [refreshSessions]);
+  }, [persistActiveSessionId, refreshSessions]);
 
   const executeCommand = useCallback(async (sessionId: string, command: string): Promise<CommandResult> => {
-    // Add command to output
+    setIsLoading(true);
     const commandOutput: TerminalOutput = {
       type: "input",
       content: `$ ${command}`,
@@ -109,12 +182,35 @@ export function useShellSessions(): UseShellSessionsReturn {
     setOutput(outputRef.current);
 
     try {
-      const result = await callMCPTool("shell.execute_command", {
+      const data = await callMCPTool("shell.execute_command", {
         session_id: sessionId,
         command,
-      }) as CommandResult;
+      });
 
-      // Add output
+      if (isErrorResponse(data)) {
+        const errData = data as Record<string, unknown>;
+        const errMsg = String(errData.error_detail || errData.error || "Command failed");
+        const operatorAction = errData.operator_action
+          ? ` ${String(errData.operator_action)}`
+          : "";
+
+        const errorOutput: TerminalOutput = {
+          type: "error",
+          content: `${errMsg}${operatorAction}`,
+          timestamp: new Date().toISOString(),
+        };
+        outputRef.current = [...outputRef.current, errorOutput];
+        setOutput(outputRef.current);
+
+        return {
+          success: false,
+          error: String(errData.error),
+          stderr: errMsg + operatorAction,
+        } as CommandResult;
+      }
+
+      const result = data as CommandResult;
+
       if (result.stdout) {
         const stdoutOutput: TerminalOutput = {
           type: "output",
@@ -131,62 +227,81 @@ export function useShellSessions(): UseShellSessionsReturn {
         };
         outputRef.current = [...outputRef.current, stderrOutput];
       }
+      if (!result.success && !result.stdout && !result.stderr && result.error) {
+        const errorOutput: TerminalOutput = {
+          type: "error",
+          content: result.error,
+          timestamp: new Date().toISOString(),
+        };
+        outputRef.current = [...outputRef.current, errorOutput];
+      }
       setOutput(outputRef.current);
 
-      // Refresh session context
       await fetchSessionContext(sessionId);
 
       return result;
     } catch (err) {
+      const errMsg = err instanceof Error ? err.message : "Command failed";
       const errorOutput: TerminalOutput = {
         type: "error",
-        content: err instanceof Error ? err.message : "Command failed",
+        content: `Connection error: ${errMsg}`,
         timestamp: new Date().toISOString(),
       };
       outputRef.current = [...outputRef.current, errorOutput];
       setOutput(outputRef.current);
-      
-      return { success: false, error: err instanceof Error ? err.message : "Command failed" };
+
+      return { success: false, error: errMsg } as CommandResult;
+    } finally {
+      setIsLoading(false);
     }
   }, [fetchSessionContext]);
 
   const terminateSession = useCallback(async (sessionId: string): Promise<boolean> => {
     try {
-      await callMCPTool("shell.terminate_session", { session_id: sessionId });
+      const data = await callMCPTool("shell.terminate_session", { session_id: sessionId });
+      if (isErrorResponse(data)) {
+        setError(extractError(data, "Failed to terminate session"));
+        return false;
+      }
       await refreshSessions();
-      
+
+      setActiveSessionRaw((prev) => {
+        if (prev?.id === sessionId) return null;
+        return prev;
+      });
       if (activeSession?.id === sessionId) {
-        setActiveSession(null);
         setSessionContext(null);
         outputRef.current = [];
         setOutput([]);
+        persistActiveSessionId(null);
       }
-      
+
       return true;
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to terminate session");
       return false;
     }
-  }, [activeSession, refreshSessions]);
+  }, [activeSession, persistActiveSessionId, refreshSessions]);
 
   const getAuditLog = useCallback(async (sessionId?: string, limit?: number): Promise<AuditLogEntry[]> => {
     try {
       const data = await callMCPTool("shell.get_audit_log", { session_id: sessionId, limit });
-      return Array.isArray(data) ? data : [];
+      if (Array.isArray(data)) {
+        return data as AuditLogEntry[];
+      }
+      return [];
     } catch (err) {
-      console.error("Failed to fetch audit log:", err);
+      console.warn("Failed to fetch audit log:", err);
       return [];
     }
   }, []);
 
-  // Load sessions on mount and refresh periodically
   useEffect(() => {
     refreshSessions();
-    const interval = setInterval(refreshSessions, 5000); // Refresh every 5 seconds
+    const interval = setInterval(refreshSessions, 5000);
     return () => clearInterval(interval);
   }, [refreshSessions]);
 
-  // Fetch context when active session changes
   useEffect(() => {
     if (activeSession) {
       fetchSessionContext(activeSession.id);
@@ -194,6 +309,15 @@ export function useShellSessions(): UseShellSessionsReturn {
       setSessionContext(null);
     }
   }, [activeSession, fetchSessionContext]);
+
+  const setActiveSession = useCallback((session: ShellSession | null) => {
+    setActiveSessionRaw(session);
+    persistActiveSessionId(session?.id || null);
+    if (session) {
+      outputRef.current = [];
+      setOutput([]);
+    }
+  }, [persistActiveSessionId]);
 
   return {
     sessions,
@@ -211,7 +335,6 @@ export function useShellSessions(): UseShellSessionsReturn {
   };
 }
 
-/** Get status color for UI */
 export function getSessionStatusColor(status: SessionStatus): string {
   switch (status) {
     case "active":
@@ -227,14 +350,12 @@ export function getSessionStatusColor(status: SessionStatus): string {
   }
 }
 
-/** Format idle time for display */
 export function formatIdleTime(seconds: number): string {
   if (seconds < 60) return `${seconds}s`;
   if (seconds < 3600) return `${Math.floor(seconds / 60)}m`;
   return `${Math.floor(seconds / 3600)}h`;
 }
 
-/** Format timestamp for display */
 export function formatSessionTime(timestamp: string): string {
   const date = new Date(timestamp);
   return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });

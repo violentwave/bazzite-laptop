@@ -271,6 +271,23 @@ workflow.cancel (run_id) — cancel pending or running steps for a workflow run
 
 Example: Run workflow.list to see available multi-agent workflows. Use workflow.handoff to dispatch a task directly to the security agent.
 
+tool.* (12) — Tool Governance + Analytics Platform (P101):
+tool.analytics.summary ([hours=24]) — usage summary with total invocations, error rates, top tools
+tool.analytics.ranking (metric, [limit=20]) — rank tools by invocations, errors, latency, or cost
+tool.analytics.trends ([tool_name], [periods=7]) — usage trend analysis with growth rates
+tool.governance.audit (tool_name) — run permission/security audit on a tool
+tool.governance.score (tool_name) — get security score (0-100) with factor breakdown
+tool.governance.policies ([action=list], [policy_id], [policy_data]) — list/manage governance policies
+tool.lifecycle.status (tool_name) — get lifecycle state (active/deprecated/legacy/retired)
+tool.lifecycle.deprecate (tool_name, [replacement_tool], [sunset_days=30], [reason]) — deprecate a tool
+tool.lifecycle.list ([state_filter]) — list tools by lifecycle state
+tool.monitoring.health (tool_name) — get health status with error rate and availability
+tool.monitoring.alerts ([min_severity=medium]) — get active monitoring alerts
+tool.monitoring.report () — generate comprehensive health report with circuit breaker status
+
+Example: Use tool.governance.audit to check security posture of any tool. Use tool.monitoring.health
+to check if a tool's circuit breaker is tripped.
+
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 THREAT INTEL CACHING — no rate-limit warnings needed
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -414,3 +431,7 @@ and workflow_steps added step-level observability and cancellation.
 
 P55 (Notion/Slack Control Plane): phase-control timer and the Notion-backed
 phase runner added autonomous phase execution plumbing.
+
+P101 (Tool Governance): tool.analytics.*, tool.governance.*, tool.lifecycle.*,
+tool.monitoring.* — comprehensive governance, analytics, and lifecycle management
+for all 145 MCP tools including usage tracking, security auditing, and circuit breakers.

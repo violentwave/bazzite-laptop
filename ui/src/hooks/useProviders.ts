@@ -140,6 +140,7 @@ export function useProviders(): UseProvidersReturn {
 
       // Handle providers response
       const providersResp = providersData as ProvidersResponse;
+      let hasError = false;
       if (providersResp.success === false) {
         const err = formatProviderError(providersResp);
         setError(err.message);
@@ -147,44 +148,43 @@ export function useProviders(): UseProvidersReturn {
         setOperatorAction(err.action);
         setProviders([]);
         setCounts(null);
+        hasError = true;
       } else {
         setProviders(providersResp.providers || []);
         setCounts(providersResp.counts || null);
       }
 
-      // Handle models response
       const modelsResp = modelsData as ModelsResponse;
       if (modelsResp.success === false) {
-        // Don't overwrite error if providers already failed
-        if (!error) {
+        if (!hasError) {
           const err = formatProviderError(modelsResp);
           setError(err.message);
           setErrorCode(err.code);
           setOperatorAction(err.action);
+          hasError = true;
         }
         setModels([]);
       } else {
         setModels(modelsResp.models || []);
       }
 
-      // Handle routing response
       const routingResp = routingData as RoutingResponse;
       if (routingResp.success === false) {
-        if (!error) {
+        if (!hasError) {
           const err = formatProviderError(routingResp);
           setError(err.message);
           setErrorCode(err.code);
           setOperatorAction(err.action);
+          hasError = true;
         }
         setRouting([]);
       } else {
         setRouting(routingResp.routing || []);
       }
 
-      // Handle health response
       const healthResp = healthData as HealthResponse;
       if (healthResp.success === false) {
-        if (!error) {
+        if (!hasError) {
           const err = formatProviderError(healthResp);
           setError(err.message);
           setErrorCode(err.code);
