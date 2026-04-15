@@ -1195,6 +1195,76 @@
 | Validation | `.venv/bin/python -m pytest tests/test_llm_proxy.py tests/test_mcp_server.py` | 32 passed, 1 skipped |
 | Validation | `cd ui && npx tsc --noEmit` | TypeScript pass |
 
+### P101 — MCP Tool Governance + Analytics Platform
+- **Status**: Done
+- **Finished**: 2026-04-15
+- **Commit SHA**: 73d6e54
+
+| Type | Path | Description |
+|------|------|-------------|
+| Plan | `docs/P101_PLAN.md` | Phase scope, governance framework, analytics platform |
+| Backend | `ai/mcp_bridge/governance/` | Governance policies, lifecycle, monitoring (12 new tools) |
+| Backend | `ai/mcp_bridge/analytics.py` | Usage tracking, trend analysis, anomaly detection |
+| Tests | `tests/test_p101_governance.py` | Governance tests |
+
+### P102 — Dynamic Tool Discovery
+- **Status**: Done
+- **Finished**: 2026-04-15
+- **Commit SHA**: 1e081ca
+
+| Type | Path | Description |
+|------|------|-------------|
+| Plan | `docs/P102_PLAN.md` | AST-based discovery, hot-reload |
+| Backend | `ai/mcp_bridge/discovery.py` | Tool discovery engine |
+| Backend | `ai/mcp_bridge/dynamic_registry.py` | Dynamic registry singleton |
+| Tests | `tests/test_p102_dynamic_tool_discovery.py` | Discovery tests |
+
+### P103 — MCP Tool Marketplace
+- **Status**: Done
+- **Finished**: 2026-04-15
+- **Commit SHA**: 8c9b2e5
+
+| Type | Path | Description |
+|------|------|-------------|
+| Plan | `docs/P103_PLAN.md` | Pack validation, import/export |
+| Backend | `ai/mcp_bridge/marketplace/` | Marketplace models, validator, installer |
+| Tests | `tests/test_p103_tool_marketplace.py` | Marketplace tests |
+
+### P104 — Advanced Tool Analytics + Optimization
+- **Status**: Done
+- **Finished**: 2026-04-15
+- **Commit SHA**: 63cad68
+
+| Type | Path | Description |
+|------|------|-------------|
+| Plan | `docs/P104_PLAN.md` | Anomaly detection, cost analysis, forecasting |
+| Backend | `ai/mcp_bridge/analytics_advanced/` | 8 files: anomaly_detector, forecaster, cost_analyzer, etc. |
+| Tests | `tests/test_p104_advanced_tool_analytics.py` | Analytics tests |
+
+### P105 — External MCP Federation Governance
+- **Status**: Done
+- **Finished**: 2026-04-15
+- **Commit SHA**: c2866b6
+
+| Type | Path | Description |
+|------|------|-------------|
+| Plan | `docs/P105_PLAN.md` | External server discovery, trust scoring |
+| Backend | `ai/mcp_bridge/federation/` | Federation models, discovery, trust, policy |
+| Tests | `tests/test_p105_mcp_federation.py` | Federation tests |
+
+### P106 — Full Browser Runtime Evidence Rebaseline
+- **Status**: Done
+- **Finished**: 2026-04-15
+
+| Type | Path | Description |
+|------|------|-------------|
+| Plan | `docs/P106_PLAN.md` | Browser evidence validation |
+| Evidence | `docs/evidence/p106/panel-evidence.json` | Panel structure verification |
+| Evidence | `docs/evidence/p106/panel-visible-text.json` | Text content sampling |
+| Validation | `ruff check ai/ tests/` | All checks pass |
+| Validation | `python -m pytest tests/test_mcp_tools.py` | Core tests pass |
+| Validation | `cd ui && npx tsc --noEmit` | TypeScript pass |
+
 ## Cross-Phase Documentation
 
 ### Hub Docs (docs/ root)

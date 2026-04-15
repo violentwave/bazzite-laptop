@@ -1,0 +1,143 @@
+{
+  "captured_at": "2026-04-15T19:40:00Z",
+  "url": "http://localhost:3001",
+  "ui_dev_server": "http://localhost:3001 (port 3000 occupied)",
+  "panels": [
+    {
+      "id": "chat",
+      "nav_title": "Chat",
+      "expected_header": "Chat Workspace",
+      "observed_header": "Chat Workspace",
+      "checks": {
+        "Message Input": true,
+        "MCP Tools Available": true,
+        "LLM Proxy Connection": true
+      },
+      "status": "operational"
+    },
+    {
+      "id": "settings",
+      "nav_title": "Settings",
+      "expected_header": "Settings",
+      "observed_header": "Settings",
+      "checks": {
+        "PIN Setup": true,
+        "PIN Verify": true,
+        "Secrets Management": true,
+        "Audit Log": true
+      },
+      "status": "operational"
+    },
+    {
+      "id": "providers",
+      "nav_title": "Models",
+      "expected_header": "Models & Providers",
+      "observed_header": "Models & Providers",
+      "checks": {
+        "Provider List": true,
+        "Model Modes": true,
+        "Routing Table": true,
+        "Health Status": true
+      },
+      "status": "operational"
+    },
+    {
+      "id": "security",
+      "nav_title": "Security",
+      "expected_header": "Security Ops Center",
+      "observed_header": "Security Ops Center",
+      "checks": {
+        "Security Status": true,
+        "Scan Actions": true,
+        "Threat Intelligence": true
+      },
+      "status": "operational"
+    },
+    {
+      "id": "projects",
+      "nav_title": "Projects",
+      "expected_header": "Projects & Phases",
+      "observed_header": "Projects & Phases",
+      "checks": {
+        "Current Phase": true,
+        "Phase Timeline": true,
+        "Workflow State": true,
+        "Notion Sync": true
+      },
+      "status": "operational"
+    },
+    {
+      "id": "terminal",
+      "nav_title": "Terminal",
+      "expected_header": "Terminal",
+      "observed_header": "Terminal",
+      "checks": {
+        "Shell Sessions": true,
+        "Command Execution": true,
+        "Audit Logging": true
+      },
+      "status": "operational"
+    },
+    {
+      "id": "governance",
+      "nav_title": "Governance",
+      "expected_header": "Tool Governance",
+      "observed_header": "Tool Governance (P101)",
+      "checks": {
+        "Audit Tools": true,
+        "Policy Management": true,
+        "Lifecycle Control": true,
+        "Monitoring": true
+      },
+      "status": "operational",
+      "tools": ["tool.governance.audit", "tool.governance.policies", "tool.lifecycle.*", "tool.monitoring.*"]
+    },
+    {
+      "id": "marketplace",
+      "nav_title": "Marketplace",
+      "expected_header": "Tool Marketplace",
+      "observed_header": "Tool Marketplace (P103)",
+      "checks": {
+        "List Packs": true,
+        "Validate Pack": true,
+        "Import/Export": true,
+        "Install/Uninstall": true
+      },
+      "status": "operational",
+      "tools": ["tool.marketplace.list", "tool.marketplace.validate", "tool.marketplace.import", "tool.marketplace.export"]
+    },
+    {
+      "id": "optimization",
+      "nav_title": "Optimization",
+      "expected_header": "Tool Optimization",
+      "observed_header": "Tool Optimization (P104)",
+      "checks": {
+        "Recommendations": true,
+        "Stale Tool Detection": true,
+        "Cost Reporting": true,
+        "Latency Analysis": true,
+        "Forecasting": true
+      },
+      "status": "operational",
+      "tools": ["tool.optimization.recommend", "tool.optimization.stale_tools", "tool.optimization.cost_report", "tool.optimization.latency_report", "tool.optimization.anomalies", "tool.optimization.forecast"]
+    },
+    {
+      "id": "federation",
+      "nav_title": "Federation",
+      "expected_header": "MCP Federation",
+      "observed_header": "MCP Federation (P105)",
+      "checks": {
+        "Discover Servers": true,
+        "List Servers": true,
+        "Inspect Server": true,
+        "Trust Scoring": true,
+        "Audit": true
+      },
+      "status": "operational",
+      "tools": ["tool.federation.discover", "tool.federation.list_servers", "tool.federation.inspect_server", "tool.federation.trust_score", "tool.federation.audit", "tool.federation.disable"]
+    }
+  ],
+  "total_mcp_tools": 169,
+  "mcp_bridge_status": "running",
+  "llm_proxy_status": "running"
+}

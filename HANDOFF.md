@@ -10,17 +10,38 @@ Auto-generated cross-tool handoff. Updated by save-handoff.sh
 - **Branch:** master
 - **Launch Gate:** PASSED — console is launch-ready
 - **Security Status:** All vulnerabilities patched (0 Python CVEs, 0 npm CVEs)
-- **Latest Commit:** P105 External MCP Federation (c2866b6)
+- **Latest Commit:** P106 Browser Runtime Evidence Rebaseline
 
 ## Open Tasks
 
 - Rotate the Figma PAT that was exposed in the P96 prompt (security priority)
 - Manually create missing Midnight Glass artifacts in Figma (API cannot create files)
-- Create P101 Notion database entry (phase completed, needs tracking)
-- Create P102 Notion database entry (phase completed - Dynamic Tool Discovery)
-- Create P103 Notion database entry (phase completed - MCP Tool Marketplace)
-- Create P104 Notion database entry (phase completed - Advanced Tool Analytics)
-- Create P105 Notion database entry (phase completed - External MCP Federation)
+
+## P106 Update — Full Browser Runtime Evidence Rebaseline (2026-04-15)
+
+**Status:** Complete  
+**Files:** docs/P106_PLAN.md  
+**MCP Tools:** 169 total (verified)
+
+### Deliverables
+- **Backend Validation:** ruff check ✅, pytest (core) ✅, TypeScript ✅
+- **MCP Tool Categories Verified:**
+  - P101 Governance: 12 tools ✅
+  - P102 Dynamic Discovery: 6 tools ✅
+  - P103 Marketplace: 6 tools ✅
+  - P104 Optimization: 6 tools ✅
+  - P105 Federation: 6 tools ✅
+- **Runtime Services:** MCP Bridge (8766) ✅, LLM Proxy (8767) ✅, UI (3001) ✅
+- **Panel Evidence:** 10 panels verified operational (Chat, Settings, Providers, Security, Projects, Terminal, Governance, Marketplace, Optimization, Federation)
+- **Evidence Files:** docs/evidence/p106/panel-evidence.json, panel-visible-text.json
+- **Notion:** P106 row created with Done status
+
+### Notion Stale Debt Resolution
+- P101 Notion row: ✅ Already created
+- P102 Notion row: ✅ Already created
+- P103 Notion row: ✅ Created during session
+- P104 Notion row: ✅ Created during session
+- P105 Notion row: ✅ Created during session
 
 ## P102 Update — Dynamic Tool Discovery (2026-04-15)
 

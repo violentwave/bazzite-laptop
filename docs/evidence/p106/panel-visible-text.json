@@ -1,0 +1,45 @@
+{
+  "captured_at": "2026-04-15T19:40:00Z",
+  "panel_text_content": {
+    "chat": {
+      "title": "Chat Workspace",
+      "visible_elements": ["Message input", "Send button", "Response area"]
+    },
+    "settings": {
+      "title": "Settings",
+      "visible_elements": ["PIN Setup", "PIN Verify", "Secrets List", "Audit Log"]
+    },
+    "providers": {
+      "title": "Models & Providers",
+      "visible_elements": ["fast mode", "reason mode", "code mode", "batch mode", "embed mode"]
+    },
+    "security": {
+      "title": "Security Ops Center",
+      "visible_elements": ["Status: clean", "Quick Scan", "Health Check"]
+    },
+    "projects": {
+      "title": "Projects & Phases",
+      "visible_elements": ["Current: P98", "Latest: P102", "Timeline", "Workflow"]
+    },
+    "terminal": {
+      "title": "Terminal",
+      "visible_elements": ["Shell", "New Session", "Command input"]
+    },
+    "governance": {
+      "title": "Tool Governance (P101)",
+      "visible_elements": ["Audit", "Policies", "Lifecycle", "Monitoring"]
+    },
+    "marketplace": {
+      "title": "Tool Marketplace (P103)",
+      "visible_elements": ["List", "Validate", "Import", "Export", "Install"]
+    },
+    "optimization": {
+      "title": "Tool Optimization (P104)",
+      "visible_elements": ["Recommendations", "Stale Tools", "Cost Report", "Latency"]
+    },
+    "federation": {
+      "title": "MCP Federation (P105)",
+      "visible_elements": ["Discover", "List Servers", "Trust Score", "Audit"]
+    }
+  }
+}
