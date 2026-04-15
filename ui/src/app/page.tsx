@@ -7,6 +7,7 @@ import { ProvidersContainer } from "@/components/providers/ProvidersContainer";
 import { SecurityContainer } from "@/components/security/SecurityContainer";
 import { ShellContainer } from "@/components/shell-gateway/ShellContainer";
 import { ProjectWorkflowContainer } from "@/components/project-workflow/ProjectWorkflowContainer";
+import { ToolControlCenterContainer } from "@/components/tool-control/ToolControlCenterContainer";
 
 export default function Home() {
   const { activePanel } = useShell();
@@ -37,6 +38,8 @@ export default function Home() {
       <div className="flex-1 overflow-hidden">
         {activePanel === "chat" ? (
           <ChatContainer />
+        ) : activePanel === "tools" ? (
+          <ToolControlCenterContainer />
         ) : activePanel === "models" ? (
           <ProvidersContainer />
         ) : activePanel === "settings" ? (
@@ -71,6 +74,18 @@ function PanelIcon({ panel }: { panel: string }) {
           strokeWidth="2"
         >
           <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+        </svg>
+      );
+    case "tools":
+      return (
+        <svg
+          style={iconStyle}
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+        >
+          <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />
         </svg>
       );
     case "security":
@@ -147,6 +162,7 @@ function PanelIcon({ panel }: { panel: string }) {
 function getPanelTitle(panel: string): string {
   const titles: Record<string, string> = {
     chat: "Chat Workspace",
+    tools: "Tool Control Center",
     security: "Security Ops Center",
     models: "Models & Providers",
     terminal: "Terminal",
@@ -174,6 +190,23 @@ function PanelStatus({ panel }: { panel: string }) {
             style={{ background: "var(--live-cyan)" }}
           />
           Live
+        </div>
+      );
+    case "tools":
+      return (
+        <div
+          className="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs"
+          style={{
+            background: "var(--base-02)",
+            color: "var(--accent-primary)",
+            border: "1px solid var(--base-04)",
+          }}
+        >
+          <span
+            className="w-2 h-2 rounded-full"
+            style={{ background: "var(--accent-primary)" }}
+          />
+          169 Tools
         </div>
       );
     case "security":
