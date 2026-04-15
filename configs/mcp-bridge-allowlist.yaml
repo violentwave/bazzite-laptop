@@ -2143,3 +2143,137 @@ tools:
       readOnly: false
       destructive: true
       openWorld: false
+
+  tool.optimization.recommend:
+    description: "Generate actionable optimization recommendations based on analytics"
+    source: python
+    module: ai.mcp_bridge.tool_optimization_handlers
+    function: "handle_tool_optimization_recommend"
+    args:
+      start_time:
+        type: string
+        required: false
+        description: "Start of analysis period (ISO 8601)"
+      end_time:
+        type: string
+        required: false
+        description: "End of analysis period (ISO 8601)"
+      max_recommendations:
+        type: integer
+        required: false
+        default: 20
+        min: 1
+        max: 100
+        description: "Maximum number of recommendations"
+    annotations:
+      readOnly: true
+      destructive: false
+      openWorld: false
+
+  tool.optimization.stale_tools:
+    description: "Detect stale, unused, and underutilized tools"
+    source: python
+    module: ai.mcp_bridge.tool_optimization_handlers
+    function: "handle_tool_optimization_stale_tools"
+    args:
+      start_time:
+        type: string
+        required: false
+        description: "Start of analysis period (ISO 8601)"
+      end_time:
+        type: string
+        required: false
+        description: "End of analysis period (ISO 8601)"
+      unused_days:
+        type: integer
+        required: false
+        default: 30
+        min: 7
+        max: 365
+        description: "Days without usage to consider unused"
+    annotations:
+      readOnly: true
+      destructive: false
+      openWorld: false
+
+  tool.optimization.cost_report:
+    description: "Generate cost analysis report for tool usage"
+    source: python
+    module: ai.mcp_bridge.tool_optimization_handlers
+    function: "handle_tool_optimization_cost_report"
+    args:
+      start_time:
+        type: string
+        required: false
+        description: "Start of analysis period (ISO 8601)"
+      end_time:
+        type: string
+        required: false
+        description: "End of analysis period (ISO 8601)"
+    annotations:
+      readOnly: true
+      destructive: false
+      openWorld: false
+
+  tool.optimization.latency_report:
+    description: "Generate latency analysis report for tools"
+    source: python
+    module: ai.mcp_bridge.tool_optimization_handlers
+    function: "handle_tool_optimization_latency_report"
+    args:
+      start_time:
+        type: string
+        required: false
+        description: "Start of analysis period (ISO 8601)"
+      end_time:
+        type: string
+        required: false
+        description: "End of analysis period (ISO 8601)"
+    annotations:
+      readOnly: true
+      destructive: false
+      openWorld: false
+
+  tool.optimization.anomalies:
+    description: "Detect anomalies in tool usage patterns"
+    source: python
+    module: ai.mcp_bridge.tool_optimization_handlers
+    function: "handle_tool_optimization_anomalies"
+    args:
+      start_time:
+        type: string
+        required: false
+        description: "Start of analysis period (ISO 8601)"
+      end_time:
+        type: string
+        required: false
+        description: "End of analysis period (ISO 8601)"
+      sensitivity:
+        type: string
+        required: false
+        default: medium
+        enum: [low, medium, high]
+        description: "Detection sensitivity"
+    annotations:
+      readOnly: true
+      destructive: false
+      openWorld: false
+
+  tool.optimization.forecast:
+    description: "Generate usage forecasting report"
+    source: python
+    module: ai.mcp_bridge.tool_optimization_handlers
+    function: "handle_tool_optimization_forecast"
+    args:
+      start_time:
+        type: string
+        required: false
+        description: "Start of historical period (ISO 8601)"
+      end_time:
+        type: string
+        required: false
+        description: "End of historical period (ISO 8601)"
+    annotations:
+      readOnly: true
+      destructive: false
+      openWorld: false

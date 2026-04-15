@@ -2316,6 +2316,54 @@ async def _execute_python_tool(tool_name: str, tool_def: dict, args: dict) -> st
             result = await handle_tool_pack_remove(args)
             return result
 
+        elif tool_name == "tool.optimization.recommend":
+            from ai.mcp_bridge.tool_optimization_handlers import (
+                handle_tool_optimization_recommend,  # noqa: PLC0415
+            )
+
+            result = await handle_tool_optimization_recommend(args)
+            return result
+
+        elif tool_name == "tool.optimization.stale_tools":
+            from ai.mcp_bridge.tool_optimization_handlers import (
+                handle_tool_optimization_stale_tools,  # noqa: PLC0415
+            )
+
+            result = await handle_tool_optimization_stale_tools(args)
+            return result
+
+        elif tool_name == "tool.optimization.cost_report":
+            from ai.mcp_bridge.tool_optimization_handlers import (
+                handle_tool_optimization_cost_report,  # noqa: PLC0415
+            )
+
+            result = await handle_tool_optimization_cost_report(args)
+            return result
+
+        elif tool_name == "tool.optimization.latency_report":
+            from ai.mcp_bridge.tool_optimization_handlers import (
+                handle_tool_optimization_latency_report,  # noqa: PLC0415
+            )
+
+            result = await handle_tool_optimization_latency_report(args)
+            return result
+
+        elif tool_name == "tool.optimization.anomalies":
+            from ai.mcp_bridge.tool_optimization_handlers import (
+                handle_tool_optimization_anomalies,  # noqa: PLC0415
+            )
+
+            result = await handle_tool_optimization_anomalies(args)
+            return result
+
+        elif tool_name == "tool.optimization.forecast":
+            from ai.mcp_bridge.tool_optimization_handlers import (
+                handle_tool_optimization_forecast,  # noqa: PLC0415
+            )
+
+            result = await handle_tool_optimization_forecast(args)
+            return result
+
         else:
             return f"[Tool '{tool_name}' not implemented]"
 
