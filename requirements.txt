@@ -57,7 +57,7 @@ packaging==25.0
 pefile==2024.8.26
 perf==0.1
 pexpect==4.9.0
-pillow==12.1.1
+pillow==12.2.0
 pip==26.0
 pip-autoremove==0.10.0
 ply==3.11
