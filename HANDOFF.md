@@ -10,7 +10,7 @@ Auto-generated cross-tool handoff. Updated by save-handoff.sh
 - **Branch:** master
 - **Launch Gate:** PASSED — console is launch-ready
 - **Security Status:** All vulnerabilities patched (0 Python CVEs, 0 npm CVEs)
-- **Latest Commit:** P102 Dynamic Tool Discovery (uncommitted)
+- **Latest Commit:** P104 Advanced Tool Analytics (63cad68)
 
 ## Open Tasks
 
@@ -18,6 +18,8 @@ Auto-generated cross-tool handoff. Updated by save-handoff.sh
 - Manually create missing Midnight Glass artifacts in Figma (API cannot create files)
 - Create P101 Notion database entry (phase completed, needs tracking)
 - Create P102 Notion database entry (phase completed - Dynamic Tool Discovery)
+- Create P103 Notion database entry (phase completed - MCP Tool Marketplace)
+- Create P104 Notion database entry (phase completed - Advanced Tool Analytics)
 
 ## P102 Update — Dynamic Tool Discovery (2026-04-15)
 
@@ -36,6 +38,53 @@ Auto-generated cross-tool handoff. Updated by save-handoff.sh
   - `tool.registry_stats` - Registry statistics
   - `tool.watch` - Control file watcher
 - **Tests:** 416 lines in `tests/test_p102_dynamic_tool_discovery.py`
+- **Ruff:** All checks passed on new code
+
+## P103 Update — MCP Tool Marketplace (2026-04-15)
+
+**Status:** Complete  
+**Files:** docs/P103_PLAN.md  
+**MCP Tools:** 6 new tools (157 total)
+
+### Deliverables
+- **Marketplace Models** (`ai/mcp_bridge/marketplace/models.py`): PackManifest, ToolPack, ValidationResult, RiskTier, PackState
+- **Pack Validator** (`ai/mcp_bridge/marketplace/pack_validator.py`): Schema validation, checksum verification, risk tier constraints
+- **Pack Store** (`ai/mcp_bridge/marketplace/pack_store.py`): Staging, indexing, file management
+- **Import/Export** (`ai/mcp_bridge/marketplace/import_export.py`): PackImporter, PackExporter for portable tool packs
+- **Installer** (`ai/mcp_bridge/marketplace/installer.py`): Tool pack installation with P102 integration
+- **6 New MCP Tools:**
+  - `tool.marketplace.list` - List available tool packs
+  - `tool.marketplace.validate` - Validate a tool pack manifest
+  - `tool.marketplace.export` - Export tools to a pack
+  - `tool.marketplace.import` - Import a tool pack
+  - `tool.marketplace.install` - Install a tool pack
+  - `tool.marketplace.uninstall` - Uninstall a tool pack
+- **Tests:** 35 passing in `tests/test_p103_tool_marketplace.py`
+- **Ruff:** All checks passed on new code
+
+## P104 Update — Advanced Tool Analytics + Optimization (2026-04-15)
+
+**Status:** Complete  
+**Files:** docs/P104_PLAN.md  
+**MCP Tools:** 6 new tools (163 total)
+
+### Deliverables
+- **Analytics Advanced Module** (`ai/mcp_bridge/analytics_advanced/`): 8 files
+  - `models.py` - OptimizationRecommendation, StaleTool, CostMetric, LatencyMetric
+  - `anomaly_detector.py` - Multi-metric anomaly detection (latency, error, cost, usage)
+  - `forecaster.py` - Usage forecasting with linear regression
+  - `cost_analyzer.py` - Cost breakdown and trend analysis
+  - `performance_scorer.py` - Performance scoring with grades (A-F)
+  - `stale_detector.py` - Stale/underutilized tool detection
+  - `recommender.py` - Unified optimization recommendation engine
+- **6 New MCP Tools:**
+  - `tool.optimization.recommend` - Generate actionable optimization recommendations
+  - `tool.optimization.stale_tools` - Detect stale, unused, underutilized tools
+  - `tool.optimization.cost_report` - Generate cost analysis report
+  - `tool.optimization.latency_report` - Generate latency analysis report
+  - `tool.optimization.anomalies` - Detect anomalies in tool usage
+  - `tool.optimization.forecast` - Generate usage forecasting report
+- **Tests:** 18 passing in `tests/test_p104_advanced_tool_analytics.py`
 - **Ruff:** All checks passed on new code
 
 ## Notion P99/P100/P101 Update
