@@ -10,12 +10,32 @@ Auto-generated cross-tool handoff. Updated by save-handoff.sh
 - **Branch:** master
 - **Launch Gate:** PASSED — console is launch-ready
 - **Security Status:** All vulnerabilities patched (0 Python CVEs, 0 npm CVEs)
-- **Latest Commit:** P108 Persistent Shell Gateway Upgrade
+- **Latest Commit:** P109 Production-Grade Settings & Secrets UX
 
 ## Open Tasks
 
 - Rotate the Figma PAT that was exposed in the P96 prompt (security priority)
 - Manually create missing Midnight Glass artifacts in Figma (API cannot create files)
+
+## P109 Update — Production-Grade Settings & Secrets UX (2026-04-15)
+
+**Status:** Complete  
+**Files:** docs/P109_PLAN.md
+
+### Implementation Summary
+- **Analysis:** Settings and Secrets UX already production-grade
+- **PIN Auth:** PBKDF2-SHA256 hashing, 3-attempt lockout
+- **Secrets:** Masked display, reveal/update/delete, double-click delete confirm
+- **Audit:** JSONL logging for all sensitive operations
+- **Tests:** 26 passing (4 settings + 22 config)
+- **Security:** No browser-native dialogs, atomic writes, no raw secrets in UI
+
+### Validation
+- ruff check: ✅ Pass
+- TypeScript: ✅ Pass
+
+### Notion
+- P109 row created with Done status
 
 ## P108 Update — Persistent Shell Gateway Upgrade (2026-04-15)
 
