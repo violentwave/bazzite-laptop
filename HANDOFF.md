@@ -15,14 +15,14 @@ Project truth model:
 - **Project:** bazzite-laptop
 - **Branch:** master
 - **Completed Phases:** P119 — Security Autopilot Core; P120 — Security Policy Engine
-- **Active Phase:** P121 — Security Autopilot UI
+- **Active Phase:** P122 — Safe Remediation Runner
 - **Next Gated Phase:** P122 — Safe Remediation Runner
 - **Phase Truth:** Notion Bazzite Phases database (primary)
 - **Validation State:** P119 and P120 reported complete and validated; P121 is the current implementation target
 
 ## Open Tasks
 
-- Execute or complete **P121 — Security Autopilot UI**.
+- Execute or complete **P122 — Safe Remediation Runner**.
 - Keep P121 UI-first and read-only.
 - Do **not** start P122 until P121 closeout is complete.
 - Reconcile stale phase page body text during phase closeout if row properties and page body disagree.
