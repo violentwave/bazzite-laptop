@@ -4,6 +4,25 @@ All significant changes. Format: date · deliverables · deltas · commit.
 
 ---
 
+## Phase 121 — Security Autopilot UI
+**Date:** 2026-04-16 · **Commit:** pending
+
+**Deliverables:**
+- Added `ai/security_autopilot/ui_service.py` for read-only autopilot aggregation (overview, findings, incidents, evidence, audit, policy, remediation queue).
+- Added seven `security.autopilot_*` MCP handlers in `ai/mcp_bridge/tools.py` and allowlist entries in `configs/mcp-bridge-allowlist.yaml`.
+- Added UI autopilot contracts and data hook: `ui/src/types/security-autopilot.ts` and `ui/src/hooks/useSecurityAutopilot.ts`.
+- Added new panel surfaces in `ui/src/components/security/AutopilotPanels.tsx` and integrated seven-tab autopilot navigation in `ui/src/components/security/SecurityContainer.tsx`.
+- Added `tests/test_security_autopilot_tools.py` and `docs/P121_PLAN.md` + `docs/evidence/p121/validation.md`.
+
+**Validation:**
+- `cd ui && npx tsc --noEmit`
+- `cd ui && npm run build`
+- `.venv/bin/python -m pytest tests/test_security_autopilot_tools.py -q`
+- `ruff check ai/ tests/`
+- `.venv/bin/python -m pytest tests/ -q --tb=short`
+
+---
+
 ## Phase 120 — Security Policy Engine
 **Date:** 2026-04-16 · **Commit:** pending
 

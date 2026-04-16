@@ -200,7 +200,7 @@ bash scripts/start-security-tray-qt.sh
 
 ---
 
-## 4. MCP Tools Reference (96 tools)
+## 4. MCP Tools Reference (182 tools)
 
 Tools are exposed through the MCP bridge and consumed by the Unified Control Console
 as primary UX, with Newelle as a supported fallback client. Tool outputs are
@@ -268,6 +268,28 @@ truncated to 4 KB and paths are redacted.
 | `security.run_ingest`        | —                       | Triggers log pipeline re-ingestion          |
 | `security.correlate`         | `ioc`, `ioc_type`       | Correlate IOC across VT/OTX/AbuseIPDB/GreyNoise/URLhaus |
 | `security.recommend_action`  | `finding_type`, `finding_id` | Response playbook for threat findings  |
+
+### security.ops_* (5 tools)
+
+| Tool                           | Args        | What it returns                                  |
+|--------------------------------|-------------|--------------------------------------------------|
+| `security.ops_overview`        | —           | Security operations overview summary             |
+| `security.ops_alerts`          | `severity`, `limit` | Security alert feed with optional filtering |
+| `security.ops_findings`        | `limit`     | Recent scan findings                             |
+| `security.ops_provider_health` | —           | Provider health issues relevant to security ops  |
+| `security.ops_acknowledge`     | `alert_id`  | Acknowledges one security alert                  |
+
+### security.autopilot_* (7 tools)
+
+| Tool                                   | Args   | What it returns |
+|----------------------------------------|--------|-----------------|
+| `security.autopilot_overview`          | —      | Security Autopilot overview (mode, queue, incidents, audit counts) |
+| `security.autopilot_findings`          | `limit`| Normalized autopilot findings from current security signals |
+| `security.autopilot_incidents`         | `limit`| Grouped autopilot incidents for operator triage |
+| `security.autopilot_evidence`          | `limit`| Redacted autopilot evidence bundles (read-only derived view) |
+| `security.autopilot_audit`             | `limit`| Recent autopilot audit ledger events |
+| `security.autopilot_policy`            | —      | Active autopilot policy status (mode/rules/path roots) |
+| `security.autopilot_remediation_queue` | `limit`| Plan-only remediation queue (no execution) |
 
 ### knowledge.* (6 tools)
 

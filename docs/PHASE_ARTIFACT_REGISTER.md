@@ -341,6 +341,23 @@ The repo has complete historical coverage across the earlier tranches, but older
 | Package Export | `ai/security_autopilot/__init__.py` | Public policy engine exports |
 | Tests | `tests/test_security_autopilot_policy.py` | Coverage for safe defaults, lockdown, malformed input, redaction, and P119 action evaluation |
 
+### P121 — Security Autopilot UI
+- **Status**: Done
+- **Finished**: 2026-04-16
+
+| Type | Path | Description |
+|------|------|-------------|
+| Plan | `docs/P121_PLAN.md` | Phase scope, safety boundaries, and validation commands for Security Autopilot UI |
+| Evidence | `docs/evidence/p121/validation.md` | Validation matrix and command outcomes |
+| Backend Module | `ai/security_autopilot/ui_service.py` | Read-only aggregation for autopilot overview/findings/incidents/evidence/audit/policy/queue |
+| MCP Bridge | `ai/mcp_bridge/tools.py` | Added `security.autopilot_*` tool handlers with explicit degraded responses |
+| Config | `configs/mcp-bridge-allowlist.yaml` | Registered seven `security.autopilot_*` read-only tools |
+| UI Hook | `ui/src/hooks/useSecurityAutopilot.ts` | Aggregates autopilot tool calls with partial/degraded state handling |
+| UI Types | `ui/src/types/security-autopilot.ts` | Typed contracts for autopilot surfaces |
+| UI Components | `ui/src/components/security/AutopilotPanels.tsx` | Seven autopilot surface panels |
+| UI Integration | `ui/src/components/security/SecurityContainer.tsx` | Security panel tab model switched to autopilot-focused surfaces |
+| Tests | `tests/test_security_autopilot_tools.py` | Coverage for overview aggregation, plan-only queue, and redaction behavior |
+
 ## Cross-Phase Documentation
 
 ### Hub Docs (docs/ root)

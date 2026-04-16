@@ -2,12 +2,18 @@
 
 import { useState } from "react";
 import { useSecurity } from "@/hooks/useSecurity";
-import { SecurityTab } from "@/types/security";
+import { useSecurityAutopilot } from "@/hooks/useSecurityAutopilot";
+import { SecurityAutopilotTab } from "@/types/security-autopilot";
 import { callMCPTool } from "@/lib/mcp-client";
-import { SecurityOverview as SecurityOverviewPanel } from "./SecurityOverview";
-import { AlertFeed } from "./AlertFeed";
-import { FindingsPanel } from "./FindingsPanel";
-import { HealthCluster } from "./HealthCluster";
+import {
+  AutopilotAuditPanel,
+  AutopilotEvidencePanel,
+  AutopilotFindingsPanel,
+  AutopilotIncidentsPanel,
+  AutopilotOverviewPanel,
+  AutopilotPolicyPanel,
+  AutopilotRemediationQueuePanel,
+} from "./AutopilotPanels";
 import { SecurityActionsPanel } from "./SecurityActionsPanel";
 
 function getErrorSeverity(errorCode: string | null): 'error' | 'warning' | 'info' {
@@ -121,26 +127,38 @@ function ErrorState({
 }
 
 export function SecurityContainer() {
-  const [activeTab, setActiveTab] = useState<SecurityTab>("overview");
+  const [activeTab, setActiveTab] = useState<SecurityAutopilotTab>("overview");
   const [actionMessage, setActionMessage] = useState<string | null>(null);
   const {
     overview,
-    alerts,
-    findings,
-    providerIssues,
     isLoading,
-    error,
-    errorCode,
-    operatorAction,
-    partialData,
-    missingSources,
     refresh,
-    acknowledgeAlert,
-    lastRefresh,
+    lastRefresh: opsLastRefresh,
   } = useSecurity();
 
-  // Check if we have data despite errors
-  const hasData = overview || alerts.length > 0 || findings.length > 0;
+  const {
+    overview: autopilotOverview,
+    findings: autopilotFindings,
+    incidents,
+    evidence,
+    auditEvents,
+    policy,
+    remediationQueue,
+    isLoading: autopilotLoading,
+    error: autopilotError,
+    errorCode: autopilotErrorCode,
+    operatorAction: autopilotOperatorAction,
+    isPartial: autopilotPartial,
+    missingSources: autopilotMissingSources,
+    refresh: refreshAutopilot,
+    lastRefresh,
+  } = useSecurityAutopilot();
+
+  const hasData =
+    autopilotOverview !== null ||
+    autopilotFindings.length > 0 ||
+    incidents.length > 0 ||
+    remediationQueue.length > 0;
 
   const runQuickScan = async () => {
     try {
@@ -148,7 +166,7 @@ export function SecurityContainer() {
         scan_type: "quick",
       })) as { message?: string };
       setActionMessage(result?.message || "Quick scan requested.");
-      await refresh();
+      await Promise.all([refresh(), refreshAutopilot()]);
     } catch (err) {
       const message = err instanceof Error ? err.message : "Failed to trigger quick scan";
       setActionMessage(`Quick scan failed: ${message}`);
@@ -166,14 +184,14 @@ export function SecurityContainer() {
       } else {
         setActionMessage(result?.message || "Health snapshot requested.");
       }
-      await refresh();
+      await Promise.all([refresh(), refreshAutopilot()]);
     } catch (err) {
       const message = err instanceof Error ? err.message : "Failed to trigger health check";
       setActionMessage(`Health check failed: ${message}`);
     }
   };
 
-  if (isLoading && !hasData) {
+  if (autopilotLoading && !hasData) {
     return (
       <div className="h-full flex items-center justify-center">
         <div className="text-center">
@@ -195,15 +213,15 @@ export function SecurityContainer() {
   }
 
   // Full error state - no data at all
-  if (error && !hasData) {
+  if (autopilotError && !hasData) {
     return (
       <ErrorState
-        error={error}
-        errorCode={errorCode}
-        operatorAction={operatorAction}
-        partialData={partialData}
-        missingSources={missingSources}
-        onRetry={refresh}
+        error={autopilotError}
+        errorCode={autopilotErrorCode}
+        operatorAction={autopilotOperatorAction}
+        partialData={autopilotPartial}
+        missingSources={autopilotMissingSources}
+        onRetry={refreshAutopilot}
       />
     );
   }
@@ -227,34 +245,54 @@ export function SecurityContainer() {
             label="Overview"
           />
           <TabButton
-            active={activeTab === "alerts"}
-            onClick={() => setActiveTab("alerts")}
-            icon={<AlertIcon />}
-            label="Alerts"
-            badge={overview?.critical_count || 0}
-            badgeColor="var(--danger)"
-          />
-          <TabButton
             active={activeTab === "findings"}
             onClick={() => setActiveTab("findings")}
             icon={<ScanIcon />}
             label="Findings"
+            badge={autopilotOverview?.finding_count || 0}
+            badgeColor="var(--danger)"
           />
           <TabButton
-            active={activeTab === "health"}
-            onClick={() => setActiveTab("health")}
+            active={activeTab === "incidents"}
+            onClick={() => setActiveTab("incidents")}
+            icon={<AlertIcon />}
+            label="Incidents"
+            badge={autopilotOverview?.open_incident_count || 0}
+          />
+          <TabButton
+            active={activeTab === "evidence"}
+            onClick={() => setActiveTab("evidence")}
+            icon={<EvidenceIcon />}
+            label="Evidence"
+          />
+          <TabButton
+            active={activeTab === "audit"}
+            onClick={() => setActiveTab("audit")}
+            icon={<AuditIcon />}
+            label="Audit"
+          />
+          <TabButton
+            active={activeTab === "policy"}
+            onClick={() => setActiveTab("policy")}
             icon={<HealthIcon />}
-            label="Health"
+            label="Policy"
+          />
+          <TabButton
+            active={activeTab === "remediation"}
+            onClick={() => setActiveTab("remediation")}
+            icon={<QueueIcon />}
+            label="Remediation Queue"
+            badge={autopilotOverview?.remediation_queue_count || 0}
           />
           <div className="flex-1" />
           <button
-            onClick={refresh}
-            disabled={isLoading}
+            onClick={refreshAutopilot}
+            disabled={autopilotLoading}
             className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm transition-colors disabled:opacity-50"
             style={{ color: "var(--text-secondary)" }}
             title="Refresh"
           >
-            <RefreshIcon spinning={isLoading} />
+            <RefreshIcon spinning={autopilotLoading} />
             <span className="hidden sm:inline">
               {lastRefresh
                 ? `Updated ${lastRefresh.toLocaleTimeString([], {
@@ -268,25 +306,26 @@ export function SecurityContainer() {
 
         {/* Tab Content */}
         <div className="flex-1 overflow-auto p-6">
-          {activeTab === "overview" && overview && (
-            <SecurityOverviewPanel data={overview} onRefresh={refresh} />
-          )}
-          {activeTab === "alerts" && (
-            <AlertFeed
-              alerts={alerts}
-              onAcknowledge={acknowledgeAlert}
-              isLoading={isLoading}
-            />
+          {activeTab === "overview" && (
+            <AutopilotOverviewPanel overview={autopilotOverview} />
           )}
           {activeTab === "findings" && (
-            <FindingsPanel findings={findings} isLoading={isLoading} />
+            <AutopilotFindingsPanel findings={autopilotFindings} />
           )}
-          {activeTab === "health" && (
-            <HealthCluster
-              providerIssues={providerIssues}
-              overview={overview}
-              isLoading={isLoading}
-            />
+          {activeTab === "incidents" && (
+            <AutopilotIncidentsPanel incidents={incidents} />
+          )}
+          {activeTab === "evidence" && (
+            <AutopilotEvidencePanel bundles={evidence} />
+          )}
+          {activeTab === "audit" && (
+            <AutopilotAuditPanel events={auditEvents} />
+          )}
+          {activeTab === "policy" && (
+            <AutopilotPolicyPanel policy={policy} />
+          )}
+          {activeTab === "remediation" && (
+            <AutopilotRemediationQueuePanel queue={remediationQueue} />
           )}
         </div>
       </div>
@@ -305,8 +344,14 @@ export function SecurityContainer() {
           onRunQuickScan={runQuickScan}
           onRunHealthCheck={runHealthCheck}
           actionMessage={actionMessage}
-          isLoading={isLoading}
+          isLoading={isLoading || autopilotLoading}
         />
+        <div className="px-4 pb-4">
+          <p className="text-xs" style={{ color: "var(--text-tertiary)" }}>
+            Autopilot refreshed: {lastRefresh ? lastRefresh.toLocaleTimeString() : "Never"}
+            {opsLastRefresh ? ` · Ops refreshed: ${opsLastRefresh.toLocaleTimeString()}` : ""}
+          </p>
+        </div>
       </div>
     </div>
   );
@@ -400,6 +445,40 @@ function HealthIcon() {
   return (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
       <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
+    </svg>
+  );
+}
+
+function EvidenceIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M4 6h16" />
+      <path d="M4 12h16" />
+      <path d="M4 18h10" />
+      <path d="M18 15v6" />
+      <path d="M15 18h6" />
+    </svg>
+  );
+}
+
+function AuditIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M9 12l2 2 4-4" />
+      <path d="M21 12c0 5-4 9-9 9s-9-4-9-9 4-9 9-9 9 4 9 9z" />
+    </svg>
+  );
+}
+
+function QueueIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M8 6h13" />
+      <path d="M8 12h13" />
+      <path d="M8 18h13" />
+      <path d="M3 6h.01" />
+      <path d="M3 12h.01" />
+      <path d="M3 18h.01" />
     </svg>
   );
 }

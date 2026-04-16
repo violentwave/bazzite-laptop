@@ -293,6 +293,88 @@ tools:
         max_length: 64
         required: true
 
+  # P121 Security Autopilot UI tools
+  security.autopilot_overview:
+    description: "Security Autopilot overview with queue, policy, and audit counts"
+    source: python
+    module: "ai.security_autopilot.ui_service"
+    function: "get_autopilot_overview"
+    readOnly: true
+    args: null
+
+  security.autopilot_findings:
+    description: "Normalized Security Autopilot findings"
+    source: python
+    module: "ai.security_autopilot.ui_service"
+    function: "get_autopilot_findings"
+    readOnly: true
+    args:
+      limit:
+        type: integer
+        min: 1
+        max: 200
+        required: false
+
+  security.autopilot_incidents:
+    description: "Grouped Security Autopilot incidents"
+    source: python
+    module: "ai.security_autopilot.ui_service"
+    function: "get_autopilot_incidents"
+    readOnly: true
+    args:
+      limit:
+        type: integer
+        min: 1
+        max: 100
+        required: false
+
+  security.autopilot_evidence:
+    description: "Redacted Security Autopilot evidence bundles"
+    source: python
+    module: "ai.security_autopilot.ui_service"
+    function: "get_autopilot_evidence"
+    readOnly: true
+    args:
+      limit:
+        type: integer
+        min: 1
+        max: 100
+        required: false
+
+  security.autopilot_audit:
+    description: "Recent Security Autopilot audit events"
+    source: python
+    module: "ai.security_autopilot.ui_service"
+    function: "get_autopilot_audit_events"
+    readOnly: true
+    args:
+      limit:
+        type: integer
+        min: 1
+        max: 200
+        required: false
+
+  security.autopilot_policy:
+    description: "Security Autopilot policy mode and controls"
+    source: python
+    module: "ai.security_autopilot.ui_service"
+    function: "get_autopilot_policy_status"
+    readOnly: true
+    args: null
+
+  security.autopilot_remediation_queue:
+    description: "Plan-only Security Autopilot remediation queue"
+    source: python
+    module: "ai.security_autopilot.ui_service"
+    function: "get_autopilot_remediation_queue"
+    readOnly: true
+    args:
+      limit:
+        type: integer
+        min: 1
+        max: 100
+        required: false
+
   # P85 Interactive Shell Gateway tools
   shell.create_session:
     description: "Create a new interactive shell session"

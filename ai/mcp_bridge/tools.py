@@ -1005,6 +1005,200 @@ async def _execute_python_tool(tool_name: str, tool_def: dict, args: dict) -> st
                     indent=2,
                 )
 
+        # P121 Security Autopilot UI tools (read-only)
+        elif tool_name == "security.autopilot_overview":
+            from ai.security_autopilot.ui_service import get_autopilot_overview  # noqa: PLC0415
+
+            try:
+                return json.dumps(
+                    {
+                        "success": True,
+                        "data": get_autopilot_overview(),
+                    },
+                    indent=2,
+                )
+            except Exception as e:
+                logger.error("security.autopilot_overview failed: %s", e)
+                return json.dumps(
+                    {
+                        "success": False,
+                        "error_code": "autopilot_overview_unavailable",
+                        "error": "Failed to load security autopilot overview",
+                        "operator_action": "Check security service and autopilot modules",
+                        "details": str(e),
+                    },
+                    indent=2,
+                )
+
+        elif tool_name == "security.autopilot_findings":
+            from ai.security_autopilot.ui_service import get_autopilot_findings  # noqa: PLC0415
+
+            try:
+                limit = args.get("limit", 50)
+                findings = get_autopilot_findings(limit=limit)
+                return json.dumps(
+                    {
+                        "success": True,
+                        "findings": findings,
+                        "count": len(findings),
+                    },
+                    indent=2,
+                )
+            except Exception as e:
+                logger.error("security.autopilot_findings failed: %s", e)
+                return json.dumps(
+                    {
+                        "success": False,
+                        "error_code": "autopilot_findings_unavailable",
+                        "error": "Failed to load security autopilot findings",
+                        "operator_action": "Check source security signals and service health",
+                        "details": str(e),
+                    },
+                    indent=2,
+                )
+
+        elif tool_name == "security.autopilot_incidents":
+            from ai.security_autopilot.ui_service import get_autopilot_incidents  # noqa: PLC0415
+
+            try:
+                limit = args.get("limit", 25)
+                incidents = get_autopilot_incidents(limit=limit)
+                return json.dumps(
+                    {
+                        "success": True,
+                        "incidents": incidents,
+                        "count": len(incidents),
+                    },
+                    indent=2,
+                )
+            except Exception as e:
+                logger.error("security.autopilot_incidents failed: %s", e)
+                return json.dumps(
+                    {
+                        "success": False,
+                        "error_code": "autopilot_incidents_unavailable",
+                        "error": "Failed to load security autopilot incidents",
+                        "operator_action": "Check autopilot classifier inputs and service health",
+                        "details": str(e),
+                    },
+                    indent=2,
+                )
+
+        elif tool_name == "security.autopilot_evidence":
+            from ai.security_autopilot.ui_service import get_autopilot_evidence  # noqa: PLC0415
+
+            try:
+                limit = args.get("limit", 25)
+                evidence = get_autopilot_evidence(limit=limit)
+                return json.dumps(
+                    {
+                        "success": True,
+                        "bundles": evidence,
+                        "count": len(evidence),
+                        "persisted": False,
+                        "operator_note": (
+                            "Evidence bundles are redacted and derived in-memory for UI review"
+                        ),
+                    },
+                    indent=2,
+                )
+            except Exception as e:
+                logger.error("security.autopilot_evidence failed: %s", e)
+                return json.dumps(
+                    {
+                        "success": False,
+                        "error_code": "autopilot_evidence_unavailable",
+                        "error": "Failed to load security autopilot evidence",
+                        "operator_action": "Check autopilot evidence manager and upstream findings",
+                        "details": str(e),
+                    },
+                    indent=2,
+                )
+
+        elif tool_name == "security.autopilot_audit":
+            from ai.security_autopilot.ui_service import get_autopilot_audit_events  # noqa: PLC0415
+
+            try:
+                limit = args.get("limit", 50)
+                events = get_autopilot_audit_events(limit=limit)
+                return json.dumps(
+                    {
+                        "success": True,
+                        "events": events,
+                        "count": len(events),
+                    },
+                    indent=2,
+                )
+            except Exception as e:
+                logger.error("security.autopilot_audit failed: %s", e)
+                return json.dumps(
+                    {
+                        "success": False,
+                        "error_code": "autopilot_audit_unavailable",
+                        "error": "Failed to load security autopilot audit events",
+                        "operator_action": "Check autopilot audit ledger path and permissions",
+                        "details": str(e),
+                    },
+                    indent=2,
+                )
+
+        elif tool_name == "security.autopilot_policy":
+            from ai.security_autopilot.ui_service import (  # noqa: PLC0415
+                get_autopilot_policy_status,
+            )
+
+            try:
+                return json.dumps(
+                    {
+                        "success": True,
+                        "policy": get_autopilot_policy_status(),
+                    },
+                    indent=2,
+                )
+            except Exception as e:
+                logger.error("security.autopilot_policy failed: %s", e)
+                return json.dumps(
+                    {
+                        "success": False,
+                        "error_code": "autopilot_policy_unavailable",
+                        "error": "Failed to load security autopilot policy status",
+                        "operator_action": "Check security-autopilot-policy.yaml configuration",
+                        "details": str(e),
+                    },
+                    indent=2,
+                )
+
+        elif tool_name == "security.autopilot_remediation_queue":
+            from ai.security_autopilot.ui_service import (  # noqa: PLC0415
+                get_autopilot_remediation_queue,
+            )
+
+            try:
+                limit = args.get("limit", 25)
+                queue = get_autopilot_remediation_queue(limit=limit)
+                return json.dumps(
+                    {
+                        "success": True,
+                        "queue": queue,
+                        "count": len(queue),
+                        "execution": "plan-only",
+                        "operator_note": "No remediation is executed from this queue",
+                    },
+                    indent=2,
+                )
+            except Exception as e:
+                logger.error("security.autopilot_remediation_queue failed: %s", e)
+                return json.dumps(
+                    {
+                        "success": False,
+                        "error_code": "autopilot_queue_unavailable",
+                        "error": "Failed to load security autopilot remediation queue",
+                        "operator_action": "Check autopilot planner and policy services",
+                        "details": str(e),
+                    },
+                    indent=2,
+                )
+
         # P85/P94 Interactive Shell Gateway tools
         elif tool_name == "shell.create_session":
             from ai.shell_service import create_session  # noqa: PLC0415
@@ -1127,7 +1321,7 @@ async def _execute_python_tool(tool_name: str, tool_def: dict, args: dict) -> st
                 compact_tools[name] = {"desc": desc, "args": arg_names}
             manifest = {"tool_count": len(compact_tools), "tools": compact_tools}
             limit = _TOOL_OUTPUT_LIMITS.get("system.mcp_manifest", _DEFAULT_OUTPUT_LIMIT)
-            return _truncate(json.dumps(manifest), limit)
+            return _truncate(json.dumps(manifest, separators=(",", ":")), limit)
 
         elif tool_name == "agents.security_audit":
             from ai.agents.security_audit import run_audit  # noqa: PLC0415

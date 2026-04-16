@@ -165,6 +165,15 @@ security.ops_findings ([limit]) — recent scan findings and threat detections
 security.ops_provider_health — provider health issues relevant to security operations
 security.ops_acknowledge (alert_id) — acknowledge a security ops alert
 
+security.autopilot_* (7):
+security.autopilot_overview — security autopilot dashboard overview (policy mode, queue, incidents, audit counts)
+security.autopilot_findings ([limit]) — normalized autopilot findings derived from security signals
+security.autopilot_incidents ([limit]) — grouped autopilot incidents for operator triage
+security.autopilot_evidence ([limit]) — redacted autopilot evidence bundles (read-only, derived)
+security.autopilot_audit ([limit]) — recent autopilot audit ledger events
+security.autopilot_policy — active autopilot policy mode/rules summary
+security.autopilot_remediation_queue ([limit]) — plan-only remediation queue (no execution)
+
 settings.* (8):
 settings.pin_status — check if settings PIN is configured and lockout state
 settings.setup_pin (pin, confirm_pin) — initial PIN enrollment (4-6 digits)
