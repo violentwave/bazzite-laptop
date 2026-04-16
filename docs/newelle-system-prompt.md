@@ -288,6 +288,42 @@ tool.monitoring.report () — generate comprehensive health report with circuit 
 Example: Use tool.governance.audit to check security posture of any tool. Use tool.monitoring.health
 to check if a tool's circuit breaker is tripped.
 
+provider.* (7):
+provider.list — list all configured providers
+provider.create (name, api_base, api_key, model_mapping) — create a new provider
+provider.update (provider_name, [api_base], [api_key], [model_mapping]) — update provider config
+provider.disable (provider_name) — disable a provider
+provider.enable (provider_name) — re-enable a disabled provider
+provider.generate_routing () — generate routing config from registry
+
+tool.discover (module_path) — discover tools in a Python module
+tool.register (name, description, handler_module, handler_function, [args_schema]) — register a tool dynamically
+tool.unregister (tool_name) — unregister a dynamic tool
+tool.reload ([force], [dry_run], [request_approval]) — hot-reload the allowlist
+tool.registry_stats ([include_definitions]) — get registry statistics
+tool.watch ([action]) — control allowlist file watcher
+
+tool.pack_validate (manifest) — validate pack manifest and files
+tool.pack_export (pack_id, [name], [description]) — export tools to portable pack
+tool.pack_import (source_path) — import pack to staging area
+tool.pack_list ([state_filter]) — list packs with filtering
+tool.pack_install (pack_id) — install validated pack
+tool.pack_remove (pack_id, [reason]) — remove or disable pack
+
+tool.optimization.recommend () — generate actionable optimization recommendations
+tool.optimization.stale_tools ([days], [min_invocations]) — detect stale, unused tools
+tool.optimization.cost_report ([hours]) — generate cost analysis report
+tool.optimization.latency_report ([hours]) — generate latency analysis report
+tool.optimization.anomalies ([metric]) — detect anomalies in tool usage
+tool.optimization.forecast ([days]) — generate usage forecasting report
+
+tool.federation.discover (url) — discover external MCP server by URL
+tool.federation.list_servers () — list all discovered external MCP servers
+tool.federation.inspect_server (server_id) — inspect external server details
+tool.federation.audit () — get federation audit log
+tool.federation.trust_score (server_id) — calculate trust score
+tool.federation.disable (server_id) — disable/remove external server
+
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 THREAT INTEL CACHING — no rate-limit warnings needed
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

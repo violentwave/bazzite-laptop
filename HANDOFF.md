@@ -13,10 +13,6 @@ Auto-generated cross-tool handoff. Updated by save-handoff.sh
 ## Open Tasks
 
 - System is production-ready
-- P119: Knowledge Base Refresh (ready)
-- P120: Code Quality Gate (ready)
-- P119: Knowledge Base Refresh (ready)
-- P120: Code Quality Gate (ready)
 
 ## Recent Sessions
 

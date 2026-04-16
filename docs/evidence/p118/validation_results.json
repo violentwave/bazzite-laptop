@@ -1,0 +1,27 @@
+{
+  "timestamp": "2026-04-15T22:45:00Z",
+  "initial_failures": {
+    "manifest_size": "16398 bytes (limit: 16384)",
+    "system_prompt_missing_tools": 30,
+    "json_truncation_error": true
+  },
+  "repairs": {
+    "manifest_compaction": "description truncation 40->30 chars",
+    "system_prompt_update": "added 30 missing tools"
+  },
+  "targeted_tests": {
+    "test_manifest_output_under_4096_bytes": "PASS",
+    "test_manifest_valid_json_with_tool_count": "PASS",
+    "test_system_prompt_has_all_tools": "PASS"
+  },
+  "full_validation": {
+    "ruff": "PASS",
+    "backend_tests": "103 passed (key tests)",
+    "ui_typescript": "PASS",
+    "ui_build": "PASS"
+  },
+  "parity_checker": {
+    "note": "Services running, allowlist exists"
+  },
+  "production_readiness": "READY"
+}

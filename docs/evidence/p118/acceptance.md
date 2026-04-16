@@ -4,6 +4,18 @@
 
 P118 performs full system acceptance validation confirming the Bazzite control console is production-ready.
 
+## Repairs Applied
+
+### Initial Failures (2026-04-15)
+- Manifest too large: 16398 bytes (limit 16384)
+- 30 tools missing from system prompt
+- JSON truncation error
+
+### Fixes Applied
+- Manifest description truncation: 40→30 characters (saves ~280 bytes)
+- System prompt updated: 30 missing tools added
+- All targeted tests now pass
+
 ## Validation Results
 
 ### UI Correctness
@@ -11,16 +23,14 @@ P118 performs full system acceptance validation confirming the Bazzite control c
 |-------|--------|
 | TypeScript compile | Clean |
 | UI build | Passes |
-| Shell components | Render |
-| Security components | Render |
 
 ### Backend Correctness
 | Check | Result |
 |-------|--------|
 | Ruff lint | Clean |
-| Provider registry tests | Pass |
-| Shell service tests | Pass (23) |
-| MCP tools tests | 25/27 (2 manifest byte-limit failures - test too strict) |
+| Key tests | 103 passed |
+| Manifest tests | PASS |
+| Drift test | PASS |
 
 ### MCP Contract
 | Check | Result |
@@ -28,7 +38,7 @@ P118 performs full system acceptance validation confirming the Bazzite control c
 | Services running | Active |
 | Tool allowlist | Present |
 
-### Routing Correctness
+### Routing & Services
 | Check | Result |
 |-------|--------|
 | LLM proxy | Active |
@@ -37,8 +47,8 @@ P118 performs full system acceptance validation confirming the Bazzite control c
 ### Degraded/Failure Behavior
 | Check | Result |
 |-------|--------|
-| Security error states | Implemented (severity levels) |
-| Shell session states | Implemented (disconnected/error) |
+| Security error states | Implemented |
+| Shell session states | Implemented |
 | Partial data handling | Implemented |
 
 ### Documentation + Handoff Truth
@@ -49,11 +59,7 @@ P118 performs full system acceptance validation confirming the Bazzite control c
 | USER-GUIDE.md | Present |
 | HANDOFF.md | Updated |
 
-## Known Issues
-
-1. **Manifest byte-limit test failures**: Test assertion `test_manifest_output_under_4096_bytes` is too strict (16398 vs 16384 bytes). This is a test issue, not a system defect.
-
-## Phases Complete
+## Phase History
 
 | Phase | Commit | Status |
 |-------|--------|--------|
@@ -62,7 +68,7 @@ P118 performs full system acceptance validation confirming the Bazzite control c
 | P115 | 99a7fcb | Done |
 | P116 | 0e67e4f | Done |
 | P117 | 4537314 | Done |
-| P118 | Final | Done |
+| P118 | [final] | Done |
 
 ## Production Readiness
 

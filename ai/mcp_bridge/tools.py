@@ -1121,7 +1121,7 @@ async def _execute_python_tool(tool_name: str, tool_def: dict, args: dict) -> st
             allowlist = _load_allowlist()
             compact_tools = {}
             for name, defn in allowlist.items():
-                desc = defn.get("description", "")[:40]
+                desc = defn.get("description", "")[:30]
                 arg_defs = defn.get("args") or {}
                 arg_names = list(arg_defs.keys()) if isinstance(arg_defs, dict) else []
                 compact_tools[name] = {"desc": desc, "args": arg_names}
