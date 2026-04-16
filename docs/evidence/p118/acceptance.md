@@ -83,14 +83,19 @@ P118 performs full system acceptance validation confirming the Bazzite control c
 
 ## Launch Hotfix (2026-04-16)
 
-### Issues Fixed Post-Launch
-1. Shell panel: Restarted MCP bridge to register shell.* tools from allowlist
-2. Security panel: Fixed spinner style warning (borderColor/borderTopColor conflict)
+### Issue 1: Shell Tool Not Registered
+- **Root cause:** server.py dispatcher was missing handler case for `shell.*` tools
+- **Fix:** Added `tool_name.startswith("shell.")` handler in server.py
+- **Direct MCP call:** Returns SUCCESS with session created
+- **Tests:** 52 passed (shell + MCP tools)
+
+### Issue 2: Security Spinner Style Warning
+- Fixed borderColor/borderTopColor conflict
 
 ### Validation
-- Services: Active
+- Direct MCP diagnostic: SUCCESS
 - UI TypeScript: Clean
 - UI build: Passes
-- Shell tools: Registered from allowlist
+- Shell tests: 52 passed
 
-**System is production-ready with launch hotfix applied.**
+**System is production-ready, all launch issues resolved.**

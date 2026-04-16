@@ -854,6 +854,14 @@ def create_app():
             async def _handler_database_id(database_id: str, _tn=tool_name):
                 return await execute_tool(_tn, {"database_id": database_id})
 
+        elif tool_name.startswith("shell."):
+
+            @mcp.tool(name=tool_name, description=description, annotations=ann)
+            async def _handler_shell(
+                name: str | None = None, cwd: str | None = None, _tn=tool_name
+            ):
+                return await execute_tool(_tn, {"name": name, "cwd": cwd} if name or cwd else {})
+
         # Built-in health tool (MCP protocol)
 
     @mcp.tool(name="health", description="Bridge health check")
