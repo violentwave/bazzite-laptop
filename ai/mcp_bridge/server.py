@@ -858,9 +858,58 @@ def create_app():
 
             @mcp.tool(name=tool_name, description=description, annotations=ann)
             async def _handler_shell(
-                name: str | None = None, cwd: str | None = None, _tn=tool_name
+                name: str | None = None,
+                cwd: str | None = None,
+                session_id: str | None = None,
+                command: str | None = None,
+                limit: int | None = None,
+                _tn=tool_name,
             ):
-                return await execute_tool(_tn, {"name": name, "cwd": cwd} if name or cwd else {})
+                args = {}
+                if name is not None:
+                    args["name"] = name
+                if cwd is not None:
+                    args["cwd"] = cwd
+                if session_id is not None:
+                    args["session_id"] = session_id
+                if command is not None:
+                    args["command"] = command
+                if limit is not None:
+                    args["limit"] = limit
+                return await execute_tool(_tn, args)
+
+        elif tool_name.startswith("provider."):
+
+            @mcp.tool(name=tool_name, description=description, annotations=ann)
+            async def _handler_provider(
+                provider_id: str | None = None,
+                display_name: str | None = None,
+                provider_type: str | None = None,
+                base_url: str | None = None,
+                credential_ref: str | None = None,
+                models: list | None = None,
+                routing_metadata: dict | None = None,
+                notes: str | None = None,
+                _tn=tool_name,
+            ):
+                args = {}
+                if provider_id is not None:
+                    args["provider_id"] = provider_id
+                if display_name is not None:
+                    args["display_name"] = display_name
+                if provider_type is not None:
+                    args["provider_type"] = provider_type
+                if base_url is not None:
+                    args["base_url"] = base_url
+                if credential_ref is not None:
+                    args["credential_ref"] = credential_ref
+                if models is not None:
+                    args["models"] = models
+                if routing_metadata is not None:
+                    args["routing_metadata"] = routing_metadata
+                if notes is not None:
+                    args["notes"] = notes
+                return await execute_tool(_tn, args)
 
         # Built-in health tool (MCP protocol)
 

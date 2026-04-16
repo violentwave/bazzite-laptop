@@ -84,18 +84,27 @@ P118 performs full system acceptance validation confirming the Bazzite control c
 ## Launch Hotfix (2026-04-16)
 
 ### Issue 1: Shell Tool Not Registered
-- **Root cause:** server.py dispatcher was missing handler case for `shell.*` tools
-- **Fix:** Added `tool_name.startswith("shell.")` handler in server.py
-- **Direct MCP call:** Returns SUCCESS with session created
+- **Root cause:** server.py dispatcher was missing handler case for `shell.*` tools and signature mapping for `execute_command`
+- **Fix:** Added `tool_name.startswith("shell.")` handler in server.py with explicit argument mapping for `session_id`, `command`, and `limit`
+- **Direct MCP call:** Returns SUCCESS with session created and commands executed
 - **Tests:** 52 passed (shell + MCP tools)
 
 ### Issue 2: Security Spinner Style Warning
 - Fixed borderColor/borderTopColor conflict
+
+### Issue 3: Add Provider Panel Stale Copy
+- **Root cause:** `AddProviderPanel.tsx` contained placeholder text instead of working form.
+- **Fix:** Rewrote component to use `provider.create` MCP tool to allow registering new LLM providers. Added `provider.*` handlers to `server.py`.
+
+### Issue 4: Chat Shows "All providers unavailable"
+- **Root cause:** LiteLLM `Router` instantiation threw `unexpected keyword argument 'http_client'`, causing 500 errors. Fixing this revealed a `RuntimeError: can't start new thread` because systemd `TasksMax` was limiting threads to 32, choking LiteLLM parallel fallback logic.
+- **Fix:** Removed `http_client` kwargs in `ai/router.py` and bumped `TasksMax` to `128` in `bazzite-llm-proxy.service` drop-in configs.
 
 ### Validation
 - Direct MCP diagnostic: SUCCESS
 - UI TypeScript: Clean
 - UI build: Passes
 - Shell tests: 52 passed
+- Chat Routing: SUCCESS (Proxies properly connecting to external models)
 
 **System is production-ready, all launch issues resolved.**

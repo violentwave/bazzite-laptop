@@ -36,7 +36,7 @@ export function RoutingConsole({ routing, providers }: RoutingConsoleProps) {
           className="text-xs mt-2"
           style={{ color: 'var(--text-tertiary)' }}
         >
-          Routing is controlled by backend config (litellm-config.yaml). Runtime persistence is deferred to P115/P116.
+          Routing is controlled by backend config (litellm-config.yaml).
         </p>
       </div>
 

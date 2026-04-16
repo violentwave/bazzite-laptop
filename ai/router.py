@@ -324,7 +324,6 @@ def _get_router():
         num_retries=0,
         timeout=router_settings.get("timeout", 30),
         allowed_fails=router_settings.get("allowed_fails", 1),
-        http_client=_httpx_client,
     )
     return _router
 

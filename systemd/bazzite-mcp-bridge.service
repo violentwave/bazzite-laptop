@@ -19,7 +19,7 @@ MemoryAccounting=yes
 MemoryHigh=80M
 MemoryMax=150M
 CPUWeight=60
-TasksMax=32
+TasksMax=128
 
 # Security hardening
 NoNewPrivileges=yes
