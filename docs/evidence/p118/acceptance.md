@@ -80,3 +80,17 @@ P118 performs full system acceptance validation confirming the Bazzite control c
 - Documentation: Ready
 
 **System is production-ready.**
+
+## Launch Hotfix (2026-04-16)
+
+### Issues Fixed Post-Launch
+1. Shell panel: Restarted MCP bridge to register shell.* tools from allowlist
+2. Security panel: Fixed spinner style warning (borderColor/borderTopColor conflict)
+
+### Validation
+- Services: Active
+- UI TypeScript: Clean
+- UI build: Passes
+- Shell tools: Registered from allowlist
+
+**System is production-ready with launch hotfix applied.**

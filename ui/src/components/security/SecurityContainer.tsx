@@ -178,10 +178,12 @@ export function SecurityContainer() {
       <div className="h-full flex items-center justify-center">
         <div className="text-center">
           <div
-            className="w-12 h-12 rounded-full border-2 border-t-transparent animate-spin mx-auto mb-4"
+            className="w-12 h-12 rounded-full border-2 animate-spin mx-auto mb-4"
             style={{
-              borderColor: "var(--base-04)",
-              borderTopColor: "var(--accent-primary)",
+              borderTopColor: "transparent",
+              borderRightColor: "var(--base-04)",
+              borderBottomColor: "var(--base-04)",
+              borderLeftColor: "var(--base-04)",
             }}
           />
           <p style={{ color: "var(--text-secondary)" }}>
