@@ -1,0 +1,21 @@
+{
+  "request_id": "exec-144aa2c1-d2f3-4201-85a0-6b557de1e6cb",
+  "action_id": "run_log_ingest",
+  "status": "rejected",
+  "executed": false,
+  "policy_decision": "blocked",
+  "approval_required": false,
+  "approval_state": "missing",
+  "reason": "Lockdown mode only allows read_only/evidence actions",
+  "output": {
+    "error": "Lockdown mode only allows read_only/evidence actions"
+  },
+  "rollback": {
+    "rollback_possible": false,
+    "rollback_action": null,
+    "instructions": []
+  },
+  "audit_event_id": "event-8e1d652d-864f-46c8-8bf7-bba7672f94bb",
+  "evidence_bundle_id": "bundle-fef2ebc8-d701-40fd-b026-0b20b2130cde",
+  "created_at": "2026-04-16T22:17:00.917476+00:00"
+}

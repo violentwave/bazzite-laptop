@@ -1,6 +1,6 @@
 # Phase Index — Bazzite AI Layer
 
-> Master index of repo-tracked phases through P120, plus the current active phase pointer.
+> Master index of repo-tracked phases through P122.
 > Updated 2026-04-16.
 > Source of truth: Notion `Bazzite Phases` database + `git log`; Notion row properties are authoritative when repo docs lag.
 
@@ -8,10 +8,10 @@
 
 | Metric | Value |
 |--------|-------|
-| Total Phases Tracked | P0-P120 complete in repo index; P121 active; P122-P139 planned in Notion |
-| Completed | P0-P120 complete in current repo-ledger terms |
-| Active | P121 — Security Autopilot UI |
-| Next Gated | P122 — Safe Remediation Runner |
+| Total Phases Tracked | P0-P122 complete in repo index; P123-P139 planned in Notion |
+| Completed | P0-P122 complete in current repo-ledger terms |
+| Active | None |
+| Next Gated | P123 — Agent Workbench Core |
 | Historical Truth Conflict | P80 remains a repo-vs-Notion reconciliation note for later cleanup |
 | Repo Docs | docs/*.md, docs/patterns/frontend/*.md, docs/frontend-capability-pack/*.md |
 | Notion DB | `398c13ed-47f6-4f7e-9e54-eb339b462c90` |
@@ -30,8 +30,8 @@
 | 2026-04-09 to 2026-04-12 | P51-P58 | Control plane: Slack, Notion, phase control, cross-system burn down |
 | 2026-04-10 to 2026-04-12 | P59-P69 | Frontend capability pack: P59 (branch convergence), P60 (intelligence reliability), P61 (frontend pack), P62 (pattern intel), P63 (QA layer), P64 (design/media), P65 (runtime harness), P66 (brief intake), P67 (deployment pack), P68 (GitNexus evaluation), P69 (ops runbooks) |
 | 2026-04-13 to 2026-04-15 | P70-P118 | Documentation normalization, Midnight Glass UI, runtime repair, MCP governance, provider/routing persistence, release candidate acceptance |
-| 2026-04-16 | P119-P120 | Security Autopilot foundation: core models, audit/evidence, policy engine, safe action decisions |
-| Current | P121-P122 | Security Autopilot UI followed by policy-gated Safe Remediation Runner |
+| 2026-04-16 | P119-P122 | Security Autopilot foundation: core, policy, UI surfaces, and safe remediation runner |
+| Next | P123+ | Agent Workbench and downstream acceptance phases |
 
 ## Phase Index
 
@@ -158,7 +158,8 @@
 | P118 | Final System Acceptance Gate | Done | fe619bf | 2026-04-15 | docs/evidence/p118/acceptance.md | Notion row | Full system acceptance validated: UI/backend/MCP/routing/failure-awareness/docs aligned, ready for production |
 | P119 | Security Autopilot Core | Done | d502c21 | 2026-04-16 | ai/security_autopilot/{models.py,sensors.py,classifier.py,planner.py,audit.py,__init__.py}, tests/test_security_autopilot.py, docs/P119_PLAN.md | Notion row | Plan-only Security Autopilot core with findings/incidents/plans, redacted evidence, and append-only hash-chained audit logging |
 | P120 | Security Policy Engine | Done | 9471662 | 2026-04-16 | ai/security_autopilot/policy.py, configs/security-autopilot-policy.yaml, tests/test_security_autopilot_policy.py, docs/P120_PLAN.md | Notion row | Policy modes, allow/approval/block decisions, safe defaults, malformed-input rejection, redaction-aware output |
-| P121 | Security Autopilot UI | Active | — | — | Repo artifacts pending implementation; see active Notion row and upcoming docs/P121_PLAN.md | Notion row | Current implementation target: extend the Unified Control Console Security Ops surface with Autopilot, Findings, Incidents, Evidence, Audit, Policy, and Remediation Queue views |
+| P121 | Security Autopilot UI | Done | c120c9f | 2026-04-16 | ai/security_autopilot/ui_service.py, ui/src/components/security/AutopilotPanels.tsx, ui/src/hooks/useSecurityAutopilot.ts, tests/test_security_autopilot_tools.py, docs/P121_PLAN.md, docs/evidence/p121/* | Notion row | Added seven read-only autopilot surfaces with policy/evidence/audit visibility and degraded-state handling |
+| P122 | Safe Remediation Runner | Done | pending | 2026-04-16 | ai/security_autopilot/executor.py, tests/test_security_autopilot_executor.py, docs/P122_PLAN.md, docs/evidence/p122/* | Notion row | Added fixed allowlisted remediation execution with P120 policy gating, approval enforcement, deterministic rejection paths, and audit/evidence records for every attempt |
 
 ## Notion Database Reference
 

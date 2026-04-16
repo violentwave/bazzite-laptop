@@ -4,6 +4,26 @@ All significant changes. Format: date · deliverables · deltas · commit.
 
 ---
 
+## Phase 122 — Safe Remediation Runner
+**Date:** 2026-04-16 · **Commit:** pending
+
+**Deliverables:**
+- Added `ai/security_autopilot/executor.py` with a fixed allowlisted action registry and strict safety validation (no arbitrary shell/model-generated command execution).
+- Added structured execution models (`ExecutionApproval`, `RemediationExecutionRequest`, `RemediationExecutionResult`, `RollbackMetadata`) and deterministic reject/execute/prepare outcomes.
+- Enforced P120 policy evaluation for every action and explicit approval gates for high-risk/destructive categories.
+- Added audit + redacted evidence emission for every attempted action (including rejected attempts).
+- Added rollback metadata for prepare-only high-risk request actions.
+- Updated package exports in `ai/security_autopilot/__init__.py`.
+- Added executor coverage in `tests/test_security_autopilot_executor.py`.
+- Added phase documentation/evidence artifacts: `docs/P122_PLAN.md` and `docs/evidence/p122/*`.
+
+**Validation:**
+- `.venv/bin/python -m pytest tests/test_security_autopilot_executor.py -q`
+- `ruff check ai/security_autopilot tests/test_security_autopilot_executor.py`
+- `.venv/bin/python -m pytest tests/ -q --tb=short`
+
+---
+
 ## Phase 121 — Security Autopilot UI
 **Date:** 2026-04-16 · **Commit:** pending
 

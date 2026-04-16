@@ -1,0 +1,24 @@
+{
+  "request_id": "exec-e6ba7b4b-f98b-4f30-b5f4-4ca7d541c4d0",
+  "action_id": "run_health_snapshot",
+  "status": "executed",
+  "executed": true,
+  "policy_decision": "auto_allowed",
+  "approval_required": false,
+  "approval_state": "missing",
+  "reason": "Action executed",
+  "output": {
+    "success": true,
+    "tool": "security.run_health",
+    "args": {},
+    "message": "simulated"
+  },
+  "rollback": {
+    "rollback_possible": false,
+    "rollback_action": null,
+    "instructions": []
+  },
+  "audit_event_id": "event-85289ded-328c-4810-bb45-4ef79f101260",
+  "evidence_bundle_id": "bundle-d91cd4e8-f71b-40ad-bc21-646d3c11ddec",
+  "created_at": "2026-04-16T22:17:00.915826+00:00"
+}

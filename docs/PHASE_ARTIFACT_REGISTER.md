@@ -296,23 +296,36 @@ The repo has complete historical coverage across the earlier tranches, but older
   - redaction-aware policy output
 
 ### P121 — Security Autopilot UI
-- **Status**: Active
-- **Finished**: —
-- **Commit SHA**: —
+- **Status**: Done
+- **Finished**: 2026-04-16
+- **Commit SHA**: `c120c9f`
 - **Repo Artifacts**:
-  - Pending implementation; expected additions include `docs/P121_PLAN.md`, `docs/evidence/p121/`, UI components/hooks/types for Security Autopilot surfaces
-- **Notion**: P121 row exists and is the current active phase row
-- **Expected Output**:
-  - extend Unified Control Console Security Ops surface with:
-    - Autopilot overview
-    - Findings
-    - Incidents
-    - Evidence
-    - Audit timeline
-    - Policy
-    - Remediation queue
-- **Important Note**:
-  - Notion row properties are authoritative if page body text lags or is stale.
+  - `docs/P121_PLAN.md`
+  - `docs/evidence/p121/validation.md`
+  - `ai/security_autopilot/ui_service.py`
+  - `ui/src/components/security/AutopilotPanels.tsx`
+  - `ui/src/hooks/useSecurityAutopilot.ts`
+  - `ui/src/types/security-autopilot.ts`
+  - `tests/test_security_autopilot_tools.py`
+- **Notion**: P121 row exists and is Done
+
+### P122 — Safe Remediation Runner
+- **Status**: Done
+- **Finished**: 2026-04-16
+- **Commit SHA**: pending
+- **Repo Artifacts**:
+  - `ai/security_autopilot/executor.py`
+  - `ai/security_autopilot/__init__.py`
+  - `tests/test_security_autopilot_executor.py`
+  - `docs/P122_PLAN.md`
+  - `docs/evidence/p122/`
+  - supporting ledger updates in `docs/PHASE_INDEX.md`, `docs/PHASE_ARTIFACT_REGISTER.md`, `CHANGELOG.md`, `HANDOFF.md`
+- **Notion**: P122 row in progress during implementation; done on closeout
+- **Key Output**:
+  - fixed allowlisted action execution only
+  - strict policy + approval gating before execution
+  - deterministic rejection for unknown/unsafe/malformed requests
+  - audit + evidence emission for every attempted action
 
 ### P119 — Security Autopilot Core
 - **Status**: Done
@@ -358,6 +371,22 @@ The repo has complete historical coverage across the earlier tranches, but older
 | UI Integration | `ui/src/components/security/SecurityContainer.tsx` | Security panel tab model switched to autopilot-focused surfaces |
 | Tests | `tests/test_security_autopilot_tools.py` | Coverage for overview aggregation, plan-only queue, and redaction behavior |
 
+### P122 — Safe Remediation Runner
+- **Status**: Done
+- **Finished**: 2026-04-16
+
+| Type | Path | Description |
+|------|------|-------------|
+| Plan | `docs/P122_PLAN.md` | P122 objective, allowlisted action catalog, policy/approval gates, safety rules, and validation |
+| Evidence | `docs/evidence/p122/README.md` | Evidence index and redaction behavior notes |
+| Evidence | `docs/evidence/p122/safe-execution.json` | Sample successful non-destructive execution record |
+| Evidence | `docs/evidence/p122/approval-required-rejection.json` | Sample deterministic rejection when approval is missing |
+| Evidence | `docs/evidence/p122/blocked-rejection.json` | Sample policy-blocked rejection record |
+| Evidence | `docs/evidence/p122/sample-audit.jsonl` | Sample append-only audit events from executor runs |
+| Backend Module | `ai/security_autopilot/executor.py` | Fixed allowlisted remediation runner with safety checks, policy gating, and audit/evidence emission |
+| Package Export | `ai/security_autopilot/__init__.py` | Exports for executor request/result and approval metadata |
+| Tests | `tests/test_security_autopilot_executor.py` | Coverage for execution, rejection paths, safety checks, approval enforcement, and rollback metadata |
+
 ## Cross-Phase Documentation
 
 ### Hub Docs (docs/ root)
@@ -385,8 +414,7 @@ The repo has complete historical coverage across the earlier tranches, but older
 1. Older historical phases intentionally remain summarized here and detailed in `docs/PHASE_INDEX.md`.
 2. Some earlier phases used batch commits, inferred historical boundaries, or alternative artifact types instead of dedicated `P{NN}_PLAN.md` documents.
 3. P80 remains a repo-vs-Notion truth reconciliation note for future cleanup.
-4. P121 is active; final artifact inventory should be filled in on closeout.
-5. P122-P139 are planned in Notion and tracked in the roadmap doc, but are not listed here as completed artifacts because implementation has not yet occurred.
+4. P123-P139 are planned in Notion and tracked in the roadmap doc; they are not listed here as completed artifacts yet.
 
 ## Cross-References
 

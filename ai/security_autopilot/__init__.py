@@ -1,12 +1,18 @@
-"""Security Autopilot core package (P119).
+"""Security Autopilot package (P119-P122).
 
-This package is intentionally plan-only. It normalizes security signals,
-classifies findings, groups incidents, produces remediation plans, and records
-auditable evidence without executing destructive remediation actions.
+P119-P121 provide plan/read-only flows. P122 adds a safe remediation runner
+that executes only fixed allowlisted actions under policy + approval gates.
 """
 
 from ai.security_autopilot.audit import AuditLedger, EvidenceManager
 from ai.security_autopilot.classifier import FindingClassifier
+from ai.security_autopilot.executor import (
+    ExecutionApproval,
+    RemediationExecutionRequest,
+    RemediationExecutionResult,
+    RollbackMetadata,
+    SafeRemediationExecutor,
+)
 from ai.security_autopilot.models import (
     AuditEvent,
     AutopilotDecision,
@@ -37,10 +43,15 @@ __all__ = [
     "EvidenceBundle",
     "EvidenceItem",
     "EvidenceManager",
+    "ExecutionApproval",
     "FindingClassifier",
+    "RemediationExecutionRequest",
+    "RemediationExecutionResult",
     "RemediationAction",
     "RemediationPlan",
     "RemediationPlanner",
+    "RollbackMetadata",
+    "SafeRemediationExecutor",
     "ActionCategory",
     "PolicyDecision",
     "PolicyMode",
