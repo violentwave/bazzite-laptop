@@ -4,8 +4,27 @@ All significant changes. Format: date · deliverables · deltas · commit.
 
 ---
 
-## Phase 119 — Security Autopilot Core
+## Phase 120 — Security Policy Engine
 **Date:** 2026-04-16 · **Commit:** pending
+
+**Deliverables:**
+- Added `ai/security_autopilot/policy.py` with mode-based policy evaluation for `monitor_only`, `recommend_only`, `safe_auto`, `approval_required`, and `lockdown`.
+- Added strict decision outcomes (`auto_allowed`, `approval_required`, `blocked`) and full action category model.
+- Added `configs/security-autopilot-policy.yaml` with safe defaults, destructive-action controls, global blocked categories, and redaction patterns.
+- Added structured request/result policy models and validation for malformed mode/category/action inputs.
+- Added target path validation for write/delete categories against allowlisted roots.
+- Added policy redaction helper and P119 remediation action evaluation path without execution.
+- Added `tests/test_security_autopilot_policy.py` and `docs/P120_PLAN.md`.
+
+**Validation:**
+- `.venv/bin/python -m pytest tests/test_security_autopilot_policy.py -q`
+- `ruff check ai/security_autopilot tests/test_security_autopilot_policy.py`
+- `.venv/bin/python -m pytest tests/ -q --tb=short`
+
+---
+
+## Phase 119 — Security Autopilot Core
+**Date:** 2026-04-16 · **Commit:** d502c21
 
 **Deliverables:**
 - Added `ai/security_autopilot/` core package with safe typed models for findings/incidents/decisions/plans/audit/evidence.

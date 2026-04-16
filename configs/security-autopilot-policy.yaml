@@ -1,0 +1,117 @@
+# Security Autopilot policy configuration (P120)
+#
+# Semantics:
+# - auto_allowed: action categories policy can permit without manual approval
+# - approval_required: categories requiring human approval before execution
+# - blocked: categories blocked in this mode
+#
+# Global safety rules always apply regardless of mode:
+# - arbitrary_shell is blocked
+# - sudo is blocked
+# - secret_read is blocked
+# - destructive categories are never auto-allowed by default
+
+policy_version: p120-v1
+default_mode: recommend_only
+
+blocked_always:
+  - arbitrary_shell
+  - sudo
+  - secret_read
+
+destructive_actions:
+  - quarantine
+  - terminate_process
+  - disable_service
+  - rotate_secret
+  - firewall_change
+  - delete_file
+  - system_write
+
+# Path validation applies to system_write/delete_file requests.
+# Paths outside these roots are rejected.
+allowed_path_prefixes:
+  - /var/home/lch/projects/bazzite-laptop
+  - /tmp
+  - /var/log
+
+redaction_patterns:
+  - '(?i)(api[_-]?key|token|secret|password)\s*[:=]\s*[^\s,;]+'
+  - '\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b'
+  - '(?i)authorization:\s*bearer\s+[A-Za-z0-9._-]+'
+
+modes:
+  monitor_only:
+    auto_allowed: [read_only, scan, evidence]
+    approval_required: [notify, ingest]
+    blocked:
+      [
+        quarantine,
+        terminate_process,
+        disable_service,
+        rotate_secret,
+        firewall_change,
+        delete_file,
+        system_write,
+        unknown,
+      ]
+
+  recommend_only:
+    auto_allowed: [read_only, scan, evidence, notify, ingest]
+    approval_required: []
+    blocked:
+      [
+        quarantine,
+        terminate_process,
+        disable_service,
+        rotate_secret,
+        firewall_change,
+        delete_file,
+        system_write,
+        unknown,
+      ]
+
+  safe_auto:
+    auto_allowed: [read_only, scan, evidence, notify, ingest]
+    approval_required:
+      [
+        quarantine,
+        terminate_process,
+        disable_service,
+        rotate_secret,
+        firewall_change,
+        delete_file,
+      ]
+    blocked: [system_write, unknown]
+
+  approval_required:
+    auto_allowed: [read_only, scan, evidence, notify, ingest]
+    approval_required:
+      [
+        quarantine,
+        terminate_process,
+        disable_service,
+        rotate_secret,
+        firewall_change,
+        delete_file,
+        system_write,
+      ]
+    blocked: [unknown]
+
+  lockdown:
+    auto_allowed: [read_only, evidence]
+    approval_required: []
+    blocked:
+      [
+        scan,
+        notify,
+        ingest,
+        quarantine,
+        terminate_process,
+        disable_service,
+        rotate_secret,
+        firewall_change,
+        delete_file,
+        system_write,
+        unknown,
+      ]

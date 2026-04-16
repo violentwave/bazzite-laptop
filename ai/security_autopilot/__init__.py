@@ -18,6 +18,15 @@ from ai.security_autopilot.models import (
     SecurityIncident,
 )
 from ai.security_autopilot.planner import RemediationPlanner
+from ai.security_autopilot.policy import (
+    ActionCategory,
+    PolicyDecision,
+    PolicyMode,
+    PolicyRequest,
+    PolicyResult,
+    SecurityAutopilotPolicy,
+    load_policy_config,
+)
 from ai.security_autopilot.sensors import BazziteSensorAdapter, SensorSnapshot
 
 __all__ = [
@@ -32,7 +41,14 @@ __all__ = [
     "RemediationAction",
     "RemediationPlan",
     "RemediationPlanner",
+    "ActionCategory",
+    "PolicyDecision",
+    "PolicyMode",
+    "PolicyRequest",
+    "PolicyResult",
+    "SecurityAutopilotPolicy",
     "SecurityFinding",
     "SecurityIncident",
     "SensorSnapshot",
+    "load_policy_config",
 ]

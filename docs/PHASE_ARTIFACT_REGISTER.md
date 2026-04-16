@@ -329,6 +329,18 @@ The repo has complete historical coverage across the earlier tranches, but older
 | Backend Module | `ai/security_autopilot/audit.py` | Redacted evidence bundles + append-only hash-chained audit ledger |
 | Tests | `tests/test_security_autopilot.py` | Coverage for model safety, sensors, classification, grouping, planning, audit |
 
+### P120 — Security Policy Engine
+- **Status**: Done
+- **Finished**: 2026-04-16
+
+| Type | Path | Description |
+|------|------|-------------|
+| Plan | `docs/P120_PLAN.md` | P120 objective, policy semantics, safety constraints, validation, DoD |
+| Backend Module | `ai/security_autopilot/policy.py` | Policy modes/categories/decisions, request/result models, evaluator, redaction, and config loader |
+| Config | `configs/security-autopilot-policy.yaml` | Default safe policy rules for mode-based allow/approval/block behavior |
+| Package Export | `ai/security_autopilot/__init__.py` | Public policy engine exports |
+| Tests | `tests/test_security_autopilot_policy.py` | Coverage for safe defaults, lockdown, malformed input, redaction, and P119 action evaluation |
+
 ## Cross-Phase Documentation
 
 ### Hub Docs (docs/ root)
