@@ -4,6 +4,24 @@ All significant changes. Format: date · deliverables · deltas · commit.
 
 ---
 
+## Phase 119 — Security Autopilot Core
+**Date:** 2026-04-16 · **Commit:** pending
+
+**Deliverables:**
+- Added `ai/security_autopilot/` core package with safe typed models for findings/incidents/decisions/plans/audit/evidence.
+- Added safe sensor adapters over existing Bazzite security/system/log/agent signals (`security.*`, `system.*`, `logs.anomalies`, `agents.*`).
+- Added finding classifier and incident grouping logic.
+- Added plan-only remediation planner (no destructive execution allowed).
+- Added redacted evidence handling and append-only hash-chained JSONL audit ledger.
+- Added `tests/test_security_autopilot.py` and `docs/P119_PLAN.md`.
+
+**Validation:**
+- `.venv/bin/python -m pytest tests/test_security_autopilot.py -q`
+- `ruff check ai/security_autopilot tests/test_security_autopilot.py`
+- `.venv/bin/python -m pytest tests/ -q --tb=short`
+
+---
+
 ## Phase 112 — UI Dev Runtime / Turbopack Launch Crash Remediation
 **Date:** 2026-04-15 · **Commit:** pending
 

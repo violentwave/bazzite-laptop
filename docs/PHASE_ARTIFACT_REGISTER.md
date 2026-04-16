@@ -314,6 +314,21 @@ The repo has complete historical coverage across the earlier tranches, but older
 - **Important Note**:
   - Notion row properties are authoritative if page body text lags or is stale.
 
+### P119 — Security Autopilot Core
+- **Status**: Done
+- **Finished**: 2026-04-16
+
+| Type | Path | Description |
+|------|------|-------------|
+| Plan | `docs/P119_PLAN.md` | Phase scope, safety boundaries, and validation commands |
+| Backend Package | `ai/security_autopilot/__init__.py` | Public exports for P119 autopilot primitives |
+| Backend Module | `ai/security_autopilot/models.py` | Typed models for findings, incidents, plans, decisions, audit, evidence |
+| Backend Module | `ai/security_autopilot/sensors.py` | Safe adapters for approved Bazzite security/system/log/agent signals |
+| Backend Module | `ai/security_autopilot/classifier.py` | Finding normalization and incident grouping heuristics |
+| Backend Module | `ai/security_autopilot/planner.py` | Plan-only remediation generation with no destructive actions |
+| Backend Module | `ai/security_autopilot/audit.py` | Redacted evidence bundles + append-only hash-chained audit ledger |
+| Tests | `tests/test_security_autopilot.py` | Coverage for model safety, sensors, classification, grouping, planning, audit |
+
 ## Cross-Phase Documentation
 
 ### Hub Docs (docs/ root)
