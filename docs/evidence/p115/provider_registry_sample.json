@@ -1,0 +1,32 @@
+{
+  "version": "1.0.0",
+  "providers": [
+    {
+      "provider_id": "custom-openai",
+      "display_name": "Custom OpenAI Compatible",
+      "provider_type": "openai_compatible",
+      "base_url": "https://api.custom.example.com/v1",
+      "enabled": true,
+      "credential_ref": "CUSTOM_PROVIDER_KEY",
+      "models": [
+        {"id": "custom-gpt-4", "name": "Custom GPT-4", "task_types": ["fast", "reason"]},
+        {"id": "custom-gpt-4-turbo", "name": "Custom GPT-4 Turbo", "task_types": ["code", "batch"]}
+      ],
+      "routing_metadata": {"priority": 10},
+      "notes": "Example custom provider"
+    },
+    {
+      "provider_id": "custom-local",
+      "display_name": "Custom Local",
+      "provider_type": "openai_compatible",
+      "base_url": "http://localhost:8080/v1",
+      "enabled": false,
+      "credential_ref": null,
+      "models": [
+        {"id": "local-model", "name": "Local Model", "task_types": ["fast"]}
+      ],
+      "notes": "Disabled local provider"
+    }
+  ],
+  "count": 2
+}

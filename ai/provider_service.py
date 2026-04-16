@@ -1,6 +1,7 @@
 """Provider and Model Discovery + Routing Console Service.
 
 P82 — Provider + Model Discovery / Routing Console
+P115 — Provider Registry + Routing Persistence v2 (integration)
 
 Provides:
 - Provider discovery from secure runtime config
@@ -10,11 +11,17 @@ Provides:
 - Fallback chain visualization
 - Refresh/invalidation after secrets changes
 - Local Ollama embed visibility
+- Durable provider registry (P115)
 
 Integration with P81:
 - Receives refresh triggers from settings_service._trigger_provider_refresh()
 - Reads provider keys via config.KEY_SCOPES["llm"]
 - Respects secure backend ownership of secrets
+
+Integration with P115:
+- Uses ProviderRegistry for custom provider storage
+- Generates routing config from registry
+- Merges built-in and custom providers
 """
 
 from __future__ import annotations
@@ -31,6 +38,10 @@ import yaml
 
 from ai.config import APP_NAME, CONFIGS_DIR, get_key
 from ai.health import HealthTracker, ProviderHealth
+from ai.provider_registry import (
+    ProviderRegistry,
+    get_provider_registry,
+)
 
 logger = logging.getLogger(APP_NAME)
 
@@ -454,6 +465,43 @@ class ProviderService:
     def get_health_tracker(self) -> HealthTracker:
         """Get the health tracker instance."""
         return self.health_tracker
+
+    def get_registry(self) -> ProviderRegistry:
+        """Get the provider registry instance."""
+        return get_provider_registry()
+
+    def generate_routing_from_registry(self) -> list[dict]:
+        """Generate routing config from provider registry.
+
+        P115: Deterministic routing config generation.
+        """
+        registry = get_provider_registry()
+        return registry.generate_routing_config(KNOWN_PROVIDERS)
+
+    def get_merged_catalog(self) -> list[ModelInfo]:
+        """Get model catalog merging built-in and registry providers.
+
+        P115: Unified catalog for UI display.
+        """
+        registry = get_provider_registry()
+        merged = registry.merge_with_builtin(KNOWN_PROVIDERS)
+
+        models = []
+        for provider in merged:
+            if not provider.enabled:
+                continue
+            for model in provider.models:
+                if model.is_available:
+                    models.append(
+                        ModelInfo(
+                            id=model.id,
+                            name=model.name,
+                            provider=provider.provider_id,
+                            task_types=model.task_types,
+                            is_available=True,
+                        )
+                    )
+        return sorted(models, key=lambda m: m.id)
 
 
 # ── Public API ──────────────────────────────────────────────────────────────

@@ -145,7 +145,8 @@
 | P110 | Tool Control Center UI | Done | 60c5daf | 2026-04-15 | docs/P110_PLAN.md, ui/src/components/tool-control/* | Notion row | Unified UI for governance, discovery, marketplace, optimization, federation |
 | P111 | Final Production Acceptance Gate | Done | pending | 2026-04-15 | docs/P111_PLAN.md, docs/P111_FINAL_ACCEPTANCE_REPORT.md | Notion row | Comprehensive system acceptance validation |
 | P112 | UI Dev Runtime / Turbopack Launch Crash Remediation | Done | 7507dbf | 2026-04-15 | scripts/start-console-ui.sh, ui/next.config.ts, ui/src/components/security/SecurityOverview.tsx | Notion row | Fixed Next.js Turbopack dev server crash due to tailwind root pollution |
-| P113 | Runtime UI Repair + Provider Onboarding | In Progress | — | — | ui/src/components/providers/ModelsList.tsx, ui/src/components/providers/AddProviderPanel.tsx, docs/evidence/p113_runtime_ui_repair.md | Notion row | ProvidersContainer: Add tab, ModelsList: empty state, AddProviderPanel: onboarding UX, RoutingConsole: config disclaimer |
+| P113 | Runtime UI Repair + Provider Onboarding | Done | 2ffc3dc | 2026-04-15 | ui/src/components/providers/ModelsList.tsx, ui/src/components/providers/AddProviderPanel.tsx, docs/evidence/p113_runtime_ui_repair.md | Notion row | ProvidersContainer: Add tab, ModelsList: empty state, AddProviderPanel: onboarding UX, RoutingConsole: config disclaimer |
+| P114 | MCP Contract Convergence + Runtime Manifest CI | Done | 7ad75c6 | 2026-04-15 | docs/evidence/p114/mcp_contract.json, docs/evidence/p114/parity_report.json, ai/mcp_bridge/parity_check.py | Notion row | MCP contract v1.0.0 with 169 tools, parity checker script, all validations pass |
 
 ## Notion Database Reference
 

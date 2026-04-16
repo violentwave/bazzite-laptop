@@ -2167,6 +2167,284 @@ async def _execute_python_tool(tool_name: str, tool_def: dict, args: dict) -> st
                     indent=2,
                 )
 
+        # P115: Provider Registry Tools
+        elif tool_name == "provider.list":
+            from ai.provider_registry import (  # noqa: PLC0415
+                get_provider_registry,
+            )
+
+            try:
+                registry = get_provider_registry()
+                include_disabled = args.get("include_disabled", False)
+                providers = registry.list_providers(include_disabled=include_disabled)
+
+                return json.dumps(
+                    {
+                        "success": True,
+                        "providers": [
+                            {
+                                "provider_id": p.provider_id,
+                                "display_name": p.display_name,
+                                "provider_type": p.provider_type,
+                                "base_url": p.base_url,
+                                "enabled": p.enabled,
+                                "credential_ref": p.credential_ref,
+                                "models": [
+                                    {
+                                        "id": m.id,
+                                        "name": m.name,
+                                        "task_types": m.task_types,
+                                    }
+                                    for m in p.models
+                                ],
+                                "health_status": p.health_status,
+                                "last_error": p.last_error,
+                            }
+                            for p in providers
+                        ],
+                        "count": len(providers),
+                    },
+                    indent=2,
+                )
+            except Exception as e:
+                logger.error("provider.list failed: %s", e)
+                return json.dumps(
+                    {
+                        "success": False,
+                        "error_code": "provider_list_failed",
+                        "error": "Failed to list providers",
+                        "details": str(e),
+                    },
+                    indent=2,
+                )
+
+        elif tool_name == "provider.create":
+            from ai.provider_registry import (  # noqa: PLC0415
+                get_provider_registry,
+            )
+
+            try:
+                registry = get_provider_registry()
+                provider_id = args.get("provider_id", "")
+                display_name = args.get("display_name", "")
+                provider_type = args.get("provider_type", "")
+                base_url = args.get("base_url")
+                credential_ref = args.get("credential_ref")
+                models = args.get("models", [])
+                routing_metadata = args.get("routing_metadata", {})
+                notes = args.get("notes")
+
+                record = registry.create_provider(
+                    provider_id=provider_id,
+                    display_name=display_name,
+                    provider_type=provider_type,
+                    base_url=base_url,
+                    credential_ref=credential_ref,
+                    models=models,
+                    routing_metadata=routing_metadata,
+                    notes=notes,
+                )
+
+                return json.dumps(
+                    {
+                        "success": True,
+                        "provider_id": record.provider_id,
+                        "message": f"Provider {provider_id} created",
+                    },
+                    indent=2,
+                )
+            except ValueError as e:
+                return json.dumps(
+                    {
+                        "success": False,
+                        "error_code": "validation_error",
+                        "error": str(e),
+                    },
+                    indent=2,
+                )
+            except Exception as e:
+                logger.error("provider.create failed: %s", e)
+                return json.dumps(
+                    {
+                        "success": False,
+                        "error_code": "provider_create_failed",
+                        "error": "Failed to create provider",
+                        "details": str(e),
+                    },
+                    indent=2,
+                )
+
+        elif tool_name == "provider.update":
+            from ai.provider_registry import (  # noqa: PLC0415
+                get_provider_registry,
+            )
+
+            try:
+                registry = get_provider_registry()
+                provider_id = args.get("provider_id", "")
+                display_name = args.get("display_name")
+                provider_type = args.get("provider_type")
+                base_url = args.get("base_url")
+                credential_ref = args.get("credential_ref")
+                models = args.get("models")
+                routing_metadata = args.get("routing_metadata")
+                notes = args.get("notes")
+
+                record = registry.update_provider(
+                    provider_id=provider_id,
+                    display_name=display_name,
+                    provider_type=provider_type,
+                    base_url=base_url,
+                    credential_ref=credential_ref,
+                    models=models,
+                    routing_metadata=routing_metadata,
+                    notes=notes,
+                )
+
+                return json.dumps(
+                    {
+                        "success": True,
+                        "provider_id": record.provider_id,
+                        "message": f"Provider {provider_id} updated",
+                    },
+                    indent=2,
+                )
+            except ValueError as e:
+                return json.dumps(
+                    {
+                        "success": False,
+                        "error_code": "validation_error",
+                        "error": str(e),
+                    },
+                    indent=2,
+                )
+            except Exception as e:
+                logger.error("provider.update failed: %s", e)
+                return json.dumps(
+                    {
+                        "success": False,
+                        "error_code": "provider_update_failed",
+                        "error": "Failed to update provider",
+                        "details": str(e),
+                    },
+                    indent=2,
+                )
+
+        elif tool_name == "provider.disable":
+            from ai.provider_registry import (  # noqa: PLC0415
+                get_provider_registry,
+            )
+
+            try:
+                registry = get_provider_registry()
+                provider_id = args.get("provider_id", "")
+
+                record = registry.disable_provider(provider_id)
+
+                return json.dumps(
+                    {
+                        "success": True,
+                        "provider_id": record.provider_id,
+                        "enabled": record.enabled,
+                        "message": f"Provider {provider_id} disabled",
+                    },
+                    indent=2,
+                )
+            except ValueError as e:
+                return json.dumps(
+                    {
+                        "success": False,
+                        "error_code": "provider_not_found",
+                        "error": str(e),
+                    },
+                    indent=2,
+                )
+            except Exception as e:
+                logger.error("provider.disable failed: %s", e)
+                return json.dumps(
+                    {
+                        "success": False,
+                        "error_code": "provider_disable_failed",
+                        "error": "Failed to disable provider",
+                        "details": str(e),
+                    },
+                    indent=2,
+                )
+
+        elif tool_name == "provider.enable":
+            from ai.provider_registry import (  # noqa: PLC0415
+                get_provider_registry,
+            )
+
+            try:
+                registry = get_provider_registry()
+                provider_id = args.get("provider_id", "")
+
+                record = registry.enable_provider(provider_id)
+
+                return json.dumps(
+                    {
+                        "success": True,
+                        "provider_id": record.provider_id,
+                        "enabled": record.enabled,
+                        "message": f"Provider {provider_id} enabled",
+                    },
+                    indent=2,
+                )
+            except ValueError as e:
+                return json.dumps(
+                    {
+                        "success": False,
+                        "error_code": "provider_not_found",
+                        "error": str(e),
+                    },
+                    indent=2,
+                )
+            except Exception as e:
+                logger.error("provider.enable failed: %s", e)
+                return json.dumps(
+                    {
+                        "success": False,
+                        "error_code": "provider_enable_failed",
+                        "error": "Failed to enable provider",
+                        "details": str(e),
+                    },
+                    indent=2,
+                )
+
+        elif tool_name == "provider.generate_routing":
+            from ai.provider_registry import (  # noqa: PLC0415
+                KNOWN_PROVIDERS,
+                get_provider_registry,
+            )
+
+            try:
+                registry = get_provider_registry()
+                include_disabled = args.get("include_disabled", False)
+                config = registry.generate_routing_config(
+                    KNOWN_PROVIDERS, include_disabled=include_disabled
+                )
+
+                return json.dumps(
+                    {
+                        "success": True,
+                        "routing": config,
+                        "count": len(config),
+                    },
+                    indent=2,
+                )
+            except Exception as e:
+                logger.error("provider.generate_routing failed: %s", e)
+                return json.dumps(
+                    {
+                        "success": False,
+                        "error_code": "routing_generation_failed",
+                        "error": "Failed to generate routing config",
+                        "details": str(e),
+                    },
+                    indent=2,
+                )
+
         # P96 Figma Design Reconciliation tools
         elif tool_name == "figma.list_teams":
             from ai.figma_service import figma_list_teams  # noqa: PLC0415

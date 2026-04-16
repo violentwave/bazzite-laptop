@@ -1611,6 +1611,61 @@ tools:
       idempotent: true
       openWorld: false
 
+  # P115 — Provider Registry + Routing Persistence
+  provider.list:
+    description: "List all providers in the registry (including custom providers)"
+    source: command
+    command: ai/mcp_bridge/tools.py
+    annotations:
+      readOnly: true
+      idempotent: true
+      openWorld: false
+
+  provider.create:
+    description: "Create a new custom provider in the registry"
+    source: command
+    command: ai/mcp_bridge/tools.py
+    annotations:
+      readOnly: false
+      idempotent: false
+      openWorld: false
+
+  provider.update:
+    description: "Update an existing provider in the registry"
+    source: command
+    command: ai/mcp_bridge/tools.py
+    annotations:
+      readOnly: false
+      idempotent: false
+      openWorld: false
+
+  provider.disable:
+    description: "Disable a provider in the registry"
+    source: command
+    command: ai/mcp_bridge/tools.py
+    annotations:
+      readOnly: false
+      idempotent: false
+      openWorld: false
+
+  provider.enable:
+    description: "Enable a disabled provider in the registry"
+    source: command
+    command: ai/mcp_bridge/tools.py
+    annotations:
+      readOnly: false
+      idempotent: false
+      openWorld: false
+
+  provider.generate_routing:
+    description: "Generate LiteLLM routing config from provider registry"
+    source: command
+    command: ai/mcp_bridge/tools.py
+    annotations:
+      readOnly: true
+      idempotent: true
+      openWorld: false
+
   # P96 Figma Design Reconciliation tools
   figma.list_teams:
     description: "List Figma teams accessible to the configured PAT"
