@@ -1,16 +1,18 @@
 # Phase Index — Bazzite AI Layer
 
-> Master index of all phases P0-P99. Updated 2026-04-14.
-> Source of truth: Notion `Bazzite Phases` database + `git log`.
+> Master index of repo-tracked phases through P120, plus the current active phase pointer.
+> Updated 2026-04-16.
+> Source of truth: Notion `Bazzite Phases` database + `git log`; Notion row properties are authoritative when repo docs lag.
 
 ## Quick Stats
 
 | Metric | Value |
 |--------|-------|
-| Total Phases | P0-P99 (100 phases) |
-| Completed | P0-P99 except P80 (deferred) |
-| In Progress | None |
-| Deferred | P80 (Auth, 2FA, Recovery, Gmail) |
+| Total Phases Tracked | P0-P120 complete in repo index; P121 active; P122-P139 planned in Notion |
+| Completed | P0-P120 complete in current repo-ledger terms |
+| Active | P121 — Security Autopilot UI |
+| Next Gated | P122 — Safe Remediation Runner |
+| Historical Truth Conflict | P80 remains a repo-vs-Notion reconciliation note for later cleanup |
 | Repo Docs | docs/*.md, docs/patterns/frontend/*.md, docs/frontend-capability-pack/*.md |
 | Notion DB | `398c13ed-47f6-4f7e-9e54-eb339b462c90` |
 
@@ -27,6 +29,9 @@
 | 2026-04-10 to 2026-04-11 | P40-P50 | Observability: intel scraper, integration tests, Newelle skills |
 | 2026-04-09 to 2026-04-12 | P51-P58 | Control plane: Slack, Notion, phase control, cross-system burn down |
 | 2026-04-10 to 2026-04-12 | P59-P69 | Frontend capability pack: P59 (branch convergence), P60 (intelligence reliability), P61 (frontend pack), P62 (pattern intel), P63 (QA layer), P64 (design/media), P65 (runtime harness), P66 (brief intake), P67 (deployment pack), P68 (GitNexus evaluation), P69 (ops runbooks) |
+| 2026-04-13 to 2026-04-15 | P70-P118 | Documentation normalization, Midnight Glass UI, runtime repair, MCP governance, provider/routing persistence, release candidate acceptance |
+| 2026-04-16 | P119-P120 | Security Autopilot foundation: core models, audit/evidence, policy engine, safe action decisions |
+| Current | P121-P122 | Security Autopilot UI followed by policy-gated Safe Remediation Runner |
 
 ## Phase Index
 
@@ -144,14 +149,17 @@
 | P109 | Production-Grade Settings & Secrets UX | Done | b0dc074 | 2026-04-15 | docs/P109_PLAN.md | Notion row | Analysis confirms production-grade UX already implemented |
 | P110 | Tool Control Center UI | Done | 60c5daf | 2026-04-15 | docs/P110_PLAN.md, ui/src/components/tool-control/* | Notion row | Unified UI for governance, discovery, marketplace, optimization, federation |
 | P111 | Final Production Acceptance Gate | Done | pending | 2026-04-15 | docs/P111_PLAN.md, docs/P111_FINAL_ACCEPTANCE_REPORT.md | Notion row | Comprehensive system acceptance validation |
-| P112 | UI Dev Runtime / Turbopack Launch Crash Remediation | Done | 7507dbf | 2026-04-15 | scripts/start-console-ui.sh, ui/next.config.ts, ui/src/components/security/SecurityOverview.tsx | Notion row | Fixed Next.js Turbopack dev server crash due to tailwind root pollution |
-| P113 | Runtime UI Repair + Provider Onboarding | Done | 2ffc3dc | 2026-04-15 | ui/src/components/providers/ModelsList.tsx, ui/src/components/providers/AddProviderPanel.tsx, docs/evidence/p113_runtime_ui_repair.md | Notion row | ProvidersContainer: Add tab, ModelsList: empty state, AddProviderPanel: onboarding UX, RoutingConsole: config disclaimer |
-| P114 | MCP Contract Convergence + Runtime Manifest CI | Done | 7ad75c6 | 2026-04-15 | docs/evidence/p114/mcp_contract.json, docs/evidence/p114/parity_report.json, ai/mcp_bridge/parity_check.py | Notion row | MCP contract v1.0.0 with 169 tools, parity checker script, all validations pass |
-| P115 | Provider Registry + Routing Persistence v2 | Done | 99a7fcb | 2026-04-15 | ai/provider_registry.py, tests/test_provider_registry.py, docs/evidence/p115/* | Notion row | Provider registry CRUD, deterministic routing generation, 6 new MCP tools, 22 tests, P114 parity updated |
-| P116 | Chat Workspace Routing Profiles | Done | 0e67e4f | 2026-04-15 | ui/src/components/chat/ChatProfileSelector.tsx, ui/src/components/chat/ChatRouteInfo.tsx, ui/src/hooks/useChatRouting.ts, docs/evidence/p116/* | Notion row | Profile selector dropdown, route visibility, localStorage persistence |
-| P117 | Security + Shell Operations Hardening v2 | Done | 4537314 | 2026-04-15 | ui/src/components/security/SecurityContainer.tsx, ui/src/components/shell-gateway/ShellContainer.tsx, docs/evidence/p117/* | Notion row | Shell/security runtime states, degraded handling, audit visibility, blocked/unavailable messages, 23 tests pass |
-| P118 | Final System Acceptance Gate | Done | fe619bf | 2026-04-15 | docs/evidence/p118/acceptance.md | Notion row | Full system acceptance validated: UI/backend/MCP/routing/failure-awareness/docs all passing after manifest/system-prompt repair, ready for production |
- 
+| P112 | UI Dev Runtime / Turbopack Launch Crash Remediation | Done | pending | 2026-04-15 | scripts/start-console-ui.sh, ui/next.config.ts, ui/src/components/security/SecurityOverview.tsx | Notion row | Fixed Next.js Turbopack dev server crash due to tailwind root pollution |
+| P113 | Runtime UI Repair + Provider Onboarding | Done | 2ffc3dc | 2026-04-15 | ui/src/components/providers/ModelsList.tsx, ui/src/components/providers/AddProviderPanel.tsx, docs/evidence/p113_runtime_ui_repair.md | Notion row | Runtime UI repair, provider onboarding UX, routing disclaimer, empty-state cleanup |
+| P114 | MCP Contract Convergence + Runtime Manifest CI | Done | 7ad75c6 | 2026-04-15 | ai/mcp_bridge/parity_check.py, docs/evidence/p114/* | Notion row | MCP contract convergence, parity report, runtime manifest CI checks |
+| P115 | Provider Registry + Routing Persistence v2 | Done | 99a7fcb | 2026-04-15 | ai/provider_registry.py, tests/test_provider_registry.py, docs/evidence/p115/* | Notion row | Provider registry CRUD, deterministic routing generation, 6 new MCP tools |
+| P116 | Chat Workspace Routing Profiles | Done | 0e67e4f | 2026-04-15 | ui/src/components/chat/ChatProfileSelector.tsx, ui/src/components/chat/ChatRouteInfo.tsx, ui/src/hooks/useChatRouting.ts, docs/evidence/p116/* | Notion row | Profile selector, route visibility, localStorage persistence |
+| P117 | Security + Shell Operations Hardening v2 | Done | 4537314 | 2026-04-15 | ui/src/components/security/SecurityContainer.tsx, ui/src/components/shell-gateway/ShellContainer.tsx, docs/evidence/p117/* | Notion row | Hardened degraded states, audit visibility, blocked/unavailable messages |
+| P118 | Final System Acceptance Gate | Done | fe619bf | 2026-04-15 | docs/evidence/p118/acceptance.md | Notion row | Full system acceptance validated: UI/backend/MCP/routing/failure-awareness/docs aligned, ready for production |
+| P119 | Security Autopilot Core | Done | d502c21 | 2026-04-16 | ai/security_autopilot/{models.py,sensors.py,classifier.py,planner.py,audit.py,__init__.py}, tests/test_security_autopilot.py, docs/P119_PLAN.md | Notion row | Plan-only Security Autopilot core with findings/incidents/plans, redacted evidence, and append-only hash-chained audit logging |
+| P120 | Security Policy Engine | Done | 9471662 | 2026-04-16 | ai/security_autopilot/policy.py, configs/security-autopilot-policy.yaml, tests/test_security_autopilot_policy.py, docs/P120_PLAN.md | Notion row | Policy modes, allow/approval/block decisions, safe defaults, malformed-input rejection, redaction-aware output |
+| P121 | Security Autopilot UI | Active | — | — | Repo artifacts pending implementation; see active Notion row and upcoming docs/P121_PLAN.md | Notion row | Current implementation target: extend the Unified Control Console Security Ops surface with Autopilot, Findings, Incidents, Evidence, Audit, Policy, and Remediation Queue views |
+
 ## Notion Database Reference
 
 Database ID: `398c13ed-47f6-4f7e-9e54-eb339b462c90`
@@ -159,11 +167,13 @@ Database ID: `398c13ed-47f6-4f7e-9e54-eb339b462c90`
 Key properties:
 - `Phase Number`: Integer identifier
 - `Name`: Phase title
-- `Status`: Ready/InProgress/Done
+- `Status`: Planned / Ready / In Progress / Blocked / Needs Review / Done / Cancelled
 - `Commit SHA`: Git commit (short form)
 - `Finished At`: Completion date
 - `Validation Summary`: Prose completion summary
 - `Dependencies`: Prerequisite phases
+- `Execution Mode`: bounded / manual-approval / other phase execution constraints
+- `Approval Required` / `Approval State`: gate metadata for high-risk phases
 
 ## Cross-References
 
@@ -172,3 +182,4 @@ Key properties:
 - [PHASE_DELIVERY_TIMELINE.md](./PHASE_DELIVERY_TIMELINE.md) — Timeline view
 - [ARCHITECTURE_EVOLUTION.md](./ARCHITECTURE_EVOLUTION.md) — Architecture evolution narrative
 - [PHASE_DOCUMENTATION_POLICY.md](./PHASE_DOCUMENTATION_POLICY.md) — Future artifact placement rules
+- [P119_P139_SECURITY_AUTOPILOT_AGENT_WORKBENCH_ROADMAP.md](./P119_P139_SECURITY_AUTOPILOT_AGENT_WORKBENCH_ROADMAP.md) — Security Autopilot + Agent Workbench roadmap
