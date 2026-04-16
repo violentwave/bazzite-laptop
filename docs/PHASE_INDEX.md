@@ -149,7 +149,7 @@
 | P114 | MCP Contract Convergence + Runtime Manifest CI | Done | 7ad75c6 | 2026-04-15 | docs/evidence/p114/mcp_contract.json, docs/evidence/p114/parity_report.json, ai/mcp_bridge/parity_check.py | Notion row | MCP contract v1.0.0 with 169 tools, parity checker script, all validations pass |
 | P115 | Provider Registry + Routing Persistence v2 | Done | 99a7fcb | 2026-04-15 | ai/provider_registry.py, tests/test_provider_registry.py, docs/evidence/p115/* | Notion row | Provider registry CRUD, deterministic routing generation, 6 new MCP tools, 22 tests, P114 parity updated |
 | P116 | Chat Workspace Routing Profiles | Done | 0e67e4f | 2026-04-15 | ui/src/components/chat/ChatProfileSelector.tsx, ui/src/components/chat/ChatRouteInfo.tsx, ui/src/hooks/useChatRouting.ts, docs/evidence/p116/* | Notion row | Profile selector dropdown, route visibility, localStorage persistence |
-| P117 | Security + Shell Operations Hardening v2 | Done | — | 2026-04-15 | ui/src/components/security/SecurityContainer.tsx, ui/src/components/shell-gateway/ShellContainer.tsx, docs/evidence/p117/* | Notion row | Shell/security runtime states, degraded handling, audit visibility, blocked/unavailable messages, 23 tests pass |
+| P117 | Security + Shell Operations Hardening v2 | Done | 4537314 | 2026-04-15 | ui/src/components/security/SecurityContainer.tsx, ui/src/components/shell-gateway/ShellContainer.tsx, docs/evidence/p117/* | Notion row | Shell/security runtime states, degraded handling, audit visibility, blocked/unavailable messages, 23 tests pass |
  
 ## Notion Database Reference
 
