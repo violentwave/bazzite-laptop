@@ -1,0 +1,34 @@
+{
+  "sessionStatuses": {
+    "active": {
+      "status": "active",
+      "commandsAccepted": true,
+      "message": null
+    },
+    "idle": {
+      "status": "idle",
+      "commandsAccepted": false,
+      "message": "Session idle — no commands accepted"
+    },
+    "disconnected": {
+      "status": "disconnected",
+      "commandsAccepted": false,
+      "message": "Session disconnected — terminate and create a new session to continue"
+    },
+    "error": {
+      "status": "error",
+      "commandsAccepted": false,
+      "message": "Session error — terminate and create a new session"
+    }
+  },
+  "audit": {
+    "component": "ShellAuditStrip",
+    "visibleData": ["timestamp", "command", "exitCode", "duration"]
+  },
+  "validation": {
+    "typescript": "clean",
+    "build": "passes",
+    "shellServiceTests": 23,
+    "ruff": "clean"
+  }
+}

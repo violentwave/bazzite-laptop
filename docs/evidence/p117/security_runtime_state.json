@@ -1,0 +1,44 @@
+{
+  "errorStates": {
+    "fullError": {
+      "error": "Failed to load security data",
+      "errorCode": "connection_failed",
+      "operatorAction": "Check MCP bridge service is running",
+      "partialData": false,
+      "missingSources": [],
+      "severity": "error"
+    },
+    "partialData": {
+      "error": "Some security data unavailable",
+      "errorCode": "alerts_file_unavailable",
+      "operatorAction": null,
+      "partialData": true,
+      "missingSources": ["alerts", "provider_health"],
+      "severity": "warning"
+    }
+  },
+  "sessionStatus": {
+    "disconnected": {
+      "status": "disconnected",
+      "message": "Session disconnected — terminate and create a new session to continue"
+    },
+    "error": {
+      "status": "error",
+      "message": "Session error — terminate and create a new session"
+    },
+    "idle": {
+      "status": "idle",
+      "message": "Session idle — no commands accepted"
+    }
+  },
+  "actions": {
+    "runQuickScan": {
+      "success": "Quick scan requested.",
+      "failure": "Quick scan failed: {error message}"
+    },
+    "runHealthCheck": {
+      "success": "Health snapshot requested.",
+      "failure": "Health check failed: {error message}"
+    }
+  }
+}
