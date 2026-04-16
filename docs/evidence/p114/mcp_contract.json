@@ -1,0 +1,1528 @@
+{
+  "version": "1.0.0",
+  "generated_at": "2026-04-15T20:39:32.651100",
+  "total_tools": 169,
+  "tools": {
+    "agents.code_quality": {
+      "description": "Run ruff + bandit + git status, report code quality and repo health",
+      "source": "python",
+      "module": "ai.agents.code_quality_agent",
+      "function": "run_code_check",
+      "readOnly": false,
+      "idempotent": false,
+      "destructive": false
+    },
+    "agents.knowledge_storage": {
+      "description": "Check vector DB health, ingestion freshness, disk usage, Ollama status",
+      "source": "python",
+      "module": "ai.agents.knowledge_storage",
+      "function": "run_storage_check",
+      "readOnly": false,
+      "idempotent": false,
+      "destructive": false
+    },
+    "agents.performance_tuning": {
+      "description": "Run performance analysis: temps, memory, disk, gaming profiles + recommendations",
+      "source": "python",
+      "module": "ai.agents.performance_tuning",
+      "function": "run_tuning",
+      "readOnly": false,
+      "idempotent": false,
+      "destructive": false
+    },
+    "agents.security_audit": {
+      "description": "Run automated security audit: scan + health + ingest + RAG summary",
+      "source": "python",
+      "module": "ai.agents.security_audit",
+      "function": "run_audit",
+      "readOnly": false,
+      "idempotent": false,
+      "destructive": false
+    },
+    "agents.timer_health": {
+      "description": "Validate all 16 systemd timers fired within expected windows. Returns per-timer status, stale list, and overall health (healthy/warning/critical).",
+      "source": "python",
+      "module": "ai.agents.timer_sentinel",
+      "function": "check_timers",
+      "readOnly": false,
+      "idempotent": false,
+      "destructive": false
+    },
+    "code.blast_radius": {
+      "description": "Compute blast radius for changed files with hop depth",
+      "source": "python",
+      "module": "ai.mcp_bridge.server",
+      "function": "handle_code_blast_radius",
+      "readOnly": false,
+      "idempotent": false,
+      "destructive": false
+    },
+    "code.class_hierarchy": {
+      "description": "Get the class hierarchy for a given class",
+      "source": "python",
+      "module": "ai.mcp_bridge.server",
+      "function": "handle_code_class_hierarchy",
+      "readOnly": false,
+      "idempotent": false,
+      "destructive": false
+    },
+    "code.complexity_report": {
+      "description": "Get complexity report for code files or functions",
+      "source": "python",
+      "module": "ai.mcp_bridge.server",
+      "function": "handle_code_complexity_report",
+      "readOnly": false,
+      "idempotent": false,
+      "destructive": false
+    },
+    "code.dependency_graph": {
+      "description": "Get the dependency graph for a module",
+      "source": "python",
+      "module": "ai.mcp_bridge.server",
+      "function": "handle_code_dependency_graph",
+      "readOnly": false,
+      "idempotent": false,
+      "destructive": false
+    },
+    "code.find_callers": {
+      "description": "Find all functions that call a given function",
+      "source": "python",
+      "module": "ai.mcp_bridge.server",
+      "function": "handle_code_find_callers",
+      "readOnly": false,
+      "idempotent": false,
+      "destructive": false
+    },
+    "code.fused_context": {
+      "description": "Unified code context across semantic, structural, and phase/task artifacts",
+      "source": "python",
+      "module": "ai.rag.code_query",
+      "function": "",
+      "readOnly": false,
+      "idempotent": false,
+      "destructive": false
+    },
+    "code.impact_analysis": {
+      "description": "Analyze the impact of code changes on dependent modules and tests",
+      "source": "python",
+      "module": "ai.mcp_bridge.server",
+      "function": "handle_code_impact_analysis",
+      "readOnly": false,
+      "idempotent": false,
+      "destructive": false
+    },
+    "code.rag_query": {
+      "description": "Semantic search over indexed Python code (embedding-based)",
+      "source": "python",
+      "module": "ai.rag.code_query",
+      "function": "",
+      "readOnly": false,
+      "idempotent": false,
+      "destructive": false
+    },
+    "code.search": {
+      "description": "Search Python code in the repo by pattern (ripgrep/grep)",
+      "source": "python",
+      "module": "ai.mcp_bridge.tools",
+      "function": "",
+      "readOnly": false,
+      "idempotent": false,
+      "destructive": false
+    },
+    "code.suggest_tests": {
+      "description": "Suggest tests that cover the given changed files",
+      "source": "python",
+      "module": "ai.mcp_bridge.server",
+      "function": "handle_code_suggest_tests",
+      "readOnly": false,
+      "idempotent": false,
+      "destructive": false
+    },
+    "collab.add_task": {
+      "description": "Add a task to the collaborative queue",
+      "source": "python",
+      "module": "ai.collab.task_queue",
+      "function": "add_task",
+      "readOnly": false,
+      "idempotent": false,
+      "destructive": false
+    },
+    "collab.queue_status": {
+      "description": "Get task queue status summary",
+      "source": "python",
+      "module": "ai.collab.task_queue",
+      "function": "get_queue_status",
+      "readOnly": false,
+      "idempotent": false,
+      "destructive": false
+    },
+    "collab.search_knowledge": {
+      "description": "Search the agent knowledge base",
+      "source": "python",
+      "module": "ai.collab.knowledge_base",
+      "function": "search_knowledge",
+      "readOnly": false,
+      "idempotent": false,
+      "destructive": false
+    },
+    "figma.find_project": {
+      "description": "Find a Figma project by name across accessible teams",
+      "source": "python",
+      "module": "ai.figma_service",
+      "function": "figma_find_project",
+      "readOnly": true,
+      "idempotent": false,
+      "destructive": false
+    },
+    "figma.get_file": {
+      "description": "Get metadata for a Figma file by key",
+      "source": "python",
+      "module": "ai.figma_service",
+      "function": "figma_get_file",
+      "readOnly": true,
+      "idempotent": false,
+      "destructive": false
+    },
+    "figma.list_project_files": {
+      "description": "List files in a Figma project",
+      "source": "python",
+      "module": "ai.figma_service",
+      "function": "figma_list_project_files",
+      "readOnly": true,
+      "idempotent": false,
+      "destructive": false
+    },
+    "figma.list_projects": {
+      "description": "List projects in a Figma team",
+      "source": "python",
+      "module": "ai.figma_service",
+      "function": "figma_list_projects",
+      "readOnly": true,
+      "idempotent": false,
+      "destructive": false
+    },
+    "figma.list_teams": {
+      "description": "List Figma teams accessible to the configured PAT",
+      "source": "python",
+      "module": "ai.figma_service",
+      "function": "figma_list_teams",
+      "readOnly": true,
+      "idempotent": true,
+      "destructive": false
+    },
+    "figma.reconcile": {
+      "description": "Reconcile Midnight Glass Design Lab artifacts against Figma project contents",
+      "source": "python",
+      "module": "ai.figma_service",
+      "function": "figma_reconcile",
+      "readOnly": true,
+      "idempotent": false,
+      "destructive": false
+    },
+    "gaming.mangohud_preset": {
+      "description": "Get MangoHud preset for a specific game",
+      "source": "python",
+      "module": "ai.gaming.scopebuddy",
+      "function": "get_preset",
+      "readOnly": false,
+      "idempotent": false,
+      "destructive": false
+    },
+    "gaming.profiles": {
+      "description": "List configured game profiles",
+      "source": "python",
+      "module": "ai.gaming.scopebuddy",
+      "function": "list_profiles",
+      "readOnly": false,
+      "idempotent": false,
+      "destructive": false
+    },
+    "intel.ingest_pending": {
+      "description": "Ingest pending scraped intelligence into LanceDB RAG knowledge base",
+      "source": "python",
+      "module": "ai.mcp_bridge.tools",
+      "function": "handle_intel_ingest_pending",
+      "readOnly": false,
+      "idempotent": false,
+      "destructive": false
+    },
+    "intel.scrape_now": {
+      "description": "Trigger intelligence scrape: GitHub releases, CISA KEV, NVD CVEs, Fedora RSS",
+      "source": "python",
+      "module": "ai.mcp_bridge.tools",
+      "function": "handle_intel_scrape_now",
+      "readOnly": false,
+      "idempotent": false,
+      "destructive": false
+    },
+    "knowledge.ingest_docs": {
+      "description": "Re-ingest reference documentation into RAG vector database",
+      "source": "python",
+      "module": "ai.rag.ingest_docs",
+      "function": "",
+      "readOnly": false,
+      "idempotent": false,
+      "destructive": false
+    },
+    "knowledge.pattern_search": {
+      "description": "Semantic search over code patterns with optional language/domain/frontend metadata filters",
+      "source": "python",
+      "module": "ai.rag.pattern_query",
+      "function": "",
+      "readOnly": false,
+      "idempotent": false,
+      "destructive": false
+    },
+    "knowledge.rag_qa": {
+      "description": "Answer a question using the security knowledge base with LLM synthesis",
+      "source": "python",
+      "module": "ai.rag.query",
+      "function": "",
+      "readOnly": false,
+      "idempotent": false,
+      "destructive": false
+    },
+    "knowledge.rag_query": {
+      "description": "Query the security knowledge base (embedding-only, no LLM)",
+      "source": "python",
+      "module": "ai.rag.query",
+      "function": "",
+      "readOnly": false,
+      "idempotent": false,
+      "destructive": false
+    },
+    "knowledge.session_history": {
+      "description": "Search session history from HANDOFF.md entries",
+      "source": "python",
+      "module": "ai.learning.handoff_parser",
+      "function": "parse_handoff",
+      "readOnly": false,
+      "idempotent": false,
+      "destructive": false
+    },
+    "knowledge.task_patterns": {
+      "description": "Retrieve similar past successful tasks",
+      "source": "python",
+      "module": "ai.learning.task_logger",
+      "function": "retrieve_similar_tasks",
+      "readOnly": false,
+      "idempotent": false,
+      "destructive": false
+    },
+    "logs.anomalies": {
+      "description": "Unacknowledged system anomalies (threats, temp spikes, disk issues)",
+      "source": "python",
+      "module": "ai.log_intel",
+      "function": "",
+      "readOnly": false,
+      "idempotent": false,
+      "destructive": false
+    },
+    "logs.health_trend": {
+      "description": "Last 7 health snapshots with delta trends (temps, disk, RAM)",
+      "source": "python",
+      "module": "ai.log_intel",
+      "function": "",
+      "readOnly": false,
+      "idempotent": false,
+      "destructive": false
+    },
+    "logs.scan_history": {
+      "description": "Last 10 ClamAV scan results with threat details",
+      "source": "python",
+      "module": "ai.log_intel",
+      "function": "",
+      "readOnly": false,
+      "idempotent": false,
+      "destructive": false
+    },
+    "logs.search": {
+      "description": "Semantic search across all system logs",
+      "source": "python",
+      "module": "ai.log_intel",
+      "function": "",
+      "readOnly": false,
+      "idempotent": false,
+      "destructive": false
+    },
+    "logs.stats": {
+      "description": "Log pipeline statistics (record counts, last ingestion, DB size)",
+      "source": "python",
+      "module": "ai.log_intel",
+      "function": "",
+      "readOnly": false,
+      "idempotent": false,
+      "destructive": false
+    },
+    "memory.search": {
+      "description": "Search conversation memories by semantic similarity",
+      "source": "python",
+      "module": "ai.memory",
+      "function": "search_memories",
+      "readOnly": false,
+      "idempotent": false,
+      "destructive": false
+    },
+    "notion.get_page": {
+      "description": "Get a Notion page by ID",
+      "source": "python",
+      "module": "ai.mcp_bridge.tools",
+      "function": "handle_notion_get_page",
+      "readOnly": true,
+      "idempotent": false,
+      "destructive": false
+    },
+    "notion.get_page_content": {
+      "description": "Get content blocks from a Notion page",
+      "source": "python",
+      "module": "ai.mcp_bridge.tools",
+      "function": "handle_notion_get_page_content",
+      "readOnly": true,
+      "idempotent": false,
+      "destructive": false
+    },
+    "notion.query_database": {
+      "description": "Query a Notion database",
+      "source": "python",
+      "module": "ai.mcp_bridge.tools",
+      "function": "handle_notion_query_database",
+      "readOnly": true,
+      "idempotent": false,
+      "destructive": false
+    },
+    "notion.search": {
+      "description": "Search pages and databases in Notion",
+      "source": "python",
+      "module": "ai.mcp_bridge.tools",
+      "function": "handle_notion_search",
+      "readOnly": true,
+      "idempotent": false,
+      "destructive": false
+    },
+    "project.artifacts": {
+      "description": "Get recent artifacts",
+      "source": "python",
+      "module": "ai.project_workflow_service",
+      "function": "get_recent_artifacts",
+      "readOnly": true,
+      "idempotent": false,
+      "destructive": false
+    },
+    "project.context": {
+      "description": "Get complete project context (current phase, workflows, artifacts, recommendations)",
+      "source": "python",
+      "module": "ai.project_workflow_service",
+      "function": "get_project_context",
+      "readOnly": true,
+      "idempotent": false,
+      "destructive": false
+    },
+    "project.phase_timeline": {
+      "description": "Get phase timeline from documentation",
+      "source": "python",
+      "module": "ai.project_workflow_service",
+      "function": "get_phase_timeline",
+      "readOnly": true,
+      "idempotent": false,
+      "destructive": false
+    },
+    "project.workflow_history": {
+      "description": "Get workflow run history",
+      "source": "python",
+      "module": "ai.project_workflow_service",
+      "function": "get_workflow_history",
+      "readOnly": true,
+      "idempotent": false,
+      "destructive": false
+    },
+    "providers.discover": {
+      "description": "Discover all providers and their configuration/health status",
+      "source": "python",
+      "module": "ai.provider_service",
+      "function": "",
+      "readOnly": true,
+      "idempotent": true,
+      "destructive": false
+    },
+    "providers.health": {
+      "description": "Get detailed health metrics for all providers",
+      "source": "python",
+      "module": "ai.provider_service",
+      "function": "",
+      "readOnly": true,
+      "idempotent": true,
+      "destructive": false
+    },
+    "providers.models": {
+      "description": "Get all available models across all configured providers",
+      "source": "python",
+      "module": "ai.provider_service",
+      "function": "",
+      "readOnly": true,
+      "idempotent": true,
+      "destructive": false
+    },
+    "providers.refresh": {
+      "description": "Force a refresh of provider discovery and health status",
+      "source": "python",
+      "module": "ai.provider_service",
+      "function": "",
+      "readOnly": false,
+      "idempotent": false,
+      "destructive": false
+    },
+    "providers.routing": {
+      "description": "Get routing configuration for all task types (fast, reason, batch, code, embed)",
+      "source": "python",
+      "module": "ai.provider_service",
+      "function": "",
+      "readOnly": true,
+      "idempotent": true,
+      "destructive": false
+    },
+    "security.alert_summary": {
+      "description": "Active security alerts: CVEs matching installed packages, stale scans, release advisories",
+      "source": "json_file",
+      "module": "",
+      "function": "",
+      "readOnly": true,
+      "idempotent": false,
+      "destructive": false
+    },
+    "security.correlate": {
+      "description": "Cross-reference an IOC across all threat intel sources. Pass ioc (the value) and ioc_type (hash|ip|url|cve)",
+      "source": "python",
+      "module": "ai.mcp_bridge.tools",
+      "function": "",
+      "readOnly": false,
+      "idempotent": false,
+      "destructive": false
+    },
+    "security.cve_check": {
+      "description": "Scan installed packages for CVEs (NVD / OSV / CISA KEV)",
+      "source": "python",
+      "module": "ai.threat_intel.cve_scanner",
+      "function": "",
+      "readOnly": false,
+      "idempotent": false,
+      "destructive": false
+    },
+    "security.health_snapshot": {
+      "description": "Last 30 lines of latest health snapshot",
+      "source": "file_tail",
+      "module": "",
+      "function": "",
+      "readOnly": false,
+      "idempotent": false,
+      "destructive": false
+    },
+    "security.ip_lookup": {
+      "description": "IP reputation lookup (AbuseIPDB + GreyNoise + Shodan)",
+      "source": "python",
+      "module": "ai.threat_intel.ip_lookup",
+      "function": "",
+      "readOnly": false,
+      "idempotent": false,
+      "destructive": false
+    },
+    "security.last_scan": {
+      "description": "Last 20 lines of latest ClamAV scan log",
+      "source": "file_tail",
+      "module": "",
+      "function": "",
+      "readOnly": false,
+      "idempotent": false,
+      "destructive": false
+    },
+    "security.ops_acknowledge": {
+      "description": "Acknowledge a security alert by ID",
+      "source": "python",
+      "module": "ai.security_service",
+      "function": "acknowledge_alert",
+      "readOnly": false,
+      "idempotent": false,
+      "destructive": true
+    },
+    "security.ops_alerts": {
+      "description": "Get security alerts with optional severity filtering",
+      "source": "python",
+      "module": "ai.security_service",
+      "function": "get_alerts",
+      "readOnly": true,
+      "idempotent": false,
+      "destructive": false
+    },
+    "security.ops_findings": {
+      "description": "Get recent scan findings",
+      "source": "python",
+      "module": "ai.security_service",
+      "function": "get_findings",
+      "readOnly": true,
+      "idempotent": false,
+      "destructive": false
+    },
+    "security.ops_overview": {
+      "description": "Get security ops overview with summary counts and status",
+      "source": "python",
+      "module": "ai.security_service",
+      "function": "get_overview",
+      "readOnly": true,
+      "idempotent": false,
+      "destructive": false
+    },
+    "security.ops_provider_health": {
+      "description": "Get provider health issues and auth failures",
+      "source": "python",
+      "module": "ai.security_service",
+      "function": "get_provider_health_issues",
+      "readOnly": true,
+      "idempotent": false,
+      "destructive": false
+    },
+    "security.recommend_action": {
+      "description": "Generate response playbook for a threat finding. Pass finding_type (cve|malware|suspicious_ip|suspicious_url) and finding_id",
+      "source": "python",
+      "module": "ai.mcp_bridge.tools",
+      "function": "",
+      "readOnly": false,
+      "idempotent": false,
+      "destructive": false
+    },
+    "security.run_health": {
+      "description": "Trigger a system health snapshot (runs in background via systemd)",
+      "source": "python",
+      "module": "ai.mcp_bridge.tools",
+      "function": "",
+      "readOnly": false,
+      "idempotent": false,
+      "destructive": false
+    },
+    "security.run_ingest": {
+      "description": "Trigger log ingestion to update the intelligence database",
+      "source": "python",
+      "module": "ai.mcp_bridge.tools",
+      "function": "",
+      "readOnly": false,
+      "idempotent": false,
+      "destructive": false
+    },
+    "security.run_scan": {
+      "description": "Trigger a ClamAV quick scan (runs in background via systemd)",
+      "source": "python",
+      "module": "ai.mcp_bridge.tools",
+      "function": "",
+      "readOnly": false,
+      "idempotent": false,
+      "destructive": false
+    },
+    "security.sandbox_submit": {
+      "description": "Submit a quarantine file to Hybrid Analysis sandbox",
+      "source": "python",
+      "module": "ai.threat_intel.sandbox",
+      "function": "",
+      "readOnly": false,
+      "idempotent": false,
+      "destructive": false
+    },
+    "security.status": {
+      "description": "Current security/health status (filtered JSON)",
+      "source": "json_file",
+      "module": "",
+      "function": "",
+      "readOnly": false,
+      "idempotent": false,
+      "destructive": false
+    },
+    "security.threat_lookup": {
+      "description": "Look up a file hash in threat intel sources",
+      "source": "python",
+      "module": "ai.threat_intel.lookup",
+      "function": "",
+      "readOnly": false,
+      "idempotent": false,
+      "destructive": false
+    },
+    "security.threat_summary": {
+      "description": "Compile threat summary from all agent/scan report directories",
+      "source": "python",
+      "module": "ai.threat_intel.summary",
+      "function": "",
+      "readOnly": false,
+      "idempotent": false,
+      "destructive": false
+    },
+    "security.url_lookup": {
+      "description": "URL/IOC threat lookup (URLhaus + ThreatFox + CIRCL)",
+      "source": "python",
+      "module": "ai.threat_intel.ioc_lookup",
+      "function": "",
+      "readOnly": false,
+      "idempotent": false,
+      "destructive": false
+    },
+    "settings.audit_log": {
+      "description": "Get recent settings audit log entries",
+      "source": "python",
+      "module": "ai.settings_service",
+      "function": "",
+      "readOnly": true,
+      "idempotent": true,
+      "destructive": false
+    },
+    "settings.delete_secret": {
+      "description": "Delete a secret (requires PIN)",
+      "source": "python",
+      "module": "ai.settings_service",
+      "function": "",
+      "readOnly": false,
+      "idempotent": false,
+      "destructive": true
+    },
+    "settings.list_secrets": {
+      "description": "List all secrets with masked values",
+      "source": "python",
+      "module": "ai.settings_service",
+      "function": "",
+      "readOnly": true,
+      "idempotent": true,
+      "destructive": false
+    },
+    "settings.pin_status": {
+      "description": "Check if PIN is configured and get lockout status",
+      "source": "python",
+      "module": "ai.settings_service",
+      "function": "",
+      "readOnly": true,
+      "idempotent": true,
+      "destructive": false
+    },
+    "settings.reveal_secret": {
+      "description": "Reveal a secret value (requires PIN)",
+      "source": "python",
+      "module": "ai.settings_service",
+      "function": "",
+      "readOnly": true,
+      "idempotent": true,
+      "destructive": false
+    },
+    "settings.set_secret": {
+      "description": "Set or update a secret (requires PIN)",
+      "source": "python",
+      "module": "ai.settings_service",
+      "function": "",
+      "readOnly": false,
+      "idempotent": false,
+      "destructive": true
+    },
+    "settings.setup_pin": {
+      "description": "Set up a new PIN (4-6 digits)",
+      "source": "python",
+      "module": "ai.settings_service",
+      "function": "",
+      "readOnly": false,
+      "idempotent": false,
+      "destructive": false
+    },
+    "settings.verify_pin": {
+      "description": "Verify PIN and unlock settings",
+      "source": "python",
+      "module": "ai.settings_service",
+      "function": "",
+      "readOnly": true,
+      "idempotent": false,
+      "destructive": false
+    },
+    "shell.create_session": {
+      "description": "Create a new interactive shell session",
+      "source": "python",
+      "module": "ai.shell_service",
+      "function": "create_session",
+      "readOnly": false,
+      "idempotent": false,
+      "destructive": false
+    },
+    "shell.execute_command": {
+      "description": "Execute a command in a shell session",
+      "source": "python",
+      "module": "ai.shell_service",
+      "function": "execute_command",
+      "readOnly": false,
+      "idempotent": false,
+      "destructive": true
+    },
+    "shell.get_audit_log": {
+      "description": "Get shell audit log",
+      "source": "python",
+      "module": "ai.shell_service",
+      "function": "get_audit_log",
+      "readOnly": true,
+      "idempotent": false,
+      "destructive": false
+    },
+    "shell.get_context": {
+      "description": "Get session context (user, cwd, shell, idle time)",
+      "source": "python",
+      "module": "ai.shell_service",
+      "function": "get_session_context",
+      "readOnly": true,
+      "idempotent": false,
+      "destructive": false
+    },
+    "shell.get_session": {
+      "description": "Get session details by ID",
+      "source": "python",
+      "module": "ai.shell_service",
+      "function": "get_session",
+      "readOnly": true,
+      "idempotent": false,
+      "destructive": false
+    },
+    "shell.list_sessions": {
+      "description": "List all shell sessions",
+      "source": "python",
+      "module": "ai.shell_service",
+      "function": "list_sessions",
+      "readOnly": true,
+      "idempotent": false,
+      "destructive": false
+    },
+    "shell.terminate_session": {
+      "description": "Terminate a shell session",
+      "source": "python",
+      "module": "ai.shell_service",
+      "function": "terminate_session",
+      "readOnly": false,
+      "idempotent": false,
+      "destructive": true
+    },
+    "slack.get_history": {
+      "description": "Get message history from a Slack channel",
+      "source": "python",
+      "module": "ai.mcp_bridge.tools",
+      "function": "handle_slack_get_history",
+      "readOnly": true,
+      "idempotent": false,
+      "destructive": false
+    },
+    "slack.list_channels": {
+      "description": "List Slack channels in the workspace",
+      "source": "python",
+      "module": "ai.mcp_bridge.tools",
+      "function": "handle_slack_list_channels",
+      "readOnly": true,
+      "idempotent": false,
+      "destructive": false
+    },
+    "slack.list_users": {
+      "description": "List Slack workspace users",
+      "source": "python",
+      "module": "ai.mcp_bridge.tools",
+      "function": "handle_slack_list_users",
+      "readOnly": true,
+      "idempotent": false,
+      "destructive": false
+    },
+    "slack.post_message": {
+      "description": "Post a message to a Slack channel",
+      "source": "python",
+      "module": "ai.mcp_bridge.tools",
+      "function": "handle_slack_post_message",
+      "readOnly": false,
+      "idempotent": false,
+      "destructive": false
+    },
+    "system.alert_history": {
+      "description": "Recent alert history",
+      "source": "python",
+      "module": "ai.alerts.history",
+      "function": "get_recent",
+      "readOnly": false,
+      "idempotent": false,
+      "destructive": false
+    },
+    "system.alert_rules": {
+      "description": "List all alert rules with enabled/cooldown status",
+      "source": "python",
+      "module": "ai.alerts.rules",
+      "function": "get_all_rules",
+      "readOnly": false,
+      "idempotent": false,
+      "destructive": false
+    },
+    "system.budget_status": {
+      "description": "Token budget usage across all tiers (security, scheduled, interactive, coding)",
+      "source": "python",
+      "module": "ai.mcp_bridge.server",
+      "function": "handle_system_budget_status",
+      "readOnly": false,
+      "idempotent": false,
+      "destructive": false
+    },
+    "system.cache_stats": {
+      "description": "LLM cache statistics: entries, size, hit rate",
+      "source": "python",
+      "module": "ai.cache",
+      "function": "get_cache_stats",
+      "readOnly": false,
+      "idempotent": false,
+      "destructive": false
+    },
+    "system.cpu_temps": {
+      "description": "CPU and sensor temperatures (JSON)",
+      "source": "",
+      "module": "",
+      "function": "",
+      "readOnly": false,
+      "idempotent": false,
+      "destructive": false
+    },
+    "system.create_tool": {
+      "description": "Create a dynamic tool with safety validation",
+      "source": "python",
+      "module": "ai.tools.builder",
+      "function": "create_tool",
+      "readOnly": false,
+      "idempotent": false,
+      "destructive": false
+    },
+    "system.dep_audit": {
+      "description": "Run dependency vulnerability audit or read latest cached result",
+      "source": "python",
+      "module": "ai.system.depaudit",
+      "function": "get_latest_report",
+      "readOnly": false,
+      "idempotent": false,
+      "destructive": false
+    },
+    "system.dep_audit_history": {
+      "description": "List last 30 days of dependency audit reports",
+      "source": "python",
+      "module": "ai.system.depaudit",
+      "function": "get_report_history",
+      "readOnly": false,
+      "idempotent": false,
+      "destructive": false
+    },
+    "system.dep_scan": {
+      "description": "Scan venv dependencies for known vulnerabilities",
+      "source": "python",
+      "module": "ai.mcp_bridge.tools",
+      "function": "handle_dep_scan",
+      "readOnly": true,
+      "idempotent": false,
+      "destructive": false
+    },
+    "system.disk_usage": {
+      "description": "Disk usage summary",
+      "source": "",
+      "module": "",
+      "function": "",
+      "readOnly": false,
+      "idempotent": false,
+      "destructive": false
+    },
+    "system.fedora_updates": {
+      "description": "Fedora/Bazzite pending security and package updates",
+      "source": "json_file",
+      "module": "",
+      "function": "",
+      "readOnly": false,
+      "idempotent": false,
+      "destructive": false
+    },
+    "system.gpu_health": {
+      "description": "NVIDIA GPU health diagnostic with throttle bit interpretation and trend logging",
+      "source": "python",
+      "module": "ai.mcp_bridge.tools",
+      "function": "",
+      "readOnly": false,
+      "idempotent": false,
+      "destructive": false
+    },
+    "system.gpu_perf": {
+      "description": "NVIDIA GPU perf snapshot: temp, pstate, clocks, VRAM, throttle reasons, headroom",
+      "source": "python",
+      "module": "ai.mcp_bridge.tools",
+      "function": "",
+      "readOnly": false,
+      "idempotent": false,
+      "destructive": false
+    },
+    "system.gpu_status": {
+      "description": "NVIDIA GPU name, temperature, memory, power",
+      "source": "",
+      "module": "",
+      "function": "",
+      "readOnly": false,
+      "idempotent": false,
+      "destructive": false
+    },
+    "system.insights": {
+      "description": "Generate on-demand AI layer insights: cache stats, provider latency, budget usage, recent memories",
+      "source": "python",
+      "module": "ai.insights",
+      "function": "generate_on_demand",
+      "readOnly": false,
+      "idempotent": false,
+      "destructive": false
+    },
+    "system.key_status": {
+      "description": "API key presence check \u2014 which keys are set vs missing (never shows values)",
+      "source": "json_file",
+      "module": "",
+      "function": "",
+      "readOnly": false,
+      "idempotent": false,
+      "destructive": false
+    },
+    "system.list_dynamic_tools": {
+      "description": "List all persisted dynamic tools",
+      "source": "python",
+      "module": "ai.tools.builder",
+      "function": "list_dynamic_tools",
+      "readOnly": false,
+      "idempotent": false,
+      "destructive": false
+    },
+    "system.llm_models": {
+      "description": "List available LLM modes and their provider chains (reads live config)",
+      "source": "python",
+      "module": "ai.mcp_bridge.tools",
+      "function": "",
+      "readOnly": false,
+      "idempotent": false,
+      "destructive": false
+    },
+    "system.llm_status": {
+      "description": "LLM routing status: provider health, token usage, active models",
+      "source": "json_file",
+      "module": "",
+      "function": "",
+      "readOnly": false,
+      "idempotent": false,
+      "destructive": false
+    },
+    "system.mcp_audit": {
+      "description": "Audit MCP bridge tool allowlist for missing handlers and validation issues",
+      "source": "python",
+      "module": "ai.mcp_bridge.tools",
+      "function": "handle_mcp_audit",
+      "readOnly": true,
+      "idempotent": false,
+      "destructive": false
+    },
+    "system.mcp_manifest": {
+      "description": "List all available MCP tools with descriptions and arguments",
+      "source": "python",
+      "module": "ai.mcp_bridge.tools",
+      "function": "",
+      "readOnly": false,
+      "idempotent": false,
+      "destructive": false
+    },
+    "system.memory_usage": {
+      "description": "System memory usage",
+      "source": "",
+      "module": "",
+      "function": "",
+      "readOnly": false,
+      "idempotent": false,
+      "destructive": false
+    },
+    "system.metrics_summary": {
+      "description": "Aggregate metrics for last 24h: cache hit rates, provider latencies, budget usage, tool errors",
+      "source": "python",
+      "module": "ai.metrics",
+      "function": "query_summary",
+      "readOnly": false,
+      "idempotent": false,
+      "destructive": false
+    },
+    "system.perf_profile": {
+      "description": "Run performance profiler for LLM, MCP tools, file I/O, LanceDB, and system metrics",
+      "source": "python",
+      "module": "ai.mcp_bridge.tools",
+      "function": "handle_perf_profile",
+      "readOnly": true,
+      "idempotent": false,
+      "destructive": false
+    },
+    "system.pipeline_status": {
+      "description": "Log pipeline status: ingest/archive/retention health, pending files, table row counts",
+      "source": "python",
+      "module": "ai.system.pipeline_status",
+      "function": "get_pipeline_status",
+      "readOnly": false,
+      "idempotent": false,
+      "destructive": false
+    },
+    "system.pkg_intel": {
+      "description": "Package intelligence via deps.dev \u2014 advisories, provenance, version status",
+      "source": "python",
+      "module": "ai.system.pkg_intel",
+      "function": "mcp_handler",
+      "readOnly": false,
+      "idempotent": false,
+      "destructive": false
+    },
+    "system.provider_status": {
+      "description": "Per-provider health, latency, error rates, and routing scores",
+      "source": "python",
+      "module": "ai.provider_intel",
+      "function": "get_status",
+      "readOnly": true,
+      "idempotent": false,
+      "destructive": false
+    },
+    "system.release_watch": {
+      "description": "Check upstream releases for watched dependencies and tools",
+      "source": "json_file",
+      "module": "",
+      "function": "",
+      "readOnly": false,
+      "idempotent": false,
+      "destructive": false
+    },
+    "system.service_status": {
+      "description": "Status of security-related systemd services",
+      "source": "",
+      "module": "",
+      "function": "",
+      "readOnly": false,
+      "idempotent": false,
+      "destructive": false
+    },
+    "system.test_analysis": {
+      "description": "Analyze pytest output for failure patterns",
+      "source": "python",
+      "module": "ai.mcp_bridge.tools",
+      "function": "handle_test_analysis",
+      "readOnly": true,
+      "idempotent": false,
+      "destructive": false
+    },
+    "system.token_report": {
+      "description": "Token usage and cost report from LLM proxy (freshness-aware)",
+      "source": "python",
+      "module": "ai.mcp_bridge.tools",
+      "function": "",
+      "readOnly": false,
+      "idempotent": false,
+      "destructive": false
+    },
+    "system.uptime": {
+      "description": "System uptime",
+      "source": "",
+      "module": "",
+      "function": "",
+      "readOnly": false,
+      "idempotent": false,
+      "destructive": false
+    },
+    "system.weekly_insights": {
+      "description": "Get AI-generated weekly insights and recommendations based on system performance",
+      "source": "python",
+      "module": "ai.insights",
+      "function": "get_latest_insights",
+      "readOnly": false,
+      "idempotent": false,
+      "destructive": false
+    },
+    "tool.analytics.ranking": {
+      "description": "Get tool rankings by metric (invocations, errors, latency, cost)",
+      "source": "python",
+      "module": "ai.mcp_bridge.tools_governance",
+      "function": "tool_analytics_ranking",
+      "readOnly": true,
+      "idempotent": true,
+      "destructive": false
+    },
+    "tool.analytics.summary": {
+      "description": "Get usage summary for time range",
+      "source": "python",
+      "module": "ai.mcp_bridge.tools_governance",
+      "function": "tool_analytics_summary",
+      "readOnly": true,
+      "idempotent": true,
+      "destructive": false
+    },
+    "tool.analytics.trends": {
+      "description": "Get usage trend analysis",
+      "source": "python",
+      "module": "ai.mcp_bridge.tools_governance",
+      "function": "tool_analytics_trends",
+      "readOnly": true,
+      "idempotent": true,
+      "destructive": false
+    },
+    "tool.discover": {
+      "description": "Discover tools in a Python module by inspecting code",
+      "source": "python",
+      "module": "ai.mcp_bridge.tool_discovery_handlers",
+      "function": "handle_tool_discover",
+      "readOnly": true,
+      "idempotent": true,
+      "destructive": false
+    },
+    "tool.federation.audit": {
+      "description": "Get federation audit log",
+      "source": "python",
+      "module": "ai.mcp_bridge.tool_federation_handlers",
+      "function": "handle_tool_federation_audit",
+      "readOnly": true,
+      "idempotent": false,
+      "destructive": false
+    },
+    "tool.federation.disable": {
+      "description": "Disable/remove external MCP server from federation",
+      "source": "python",
+      "module": "ai.mcp_bridge.tool_federation_handlers",
+      "function": "handle_tool_federation_disable",
+      "readOnly": false,
+      "idempotent": false,
+      "destructive": true
+    },
+    "tool.federation.discover": {
+      "description": "Discover external MCP server by URL",
+      "source": "python",
+      "module": "ai.mcp_bridge.tool_federation_handlers",
+      "function": "handle_tool_federation_discover",
+      "readOnly": true,
+      "idempotent": false,
+      "destructive": false
+    },
+    "tool.federation.inspect_server": {
+      "description": "Inspect external MCP server details",
+      "source": "python",
+      "module": "ai.mcp_bridge.tool_federation_handlers",
+      "function": "handle_tool_federation_inspect_server",
+      "readOnly": true,
+      "idempotent": false,
+      "destructive": false
+    },
+    "tool.federation.list_servers": {
+      "description": "List all discovered external MCP servers",
+      "source": "python",
+      "module": "ai.mcp_bridge.tool_federation_handlers",
+      "function": "handle_tool_federation_list_servers",
+      "readOnly": true,
+      "idempotent": false,
+      "destructive": false
+    },
+    "tool.federation.trust_score": {
+      "description": "Calculate trust score for external server",
+      "source": "python",
+      "module": "ai.mcp_bridge.tool_federation_handlers",
+      "function": "handle_tool_federation_trust_score",
+      "readOnly": true,
+      "idempotent": false,
+      "destructive": false
+    },
+    "tool.governance.audit": {
+      "description": "Run permission/security audit on a tool",
+      "source": "python",
+      "module": "ai.mcp_bridge.tools_governance",
+      "function": "tool_governance_audit",
+      "readOnly": true,
+      "idempotent": true,
+      "destructive": false
+    },
+    "tool.governance.policies": {
+      "description": "List or manage governance policies",
+      "source": "python",
+      "module": "ai.mcp_bridge.tools_governance",
+      "function": "tool_governance_policies",
+      "readOnly": false,
+      "idempotent": false,
+      "destructive": false
+    },
+    "tool.governance.score": {
+      "description": "Get security score for a tool",
+      "source": "python",
+      "module": "ai.mcp_bridge.tools_governance",
+      "function": "tool_governance_score",
+      "readOnly": true,
+      "idempotent": true,
+      "destructive": false
+    },
+    "tool.lifecycle.deprecate": {
+      "description": "Deprecate a tool",
+      "source": "python",
+      "module": "ai.mcp_bridge.tools_governance",
+      "function": "tool_lifecycle_deprecate",
+      "readOnly": false,
+      "idempotent": false,
+      "destructive": true
+    },
+    "tool.lifecycle.list": {
+      "description": "List tools by lifecycle state",
+      "source": "python",
+      "module": "ai.mcp_bridge.tools_governance",
+      "function": "tool_lifecycle_list",
+      "readOnly": true,
+      "idempotent": true,
+      "destructive": false
+    },
+    "tool.lifecycle.status": {
+      "description": "Get lifecycle state of a tool",
+      "source": "python",
+      "module": "ai.mcp_bridge.tools_governance",
+      "function": "tool_lifecycle_status",
+      "readOnly": true,
+      "idempotent": true,
+      "destructive": false
+    },
+    "tool.monitoring.alerts": {
+      "description": "Get active monitoring alerts",
+      "source": "python",
+      "module": "ai.mcp_bridge.tools_governance",
+      "function": "tool_monitoring_alerts",
+      "readOnly": true,
+      "idempotent": true,
+      "destructive": false
+    },
+    "tool.monitoring.health": {
+      "description": "Get health status of a tool",
+      "source": "python",
+      "module": "ai.mcp_bridge.tools_governance",
+      "function": "tool_monitoring_health",
+      "readOnly": true,
+      "idempotent": true,
+      "destructive": false
+    },
+    "tool.monitoring.report": {
+      "description": "Generate comprehensive monitoring report",
+      "source": "python",
+      "module": "ai.mcp_bridge.tools_governance",
+      "function": "tool_monitoring_report",
+      "readOnly": true,
+      "idempotent": true,
+      "destructive": false
+    },
+    "tool.optimization.anomalies": {
+      "description": "Detect anomalies in tool usage patterns",
+      "source": "python",
+      "module": "ai.mcp_bridge.tool_optimization_handlers",
+      "function": "handle_tool_optimization_anomalies",
+      "readOnly": true,
+      "idempotent": false,
+      "destructive": false
+    },
+    "tool.optimization.cost_report": {
+      "description": "Generate cost analysis report for tool usage",
+      "source": "python",
+      "module": "ai.mcp_bridge.tool_optimization_handlers",
+      "function": "handle_tool_optimization_cost_report",
+      "readOnly": true,
+      "idempotent": false,
+      "destructive": false
+    },
+    "tool.optimization.forecast": {
+      "description": "Generate usage forecasting report",
+      "source": "python",
+      "module": "ai.mcp_bridge.tool_optimization_handlers",
+      "function": "handle_tool_optimization_forecast",
+      "readOnly": true,
+      "idempotent": false,
+      "destructive": false
+    },
+    "tool.optimization.latency_report": {
+      "description": "Generate latency analysis report for tools",
+      "source": "python",
+      "module": "ai.mcp_bridge.tool_optimization_handlers",
+      "function": "handle_tool_optimization_latency_report",
+      "readOnly": true,
+      "idempotent": false,
+      "destructive": false
+    },
+    "tool.optimization.recommend": {
+      "description": "Generate actionable optimization recommendations based on analytics",
+      "source": "python",
+      "module": "ai.mcp_bridge.tool_optimization_handlers",
+      "function": "handle_tool_optimization_recommend",
+      "readOnly": true,
+      "idempotent": false,
+      "destructive": false
+    },
+    "tool.optimization.stale_tools": {
+      "description": "Detect stale, unused, and underutilized tools",
+      "source": "python",
+      "module": "ai.mcp_bridge.tool_optimization_handlers",
+      "function": "handle_tool_optimization_stale_tools",
+      "readOnly": true,
+      "idempotent": false,
+      "destructive": false
+    },
+    "tool.pack_export": {
+      "description": "Export selected dynamic/registered tool metadata into a portable local pack",
+      "source": "python",
+      "module": "ai.mcp_bridge.tool_marketplace_handlers",
+      "function": "handle_tool_pack_export",
+      "readOnly": false,
+      "idempotent": false,
+      "destructive": false
+    },
+    "tool.pack_import": {
+      "description": "Import a local pack into a staging area only after validation",
+      "source": "python",
+      "module": "ai.mcp_bridge.tool_marketplace_handlers",
+      "function": "handle_tool_pack_import",
+      "readOnly": false,
+      "idempotent": false,
+      "destructive": false
+    },
+    "tool.pack_install": {
+      "description": "Install a validated pack into the dynamic registry/allowlist path using P102 mechanisms",
+      "source": "python",
+      "module": "ai.mcp_bridge.tool_marketplace_handlers",
+      "function": "handle_tool_pack_install",
+      "readOnly": false,
+      "idempotent": false,
+      "destructive": false
+    },
+    "tool.pack_list": {
+      "description": "List staged/installed packs and validation state",
+      "source": "python",
+      "module": "ai.mcp_bridge.tool_marketplace_handlers",
+      "function": "handle_tool_pack_list",
+      "readOnly": true,
+      "idempotent": true,
+      "destructive": false
+    },
+    "tool.pack_remove": {
+      "description": "Remove or disable an installed pack safely, preserving audit history",
+      "source": "python",
+      "module": "ai.mcp_bridge.tool_marketplace_handlers",
+      "function": "handle_tool_pack_remove",
+      "readOnly": false,
+      "idempotent": false,
+      "destructive": true
+    },
+    "tool.pack_validate": {
+      "description": "Validate a tool pack manifest and files without installing or executing code",
+      "source": "python",
+      "module": "ai.mcp_bridge.tool_marketplace_handlers",
+      "function": "handle_tool_pack_validate",
+      "readOnly": true,
+      "idempotent": true,
+      "destructive": false
+    },
+    "tool.register": {
+      "description": "Register a tool dynamically at runtime",
+      "source": "python",
+      "module": "ai.mcp_bridge.tool_discovery_handlers",
+      "function": "handle_tool_register",
+      "readOnly": false,
+      "idempotent": false,
+      "destructive": false
+    },
+    "tool.registry_stats": {
+      "description": "Get dynamic tool registry statistics",
+      "source": "python",
+      "module": "ai.mcp_bridge.tool_discovery_handlers",
+      "function": "handle_tool_registry_stats",
+      "readOnly": true,
+      "idempotent": true,
+      "destructive": false
+    },
+    "tool.reload": {
+      "description": "Hot-reload the tool allowlist from disk",
+      "source": "python",
+      "module": "ai.mcp_bridge.tool_discovery_handlers",
+      "function": "handle_tool_reload",
+      "readOnly": false,
+      "idempotent": false,
+      "destructive": false
+    },
+    "tool.unregister": {
+      "description": "Unregister a dynamically registered tool",
+      "source": "python",
+      "module": "ai.mcp_bridge.tool_discovery_handlers",
+      "function": "handle_tool_unregister",
+      "readOnly": false,
+      "idempotent": false,
+      "destructive": true
+    },
+    "tool.watch": {
+      "description": "Control the allowlist file watcher",
+      "source": "python",
+      "module": "ai.mcp_bridge.tool_discovery_handlers",
+      "function": "handle_tool_watch",
+      "readOnly": false,
+      "idempotent": false,
+      "destructive": false
+    },
+    "workflow.agents": {
+      "description": "List all registered agents and their supported task types",
+      "source": "python",
+      "module": "ai.mcp_bridge.handlers.workflow_tools",
+      "function": "workflow_agents",
+      "readOnly": true,
+      "idempotent": true,
+      "destructive": false
+    },
+    "workflow.cancel": {
+      "description": "Cancel pending/running steps in a workflow run",
+      "source": "python",
+      "module": "ai.mcp_bridge.handlers.workflow_tools",
+      "function": "workflow_cancel_steps",
+      "readOnly": false,
+      "idempotent": false,
+      "destructive": true
+    },
+    "workflow.handoff": {
+      "description": "Manually dispatch a task message to a named agent",
+      "source": "python",
+      "module": "ai.mcp_bridge.handlers.workflow_tools",
+      "function": "workflow_handoff",
+      "readOnly": false,
+      "idempotent": false,
+      "destructive": false
+    },
+    "workflow.history": {
+      "description": "Query workflow_runs table for run history",
+      "source": "python",
+      "module": "ai.mcp_bridge.handlers.workflow_tools",
+      "function": "workflow_history",
+      "readOnly": true,
+      "idempotent": true,
+      "destructive": false
+    },
+    "workflow.history_steps": {
+      "description": "List recent workflow runs with summary stats",
+      "source": "python",
+      "module": "ai.mcp_bridge.handlers.workflow_tools",
+      "function": "workflow_history_steps",
+      "readOnly": true,
+      "idempotent": true,
+      "destructive": false
+    },
+    "workflow.list": {
+      "description": "List all registered workflow definitions",
+      "source": "python",
+      "module": "ai.mcp_bridge.handlers.workflow_tools",
+      "function": "workflow_list",
+      "readOnly": true,
+      "idempotent": true,
+      "destructive": false
+    },
+    "workflow.run": {
+      "description": "Trigger a named workflow. Logs run to workflow_runs table.",
+      "source": "python",
+      "module": "ai.mcp_bridge.handlers.workflow_tools",
+      "function": "workflow_run",
+      "readOnly": false,
+      "idempotent": false,
+      "destructive": false
+    },
+    "workflow.status": {
+      "description": "Get per-step status for a workflow run",
+      "source": "python",
+      "module": "ai.mcp_bridge.handlers.workflow_tools",
+      "function": "workflow_status_steps",
+      "readOnly": true,
+      "idempotent": true,
+      "destructive": false
+    }
+  }
+}
