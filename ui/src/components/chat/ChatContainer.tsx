@@ -4,6 +4,7 @@ import React from 'react';
 import { useChat } from '@/hooks/useChat';
 import { ChatMessage } from './ChatMessage';
 import { ChatInput } from './ChatInput';
+import { ChatProfileSelector } from './ChatProfileSelector';
 
 export function ChatContainer() {
   const {
@@ -23,6 +24,14 @@ export function ChatContainer() {
 
   return (
     <div className="h-full flex flex-col">
+      {/* Chat Profile Selector Toolbar */}
+      <div
+        className="flex items-center justify-between px-4 py-2 border-b"
+        style={{ borderColor: 'var(--base-04)', background: 'var(--base-02)' }}
+      >
+        <ChatProfileSelector />
+      </div>
+
       {/* Messages area */}
       <div className="flex-1 overflow-y-auto px-4 py-6">
         {!hasMessages ? (

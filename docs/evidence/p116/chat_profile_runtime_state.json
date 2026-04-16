@@ -1,0 +1,59 @@
+{
+  "localStorage": {
+    "key": "bazzite-chat-profile",
+    "validValues": ["fast", "reason", "batch", "code", "embed"],
+    "exampleStored": "fast"
+  },
+  "providersRoutingResponse": {
+    "success": true,
+    "routing": [
+      {
+        "task_type": "fast",
+        "task_label": "Fast (Interactive)",
+        "primary_provider": "anthropic",
+        "fallback_chain": ["openai", "gemini"],
+        "health_state": "healthy",
+        "caveats": null
+      },
+      {
+        "task_type": "reason",
+        "task_label": "Reason (Analysis)",
+        "primary_provider": "anthropic",
+        "fallback_chain": ["openai"],
+        "health_state": "healthy",
+        "caveats": "Rate limited - 45s cooldown"
+      },
+      {
+        "task_type": "batch",
+        "task_label": "Batch (Volume)",
+        "primary_provider": "openai",
+        "fallback_chain": ["gemini"],
+        "health_state": "degraded",
+        "caveats": "High latency expected"
+      },
+      {
+        "task_type": "code",
+        "task_label": "Code (Generation)",
+        "primary_provider": "anthropic",
+        "fallback_chain": [],
+        "health_state": "healthy",
+        "caveats": null
+      },
+      {
+        "task_type": "embed",
+        "task_label": "Embed (Vectors)",
+        "primary_provider": "openai",
+        "fallback_chain": [],
+        "health_state": "no-provider",
+        "caveats": "No embed-capable provider configured"
+      }
+    ]
+  },
+  "activeRoute": {
+    "taskType": "fast",
+    "primaryProvider": "anthropic",
+    "fallbackChain": ["openai", "gemini"],
+    "healthState": "healthy",
+    "caveats": null
+  }
+}
