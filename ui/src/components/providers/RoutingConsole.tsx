@@ -32,6 +32,12 @@ export function RoutingConsole({ routing, providers }: RoutingConsoleProps) {
           Each task type has a primary provider and fallback chain. The router selects
           the best available provider based on health scores and cooldown status.
         </p>
+        <p
+          className="text-xs mt-2"
+          style={{ color: 'var(--text-tertiary)' }}
+        >
+          Routing is controlled by backend config (litellm-config.yaml). Runtime persistence is deferred to P115/P116.
+        </p>
       </div>
 
       {/* Routing Cards */}

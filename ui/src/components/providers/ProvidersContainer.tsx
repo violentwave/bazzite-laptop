@@ -5,8 +5,9 @@ import { useProviders } from '@/hooks/useProviders';
 import { ProviderHealthPanel } from './ProviderHealthPanel';
 import { ModelCatalogPanel } from './ModelCatalogPanel';
 import { RoutingConsole } from './RoutingConsole';
+import { AddProviderPanel } from './AddProviderPanel';
 
-type Tab = 'health' | 'models' | 'routing';
+type Tab = 'health' | 'models' | 'routing' | 'add';
 
 function getErrorSeverity(errorCode: string | null): 'error' | 'warning' | 'info' {
   if (!errorCode) return 'error';
@@ -273,6 +274,12 @@ export function ProvidersContainer() {
           isActive={activeTab === 'routing'}
           onClick={() => setActiveTab('routing')}
         />
+        <TabButton
+          label="Add"
+          count={0}
+          isActive={activeTab === 'add'}
+          onClick={() => setActiveTab('add')}
+        />
       </div>
 
       {/* Content */}
@@ -330,6 +337,9 @@ export function ProvidersContainer() {
             )}
             {activeTab === 'routing' && (
               <RoutingConsole routing={routing} providers={providers} />
+            )}
+            {activeTab === 'add' && (
+              <AddProviderPanel providers={providers} />
             )}
           </>
         )}
