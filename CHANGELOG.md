@@ -5,7 +5,7 @@ All significant changes. Format: date · deliverables · deltas · commit.
 ---
 
 ## Phase 123 — Agent Workbench Core
-**Date:** 2026-04-17 · **Commit:** pending
+**Date:** 2026-04-17 · **Commit:** 14b0f78
 
 **Deliverables:**
 - Added new `ai/agent_workbench/` package for project registry, session lifecycle, sandbox profiles, read-only git summaries, safe test command execution, and structured handoff notes.

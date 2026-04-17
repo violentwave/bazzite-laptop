@@ -330,7 +330,7 @@ The repo has complete historical coverage across the earlier tranches, but older
 ### P123 — Agent Workbench Core
 - **Status**: Done
 - **Finished**: 2026-04-17
-- **Commit SHA**: pending
+- **Commit SHA**: `14b0f78`
 - **Repo Artifacts**:
   - `ai/agent_workbench/`
   - `ai/mcp_bridge/tools.py`

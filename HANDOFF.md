@@ -22,7 +22,6 @@ Project truth model:
 
 ## Open Tasks
 
-- Commit and push P123 changes once approved.
 - Update Notion P123 row to `Done` with final commit SHA and validation summary.
 - Start P124 only after P123 closeout metadata is fully synced.
 
@@ -45,3 +44,4 @@ Project truth model:
 - Added `tests/test_agent_workbench.py` and validated P123 scope.
 - Added phase artifacts: `docs/P123_PLAN.md`, `docs/evidence/p123/validation.md`.
 - Updated ledger/docs: `CHANGELOG.md`, `docs/PHASE_INDEX.md`, `docs/PHASE_ARTIFACT_REGISTER.md`, `docs/newelle-system-prompt.md`, `docs/USER-GUIDE.md`.
+- Committed and pushed: `feat(p123): add agent workbench core` (`14b0f78`).
