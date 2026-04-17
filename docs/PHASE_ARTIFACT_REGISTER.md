@@ -23,7 +23,7 @@
 
 | Category | Current State |
 |----------|---------------|
-| Current completed Security Autopilot + Workbench phases | `P119`, `P120`, `P121`, `P122`, `P123`, `P124`, `P125` |
+| Current completed Security Autopilot + Workbench phases | `P119`, `P120`, `P121`, `P122`, `P123`, `P124`, `P125`, `P126` |
 | Current active phase | None |
 | Next gated phase | `P126 — Full Autopilot Acceptance Gate` |
 | Primary phase truth | Notion `Bazzite Phases` row properties |
@@ -381,6 +381,26 @@ The repo has complete historical coverage across the earlier tranches, but older
   - Browser evidence at http://localhost:3000 shows unified console with Security and Workbench panels
   - P126 scope NOT implemented
 
+### P126 — Full Autopilot Acceptance Gate
+- **Status**: Done
+- **Finished**: 2026-04-17
+- **Commit SHA**: 7d3b17b
+- **Repo Artifacts**:
+  - `docs/evidence/p126/validation.md`
+- **Key Output**:
+  - Validated P119–P125 as integrated system
+  - Policy modes verified (recommend_only/approval/safe_auto)
+  - Approval gates proven (executor.py approval.approved flag)
+  - Remediation safety proven (bounded actions, no arbitrary shell)
+  - Workbench safety proven (project registry, session isolation, git read-only)
+  - No unrestricted AI execution verified
+  - No secrets exposed verified
+  - MCP bridge: 193 tools, status ok
+  - LLM proxy: status ok
+  - UI typecheck/build: pass
+  - Ruff/targeted pytest: pass
+  - **Result**: PASS — Approval gates and safety proofs confirmed
+
 ### P119 — Security Autopilot Core
 - **Status**: Done
 - **Finished**: 2026-04-16
@@ -472,6 +492,14 @@ The repo has complete historical coverage across the earlier tranches, but older
 | Command Palette | `ui/src/components/shell/CommandPalette.tsx` | Added Workbench navigation command |
 | Tests | `tests/test_agent_workbench_tools.py` | MCP contract coverage for P124 UI-dependent workbench envelopes |
 
+### P126 — Full Autopilot Acceptance Gate
+- **Status**: Done
+- **Finished**: 2026-04-17
+
+| Type | Path | Description |
+|------|------|-------------|
+| Evidence | `docs/evidence/p126/validation.md` | Full acceptance validation across P119-P125 with policy/approval gates, safety proofs, service checks |
+
 ## Cross-Phase Documentation
 
 ### Hub Docs (docs/ root)
@@ -492,7 +520,7 @@ The repo has complete historical coverage across the earlier tranches, but older
 | Artifact | Purpose |
 |----------|---------|
 | `P119-P122 Security Autopilot Control Flow` | Design/runtime map for Security Autopilot foundation |
-| `P123-P126 Agent Workbench Acceptance Flow` | Design/runtime map for Agent Workbench + acceptance phases |
+| `P123-P126 Agent Workbench Acceptance Flow` | Design/runtime map for Agent Workbench + acceptance phases (verified in P126) |
 
 ## Known Gaps / Notes
 

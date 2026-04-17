@@ -4,6 +4,28 @@ All significant changes. Format: date · deliverables · deltas · commit.
 
 ---
 
+## Phase 126 — Full Autopilot Acceptance Gate
+**Date:** 2026-04-17 · **Commit:** 7d3b17b
+
+**Deliverables:**
+- Validated P119–P125 as one integrated system.
+- Created acceptance validation evidence at `docs/evidence/p126/validation.md`.
+- Verified policy modes (recommend_only/approval/safe_auto), approval gates, remediation safety, workbench safety.
+- Confirmed no unrestricted AI execution, no arbitrary shell, no secrets exposed.
+- Updated HANDOFF.md with P126 completion.
+
+**Validation:**
+- `ruff check ai/ tests/ scripts/` — pass
+- `.venv/bin/python -m pytest tests/test_security_autopilot_tools.py tests/test_agent_workbench.py tests/test_agent_workbench_tools.py -q` — 20 passed
+- `cd ui && npx tsc --noEmit` — pass
+- `cd ui && npm run build` — pass
+- `curl -s http://127.0.0.1:8766/health` — `{"status":"ok","tools":193,"service":"bazzite-mcp-bridge"}`
+- `curl -s http://127.0.0.1:8767/health` — `{"status":"ok","service":"bazzite-llm-proxy"}`
+
+**Result:** PASS — Approval gates verified, safety proofs confirmed.
+
+---
+
 ## Phase 125 — Browser Runtime Acceptance
 **Date:** 2026-04-17 · **Commit:** 28bf021
 
