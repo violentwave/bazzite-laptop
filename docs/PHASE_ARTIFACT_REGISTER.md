@@ -23,9 +23,9 @@
 
 | Category | Current State |
 |----------|---------------|
-| Current completed Security Autopilot + Workbench phases | `P119`, `P120`, `P121`, `P122`, `P123`, `P124`, `P125`, `P126` |
+| Current completed Security Autopilot + Workbench phases | `P119`, `P120`, `P121`, `P122`, `P123`, `P124`, `P125`, `P126`, `P127` |
 | Current active phase | None |
-| Next gated phase | `P126 — Full Autopilot Acceptance Gate` |
+| Next gated phase | `P128 — Identity Step-Up` |
 | Primary phase truth | Notion `Bazzite Phases` row properties |
 | Lightweight session truth | `HANDOFF.md` |
 | Standing agent rules | `docs/AGENT.md` |
@@ -499,6 +499,19 @@ The repo has complete historical coverage across the earlier tranches, but older
 | Type | Path | Description |
 |------|------|-------------|
 | Evidence | `docs/evidence/p126/validation.md` | Full acceptance validation across P119-P125 with policy/approval gates, safety proofs, service checks |
+
+### P127 — MCP Policy-as-Code and Approval Gates
+- **Status**: Done
+- **Finished**: 2026-04-17
+
+| Type | Path | Description |
+|------|------|-------------|
+| Package | `ai/mcp_bridge/policy/` | MCP policy-as-code module |
+| Models | `ai/mcp_bridge/policy/models.py` | ToolPolicyMetadata, RiskTier, PolicyDecision, ApprovalMetadata |
+| Engine | `ai/mcp_bridge/policy/engine.py` | MCPToolPolicyEngine with default-deny evaluation |
+| Approval | `ai/mcp_bridge/policy/approval.py` | ApprovalGate for high-risk tool enforcement |
+| Tests | `tests/test_mcp_policy.py` | 26 policy tests |
+| Evidence | `docs/evidence/p127/validation.md` | P127 validation with policy model, approval gates, bypass resistance, auditability |
 
 ## Cross-Phase Documentation
 

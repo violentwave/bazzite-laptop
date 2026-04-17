@@ -14,17 +14,17 @@ Project truth model:
 - **Last Updated:** 2026-04-17
 - **Project:** bazzite-laptop
 - **Branch:** master
-- **Completed Phases:** P119, P120, P121, P122, P123, P124, P125, P126
+- **Completed Phases:** P119, P120, P121, P122, P123, P124, P125, P126, P127
 - **Active Phase:** None
-- **Next Gated Phase:** P127 — MCP Policy-as-Code and Approval Gates
+- **Next Gated Phase:** P128 — Identity Step-Up
 - **Phase Truth:** Notion Bazzite Phases database (primary)
-- **Validation State:** P126 full acceptance validation PASSED (ruff, targeted pytest, MCP bridge 193 tools, LLM proxy, UI typecheck/build, policy/approval gates verified, safety proofs confirmed)
-- **Current SHA:** 7d3b17b
+- **Validation State:** P127 MCP policy-as-code implemented with canonical tool policy metadata, high-risk approval enforcement, default-deny, auditability, policy parity tests (26 policy + 20 existing tests pass)
+- **Current SHA:** <to be committed>
 
 ## Open Tasks
 
-- Update Notion P126 row to Done with final commit SHA and validation summary.
-- Update Notion P127 row to ready for implementation.
+- Update Notion P127 row to Done with final commit SHA and validation summary.
+- Update Notion P128 row to ready for implementation.
 
 ## Recent Session — 2026-04-17
 
@@ -66,3 +66,21 @@ Project truth model:
 - No secrets exposed: ✅ redacted in logs/screenshots.
 - Created docs/evidence/p126/validation.md.
 - Result: **PASS** — P126 can be marked Done.
+
+## P127 Implementation — 2026-04-17
+
+- Implemented MCP policy-as-code with canonical tool policy metadata.
+- Created `ai/mcp_bridge/policy/` module with:
+  - models.py: ToolPolicyMetadata, PolicyEvaluationResult, ApprovalMetadata
+  - engine.py: MCPToolPolicyEngine with default-deny evaluation
+  - approval.py: ApprovalGate for high-risk tool enforcement
+- 26 policy tests added in tests/test_mcp_policy.py.
+- Ruff: ✅ All checks passed.
+- Policy tests: ✅ 38 passed (26 MCP + 12 security autopilot).
+- Existing tests: ✅ 20 passed (security autopilot tools + agent workbench).
+- Default-deny proven for unknown tools and alias bypass attempts.
+- Policy parity verified with Security Autopilot (P120) and Safe Remediation Runner (P122).
+- Audit ID generated for every policy decision.
+- Redaction enabled to prevent secret exposure.
+- Created docs/evidence/p127/validation.md.
+- Result: **PASS** — P127 can be marked Done.

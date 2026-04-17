@@ -4,6 +4,35 @@ All significant changes. Format: date · deliverables · deltas · commit.
 
 ---
 
+## Phase 127 — MCP Policy-as-Code and Approval Gates
+**Date:** 2026-04-17 · **Commit:** <to be committed>
+
+**Deliverables:**
+- Implemented canonical MCP tool policy metadata (ToolPolicyMetadata, RiskTier, PolicyDecision)
+- Created policy evaluation engine with default-deny semantics
+- Implemented approval gate enforcement for high-risk tools
+- Added bypass resistance (alias/namespace/parameter tricks rejected)
+- Integrated with Security Autopilot (P120) and Safe Remediation Runner (P122) semantics
+- Audit ID generation for every policy decision
+- Redaction to prevent secret exposure
+
+**Validation:**
+- `ruff check ai/mcp_bridge/policy/ tests/test_mcp_policy.py` — pass
+- `.venv/bin/python -m pytest tests/test_mcp_policy.py tests/test_security_autopilot_policy.py -q` — 38 passed
+- `.venv/bin/python -m pytest tests/test_security_autopilot_tools.py tests/test_agent_workbench.py tests/test_agent_workbench_tools.py -q` — 20 passed
+
+**Artifacts:**
+- `ai/mcp_bridge/policy/__init__.py`
+- `ai/mcp_bridge/policy/models.py`
+- `ai/mcp_bridge/policy/engine.py`
+- `ai/mcp_bridge/policy/approval.py`
+- `tests/test_mcp_policy.py`
+- `docs/evidence/p127/validation.md`
+
+**Result:** PASS — Policy-as-code layer implemented with approval gates and auditability.
+
+---
+
 ## Phase 126 — Full Autopilot Acceptance Gate
 **Date:** 2026-04-17 · **Commit:** 7d3b17b
 
