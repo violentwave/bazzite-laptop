@@ -19,12 +19,12 @@ Project truth model:
 - **Next Gated Phase:** P132 — Human-in-the-Loop Runbooks
 - **Phase Truth:** Notion Bazzite Phases database (primary)
 - **Validation State:** P131 routing replay lab implemented with sanitized fixtures, deterministic explanation payloads, failover/stale-metrics coverage, and P130 budget-aware comparisons; validation pass
-- **Current SHA:** (pending)
+- **Current SHA:** 7e32900
 
 ## Open Tasks
 
 - Update Notion P131 row to Done with final commit SHA and validation summary.
-- Replace `(pending)` SHA markers in repo ledgers during closeout sync.
+- Update Notion row metadata for P127-P130 if still pending commit SHAs.
 
 ## Recent Session — 2026-04-17 (P131)
 

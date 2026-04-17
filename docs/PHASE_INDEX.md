@@ -168,7 +168,7 @@
 | P128 | Local Identity and Step-Up Security | Done | f524b84 | 2026-04-17 | ai/identity/*, tests/test_identity_stepup.py, docs/evidence/p128/validation.md | Notion row | Implemented local identity layer with step-up security, test isolation fixed (23 pass), backend enforcement, P127 policy integration |
 | P129 | Workspace and Actor Context Isolation | Done | 861a277 | 2026-04-17 | ai/context/*, tests/test_workspace_isolation.py, docs/evidence/p129/validation.md | Notion row | Implemented workspace/actor/project context isolation, server-side path restrictions, cross-project leakage prevention, audit correlation, 24 tests pass |
 | P130 | Cost Quotas and Budget Automation | Done | be08087 | 2026-04-17 | ai/budget_scoped.py, ai/budget_routing.py, tests/test_budget_scoped.py, docs/evidence/p130/validation.md | Notion row | Implemented scoped budget model with token/cost limits, warning/stop thresholds, routing constraints, audit events, 17 tests pass |
-| P131 | Routing Evaluation and Replay Lab | Done | (pending) | 2026-04-17 | ai/routing_replay.py, docs/routing_replay/*, tests/test_routing_replay.py, docs/evidence/p131/validation.md | Notion row | Added deterministic replay fixtures and explanation payloads comparing routing across health/cost/latency/task type/failover and P130 budget constraints |
+| P131 | Routing Evaluation and Replay Lab | Done | 7e32900 | 2026-04-17 | ai/routing_replay.py, docs/routing_replay/*, tests/test_routing_replay.py, docs/evidence/p131/validation.md | Notion row | Added deterministic replay fixtures and explanation payloads comparing routing across health/cost/latency/task type/failover and P130 budget constraints |
 
 ## Notion Database Reference
 

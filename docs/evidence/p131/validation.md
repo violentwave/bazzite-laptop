@@ -7,7 +7,7 @@
 ## Git SHA
 
 - Before: `be08087` (P130 final SHA)
-- After: `(set by final P131 commit)`
+- After: `7e32900`
 
 ## Replay Fixture Inventory
 

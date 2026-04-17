@@ -5,7 +5,7 @@ All significant changes. Format: date · deliverables · deltas · commit.
 ---
 
 ## Phase 131 — Routing Evaluation and Replay Lab
-**Date:** 2026-04-17 · **Commit:** (pending)
+**Date:** 2026-04-17 · **Commit:** 7e32900
 
 **Deliverables:**
 - Added evaluation-only routing replay module in `ai/routing_replay.py`
