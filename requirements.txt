@@ -98,7 +98,7 @@ rpm==6.0.1
 s3transfer==0.16.0
 SecretStorage==3.3.3
 selinux==3.9
-sentry-sdk==2.35.0
+sentry-sdk==2.58.0
 sepolicy==3.9
 setools==4.6.0
 setproctitle==1.3.7
