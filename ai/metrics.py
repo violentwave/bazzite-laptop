@@ -9,17 +9,21 @@ Provides two systems in one module:
    in-memory counters (backward-compat with P40 tests and embedder.py).
    ``record_metric(name, value)`` (2-arg form) also writes here.
 """
+
 from __future__ import annotations
 
 import functools
 import json
 import logging
+import os
+import tempfile
 import threading
 import time
 import uuid
 from collections import defaultdict
 from collections.abc import Callable
 from datetime import UTC, datetime
+from pathlib import Path
 from typing import Any
 
 import lancedb
@@ -36,15 +40,17 @@ TABLE_NAME = "metrics"
 FLUSH_COUNT = 100
 FLUSH_INTERVAL_S = 60
 
-_SCHEMA = pa.schema([
-    pa.field("id", pa.string()),
-    pa.field("ts", pa.string()),
-    pa.field("metric_type", pa.string()),
-    pa.field("name", pa.string()),
-    pa.field("tags", pa.string()),
-    pa.field("value", pa.float32()),
-    pa.field("window_s", pa.int32()),
-])
+_SCHEMA = pa.schema(
+    [
+        pa.field("id", pa.string()),
+        pa.field("ts", pa.string()),
+        pa.field("metric_type", pa.string()),
+        pa.field("name", pa.string()),
+        pa.field("tags", pa.string()),
+        pa.field("value", pa.float32()),
+        pa.field("window_s", pa.int32()),
+    ]
+)
 
 # ── In-memory store (backward-compat) ───────────────────────────────────────
 
@@ -56,9 +62,12 @@ _metrics_lock = threading.Lock()
 
 # ── LanceDB MetricsRecorder ──────────────────────────────────────────────────
 
+
 class MetricsRecorder:
     def __init__(self, db_path: str | None = None) -> None:
         path = db_path or str(VECTOR_DB_DIR)
+        if not db_path and (os.environ.get("PYTEST_CURRENT_TEST") or os.environ.get("CI")):
+            path = str(Path(tempfile.gettempdir()) / "bazzite-metrics-db")
         self._db = lancedb.connect(path)
         self._table = self._ensure_table()
         self._buffer: list[dict[str, Any]] = []
@@ -131,9 +140,7 @@ class MetricsRecorder:
     ) -> dict[str, Any]:
         try:
             self._flush()
-            cutoff = datetime.fromtimestamp(
-                time.time() - hours * 3600, tz=UTC
-            ).isoformat()
+            cutoff = datetime.fromtimestamp(time.time() - hours * 3600, tz=UTC).isoformat()
             df = self._table.to_pandas()
             df = df[df["ts"] >= cutoff]
             if metric_type:
@@ -160,9 +167,7 @@ class MetricsRecorder:
     ) -> list[dict[str, Any]]:
         try:
             self._flush()
-            cutoff = datetime.fromtimestamp(
-                time.time() - hours * 3600, tz=UTC
-            ).isoformat()
+            cutoff = datetime.fromtimestamp(time.time() - hours * 3600, tz=UTC).isoformat()
             df = self._table.to_pandas()
             df = df[df["ts"] >= cutoff]
             if metric_type:

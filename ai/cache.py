@@ -18,6 +18,14 @@ from pathlib import Path
 logger = logging.getLogger(__name__)
 
 
+def _path_exists(path: Path) -> bool:
+    """Return True when path.exists() succeeds, else False."""
+    try:
+        return path.exists()
+    except OSError:
+        return False
+
+
 class JsonFileCache:
     """Disk-based LLM response cache using JSON files. No pickle. No CVEs."""
 
@@ -203,7 +211,7 @@ def get_cache_stats() -> dict:
     """MCP-callable function returning LLM cache statistics from disk."""
     ext = Path("/var/mnt/ext-ssd/bazzite-ai/llm-cache")
     internal = Path.home() / "security" / "llm-cache"
-    cache_dir = ext if ext.parent.exists() else internal
+    cache_dir = ext if _path_exists(ext.parent) else internal
 
     cache = JsonFileCache(cache_dir=cache_dir)
     result = cache.stats()

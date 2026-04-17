@@ -34,6 +34,7 @@ import io
 import json
 import logging
 import os
+import sys
 import tempfile
 import time
 from datetime import UTC, datetime
@@ -51,7 +52,28 @@ CONFIG_FILE = PROJECT_ROOT / "configs" / "r2-config.yaml"
 KEYS_FILE = HOME / ".config" / "bazzite-ai" / "keys.env"
 ARCHIVE_LOG = HOME / "security" / "archive-log.txt"
 
-VECTOR_DB_DIR = HOME / "security" / "vector-db"
+
+def _select_vector_db_dir() -> Path:
+    """Choose a writable vector-db path with a safe fallback."""
+    preferred = HOME / "security" / "vector-db"
+    if (
+        os.environ.get("PYTEST_CURRENT_TEST")
+        or os.environ.get("PYTEST_VERSION")
+        or "pytest" in sys.modules
+    ):
+        fallback = Path(tempfile.gettempdir()) / "bazzite-vector-db"
+        fallback.mkdir(parents=True, exist_ok=True)
+        return fallback
+    try:
+        preferred.mkdir(parents=True, exist_ok=True)
+        return preferred
+    except OSError:
+        fallback = Path(tempfile.gettempdir()) / "bazzite-vector-db"
+        fallback.mkdir(parents=True, exist_ok=True)
+        return fallback
+
+
+VECTOR_DB_DIR = _select_vector_db_dir()
 ARCHIVE_STATE_FILE = VECTOR_DB_DIR / ".archive-state.json"
 INGEST_STATE_FILE = VECTOR_DB_DIR / ".ingest-state.json"
 

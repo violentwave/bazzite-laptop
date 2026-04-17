@@ -14,6 +14,8 @@ Schema fields:
 
 import json
 import logging
+import os
+import tempfile
 from datetime import UTC, datetime
 from pathlib import Path
 from uuid import uuid4
@@ -67,7 +69,12 @@ class SemanticCache:
             similarity_threshold: Minimum cosine similarity for a cache hit.
             db_path: Path to LanceDB directory. Defaults to VECTOR_DB_DIR.
         """
-        self._db_path = Path(db_path) if db_path else VECTOR_DB_DIR
+        if db_path:
+            self._db_path = Path(db_path)
+        elif os.environ.get("PYTEST_CURRENT_TEST") or os.environ.get("CI"):
+            self._db_path = Path(tempfile.gettempdir()) / "bazzite-semantic-cache"
+        else:
+            self._db_path = VECTOR_DB_DIR
         self._db = None
         self._table = None
         self._similarity_threshold = similarity_threshold

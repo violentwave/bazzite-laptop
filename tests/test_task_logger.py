@@ -22,7 +22,10 @@ def _lancedb_writable() -> bool:
     import os
 
     db_dir = Path("~/security/vector-db").expanduser()
-    return os.access(db_dir, os.W_OK) if db_dir.exists() else False
+    try:
+        return os.access(db_dir, os.W_OK) if db_dir.exists() else False
+    except OSError:
+        return False
 
 
 def _embedding_available() -> bool:
@@ -59,8 +62,10 @@ class TestTaskLogger:
         UUID(result)
 
     def test_log_success_creates_table_entry(self, tmp_path):
-        with patch("ai.learning.task_logger.embed_single", return_value=_FAKE_EMBED), \
-             patch("ai.learning.task_retriever.embed_single", return_value=_FAKE_EMBED):
+        with (
+            patch("ai.learning.task_logger.embed_single", return_value=_FAKE_EMBED),
+            patch("ai.learning.task_retriever.embed_single", return_value=_FAKE_EMBED),
+        ):
             logger = TaskLogger(db_path=str(tmp_path))
             logger.log_success(
                 description="Added HTTP session reuse",
@@ -88,8 +93,10 @@ class TestTaskRetriever:
         assert results == []
 
     def test_retrieve_filters_by_similarity(self, tmp_path):
-        with patch("ai.learning.task_logger.embed_single", return_value=_FAKE_EMBED), \
-             patch("ai.learning.task_retriever.embed_single", return_value=_FAKE_EMBED):
+        with (
+            patch("ai.learning.task_logger.embed_single", return_value=_FAKE_EMBED),
+            patch("ai.learning.task_retriever.embed_single", return_value=_FAKE_EMBED),
+        ):
             logger = TaskLogger(db_path=str(tmp_path))
             logger.log_success(
                 description="Add HTTP session reuse to threat intel",
@@ -152,6 +159,7 @@ class TestMCPHandlerRobustness:
     def test_knowledge_task_patterns_docstring_tool_count(self):
         """Server module docstring must not claim stale tool count."""
         import ai.mcp_bridge.server as server_mod
+
         assert "46 tools" not in (server_mod.__doc__ or ""), (
             "Stale docstring: update tool count in server.py module docstring"
         )

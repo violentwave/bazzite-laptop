@@ -6,6 +6,8 @@ Every other AI module imports from this module.
 
 import logging
 import os
+import sys
+import tempfile
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -24,7 +26,33 @@ RATE_LIMITS_DEF = CONFIGS_DIR / "ai-rate-limits.json"
 RATE_LIMITS_STATE = Path.home() / ".config" / "bazzite-ai" / "rate-limits-state.json"
 LITELLM_CONFIG = CONFIGS_DIR / "litellm-config.yaml"
 SECURITY_DIR = Path.home() / "security"
-VECTOR_DB_DIR = SECURITY_DIR / "vector-db"
+
+
+def _select_vector_db_dir() -> Path:
+    """Choose a writable vector-db path with safe fallback.
+
+    Some hosts expose stale mount points under ~/security that raise OSError
+    (for example, Errno 19 No such device). Fall back to tmp in that case.
+    """
+    preferred = SECURITY_DIR / "vector-db"
+    if (
+        os.environ.get("PYTEST_CURRENT_TEST")
+        or os.environ.get("PYTEST_VERSION")
+        or "pytest" in sys.modules
+    ):
+        fallback = Path(tempfile.gettempdir()) / "bazzite-vector-db"
+        fallback.mkdir(parents=True, exist_ok=True)
+        return fallback
+    try:
+        preferred.parent.mkdir(parents=True, exist_ok=True)
+        return preferred
+    except OSError:
+        fallback = Path(tempfile.gettempdir()) / "bazzite-vector-db"
+        fallback.mkdir(parents=True, exist_ok=True)
+        return fallback
+
+
+VECTOR_DB_DIR = _select_vector_db_dir()
 STATUS_FILE = SECURITY_DIR / ".status"
 ENRICHED_HASHES = SECURITY_DIR / "quarantine-hashes-enriched.jsonl"
 CVE_REPORTS_DIR = SECURITY_DIR / "cve-reports"

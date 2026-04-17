@@ -43,6 +43,7 @@ import hashlib
 import json
 import logging
 import os
+import sys
 import time
 from collections.abc import AsyncGenerator
 from datetime import UTC, datetime
@@ -78,7 +79,33 @@ _TASK_TTL: dict[str, int] = {
 # Prefer external SSD; fall back to ~/security/llm-cache; then tmpdir.
 _EXT_SSD_CACHE = Path("/var/mnt/ext-ssd/bazzite-ai/llm-cache")
 _INTERNAL_CACHE = Path.home() / "security" / "llm-cache"
-_CACHE_DIR = _EXT_SSD_CACHE if _EXT_SSD_CACHE.parent.exists() else _INTERNAL_CACHE
+
+
+def _path_exists(path: Path) -> bool:
+    """Return True when path.exists() succeeds, else False.
+
+    Some test and container environments expose mount points that raise OSError
+    on stat() instead of returning False.
+    """
+    try:
+        return path.exists()
+    except OSError:
+        return False
+
+
+def _is_test_env() -> bool:
+    return (
+        bool(os.environ.get("PYTEST_CURRENT_TEST"))
+        or bool(os.environ.get("PYTEST_VERSION"))
+        or "pytest" in sys.modules
+    )
+
+
+_CACHE_DIR = (
+    _INTERNAL_CACHE
+    if _is_test_env()
+    else (_EXT_SSD_CACHE if _path_exists(_EXT_SSD_CACHE.parent) else _INTERNAL_CACHE)
+)
 try:
     _CACHE_DIR.mkdir(parents=True, exist_ok=True)
 except OSError:

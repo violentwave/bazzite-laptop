@@ -24,6 +24,15 @@ MAX_FIX_SUGGESTIONS = 10
 CONTEXT_LINES = 5
 
 
+class _SourceContext(str):
+    """String wrapper preserving whether source context was read successfully."""
+
+    def __new__(cls, value: str, *, read_ok: bool):
+        obj = super().__new__(cls, value)
+        obj.read_ok = read_ok
+        return obj
+
+
 def analyze_findings(
     summaries: list[LintSummary],
     rate_limiter: RateLimiter | None = None,
@@ -70,7 +79,9 @@ def analyze_findings(
         except Exception:
             logger.exception(
                 "Failed to generate fix for %s:%d [%s]",
-                finding.file, finding.line, finding.code,
+                finding.file,
+                finding.line,
+                finding.code,
             )
 
     return summaries
@@ -85,6 +96,8 @@ def _generate_fix(finding: LintFinding, rate_limiter: RateLimiter) -> str:
     Returns empty string if source can't be read or LLM fails.
     """
     source_context = _read_source_context(finding.file, finding.line)
+    if not getattr(source_context, "read_ok", True):
+        return ""
 
     prompt = _build_fix_prompt(finding, source_context)
 
@@ -104,16 +117,14 @@ def _read_source_context(file_path: str, line: int) -> str:
     try:
         path = Path(file_path)
         if not path.is_file():
-            return ""
+            return _SourceContext("", read_ok=True)
         lines = path.read_text().splitlines()
         start = max(0, line - CONTEXT_LINES - 1)
         end = min(len(lines), line + CONTEXT_LINES)
-        numbered = [
-            f"{i + 1:4d} | {lines[i]}" for i in range(start, end)
-        ]
-        return "\n".join(numbered)
+        numbered = [f"{i + 1:4d} | {lines[i]}" for i in range(start, end)]
+        return _SourceContext("\n".join(numbered), read_ok=True)
     except (OSError, UnicodeDecodeError):
-        return ""
+        return _SourceContext("", read_ok=False)
 
 
 def _build_fix_prompt(finding: LintFinding, source_context: str) -> str:
