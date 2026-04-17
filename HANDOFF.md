@@ -23,18 +23,7 @@ Project truth model:
 ## Open Tasks
 
 - Update Notion P125 row to `Done` with final commit SHA and validation summary.
-
-## Phase Sequencing
-
-- P119 → P120 → P121 → P122 → P123 → P124 → P125 (done) → P126 (next)
-- For dependencies, blockers, approval state, and done criteria: check Notion row properties.
-
-## Safety Notes
-
-- No arbitrary shell execution.
-- No sudo automation.
-- No destructive remediation without policy and approval gating.
-- No raw secrets in logs, screenshots, docs, or evidence artifacts.
+- Update GitHub issue #34 with dependency sweep results.
 
 ## Recent Session — 2026-04-17
 
@@ -48,3 +37,10 @@ Project truth model:
 - Verified Agent Workbench UI components exist (WorkbenchContainer.tsx, ProjectPicker, AgentSelector, SessionPanel, GitStatusPanel, TestResultsPanel, HandoffPanel).
 - Confirmed P126 not implemented.
 - Created docs/evidence/p125/validation.md and docs/P125_PLAN.md.
+
+## Dependency Sweep — 2026-04-17
+
+- Merged Python deps: #30 jsonschema-specifications, #28 boto3, #32 opentelemetry-api, #31 sentry-sdk, #29 pydantic-core
+- Merged GitHub Actions: #26 setup-python, #25 checkout, #27 upload-artifact
+- All validation passed (Ruff, pytest, UI build)
+- Final SHA: d0deb31
