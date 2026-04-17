@@ -5,7 +5,7 @@ All significant changes. Format: date · deliverables · deltas · commit.
 ---
 
 ## Phase 132 — Human-in-the-loop Orchestration Runbooks
-**Date:** 2026-04-17 · **Commit:** (pending)
+**Date:** 2026-04-17 · **Commit:** 9e7e963
 
 **Deliverables:**
 - Added high-risk operator runbook corpus under `docs/runbooks/`
