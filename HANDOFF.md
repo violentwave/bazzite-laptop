@@ -19,7 +19,7 @@ Project truth model:
 - **Next Gated Phase:** P128 — Identity Step-Up
 - **Phase Truth:** Notion Bazzite Phases database (primary)
 - **Validation State:** P127 MCP policy-as-code implemented with canonical tool policy metadata, high-risk approval enforcement, default-deny, auditability, policy parity tests (26 policy + 20 existing tests pass)
-- **Current SHA:** <to be committed>
+- **Current SHA:** aea4d5c
 
 ## Open Tasks
 

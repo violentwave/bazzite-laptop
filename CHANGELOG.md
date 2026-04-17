@@ -5,7 +5,7 @@ All significant changes. Format: date · deliverables · deltas · commit.
 ---
 
 ## Phase 127 — MCP Policy-as-Code and Approval Gates
-**Date:** 2026-04-17 · **Commit:** <to be committed>
+**Date:** 2026-04-17 · **Commit:** aea4d5c
 
 **Deliverables:**
 - Implemented canonical MCP tool policy metadata (ToolPolicyMetadata, RiskTier, PolicyDecision)
