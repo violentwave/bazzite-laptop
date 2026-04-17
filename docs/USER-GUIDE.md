@@ -125,6 +125,15 @@ fixtures (security analysis and coding-session scenarios):
 Replay outputs are deterministic, redacted, and do not modify production
 router defaults.
 
+### Human-in-the-loop runbooks (P132)
+
+High-risk operations use explicit runbooks in `docs/runbooks/` with matching
+machine-readable definitions in `docs/runbooks/workflows/`.
+
+- Use `workflow.list` to view runbook metadata (approval state, manual steps).
+- Running a runbook ID through `workflow.run` returns `manual_required` and
+  operator steps; it does not auto-execute privileged actions.
+
 ---
 
 ## 3. Daily Operations

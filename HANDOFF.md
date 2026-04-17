@@ -14,17 +14,28 @@ Project truth model:
 - **Last Updated:** 2026-04-17
 - **Project:** bazzite-laptop
 - **Branch:** master
-- **Completed Phases:** P119, P120, P121, P122, P123, P124, P125, P126, P127, P128, P129, P130, P131
+- **Completed Phases:** P119, P120, P121, P122, P123, P124, P125, P126, P127, P128, P129, P130, P131, P132
 - **Active Phase:** None
-- **Next Gated Phase:** P132 — Human-in-the-Loop Runbooks
+- **Next Gated Phase:** P133 — Provenance Graph
 - **Phase Truth:** Notion Bazzite Phases database (primary)
-- **Validation State:** P131 routing replay lab implemented with sanitized fixtures, deterministic explanation payloads, failover/stale-metrics coverage, and P130 budget-aware comparisons; validation pass
-- **Current SHA:** 7e32900
+- **Validation State:** P132 human-in-the-loop runbooks added with machine-readable workflow metadata, explicit approval/escalation semantics, and validation pass
+- **Current SHA:** (pending)
 
 ## Open Tasks
 
-- Update Notion P131 row to Done with final commit SHA and validation summary.
-- Update Notion row metadata for P127-P130 if still pending commit SHAs.
+- Update Notion P132 row to Done with final commit SHA, approval state approved, and validation summary.
+- Resolve legacy Notion row metadata drift where commit SHAs are pending.
+
+## Recent Session — 2026-04-17 (P132)
+
+- Added high-risk runbook corpus under `docs/runbooks/`.
+- Added machine-readable runbook definitions under `docs/runbooks/workflows/`.
+- Added `ai/workflows/runbooks.py` loader/validator and exported helpers.
+- Integrated runbook metadata into `workflow.list`; runbook `workflow.run` now returns truthful `manual_required` state with operator steps.
+- Added tests `tests/test_runbooks.py` and `tests/test_workflow_runbooks.py`.
+- Added `docs/P132_PLAN.md` and `docs/evidence/p132/validation.md`.
+- Validation: runbook/workflow tests pass, ruff pass, targeted policy/security/workbench regressions pass.
+- Scope guard: no P133/P135/P138 implementation; no policy/approval bypass logic introduced.
 
 ## Recent Session — 2026-04-17 (P131)
 

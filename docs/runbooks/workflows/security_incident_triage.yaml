@@ -1,0 +1,67 @@
+runbook_id: security_incident_triage
+title: Security Incident Triage and Escalation
+risk_tier: high
+execution_mode: manual-approval
+approval_required: true
+approval_state: pending
+trigger: Critical or high severity findings/incidents in Security Autopilot surfaces.
+prerequisites:
+  - Operator identity and session attribution confirmed.
+  - Security policy mode verified.
+  - MCP and LLM service health checked.
+required_evidence:
+  - security.autopilot_overview
+  - security.autopilot_findings
+  - security.autopilot_incidents
+  - security.autopilot_evidence
+  - security.autopilot_audit
+operator_steps:
+  - id: collect_signals
+    action: Gather incident signals and evidence IDs.
+    manual_approval: false
+  - id: classify_incident
+    action: Classify severity and containment priority.
+    manual_approval: false
+  - id: escalate_or_handoff
+    action: Escalate or hand off into remediation approval flow.
+    manual_approval: true
+escalation:
+  owner_role: security_lead
+  escalation_channel: phase-control
+  conditions:
+    - Severity is critical.
+    - Evidence confidence is low due to platform degradation.
+verification:
+  - Triage decision recorded with timestamp and actor.
+  - Evidence and audit IDs linked in handoff.
+artifacts:
+  - docs/runbooks/security-incident-triage.md
+  - HANDOFF.md
+policy_alignment:
+  - p122_safe_remediation_runner
+  - p127_mcp_policy_approval
+workflow_plan:
+  - id: overview
+    tool: security.autopilot_overview
+    args: {}
+  - id: findings
+    tool: security.autopilot_findings
+    args:
+      limit: 50
+  - id: incidents
+    tool: security.autopilot_incidents
+    args:
+      limit: 25
+  - id: audit
+    tool: security.autopilot_audit
+    args:
+      limit: 30
+  - id: operator_decision
+    manual_step: true
+    depends_on:
+      - overview
+      - findings
+      - incidents
+      - audit
+notes:
+  - Human review is mandatory before remediation escalation.

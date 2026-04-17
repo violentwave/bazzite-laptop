@@ -23,9 +23,9 @@
 
 | Category | Current State |
 |----------|---------------|
-| Current completed Security Autopilot + Workbench phases | `P119`, `P120`, `P121`, `P122`, `P123`, `P124`, `P125`, `P126`, `P127`, `P128`, `P129`, `P130`, `P131` |
+| Current completed Security Autopilot + Workbench phases | `P119`, `P120`, `P121`, `P122`, `P123`, `P124`, `P125`, `P126`, `P127`, `P128`, `P129`, `P130`, `P131`, `P132` |
 | Current active phase | None |
-| Next gated phase | `P132 — Human-in-the-Loop Runbooks` |
+| Next gated phase | `P133 — Provenance Graph` |
 | Primary phase truth | Notion `Bazzite Phases` row properties |
 | Lightweight session truth | `HANDOFF.md` |
 | Standing agent rules | `docs/AGENT.md` |
@@ -563,6 +563,21 @@ The repo has complete historical coverage across the earlier tranches, but older
 | Tests | `tests/test_routing_replay.py` | Replay loading, explanation shape, failover, stale metrics, budget, redaction, deterministic behavior |
 | Evidence | `docs/evidence/p131/validation.md` | P131 validation with command results and scope-safe closeout notes |
 
+### P132 — Human-in-the-loop Orchestration Runbooks
+- **Status**: Done
+- **Finished**: 2026-04-17
+
+| Type | Path | Description |
+|------|------|-------------|
+| Plan | `docs/P132_PLAN.md` | P132 scope, approval boundaries, validation commands |
+| Runbooks | `docs/runbooks/*.md` | Operator-facing runbooks for triage, approvals, privileged actions, provider failover, phase handoff |
+| Workflow Definitions | `docs/runbooks/workflows/*.yaml` | Machine-readable runbook metadata with manual steps, approval state, escalation, verification |
+| Loader | `ai/workflows/runbooks.py` | Runbook parser, registry surfacing, safety validation for bypass/secret wording |
+| Workflow Integration | `ai/mcp_bridge/handlers/workflow_tools.py` | Surfaces runbook metadata in `workflow.list`; returns `manual_required` for runbook `workflow.run` |
+| Tests | `tests/test_runbooks.py` | Runbook inventory, policy alignment, no-bypass/no-secret doc checks |
+| Tests | `tests/test_workflow_runbooks.py` | Registry integration, manual approval step checks, workflow handler surfacing |
+| Evidence | `docs/evidence/p132/validation.md` | P132 validation with inventory, command results, and limitations |
+
 ## Cross-Phase Documentation
 
 ### Hub Docs (docs/ root)
@@ -590,7 +605,7 @@ The repo has complete historical coverage across the earlier tranches, but older
 1. Older historical phases intentionally remain summarized here and detailed in `docs/PHASE_INDEX.md`.
 2. Some earlier phases used batch commits, inferred historical boundaries, or alternative artifact types instead of dedicated `P{NN}_PLAN.md` documents.
 3. P80 remains a repo-vs-Notion truth reconciliation note for future cleanup.
-4. P132-P139 remain planned in Notion and tracked in the roadmap doc; they are not listed here as completed artifacts yet.
+4. P133-P139 remain planned in Notion and tracked in the roadmap doc; they are not listed here as completed artifacts yet.
 
 ## Cross-References
 

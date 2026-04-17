@@ -4,6 +4,39 @@ All significant changes. Format: date · deliverables · deltas · commit.
 
 ---
 
+## Phase 132 — Human-in-the-loop Orchestration Runbooks
+**Date:** 2026-04-17 · **Commit:** (pending)
+
+**Deliverables:**
+- Added high-risk operator runbook corpus under `docs/runbooks/`
+- Added machine-readable runbook workflow definitions under `docs/runbooks/workflows/`
+- Added runbook loader/validator in `ai/workflows/runbooks.py`
+- Integrated runbook surfacing into existing workflow handlers:
+  - `workflow.list` now returns runbook metadata
+  - `workflow.run` returns `manual_required` for runbook IDs with explicit operator steps
+- Added tests for runbook parsing/safety and workflow integration
+- Added phase plan and evidence docs (`docs/P132_PLAN.md`, `docs/evidence/p132/validation.md`)
+
+**Validation:**
+- `.venv/bin/python -m pytest tests/test_runbooks.py tests/test_workflow*.py -q` — 35 passed
+- `ruff check ai/ tests/` — pass
+- `.venv/bin/python -m pytest tests/test_mcp_policy.py tests/test_security_autopilot_tools.py tests/test_agent_workbench.py -q` — 42 passed
+
+**Artifacts:**
+- `docs/runbooks/*.md`
+- `docs/runbooks/workflows/*.yaml`
+- `ai/workflows/runbooks.py`
+- `ai/mcp_bridge/handlers/workflow_tools.py`
+- `tests/test_runbooks.py`
+- `tests/test_workflow_runbooks.py`
+- `docs/P132_PLAN.md`
+- `docs/evidence/p132/validation.md`
+
+**Result:** PASS — Human-in-the-loop runbooks added with explicit approval and
+escalation semantics aligned to P122/P127/P128 and P131 decision support.
+
+---
+
 ## Phase 131 — Routing Evaluation and Replay Lab
 **Date:** 2026-04-17 · **Commit:** 7e32900
 

@@ -1,0 +1,65 @@
+runbook_id: privileged_workbench_actions
+title: Privileged Workbench and Session Actions
+risk_tier: high
+execution_mode: manual-approval
+approval_required: true
+approval_state: pending
+trigger: Privileged action request in Agent Workbench scope.
+prerequisites:
+  - Workspace and project context validated (P129).
+  - Actor step-up state verified (P128).
+  - Requested tool is policy-evaluated.
+required_evidence:
+  - session_id
+  - project_id
+  - policy_audit_id
+  - approval_reference
+operator_steps:
+  - id: validate_context
+    action: Validate session/project context isolation and actor identity.
+    manual_approval: false
+  - id: evaluate_privilege
+    action: Confirm whether step-up and approval are required.
+    manual_approval: false
+  - id: perform_privileged_action
+    action: Execute approved bounded action through workbench pathways.
+    manual_approval: true
+  - id: handoff_note
+    action: Write handoff note with artifact references.
+    manual_approval: false
+escalation:
+  owner_role: platform_operator
+  escalation_channel: workbench
+  conditions:
+    - Step-up challenge fails repeatedly.
+    - Cross-project scope mismatch detected.
+verification:
+  - Action result and reason captured.
+  - Session/project IDs tied to actor context.
+  - No unsafe command path introduced.
+artifacts:
+  - docs/runbooks/privileged-workbench-actions.md
+  - HANDOFF.md
+policy_alignment:
+  - p127_mcp_policy_approval
+  - p128_stepup_security
+  - p129_context_isolation
+workflow_plan:
+  - id: get_session
+    tool: workbench.session_get
+    args: {}
+  - id: policy_check
+    manual_step: true
+    depends_on:
+      - get_session
+  - id: privileged_execute
+    manual_step: true
+    depends_on:
+      - policy_check
+  - id: handoff
+    tool: workbench.handoff_note
+    args: {}
+    depends_on:
+      - privileged_execute
+notes:
+  - Privileged actions must preserve bounded workbench safety model.

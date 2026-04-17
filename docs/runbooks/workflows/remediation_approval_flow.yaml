@@ -1,0 +1,65 @@
+runbook_id: remediation_approval_flow
+title: Remediation Approval Flow
+risk_tier: critical
+execution_mode: manual-approval
+approval_required: true
+approval_state: pending
+trigger: Remediation action request for a security incident.
+prerequisites:
+  - Action exists in P122 fixed allowlist.
+  - Policy decision generated.
+  - Approval metadata includes approver and rationale.
+required_evidence:
+  - policy_result
+  - approval_metadata
+  - remediation_request_id
+  - evidence_bundle_id
+operator_steps:
+  - id: review_policy
+    action: Review policy decision and action category.
+    manual_approval: false
+  - id: collect_approval
+    action: Collect attributable approval metadata with ticket or phase reference.
+    manual_approval: true
+  - id: execute_fixed_action
+    action: Execute via P122 fixed action path.
+    manual_approval: true
+  - id: verify_audit
+    action: Verify audit and evidence bundle entries.
+    manual_approval: false
+escalation:
+  owner_role: security_lead
+  escalation_channel: approvals
+  conditions:
+    - Policy decision is blocked.
+    - Approval metadata is invalid or missing.
+verification:
+  - Result status is executed, prepared, or rejected.
+  - Approval state is represented in audit metadata.
+  - Evidence bundle stores redacted payload.
+artifacts:
+  - docs/runbooks/remediation-approval-flow.md
+  - docs/evidence/p122/README.md
+policy_alignment:
+  - p122_safe_remediation_runner
+  - p127_mcp_policy_approval
+  - p128_stepup_security
+workflow_plan:
+  - id: evaluate
+    manual_step: true
+  - id: approval_gate
+    manual_step: true
+    depends_on:
+      - evaluate
+  - id: execute
+    agent: security
+    task_type: run_audit
+    args: {}
+    depends_on:
+      - approval_gate
+  - id: evidence_review
+    manual_step: true
+    depends_on:
+      - execute
+notes:
+  - Approval gate semantics must remain attributable and auditable.

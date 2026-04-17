@@ -1,0 +1,64 @@
+runbook_id: phase_execution_handoff
+title: Phase Execution and Closeout Handoff
+risk_tier: high
+execution_mode: manual-approval
+approval_required: true
+approval_state: pending
+trigger: Start or closeout of a gated/high-risk phase.
+prerequisites:
+  - Preflight command outputs captured.
+  - Dependency phases verified complete.
+  - Approval state confirmed for manual-approval phase.
+required_evidence:
+  - git_preflight
+  - validation_command_results
+  - evidence_doc_path
+  - final_commit_sha
+operator_steps:
+  - id: preflight
+    action: Run git/python preflight checks and record outputs.
+    manual_approval: false
+  - id: approval_checkpoint
+    action: Obtain explicit operator approval before implementation.
+    manual_approval: true
+  - id: validation
+    action: Execute phase validation command set and capture results.
+    manual_approval: false
+  - id: closeout
+    action: Update docs, Notion fields, and handoff pointer.
+    manual_approval: true
+escalation:
+  owner_role: phase_owner
+  escalation_channel: phase-control
+  conditions:
+    - Approval is ambiguous or missing.
+    - Validation fails or blockers remain unresolved.
+verification:
+  - Evidence file exists and has before/after SHA.
+  - Ledger docs updated with final SHA.
+  - Notion closeout text prepared and posted.
+artifacts:
+  - docs/runbooks/phase-execution-handoff.md
+  - HANDOFF.md
+  - docs/PHASE_INDEX.md
+  - docs/PHASE_ARTIFACT_REGISTER.md
+policy_alignment:
+  - p126_acceptance_gate
+  - p127_mcp_policy_approval
+workflow_plan:
+  - id: preflight_checks
+    manual_step: true
+  - id: implementation
+    manual_step: true
+    depends_on:
+      - preflight_checks
+  - id: validation_commands
+    manual_step: true
+    depends_on:
+      - implementation
+  - id: closeout_sync
+    manual_step: true
+    depends_on:
+      - validation_commands
+notes:
+  - Manual approval is mandatory before edits in gated phases.

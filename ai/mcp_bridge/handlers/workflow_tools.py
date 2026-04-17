@@ -8,17 +8,31 @@ from datetime import UTC, datetime
 from ai.rag.embedder import embed_single as embed
 from ai.rag.store import VectorStore, _get_schemas
 from ai.workflows.definitions import WORKFLOW_REGISTRY
+from ai.workflows.runbooks import get_runbook_registry
 
 logger = logging.getLogger("workflow_tools")
 
 
 async def workflow_list(params: dict) -> dict:
     """List all registered workflow definitions."""
+    runbooks = get_runbook_registry()
     return {
         "workflows": [
             {"name": name, "description": wf["description"], "step_count": len(wf["steps"])}
             for name, wf in WORKFLOW_REGISTRY.items()
-        ]
+        ],
+        "runbooks": [
+            {
+                "runbook_id": runbook_id,
+                "title": data["title"],
+                "risk_tier": data["risk_tier"],
+                "execution_mode": data["execution_mode"],
+                "approval_required": data["approval_required"],
+                "approval_state": data["approval_state"],
+                "operator_step_count": len(data["operator_steps"]),
+            }
+            for runbook_id, data in runbooks.items()
+        ],
     }
 
 
@@ -29,6 +43,22 @@ async def workflow_run(params: dict) -> dict:
 
     name = params.get("name")
     triggered_by = params.get("triggered_by", "mcp")
+
+    runbooks = get_runbook_registry()
+    if name in runbooks:
+        data = runbooks[name]
+        return {
+            "workflow": name,
+            "status": "manual_required",
+            "execution_mode": data["execution_mode"],
+            "approval_required": data["approval_required"],
+            "approval_state": data["approval_state"],
+            "operator_steps": data["operator_steps"],
+            "escalation": data["escalation"],
+            "reason": (
+                "Runbook requires human-in-the-loop execution; use documented operator steps."
+            ),
+        }
 
     if name not in WORKFLOW_REGISTRY:
         return {"error": f"Unknown workflow: {name}"}

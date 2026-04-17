@@ -1,0 +1,62 @@
+runbook_id: provider_outage_failover
+title: Provider Outage and Routing Failover
+risk_tier: high
+execution_mode: manual-approval
+approval_required: true
+approval_state: pending
+trigger: Provider health degradation or routing outage affecting core workflows.
+prerequisites:
+  - Provider health and routing status captured.
+  - Routing replay fixtures available for comparison.
+  - Budget status available for constrained scenarios.
+required_evidence:
+  - system.provider_status
+  - providers.health
+  - providers.routing
+  - routing_replay_explanation
+operator_steps:
+  - id: collect_health
+    action: Capture health and routing snapshots.
+    manual_approval: false
+  - id: run_replay
+    action: Execute matching replay fixture and review selected/rejected routes.
+    manual_approval: false
+  - id: decide_action
+    action: Select escalation or bounded route adjustment request.
+    manual_approval: true
+escalation:
+  owner_role: platform_owner
+  escalation_channel: provider-ops
+  conditions:
+    - Multi-provider outage.
+    - Persistent auth failures with no immediate recovery.
+verification:
+  - Failover recommendation includes health and budget context.
+  - Replay explanation recorded with fixture ID.
+  - Any mutation request has approval metadata.
+artifacts:
+  - docs/runbooks/provider-outage-failover.md
+  - docs/routing_replay/explanation_schema.md
+policy_alignment:
+  - p130_budget_constraints
+  - p131_routing_replay
+  - p127_mcp_policy_approval
+workflow_plan:
+  - id: provider_status
+    tool: system.provider_status
+    args: {}
+  - id: providers_health
+    tool: providers.health
+    args: {}
+    depends_on:
+      - provider_status
+  - id: replay_review
+    manual_step: true
+    depends_on:
+      - providers_health
+  - id: escalation_decision
+    manual_step: true
+    depends_on:
+      - replay_review
+notes:
+  - Routing replay is decision support and does not auto-tune production routes.
