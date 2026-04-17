@@ -1,6 +1,8 @@
 # Changelog — Bazzite AI Enhancement Layer
 <!-- System: Acer Predator G3-571 | Bazzite 43 | Last updated: 2026-04-09 -->
 
+> Historical note: older entries mention legacy Newelle/PySide surfaces that are now retired from active runtime support.
+
 All notable changes are recorded here. Phases correspond to the original
 implementation plan for the AI enhancement layer built on top of the base
 Bazzite security/gaming system.

@@ -7,9 +7,6 @@ dependencies = [
     "sentry-sdk>=2.57.0",
 ]
 
-[project.optional-dependencies]
-tray = ["PySide6>=6.6"]
-
 [tool.ruff]
 target-version = "py312"
 line-length = 100
@@ -21,7 +18,6 @@ select = ["E", "F", "W", "I", "S", "B", "UP"]
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = ["S101", "S105", "S108", "S603", "S607"]
-"tray/**" = ["E402", "I001", "S110"]
 "ai/router.py" = ["E402"]  # sentry_sdk.init() must run before other imports
 "ai/hooks.py" = ["S110", "S607"]
 # Scripts intentionally call subprocesses with partial paths (systemctl, clamscan etc.)
@@ -36,7 +32,7 @@ select = ["E", "F", "W", "I", "S", "B", "UP"]
 "ai/tools/builder.py" = ["S102", "B904"]
 
 [tool.bandit]
-exclude_dirs = ["tests", ".venv", "tray"]
+exclude_dirs = ["tests", ".venv"]
 # B603/B607: subprocess without shell / partial executable path
 # Only skip in scripts and system modules, not project-wide
 skips = []

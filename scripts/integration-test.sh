@@ -28,7 +28,6 @@ DIRECTORY_DIR="$USER_HOME/.local/share/desktop-directories"
 MENU_FILE="$USER_HOME/.config/menus/applications-merged/security.menu"
 AUTOSTART_FILE="$USER_HOME/.config/autostart/bazzite-security-tray.desktop"
 TRAY_SCRIPT="$USER_HOME/security/bazzite-security-tray.py"
-TRAY_SCRIPT_QT="/var/home/lch/projects/bazzite-laptop/tray/security_tray_qt.py"
 LCH_UID="$(id -u lch)"
 
 # --- Colors (256-color for richer output) ---
@@ -155,7 +154,7 @@ echo -e "  ${CYN}${BLD}│${RST}  ${BLU}${BLD}╚═╝╚═╝╚═╝╚═�
 echo -e "  ${CYN}${BLD}│${RST}                                                          ${CYN}${BLD}│${RST}"
 echo -e "  ${CYN}${BLD}│${RST}  ${GRY}Host:${RST}  ${WHT}$(hostname)${RST}$(printf '%*s' $((36 - ${#HOSTNAME})) '')${CYN}${BLD}│${RST}"
 echo -e "  ${CYN}${BLD}│${RST}  ${GRY}Date:${RST}  ${WHT}$(date '+%a %b %d, %Y  %I:%M %p')${RST}              ${CYN}${BLD}│${RST}"
-echo -e "  ${CYN}${BLD}│${RST}  ${GRY}Tests:${RST} ${WHT}29 checks across 8 sections${RST}                   ${CYN}${BLD}│${RST}"
+echo -e "  ${CYN}${BLD}│${RST}  ${GRY}Tests:${RST} ${WHT}28 checks across 8 sections${RST}                   ${CYN}${BLD}│${RST}"
 echo -e "  ${CYN}${BLD}│${RST}                                                          ${CYN}${BLD}│${RST}"
 echo -e "  ${CYN}${BLD}└──────────────────────────────────────────────────────────┘${RST}"
 echo ""
@@ -165,20 +164,13 @@ echo ""
 # ═══════════════════════════════════════════════════════════
 section_header 1 "Tray App" "🖥"
 
-# [01] Tray app is running (single instance) — legacy or Qt tray
+# [01] Tray app is running (single instance)
 TRAY_COUNT=$(pgrep -c -f "bazzite-security-tray[.]py" 2>/dev/null || echo "0")
-QT_TRAY_COUNT=$(pgrep -c -f "security_tray_qt[.]py" 2>/dev/null || echo "0")
-TOTAL_TRAY=$(( TRAY_COUNT + QT_TRAY_COUNT ))
-if [[ "$TOTAL_TRAY" -eq 1 ]]; then
-    if [[ "$QT_TRAY_COUNT" -eq 1 ]]; then
-        TRAY_PID=$(pgrep -f "security_tray_qt[.]py" | head -1)
-        result PASS "Qt tray running (single instance)" "PID: $TRAY_PID"
-    else
-        TRAY_PID=$(pgrep -f "bazzite-security-tray[.]py" | head -1)
-        result PASS "Tray running (single instance)" "PID: $TRAY_PID"
-    fi
-elif [[ "$TOTAL_TRAY" -gt 1 ]]; then
-    result FAIL "Multiple tray instances running" "Count: $TOTAL_TRAY — kill extras"
+if [[ "$TRAY_COUNT" -eq 1 ]]; then
+    TRAY_PID=$(pgrep -f "bazzite-security-tray[.]py" | head -1)
+    result PASS "Tray running (single instance)" "PID: $TRAY_PID"
+elif [[ "$TRAY_COUNT" -gt 1 ]]; then
+    result FAIL "Multiple tray instances running" "Count: $TRAY_COUNT — kill extras"
 else
     result FAIL "Tray not running" "Start: /usr/local/bin/start-security-tray.sh"
 fi
@@ -468,19 +460,6 @@ if [[ -f "$TRAY_SCRIPT" ]]; then
     fi
 else
     result FAIL "Tray script missing" "$TRAY_SCRIPT"
-fi
-
-# [19] PySide6 Qt tray module imports successfully
-if [[ -f "$TRAY_SCRIPT_QT" ]]; then
-    QT_IMPORT_OUT=$(su -c "source /var/home/lch/projects/bazzite-laptop/.venv/bin/activate && python -c 'from tray.security_tray_qt import SecurityTrayQt'" lch 2>&1)
-    QT_IMPORT_EXIT=$?
-    if [[ $QT_IMPORT_EXIT -eq 0 ]]; then
-        result PASS "PySide6 Qt tray imports successfully" "$TRAY_SCRIPT_QT"
-    else
-        result FAIL "Qt tray import failed" "$(echo "$QT_IMPORT_OUT" | tail -1)"
-    fi
-else
-    result WARN "Qt tray script not found" "$TRAY_SCRIPT_QT"
 fi
 
 section_footer

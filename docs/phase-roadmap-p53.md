@@ -4,6 +4,7 @@
 > **Date:** 2026-04-09  
 > **Baseline:** Post-P52 (82 MCP tools, 2317 tests, 26 LanceDB tables, 22 timers, 0 ruff errors)  
 > **CC Prompt Numbering:** Continues from 100 (use 101+)
+> **Historical context:** references to Newelle in this plan describe a now-retired legacy client.
 
 ---
 
@@ -29,7 +30,7 @@ Elevate the bazzite-laptop AI layer from a collection of independent tool-callin
 
 - Agents operate in silos — no mechanism for Agent A to trigger Agent B with shared context
 - `ai/workflows/runner.py` lacks a task-handoff protocol between named agents
-- No `workflow.*` MCP tools exposed — Newelle/users cannot trigger orchestrated workflows
+- No `workflow.*` MCP tools exposed — users cannot trigger orchestrated workflows from legacy clients
 - Root `agents/*.yaml` stubs are disconnected from `ai/agents/` Python implementations
 - No observability on inter-agent message passing or handoff latency
 
@@ -99,7 +100,7 @@ Extend `ai/workflows/` to support agent-composed workflows:
 
 ### P53-D: MCP Tools — `workflow.*` Namespace (6 new tools)
 
-Expose orchestration to Newelle/users:
+Expose orchestration to legacy assistant clients/users:
 
 | Tool | Description |
 |---|---|
@@ -281,7 +282,7 @@ Do:
 1. Update docs/AGENT.md: tool count 88, LanceDB tables 27, add orchestration/ section
 2. Update docs/CHANGELOG.md: append P53 entry
 3. Update docs/USER-GUIDE.md: add workflow.* tool usage examples
-4. Update docs/newelle-system-prompt.md: add workflow.* tools to Newelle skill block
+4. Update docs/newelle-system-prompt.md: add workflow.* tools to legacy assistant skill block
 5. Update HANDOFF.md: post-P53 state
 6. Run: pytest --tb=short -q (target: 2383 tests, 0 failures)
 7. Run: ruff check ai/ (0 errors)
@@ -327,4 +328,4 @@ Done when: all tests pass, 0 ruff, docs current, git clean
 - [ ] ≥2383 tests, 0 failures
 - [ ] 0 ruff errors
 - [ ] AGENT.md, CHANGELOG.md, HANDOFF.md all reconciled
-- [ ] Newelle system prompt updated with workflow.* tools
+- [ ] Legacy assistant system prompt updated with workflow.* tools

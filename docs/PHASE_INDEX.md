@@ -3,6 +3,7 @@
 > Master index of repo-tracked phases through P132.
 > Updated 2026-04-17.
 > Source of truth: Notion `Bazzite Phases` database + `git log`; Notion row properties are authoritative when repo docs lag.
+> Note: references to legacy assistant/tray surfaces are historical phase records, not active runtime guidance.
 
 ## Quick Stats
 
@@ -26,7 +27,7 @@
 | 2026-04-03 to 2026-04-08 | P22-P28 | Governance: stabilization phases (token budget, cache, metrics, memory, provider intel, alerts, insights) |
 | 2026-04-07 to 2026-04-10 | P29-P33 | Scale: code intel, workflow engine, collab, testing intelligence, dynamic tools |
 | 2026-04-08 to 2026-04-10 | P34-P39 | Integration: parity work, agent stabilization, dep audit |
-| 2026-04-10 to 2026-04-11 | P40-P50 | Observability: intel scraper, integration tests, Newelle skills |
+| 2026-04-10 to 2026-04-11 | P40-P50 | Observability: intel scraper, integration tests, legacy assistant skills |
 | 2026-04-09 to 2026-04-12 | P51-P58 | Control plane: Slack, Notion, phase control, cross-system burn down |
 | 2026-04-10 to 2026-04-12 | P59-P69 | Frontend capability pack: P59 (branch convergence), P60 (intelligence reliability), P61 (frontend pack), P62 (pattern intel), P63 (QA layer), P64 (design/media), P65 (runtime harness), P66 (brief intake), P67 (deployment pack), P68 (GitNexus evaluation), P69 (ops runbooks) |
 | 2026-04-13 to 2026-04-15 | P70-P118 | Documentation normalization, Midnight Glass UI, runtime repair, MCP governance, provider/routing persistence, release candidate acceptance |

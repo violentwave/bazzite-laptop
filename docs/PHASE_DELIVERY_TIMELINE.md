@@ -2,6 +2,7 @@
 
 > Visual timeline of phase completions from February to April 2026.
 > Generated 2026-04-12. Source: Notion `Finished At` field.
+> Note: legacy assistant naming in older phase titles is historical.
 
 ## Timeline Overview
 
@@ -43,7 +44,7 @@ April 2026
 ├── 04-07 P25-P28: Memory + Provider + Alerts + Insights
 ├── 04-07 P45-P49: Cache/Budget/Pattern/Memory/Insights v2
 ├── 04-08 P50: Integration Tests
-├── 04-08 P51: Newelle Skills Sync
+├── 04-08 P51: Legacy Assistant Skills Sync
 ├── 04-09 P29-P33: Code Intel + Workflow + Collab + Testing + Dynamic Tools
 ├── 04-09 P52: Slack + Notion Integrations
 ├── 04-10 P34-P36: Integration Parity + Agent + Doc Reconcile

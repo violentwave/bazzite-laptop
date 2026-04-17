@@ -1,15 +1,17 @@
 # P43 — Lint Cleanup, Newelle Sync & Operational Verification
 ## CC Prompts 93–100
 
+> Historical artifact: this prompt pack refers to a legacy client path that is no longer active runtime guidance.
+
 **Starting state:** P42 complete. 1,872 tests (0 failures). 82 MCP tools, 22 timers.
 30 ruff errors remaining. Commit `cf9e7db`.
 
-**Goal:** Clean lint to zero, sync all Newelle-facing docs with the 82-tool reality,
+**Goal:** Clean lint to zero, sync all legacy-client docs with the 82-tool reality,
 verify the 30 tools wired in P42 actually work end-to-end, and fix remaining hygiene
 items (pre-commit hook, architecture diagram).
 
 **Design principle:** No new features. This is about making the existing 82 tools
-fully discoverable and operational through Newelle, and cleaning up the last
+fully discoverable and operational through the legacy client path, and cleaning up the last
 technical debt before the next feature phase.
 
 ---

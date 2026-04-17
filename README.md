@@ -22,7 +22,6 @@ An AI enhancement layer for the Bazzite gaming laptop, providing voice-controlle
 | `configs/` | Configuration files for MCP, LiteLLM, rate limits |
 | `systemd/` | User service definitions for MCP bridge and LLM proxy |
 | `tests/` | Unit and integration test suite |
-| `tray/` | PySide6 system tray application |
 
 ## Getting Started
 
@@ -56,7 +55,7 @@ systemctl --user start bazzite-mcp-bridge.service bazzite-llm-proxy.service
 ## Documentation Index
 
 - [Agent Reference](docs/AGENT.md) — Detailed architecture, tools, and system reference
-- [User Guide](docs/USER-GUIDE.md) — Console-first operator guide with Newelle/PySide fallback roles
+- [User Guide](docs/USER-GUIDE.md) — Console-first operator guide for MCP and workflows
 - [Changelog](docs/CHANGELOG.md) — Version history and release notes
 - [Verified Dependencies](docs/verified-deps.md) — Audited dependency versions
 

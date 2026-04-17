@@ -86,7 +86,7 @@ Priority 1 (high-impact, user-facing):
 
 | Module | Rationale |
 |--------|-----------|
-| `ai/tray.py` | UI code, but state machine tested in test_tray_state_machine.py |
+| `ai/workflows/runner.py` | High-impact workflow execution path with partial scenario coverage |
 | `ai/tools/builder.py` | Dynamic tool creation - security-critical, limited tests |
 | `ai/router.py` | Core routing logic - extensive test suite exists |
 

@@ -34,7 +34,7 @@ Perform final tranche hardening for the Unified Control Console, validate end-to
 ### Control Plane
 
 - [x] Security Ops + Project/Workflow/Phase panel set aligns with P84/P86 docs
-- [x] P87 migration stance remains explicit: Console primary, Newelle fallback, PySide secondary
+- [x] P87 migration stance remains explicit: Console primary, legacy chat client fallback, legacy tray secondary
 
 ## Evidence Summary
 
@@ -47,8 +47,8 @@ Perform final tranche hardening for the Unified Control Console, validate end-to
 
 ### Test Outcome
 
-- Initial full test run exposed one failing drift check: Newelle system prompt missing tool references added in P81-P86.
-- P88 hardening updated `docs/newelle-system-prompt.md` tool routing catalog for:
+- Initial full test run exposed one failing drift check: legacy system prompt missing tool references added in P81-P86.
+- P88 hardening updated historical legacy-prompt catalog at `docs/newelle-system-prompt.md` for:
   - `security.ops_*`
   - `settings.*`
   - `providers.*`
@@ -69,7 +69,7 @@ Perform final tranche hardening for the Unified Control Console, validate end-to
 
 ### Corrected in P88
 
-1. Prompt/tool drift: Newelle system prompt now includes all currently exposed panel-era tool namespaces required by drift tests.
+1. Prompt/tool drift: legacy system prompt now includes all currently exposed panel-era tool namespaces required by drift tests.
 2. Phase doc status drift: P77/P78 phase docs now reflect completed status.
 3. Documentation metadata drift: phase index/register/changelog/handoff reconciled to current tranche state.
 
@@ -81,7 +81,7 @@ Perform final tranche hardening for the Unified Control Console, validate end-to
 ### Deferred (Explicit)
 
 1. P80 auth/2FA/recovery/Gmail runtime feature completion.
-2. Any hard removal of Newelle or PySide runtime surfaces (out of scope for P88).
+2. Any hard removal of legacy runtime surfaces (out of scope for P88).
 
 ## Launch Checklist (Local Operator Console)
 
@@ -98,7 +98,7 @@ Perform final tranche hardening for the Unified Control Console, validate end-to
 
 - Unified Control Console as primary documented local operator UX
 - Core panel workflows from P81-P87
-- Newelle fallback and PySide secondary support model
+- Legacy fallback and legacy secondary support model
 
 ### Partial but Acceptable
 
@@ -123,3 +123,7 @@ Perform final tranche hardening for the Unified Control Console, validate end-to
 ## Post-Launch Next Tranche Recommendation
 
 **P89 recommendation**: Complete P80 identity tranche (auth/2FA/recovery/Gmail) and perform post-launch UX refinement pass using production operator usage feedback, while preserving existing control-plane contracts.
+
+## Historical Supersession
+
+This handoff captured a period where legacy client compatibility remained in scope. A later cleanup sweep removed those runtime surfaces and shifted active guidance to console/workflow-only operation.

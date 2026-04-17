@@ -9,7 +9,6 @@ REPO_ROOT = Path(__file__).parent.parent
 ALLOWLIST_PATH = REPO_ROOT / "configs" / "mcp-bridge-allowlist.yaml"
 TOOLS_PY = REPO_ROOT / "ai" / "mcp_bridge" / "tools.py"
 SERVER_PY = REPO_ROOT / "ai" / "mcp_bridge" / "server.py"
-SYSTEM_PROMPT = REPO_ROOT / "docs" / "newelle-system-prompt.md"
 
 
 def _load_allowlist() -> dict:
@@ -55,28 +54,3 @@ class TestAllowlistVsCode:
         assert declared == actual, (
             f"server.py _TOOL_COUNT={declared} but allowlist has {actual} tools"
         )
-
-    def test_system_prompt_has_all_tools(self):
-        """Every tool in the allowlist must appear in the Newelle system prompt."""
-        allowlist = _load_allowlist()
-        prompt_text = SYSTEM_PROMPT.read_text()
-        known_missing = {
-            "intel.scrape_now",
-            "system.dep_scan",
-            "system.test_analysis",
-            "system.perf_profile",
-            "system.mcp_audit",
-            "intel.ingest_pending",
-            "workflow.history_steps",
-            "workflow.cancel",
-            "figma.list_teams",
-            "figma.list_projects",
-            "figma.list_project_files",
-            "figma.get_file",
-            "figma.find_project",
-            "figma.reconcile",
-        }
-        missing = [
-            name for name in allowlist if name not in prompt_text and name not in known_missing
-        ]
-        assert not missing, f"Tools missing from Newelle system prompt: {missing}"

@@ -26,6 +26,18 @@ Project truth model:
 - Update Notion P132 row to Done with final commit SHA, approval state approved, and validation summary.
 - Resolve legacy Notion row metadata drift where commit SHAs are pending.
 
+## Recent Session — 2026-04-17 (Cleanup Sweep)
+
+- Removed deprecated Newelle/PySide runtime surfaces from active support paths.
+- Deleted wrapper scripts: `scripts/newelle-exec.sh`, `scripts/newelle-sudo.sh`.
+- Deleted deprecated launcher: `scripts/start-security-tray-qt.sh`.
+- Deleted deprecated validator: `scripts/validate_newelle_skills.py`.
+- Removed PySide/Newelle-specific tests and dropped PySide fixture from `tests/conftest.py`.
+- Updated `docs/USER-GUIDE.md` to console/workflow-first guidance.
+- Marked `docs/newelle-system-prompt.md`, `docs/P87_MIGRATION_CUTOVER.md`, and `docs/P88_UI_HARDENING_LAUNCH_HANDOFF.md` as historical/superseded where applicable.
+- Updated `README.md`, `pyproject.toml`, and `scripts/integration-test.sh` to remove deprecated surface references.
+- Validation evidence path: `docs/evidence/cleanup-newelle-pyside/validation.md`.
+
 ## Recent Session — 2026-04-17 (P132)
 
 - Added high-risk runbook corpus under `docs/runbooks/`.

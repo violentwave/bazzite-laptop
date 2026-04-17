@@ -477,7 +477,7 @@ async def _execute_gpu_status(command: list[str]) -> str:
 
 
 async def execute_tool(tool_name: str, args: dict) -> str:
-    """Execute a tool and return redacted output safe to send to Newelle.
+    """Execute a tool and return redacted output safe to return to clients.
 
     Applies secret redaction as a final pass so no API key can leak even
     if a tool handler accidentally includes one.  ValueError from the
@@ -757,8 +757,8 @@ async def _execute_python_tool(tool_name: str, tool_def: dict, args: dict) -> st
                 models.setdefault(mode, []).append(provider)
             result = {
                 "modes": {k: {"providers": v, "count": len(v)} for k, v in models.items()},
-                "how_to_switch": "In Newelle: Settings → API → Model field. "
-                "Change from 'fast' to any mode name listed above.",
+                "how_to_switch": "Set request model to one of these mode names "
+                "(for example: 'fast', 'reason', or 'code').",
                 "proxy_url": "http://127.0.0.1:8767/v1/",
             }
             return json.dumps(result, indent=2)

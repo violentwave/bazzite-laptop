@@ -1,4 +1,4 @@
-"""FastMCP server for the Newelle MCP bridge.
+"""FastMCP server for the local MCP bridge.
 
 Exposes 52 tools + 1 health endpoint on localhost.
 NEVER bind to 0.0.0.0. NEVER import ai.router (it loads all keys unscoped).

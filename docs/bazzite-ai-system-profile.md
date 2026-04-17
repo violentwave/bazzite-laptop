@@ -17,7 +17,7 @@ This is a **Python-based AI control plane**, not a React application. The core d
 - Workflow engine with Notion/Slack phase control
 - RAG knowledge base (LanceDB)
 - Security intel and system monitoring
-- PySide6 system tray dashboard
+- Unified Control Console and workflow-driven operations
 
 **Frontend work in this repo is documentation and capability-pack only** — we generate guidance and prompts for React/Tailwind sites, not the sites themselves.
 

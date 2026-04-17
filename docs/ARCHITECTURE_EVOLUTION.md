@@ -117,7 +117,7 @@ Established governance layer with budget enforcement, semantic caching, observab
 - P39: Dependency vulnerability auditing (pip-audit)
 - P40: Intel scraper expansion (18K+ lines)
 - P41: Unified ingest pipeline
-- P42-P43: Stabilization phases (lint, Newelle sync)
+- P42-P43: Stabilization phases (lint, legacy assistant prompt sync)
 
 **Architecture impact:**
 Filled integration gaps, added dependency security scanning, unified log ingestion, and stabilized agent behavior.
@@ -130,7 +130,7 @@ Filled integration gaps, added dependency security scanning, unified log ingesti
 - P44: Input validation v2 (safety rules, validation layer)
 - P45-P49: Cache/Budget/Pattern/Memory/Insights v2 (referenced in P44)
 - P50: Integration tests for P44-P49
-- P51: Newelle skills sync (system prompt, 9 skill bundles)
+- P51: Legacy assistant skills sync (system prompt, 9 skill bundles)
 - P52: Slack + Notion integrations with scoped secret loading
 - P53: Orchestration bus with agent registry
 - P54: Workflow hardening with step-level observability
@@ -203,7 +203,7 @@ Deferred GitNexus integration due to licensing (PolyForm Noncommercial), duplica
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│ Newelle GTK4 UI (Flatpak)                                   │
+│ Unified Control Console (primary local operator surface)     │
 │ ↓ http://127.0.0.1:8767/v1 (OpenAI-compatible fast/reason)   │
 │ ↓ http://127.0.0.1:8766/mcp (FastMCP streamable-http, 96 tools)│
 └─────────────────────────────────────────────────────────────┘

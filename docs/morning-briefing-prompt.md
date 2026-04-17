@@ -1,5 +1,5 @@
 # Morning Briefing Prompt — Bazzite Gaming Laptop
-<!-- Paste into Newelle as a scheduled task (daily ~08:30) -->
+<!-- Use in Unified Control Console scheduled workflow (daily ~08:30) -->
 <!-- Last updated: 2026-03-31 -->
 
 ```

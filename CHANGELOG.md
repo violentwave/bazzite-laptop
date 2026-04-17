@@ -4,6 +4,28 @@ All significant changes. Format: date · deliverables · deltas · commit.
 
 ---
 
+## Cleanup Sweep - Deprecated Newelle/PySide Runtime Surfaces
+**Date:** 2026-04-17 · **Commit:** (pending)
+
+**Deliverables:**
+- Removed deprecated runtime wrapper scripts: `scripts/newelle-exec.sh`, `scripts/newelle-sudo.sh`
+- Removed deprecated PySide launcher script: `scripts/start-security-tray-qt.sh`
+- Removed deprecated Newelle skill validator script: `scripts/validate_newelle_skills.py`
+- Removed Newelle/PySide-focused tests and PySide test fixture wiring
+- Updated docs to console/workflow-first guidance and marked legacy prompt/migration docs as historical
+- Removed PySide-specific dependency/lint exclusions from `pyproject.toml`
+
+**Validation:**
+- `ruff check ai/ tests/ scripts/` - pass
+- `.venv/bin/python -m pytest tests/ -x -q --tb=short` - pass
+
+**Artifacts:**
+- `docs/evidence/cleanup-newelle-pyside/validation.md`
+
+**Result:** PASS - Deprecated fallback/tray runtime surfaces removed from active operation without changing MCP, LLM proxy, workflow, or runbook contracts.
+
+---
+
 ## Phase 132 — Human-in-the-loop Orchestration Runbooks
 **Date:** 2026-04-17 · **Commit:** 9e7e963
 

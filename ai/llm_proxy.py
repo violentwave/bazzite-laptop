@@ -1,6 +1,6 @@
 """Lightweight OpenAI-compatible proxy for the LiteLLM router.
 
-Exposes /v1/chat/completions on localhost so Newelle can use our full
+Exposes /v1/chat/completions on localhost so local clients can use our full
 provider fallback chain (Gemini → Groq → Mistral → OpenRouter → z.ai → Cerebras).
 
 This runs as a SEPARATE process from the MCP bridge (which must never
@@ -138,7 +138,7 @@ async def _stream_response(task_type: str, messages: list[dict]) -> AsyncGenerat
 
     If the upstream stream fails after data has already been sent to the client
     (post-commit failure), emit a graceful error chunk instead of letting
-    the raw connection error propagate to Newelle.
+    the raw connection error propagate to the caller.
     """
     try:
         async for chunk in route_query_stream(task_type, messages):
@@ -182,7 +182,7 @@ async def _stream_response(task_type: str, messages: list[dict]) -> AsyncGenerat
         return
     except Exception as e:
         # Post-commit failure — stream already started, can't retry.
-        # Send an error chunk so Newelle gets a terminated SSE stream.
+        # Send an error chunk so the caller gets a terminated SSE stream.
         logger.warning("Stream interrupted for task_type=%s: %s", task_type, e)
         error_data = {
             "id": "error",

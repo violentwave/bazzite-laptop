@@ -1,1 +1,1 @@
-"""MCP Bridge server for Newelle integration."""
+"""MCP Bridge server for local assistant integrations."""

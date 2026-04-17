@@ -4,6 +4,7 @@
 > Updated 2026-04-17.
 > Canonical source: Notion `Bazzite Phases` database + `git log` + repo artifacts.
 > Use this file as the artifact ledger. Use `docs/PHASE_INDEX.md` for the full chronological phase index.
+> Note: any legacy assistant/tray references are historical artifact labels.
 
 ## Artifact Naming Conventions
 
@@ -43,7 +44,7 @@ The repo has complete historical coverage across the earlier tranches, but older
 | P00-P18 | Foundation, router, MCP bridge, threat intel, RAG, timers, logging, docs | `ai/config.py`, `ai/router.py`, `ai/mcp_bridge/`, `ai/threat_intel/`, `ai/rag/`, `systemd/`, `docs/` |
 | P19-P28 | Validation, timer sentinel, pattern store, budget/cache/metrics/memory/provider intel/alerts/insights | `ai/security/`, `ai/agents/`, `ai/rag/`, `ai/budget.py`, `ai/cache_semantic.py`, `ai/metrics.py`, `ai/memory.py`, `ai/provider_intel.py`, `ai/alerts/`, `ai/insights.py` |
 | P29-P39 | Code intelligence, workflows, collaboration, testing intelligence, dynamic tools, dep audit | `ai/code_intel/`, `ai/workflows/`, `ai/collab/`, `ai/testing/`, `ai/tools/`, `ai/system/dep_audit.py` |
-| P40-P58 | Observability, integration tests, Newelle sync, Slack/Notion integrations, orchestration, phase control, stabilization | `ai/intel_scraper.py`, `tests/test_integration_*.py`, `docs/newelle-*`, `ai/slack/`, `ai/notion/`, `ai/orchestration/`, `ai/phase_control/` |
+| P40-P58 | Observability, integration tests, legacy assistant sync, Slack/Notion integrations, orchestration, phase control, stabilization | `ai/intel_scraper.py`, `tests/test_integration_*.py`, `docs/newelle-*`, `ai/slack/`, `ai/notion/`, `ai/orchestration/`, `ai/phase_control/` |
 | P59-P76 | Frontend capability pack, documentation normalization, code intelligence fusion, preflight, ingestion automation | `docs/frontend-capability-pack/`, `docs/patterns/frontend/`, `docs/PHASE_*.md`, `ai/code_intel/`, `ai/phase_control/` |
 | P77-P100 | Midnight Glass UI architecture, shell/settings/providers/chat/security/projects UI, runtime recovery, evidence rebaseline, Figma reconciliation, connectivity recovery | `docs/PHASE77_*`, `docs/PHASE78_*`, `ui/src/components/*`, `ui/src/hooks/*`, `ai/settings_service.py`, `ai/shell_service.py`, `ai/project_workflow_service.py`, `docs/evidence/p99/`, `docs/evidence/p100/` |
 | P101-P118 | MCP governance/discovery/marketplace/analytics/federation, browser evidence, routing persistence, chat profiles, runtime acceptance | `ai/mcp_bridge/governance/`, `ai/mcp_bridge/discovery.py`, `ai/mcp_bridge/marketplace/`, `ai/mcp_bridge/analytics_advanced/`, `ai/mcp_bridge/federation/`, `docs/evidence/p106/`, `docs/evidence/p113/`, `docs/evidence/p114/`, `docs/evidence/p115/`, `docs/evidence/p116/`, `docs/evidence/p117/`, `docs/evidence/p118/` |

@@ -69,7 +69,7 @@ Documentation for code modules stays with the module.
 **Examples:**
 - `ai/orchestration/README.md` — Orchestration module doc
 - `ai/security/input_validator.py` docstrings — Inline documentation
-- `docs/newelle-system-prompt.md` — Newelle integration doc
+- `docs/newelle-system-prompt.md` — Historical legacy-assistant integration doc
 
 ### Frontend Capability Pack → `docs/frontend-capability-pack/`
 
