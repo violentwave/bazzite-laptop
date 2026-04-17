@@ -1,6 +1,6 @@
 # Phase Index — Bazzite AI Layer
 
-> Master index of repo-tracked phases through P124.
+> Master index of repo-tracked phases through P131.
 > Updated 2026-04-17.
 > Source of truth: Notion `Bazzite Phases` database + `git log`; Notion row properties are authoritative when repo docs lag.
 
@@ -8,10 +8,10 @@
 
 | Metric | Value |
 |--------|-------|
-| Total Phases Tracked | P0-P127 complete in repo index; P128-P139 planned in Notion |
-| Completed | P0-P127 complete in current repo-ledger terms |
+| Total Phases Tracked | P0-P131 complete in repo index; P132-P139 planned in Notion |
+| Completed | P0-P131 complete in current repo-ledger terms |
 | Active | None |
-| Next Gated | P128 — Identity Step-Up |
+| Next Gated | P132 — Human-in-the-Loop Runbooks |
 | Historical Truth Conflict | P80 remains a repo-vs-Notion reconciliation note for later cleanup |
 | Repo Docs | docs/*.md, docs/patterns/frontend/*.md, docs/frontend-capability-pack/*.md |
 | Notion DB | `398c13ed-47f6-4f7e-9e54-eb339b462c90` |
@@ -32,7 +32,7 @@
 | 2026-04-13 to 2026-04-15 | P70-P118 | Documentation normalization, Midnight Glass UI, runtime repair, MCP governance, provider/routing persistence, release candidate acceptance |
 | 2026-04-16 | P119-P122 | Security Autopilot foundation: core, policy, UI surfaces, and safe remediation runner |
 | 2026-04-17 | P126-P130 | Full Autopilot Acceptance Gate + MCP Policy-as-Code + Local Identity + Workspace Isolation + Cost Quotas |
-| Next | P131+ | Replay lab, provenance graph |
+| Next | P132+ | Runbooks, provenance graph |
 
 ## Phase Index
 
@@ -167,7 +167,8 @@
 | P127 | MCP Policy-as-Code and Approval Gates | Done | aea4d5c | 2026-04-17 | ai/mcp_bridge/policy/*, tests/test_mcp_policy.py, docs/evidence/p127/validation.md | Notion row | Implemented canonical MCP tool policy metadata, default-deny evaluation, approval gate enforcement, bypass resistance, auditability, policy parity with P120/P122 |
 | P128 | Local Identity and Step-Up Security | Done | f524b84 | 2026-04-17 | ai/identity/*, tests/test_identity_stepup.py, docs/evidence/p128/validation.md | Notion row | Implemented local identity layer with step-up security, test isolation fixed (23 pass), backend enforcement, P127 policy integration |
 | P129 | Workspace and Actor Context Isolation | Done | 861a277 | 2026-04-17 | ai/context/*, tests/test_workspace_isolation.py, docs/evidence/p129/validation.md | Notion row | Implemented workspace/actor/project context isolation, server-side path restrictions, cross-project leakage prevention, audit correlation, 24 tests pass |
-| P130 | Cost Quotas and Budget Automation | Done | (pending) | 2026-04-17 | ai/budget_scoped.py, ai/budget_routing.py, tests/test_budget_scoped.py, docs/evidence/p130/validation.md | Notion row | Implemented scoped budget model with token/cost limits, warning/stop thresholds, routing constraints, audit events, 17 tests pass |
+| P130 | Cost Quotas and Budget Automation | Done | be08087 | 2026-04-17 | ai/budget_scoped.py, ai/budget_routing.py, tests/test_budget_scoped.py, docs/evidence/p130/validation.md | Notion row | Implemented scoped budget model with token/cost limits, warning/stop thresholds, routing constraints, audit events, 17 tests pass |
+| P131 | Routing Evaluation and Replay Lab | Done | (pending) | 2026-04-17 | ai/routing_replay.py, docs/routing_replay/*, tests/test_routing_replay.py, docs/evidence/p131/validation.md | Notion row | Added deterministic replay fixtures and explanation payloads comparing routing across health/cost/latency/task type/failover and P130 budget constraints |
 
 ## Notion Database Reference
 

@@ -113,6 +113,18 @@ for example: `Run a health check`.
 
 Fallback path: run the same request in Newelle if the console is unavailable.
 
+### Routing replay lab (P131)
+
+Use this evaluation-only workflow to inspect routing decisions for sanitized
+fixtures (security analysis and coding-session scenarios):
+
+```bash
+.venv/bin/python -c "from ai.routing_replay import replay_all_fixtures; import json; print(json.dumps(replay_all_fixtures(), indent=2))"
+```
+
+Replay outputs are deterministic, redacted, and do not modify production
+router defaults.
+
 ---
 
 ## 3. Daily Operations

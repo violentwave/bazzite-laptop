@@ -1,0 +1,43 @@
+{
+  "fixture_id": "stale-metrics-health-variation",
+  "title": "Stale metrics cap influences effective score",
+  "task_type": "reason",
+  "source": "security_autopilot.analysis",
+  "prompt": "Summarize anomaly spike patterns from the last seven health snapshots.",
+  "candidates": [
+    {
+      "provider": "gemini",
+      "model": "gemini/gemini-2.5-pro",
+      "task_types": ["reason"],
+      "estimated_latency_ms": 640,
+      "estimated_cost_usd": 0.0014
+    },
+    {
+      "provider": "mistral",
+      "model": "mistral/mistral-large-latest",
+      "task_types": ["reason"],
+      "estimated_latency_ms": 700,
+      "estimated_cost_usd": 0.0015
+    }
+  ],
+  "health_overrides": {
+    "gemini": {
+      "success_count": 80,
+      "failure_count": 2,
+      "consecutive_failures": 0,
+      "total_latency_ms": 50400,
+      "stale_seconds": 1200
+    },
+    "mistral": {
+      "success_count": 30,
+      "failure_count": 2,
+      "consecutive_failures": 0,
+      "total_latency_ms": 21600,
+      "stale_seconds": 40
+    }
+  },
+  "metadata": {
+    "scenario": "stale-metrics",
+    "sanitized": true
+  }
+}

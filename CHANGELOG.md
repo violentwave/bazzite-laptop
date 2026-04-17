@@ -4,8 +4,39 @@ All significant changes. Format: date · deliverables · deltas · commit.
 
 ---
 
-## Phase 130 — Cost Quotas and Budget Automation
+## Phase 131 — Routing Evaluation and Replay Lab
 **Date:** 2026-04-17 · **Commit:** (pending)
+
+**Deliverables:**
+- Added evaluation-only routing replay module in `ai/routing_replay.py`
+- Added five sanitized replay fixtures under `docs/routing_replay/fixtures/`
+- Added explanation schema doc at `docs/routing_replay/explanation_schema.md`
+- Added replay lab usage docs at `docs/routing_replay/README.md`
+- Added replay test suite `tests/test_routing_replay.py`
+- Added phase plan and validation evidence (`docs/P131_PLAN.md`, `docs/evidence/p131/validation.md`)
+- Preserved production routing defaults and avoided runtime mutation
+
+**Validation:**
+- `.venv/bin/python -m pytest tests/test_routing_replay.py tests/test_router.py -q` — 35 passed
+- `ruff check ai/ tests/` — pass
+- `.venv/bin/python -m pytest tests/test_budget_scoped.py tests/test_mcp_policy.py tests/test_security_autopilot_tools.py tests/test_agent_workbench.py -q` — 59 passed
+
+**Artifacts:**
+- `ai/routing_replay.py`
+- `docs/routing_replay/README.md`
+- `docs/routing_replay/explanation_schema.md`
+- `docs/routing_replay/fixtures/*.json`
+- `tests/test_routing_replay.py`
+- `docs/P131_PLAN.md`
+- `docs/evidence/p131/validation.md`
+
+**Result:** PASS — Routing replay lab implemented with deterministic fixtures,
+budget-aware comparisons, failover/staleness coverage, and explanation payloads.
+
+---
+
+## Phase 130 — Cost Quotas and Budget Automation
+**Date:** 2026-04-17 · **Commit:** be08087
 
 **Deliverables:**
 - Implemented scoped budget model with token/cost limits, warning/stop thresholds

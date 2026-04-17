@@ -1,0 +1,57 @@
+{
+  "fixture_id": "security-analysis-reasoning",
+  "title": "Security analysis routing with healthy fallbacks",
+  "task_type": "reason",
+  "source": "security_autopilot.analysis",
+  "prompt": "Analyze CVE trend severity and summarize likely mitigation priorities.",
+  "candidates": [
+    {
+      "provider": "gemini",
+      "model": "gemini/gemini-2.5-pro",
+      "task_types": ["reason"],
+      "estimated_latency_ms": 720,
+      "estimated_cost_usd": 0.0015
+    },
+    {
+      "provider": "groq",
+      "model": "groq/llama-3.3-70b-versatile",
+      "task_types": ["reason"],
+      "estimated_latency_ms": 420,
+      "estimated_cost_usd": 0.0008
+    },
+    {
+      "provider": "openrouter",
+      "model": "openrouter/anthropic/claude-sonnet-4",
+      "task_types": ["reason", "code"],
+      "estimated_latency_ms": 930,
+      "estimated_cost_usd": 0.0024
+    }
+  ],
+  "health_overrides": {
+    "gemini": {
+      "success_count": 45,
+      "failure_count": 3,
+      "consecutive_failures": 0,
+      "total_latency_ms": 27840,
+      "stale_seconds": 25
+    },
+    "groq": {
+      "success_count": 39,
+      "failure_count": 2,
+      "consecutive_failures": 0,
+      "total_latency_ms": 14760,
+      "stale_seconds": 20
+    },
+    "openrouter": {
+      "success_count": 12,
+      "failure_count": 5,
+      "consecutive_failures": 1,
+      "total_latency_ms": 19380,
+      "stale_seconds": 30
+    }
+  },
+  "metadata": {
+    "scenario": "security-analysis",
+    "sanitized": true
+  }
+}

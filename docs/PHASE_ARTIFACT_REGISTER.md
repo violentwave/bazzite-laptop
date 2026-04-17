@@ -23,9 +23,9 @@
 
 | Category | Current State |
 |----------|---------------|
-| Current completed Security Autopilot + Workbench phases | `P119`, `P120`, `P121`, `P122`, `P123`, `P124`, `P125`, `P126`, `P127`, `P128`, `P129`, `P130` |
+| Current completed Security Autopilot + Workbench phases | `P119`, `P120`, `P121`, `P122`, `P123`, `P124`, `P125`, `P126`, `P127`, `P128`, `P129`, `P130`, `P131` |
 | Current active phase | None |
-| Next gated phase | `P131 — Replay Lab` |
+| Next gated phase | `P132 — Human-in-the-Loop Runbooks` |
 | Primary phase truth | Notion `Bazzite Phases` row properties |
 | Lightweight session truth | `HANDOFF.md` |
 | Standing agent rules | `docs/AGENT.md` |
@@ -549,6 +549,20 @@ The repo has complete historical coverage across the earlier tranches, but older
 | Tests | `tests/test_budget_scoped.py` | 17 budget tests |
 | Evidence | `docs/evidence/p130/validation.md` | P130 validation with budget model, enforcement |
 
+### P131 — Routing Evaluation and Replay Lab
+- **Status**: Done
+- **Finished**: 2026-04-17
+
+| Type | Path | Description |
+|------|------|-------------|
+| Plan | `docs/P131_PLAN.md` | P131 scope, bounded replay requirements, and validation commands |
+| Module | `ai/routing_replay.py` | Evaluation-only replay engine with deterministic explanation payloads |
+| Fixtures | `docs/routing_replay/fixtures/` | Five sanitized replay fixtures (security, coding, failover, budget, stale metrics) |
+| Schema | `docs/routing_replay/explanation_schema.md` | Stable machine-testable explanation payload schema |
+| Docs | `docs/routing_replay/README.md` | Operator replay workflow and fixture inventory |
+| Tests | `tests/test_routing_replay.py` | Replay loading, explanation shape, failover, stale metrics, budget, redaction, deterministic behavior |
+| Evidence | `docs/evidence/p131/validation.md` | P131 validation with command results and scope-safe closeout notes |
+
 ## Cross-Phase Documentation
 
 ### Hub Docs (docs/ root)
@@ -576,7 +590,7 @@ The repo has complete historical coverage across the earlier tranches, but older
 1. Older historical phases intentionally remain summarized here and detailed in `docs/PHASE_INDEX.md`.
 2. Some earlier phases used batch commits, inferred historical boundaries, or alternative artifact types instead of dedicated `P{NN}_PLAN.md` documents.
 3. P80 remains a repo-vs-Notion truth reconciliation note for future cleanup.
-4. P125-P139 remain planned in Notion and tracked in the roadmap doc; they are not listed here as completed artifacts yet.
+4. P132-P139 remain planned in Notion and tracked in the roadmap doc; they are not listed here as completed artifacts yet.
 
 ## Cross-References
 

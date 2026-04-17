@@ -14,17 +14,27 @@ Project truth model:
 - **Last Updated:** 2026-04-17
 - **Project:** bazzite-laptop
 - **Branch:** master
-- **Completed Phases:** P119, P120, P121, P122, P123, P124, P125, P126, P127, P128, P129, P130
+- **Completed Phases:** P119, P120, P121, P122, P123, P124, P125, P126, P127, P128, P129, P130, P131
 - **Active Phase:** None
-- **Next Gated Phase:** P131 — Replay Lab
+- **Next Gated Phase:** P132 — Human-in-the-Loop Runbooks
 - **Phase Truth:** Notion Bazzite Phases database (primary)
-- **Validation State:** P130 cost quotas and budget automation implemented with 17 budget tests, warning/stop thresholds, routing constraints, audit events, all validation pass
+- **Validation State:** P131 routing replay lab implemented with sanitized fixtures, deterministic explanation payloads, failover/stale-metrics coverage, and P130 budget-aware comparisons; validation pass
 - **Current SHA:** (pending)
 
 ## Open Tasks
 
-- Update Notion P127 row to Done with final commit SHA and validation summary.
-- Update Notion P128 row to ready for implementation.
+- Update Notion P131 row to Done with final commit SHA and validation summary.
+- Replace `(pending)` SHA markers in repo ledgers during closeout sync.
+
+## Recent Session — 2026-04-17 (P131)
+
+- Added `ai/routing_replay.py` evaluation-only replay engine.
+- Added five sanitized fixtures under `docs/routing_replay/fixtures/`.
+- Added replay docs: `docs/routing_replay/README.md`, `docs/routing_replay/explanation_schema.md`.
+- Added `tests/test_routing_replay.py` (replay loading, explanation shape, stale metrics, failover, budget constraints, redaction, deterministic replay, no router mutation).
+- Added `docs/P131_PLAN.md` and `docs/evidence/p131/validation.md`.
+- Validation: routing replay + router tests pass, ruff pass, regression suite pass.
+- Scope guard: no P132/P133/P138/P139 implementation, no production routing default mutation.
 
 ## Recent Session — 2026-04-17
 

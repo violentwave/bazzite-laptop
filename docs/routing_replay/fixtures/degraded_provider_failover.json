@@ -1,0 +1,59 @@
+{
+  "fixture_id": "degraded-provider-failover",
+  "title": "Provider failover under degradation",
+  "task_type": "reason",
+  "source": "security_autopilot.analysis",
+  "prompt": "Compare two suspicious binaries and identify likely malware family overlap.",
+  "candidates": [
+    {
+      "provider": "groq",
+      "model": "groq/llama-3.3-70b-versatile",
+      "task_types": ["reason"],
+      "estimated_latency_ms": 360,
+      "estimated_cost_usd": 0.0007
+    },
+    {
+      "provider": "gemini",
+      "model": "gemini/gemini-2.5-pro",
+      "task_types": ["reason"],
+      "estimated_latency_ms": 690,
+      "estimated_cost_usd": 0.0014
+    },
+    {
+      "provider": "mistral",
+      "model": "mistral/mistral-large-latest",
+      "task_types": ["reason"],
+      "estimated_latency_ms": 760,
+      "estimated_cost_usd": 0.0016
+    }
+  ],
+  "health_overrides": {
+    "groq": {
+      "success_count": 18,
+      "failure_count": 11,
+      "consecutive_failures": 6,
+      "total_latency_ms": 10440,
+      "stale_seconds": 8,
+      "disabled": true
+    },
+    "gemini": {
+      "success_count": 35,
+      "failure_count": 2,
+      "consecutive_failures": 0,
+      "total_latency_ms": 24150,
+      "stale_seconds": 15
+    },
+    "mistral": {
+      "success_count": 20,
+      "failure_count": 4,
+      "consecutive_failures": 0,
+      "total_latency_ms": 15200,
+      "stale_seconds": 16
+    }
+  },
+  "failover_providers": ["groq"],
+  "metadata": {
+    "scenario": "failover",
+    "sanitized": true
+  }
+}
