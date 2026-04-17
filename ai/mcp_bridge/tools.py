@@ -1267,6 +1267,178 @@ async def _execute_python_tool(tool_name: str, tool_def: dict, args: dict) -> st
             limit = args.get("limit", 20)
             return json.dumps(get_recent_artifacts(limit=limit), indent=2)
 
+        # P123 Agent Workbench tools
+        elif tool_name == "workbench.project_register":
+            from ai.agent_workbench import get_registry  # noqa: PLC0415
+
+            registry = get_registry()
+            tags_raw = args.get("tags", "")
+            tags = [item.strip() for item in tags_raw.split(",") if item.strip()]
+            project = registry.register_project(
+                path=args.get("path", ""),
+                name=args.get("name") or None,
+                tags=tags,
+                description=args.get("description", ""),
+                allow_non_project_dirs=bool(args.get("allow_non_project_dirs", False)),
+            )
+            return json.dumps(
+                {
+                    "success": True,
+                    "project": project.to_dict(),
+                    "allowed_roots": registry.allowed_roots,
+                },
+                indent=2,
+            )
+
+        elif tool_name == "workbench.project_list":
+            from ai.agent_workbench import get_registry  # noqa: PLC0415
+
+            registry = get_registry()
+            projects = [item.to_dict() for item in registry.list_projects()]
+            return json.dumps(
+                {"success": True, "projects": projects, "count": len(projects)},
+                indent=2,
+            )
+
+        elif tool_name == "workbench.project_open":
+            from ai.agent_workbench import get_registry  # noqa: PLC0415
+
+            registry = get_registry()
+            project = registry.open_project(args.get("project_id", ""))
+            return json.dumps({"success": True, "project": project.to_dict()}, indent=2)
+
+        elif tool_name == "workbench.project_status":
+            from ai.agent_workbench import get_registry  # noqa: PLC0415
+
+            registry = get_registry()
+            status = registry.project_status(args.get("project_id", ""))
+            return json.dumps({"success": True, **status}, indent=2)
+
+        elif tool_name == "workbench.session_create":
+            from ai.agent_workbench import get_session_manager  # noqa: PLC0415
+
+            manager = get_session_manager()
+            session = manager.create_session(
+                project_id=args.get("project_id", ""),
+                backend=args.get("backend", ""),
+                cwd=args.get("cwd") or None,
+                sandbox_profile=args.get("sandbox_profile", "conservative"),
+                lease_minutes=int(args.get("lease_minutes", 0) or 0) or None,
+            )
+            return json.dumps({"success": True, "session": session.to_dict()}, indent=2)
+
+        elif tool_name == "workbench.session_list":
+            from ai.agent_workbench import get_session_manager  # noqa: PLC0415
+
+            manager = get_session_manager()
+            sessions = [
+                item.to_dict()
+                for item in manager.list_sessions(
+                    project_id=args.get("project_id") or None,
+                    status=args.get("status") or None,
+                )
+            ]
+            return json.dumps(
+                {"success": True, "sessions": sessions, "count": len(sessions)},
+                indent=2,
+            )
+
+        elif tool_name == "workbench.session_get":
+            from ai.agent_workbench import get_session_manager  # noqa: PLC0415
+
+            manager = get_session_manager()
+            session = manager.get_session(args.get("session_id", ""))
+            if session is None:
+                return json.dumps(
+                    {
+                        "success": False,
+                        "error_code": "session_not_found",
+                        "error": "Session not found",
+                    },
+                    indent=2,
+                )
+            return json.dumps({"success": True, "session": session.to_dict()}, indent=2)
+
+        elif tool_name == "workbench.session_stop":
+            from ai.agent_workbench import get_session_manager  # noqa: PLC0415
+
+            manager = get_session_manager()
+            session = manager.stop_session(args.get("session_id", ""))
+            return json.dumps({"success": True, "session": session.to_dict()}, indent=2)
+
+        elif tool_name == "workbench.git_status":
+            from ai.agent_workbench import get_git_status_summary, get_registry  # noqa: PLC0415
+
+            registry = get_registry()
+            project = registry.get_project(args.get("project_id", ""))
+            if project is None:
+                return json.dumps(
+                    {
+                        "success": False,
+                        "error_code": "project_not_found",
+                        "error": "Project not found",
+                    },
+                    indent=2,
+                )
+            summary = get_git_status_summary(project.root_path)
+            return json.dumps({"success": True, "git": summary.to_dict()}, indent=2)
+
+        elif tool_name == "workbench.test_commands":
+            from ai.agent_workbench import get_registry, get_test_hooks  # noqa: PLC0415
+
+            registry = get_registry()
+            project = registry.get_project(args.get("project_id", ""))
+            if project is None:
+                return json.dumps(
+                    {
+                        "success": False,
+                        "error_code": "project_not_found",
+                        "error": "Project not found",
+                    },
+                    indent=2,
+                )
+
+            hooks = get_test_hooks()
+            hooks.ensure_defaults(project.project_id, project.root_path)
+            execute = bool(args.get("execute", False))
+            command_name = args.get("command_name", "")
+            if execute:
+                if not command_name:
+                    return json.dumps(
+                        {
+                            "success": False,
+                            "error_code": "command_name_required",
+                            "error": "command_name is required when execute=true",
+                        },
+                        indent=2,
+                    )
+                result = hooks.execute_command(project.project_id, command_name, project.root_path)
+                return json.dumps({"success": True, "execution": result}, indent=2)
+
+            commands = hooks.list_commands(project.project_id)
+            return json.dumps(
+                {
+                    "success": True,
+                    "project_id": project.project_id,
+                    "commands": commands,
+                    "count": len(commands),
+                },
+                indent=2,
+            )
+
+        elif tool_name == "workbench.handoff_note":
+            from ai.agent_workbench import append_handoff_note  # noqa: PLC0415
+
+            artifacts_raw = args.get("artifacts", "")
+            artifacts = [item.strip() for item in artifacts_raw.split(",") if item.strip()]
+            result = append_handoff_note(
+                summary=args.get("summary", ""),
+                artifacts=artifacts,
+                phase=args.get("phase", "P123"),
+                session_id=args.get("session_id") or None,
+            )
+            return json.dumps(result, indent=2)
+
         elif tool_name == "code.search":
             query = args.get("query", "")
             repo_root = str(PROJECT_ROOT)
@@ -1315,7 +1487,7 @@ async def _execute_python_tool(tool_name: str, tool_def: dict, args: dict) -> st
             allowlist = _load_allowlist()
             compact_tools = {}
             for name, defn in allowlist.items():
-                desc = defn.get("description", "")[:30]
+                desc = defn.get("description", "")[:20]
                 arg_defs = defn.get("args") or {}
                 arg_names = list(arg_defs.keys()) if isinstance(arg_defs, dict) else []
                 compact_tools[name] = {"desc": desc, "args": arg_names}

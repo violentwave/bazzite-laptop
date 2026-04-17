@@ -11,58 +11,37 @@ Project truth model:
 ## Current State
 
 - **Last Tool:** ChatGPT / OpenCode
-- **Last Updated:** 2026-04-16
+- **Last Updated:** 2026-04-17
 - **Project:** bazzite-laptop
 - **Branch:** master
-- **Completed Phases:** P119 — Security Autopilot Core; P120 — Security Policy Engine
-- **Active Phase:** P122 — Safe Remediation Runner
-- **Next Gated Phase:** P122 — Safe Remediation Runner
+- **Completed Phases:** P119, P120, P121, P122, P123
+- **Active Phase:** None
+- **Next Gated Phase:** P124 — Codex/OpenCode UI Integration
 - **Phase Truth:** Notion Bazzite Phases database (primary)
-- **Validation State:** P119 and P120 reported complete and validated; P121 is the current implementation target
+- **Validation State:** P123 required validation commands passed locally (targeted tests, targeted Ruff, allowlist YAML parse, full pytest suite)
 
 ## Open Tasks
 
-- Execute or complete **P122 — Safe Remediation Runner**.
-- Keep P121 UI-first and read-only.
-- Do **not** start P122 until P121 closeout is complete.
-- Reconcile stale phase page body text during phase closeout if row properties and page body disagree.
+- Commit and push P123 changes once approved.
+- Update Notion P123 row to `Done` with final commit SHA and validation summary.
+- Start P124 only after P123 closeout metadata is fully synced.
 
 ## Phase Sequencing
 
-- P119 → P120 → **P121 (active)** → P122 (gated)
-- For detailed dependencies, approval state, blockers, validation commands, and done criteria: check Notion.
+- P119 → P120 → P121 → P122 → P123 (done) → P124 (next)
+- For dependencies, blockers, approval state, and done criteria: check Notion row properties.
 
-## For Agents Starting a Session
+## Safety Notes
 
-1. Read this file first.
-2. Check `docs/AGENT.md` for architecture, tools, paths, and hard stops.
-3. Query the Notion phase database for the current phase row, blockers, approval state, and open tasks.
-4. Execute the active phase prompt(s) only — do not assume older roadmap state is still current.
-5. Validate, commit, update repo docs, update Notion, and run `/save-handoff` at session end.
-
-**Do not rely on stale phase page body text as ground truth. Notion row properties are authoritative.**
-
-## Key Safety Notes
-
-- No arbitrary shell.
+- No arbitrary shell execution.
 - No sudo automation.
 - No destructive remediation without policy and approval gating.
-- No raw secrets in logs, screenshots, docs, or UI evidence.
-- P122 must remain Safe Remediation Runner and must not drift into generic orchestration.
+- No raw secrets in logs, screenshots, docs, or evidence artifacts.
 
-## Next Recommended Action
+## Recent Session — 2026-04-17
 
-- Continue P121 in OpenCode.
-- On closeout, update the P121 Notion row and replace any stale P121 page body text with Security Autopilot UI content.
-- After P121 is verified complete, begin P122 with fixed, allowlisted, policy-approved executor scope only.
-
-## Recent Sessions
-
-### 2026-04-16 — OpenCode
-- P119 completed locally and closed out in Notion.
-- P120 completed locally and closed out in Notion.
-- P121 kickoff prompt prepared.
-
-### 2026-04-16 — ChatGPT
-- Updated roadmap and agent guidance around Security Autopilot + Agent Workbench.
-- Reconciled Notion planning guidance, FigJam references, and repo doc follow-up tasks.
+- Implemented `ai/agent_workbench/` core package.
+- Added and wired 11 `workbench.*` MCP tools across bridge/server/allowlist.
+- Added `tests/test_agent_workbench.py` and validated P123 scope.
+- Added phase artifacts: `docs/P123_PLAN.md`, `docs/evidence/p123/validation.md`.
+- Updated ledger/docs: `CHANGELOG.md`, `docs/PHASE_INDEX.md`, `docs/PHASE_ARTIFACT_REGISTER.md`, `docs/newelle-system-prompt.md`, `docs/USER-GUIDE.md`.

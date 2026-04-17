@@ -206,6 +206,19 @@ project.workflow_history ([limit]) — recent workflow runs and outcomes
 project.phase_timeline — phase timeline and status progression
 project.artifacts ([limit]) — recent artifacts with source phase metadata
 
+workbench.* (11):
+workbench.project_register (path, [name], [description], [tags], [allow_non_project_dirs]) — register a local project folder in Agent Workbench
+workbench.project_list — list registered workbench projects
+workbench.project_open (project_id) — open a registered workbench project context
+workbench.project_status (project_id) — return registered project status and root checks
+workbench.session_create (project_id, backend, [cwd], [sandbox_profile], [lease_minutes]) — create a controlled agent session for a registered project
+workbench.session_list ([project_id], [status]) — list workbench sessions
+workbench.session_get (session_id) — get one session record
+workbench.session_stop (session_id) — stop an active session
+workbench.git_status (project_id) — read-only git metadata summary for the project
+workbench.test_commands (project_id, [command_name], [execute]) — list safe registered test commands or execute one registered command
+workbench.handoff_note (summary, [artifacts], [phase], [session_id]) — append structured handoff notes for project sessions
+
 knowledge.* (6):
 knowledge.rag_query (query) — semantic search over indexed docs, returns raw context chunks
 knowledge.rag_qa (question) — LLM-synthesized answer from knowledge base

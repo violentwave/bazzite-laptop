@@ -1,17 +1,17 @@
 # Phase Index — Bazzite AI Layer
 
-> Master index of repo-tracked phases through P122.
-> Updated 2026-04-16.
+> Master index of repo-tracked phases through P123.
+> Updated 2026-04-17.
 > Source of truth: Notion `Bazzite Phases` database + `git log`; Notion row properties are authoritative when repo docs lag.
 
 ## Quick Stats
 
 | Metric | Value |
 |--------|-------|
-| Total Phases Tracked | P0-P122 complete in repo index; P123-P139 planned in Notion |
-| Completed | P0-P122 complete in current repo-ledger terms |
+| Total Phases Tracked | P0-P123 complete in repo index; P124-P139 planned in Notion |
+| Completed | P0-P123 complete in current repo-ledger terms |
 | Active | None |
-| Next Gated | P123 — Agent Workbench Core |
+| Next Gated | P124 — Codex/OpenCode UI Integration |
 | Historical Truth Conflict | P80 remains a repo-vs-Notion reconciliation note for later cleanup |
 | Repo Docs | docs/*.md, docs/patterns/frontend/*.md, docs/frontend-capability-pack/*.md |
 | Notion DB | `398c13ed-47f6-4f7e-9e54-eb339b462c90` |
@@ -31,7 +31,8 @@
 | 2026-04-10 to 2026-04-12 | P59-P69 | Frontend capability pack: P59 (branch convergence), P60 (intelligence reliability), P61 (frontend pack), P62 (pattern intel), P63 (QA layer), P64 (design/media), P65 (runtime harness), P66 (brief intake), P67 (deployment pack), P68 (GitNexus evaluation), P69 (ops runbooks) |
 | 2026-04-13 to 2026-04-15 | P70-P118 | Documentation normalization, Midnight Glass UI, runtime repair, MCP governance, provider/routing persistence, release candidate acceptance |
 | 2026-04-16 | P119-P122 | Security Autopilot foundation: core, policy, UI surfaces, and safe remediation runner |
-| Next | P123+ | Agent Workbench and downstream acceptance phases |
+| 2026-04-17 | P123 | Agent Workbench core backend + MCP surface |
+| Next | P124+ | Agent Workbench integration and downstream acceptance phases |
 
 ## Phase Index
 
@@ -160,6 +161,7 @@
 | P120 | Security Policy Engine | Done | 9471662 | 2026-04-16 | ai/security_autopilot/policy.py, configs/security-autopilot-policy.yaml, tests/test_security_autopilot_policy.py, docs/P120_PLAN.md | Notion row | Policy modes, allow/approval/block decisions, safe defaults, malformed-input rejection, redaction-aware output |
 | P121 | Security Autopilot UI | Done | c120c9f | 2026-04-16 | ai/security_autopilot/ui_service.py, ui/src/components/security/AutopilotPanels.tsx, ui/src/hooks/useSecurityAutopilot.ts, tests/test_security_autopilot_tools.py, docs/P121_PLAN.md, docs/evidence/p121/* | Notion row | Added seven read-only autopilot surfaces with policy/evidence/audit visibility and degraded-state handling |
 | P122 | Safe Remediation Runner | Done | pending | 2026-04-16 | ai/security_autopilot/executor.py, tests/test_security_autopilot_executor.py, docs/P122_PLAN.md, docs/evidence/p122/* | Notion row | Added fixed allowlisted remediation execution with P120 policy gating, approval enforcement, deterministic rejection paths, and audit/evidence records for every attempt |
+| P123 | Agent Workbench Core | Done | pending | 2026-04-17 | ai/agent_workbench/*, ai/mcp_bridge/{tools.py,server.py}, configs/mcp-bridge-allowlist.yaml, tests/test_agent_workbench.py, docs/P123_PLAN.md, docs/evidence/p123/* | Notion row | Added bounded project/session workbench primitives and 11 `workbench.*` MCP tools with allowlist, safety checks, and validation evidence |
 
 ## Notion Database Reference
 

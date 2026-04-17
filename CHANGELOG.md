@@ -4,6 +4,25 @@ All significant changes. Format: date · deliverables · deltas · commit.
 
 ---
 
+## Phase 123 — Agent Workbench Core
+**Date:** 2026-04-17 · **Commit:** pending
+
+**Deliverables:**
+- Added new `ai/agent_workbench/` package for project registry, session lifecycle, sandbox profiles, read-only git summaries, safe test command execution, and structured handoff notes.
+- Added 11 MCP `workbench.*` tool handlers in `ai/mcp_bridge/tools.py`.
+- Added MCP server workbench tool annotations/argument registration in `ai/mcp_bridge/server.py`.
+- Added allowlist contracts for all `workbench.*` tools in `configs/mcp-bridge-allowlist.yaml`.
+- Added `tests/test_agent_workbench.py` coverage for path safety, registry/session persistence, command restrictions, and MCP envelopes.
+- Synced tool drift docs in `docs/newelle-system-prompt.md` and added phase artifacts `docs/P123_PLAN.md` and `docs/evidence/p123/validation.md`.
+
+**Validation:**
+- `.venv/bin/python -m pytest tests/test_agent_workbench.py -q`
+- `ruff check ai/agent_workbench tests/test_agent_workbench.py`
+- `.venv/bin/python -c "from pathlib import Path; import yaml; yaml.safe_load(Path('configs/mcp-bridge-allowlist.yaml').read_text()); print('allowlist yaml parse ok')"`
+- `.venv/bin/python -m pytest tests/ -q --tb=short`
+
+---
+
 ## Phase 122 — Safe Remediation Runner
 **Date:** 2026-04-16 · **Commit:** pending
 

@@ -174,6 +174,18 @@ def create_app():
         # ── workflows ─────────────────────────────────────────────────────────
         "workflow.run": {"readOnlyHint": False, "idempotentHint": False},
         "workflow.list": {"readOnlyHint": True, "idempotentHint": True},
+        # ── P123 agent workbench ─────────────────────────────────────────────
+        "workbench.project_register": {"readOnlyHint": False, "idempotentHint": False},
+        "workbench.project_list": {"readOnlyHint": True, "idempotentHint": True},
+        "workbench.project_open": {"readOnlyHint": False, "idempotentHint": False},
+        "workbench.project_status": {"readOnlyHint": True, "idempotentHint": True},
+        "workbench.session_create": {"readOnlyHint": False, "idempotentHint": False},
+        "workbench.session_list": {"readOnlyHint": True, "idempotentHint": True},
+        "workbench.session_get": {"readOnlyHint": True, "idempotentHint": True},
+        "workbench.session_stop": {"readOnlyHint": False, "idempotentHint": False},
+        "workbench.git_status": {"readOnlyHint": True, "idempotentHint": True},
+        "workbench.test_commands": {"readOnlyHint": False, "idempotentHint": False},
+        "workbench.handoff_note": {"readOnlyHint": False, "idempotentHint": False},
         # ── dynamic tools ─────────────────────────────────────────────────────
         "system.create_tool": {
             "readOnlyHint": False,
@@ -876,6 +888,66 @@ def create_app():
                     args["command"] = command
                 if limit is not None:
                     args["limit"] = limit
+                return await execute_tool(_tn, args)
+
+        elif tool_name.startswith("workbench."):
+
+            @mcp.tool(name=tool_name, description=description, annotations=ann)
+            async def _handler_workbench(
+                project_id: str | None = None,
+                path: str | None = None,
+                name: str | None = None,
+                description: str | None = None,
+                tags: str | None = None,
+                allow_non_project_dirs: bool | None = None,
+                backend: str | None = None,
+                cwd: str | None = None,
+                sandbox_profile: str | None = None,
+                lease_minutes: int | None = None,
+                status: str | None = None,
+                session_id: str | None = None,
+                command_name: str | None = None,
+                execute: bool | None = None,
+                summary: str | None = None,
+                artifacts: str | None = None,
+                phase: str | None = None,
+                _tn=tool_name,
+            ):
+                args = {}
+                if project_id is not None:
+                    args["project_id"] = project_id
+                if path is not None:
+                    args["path"] = path
+                if name is not None:
+                    args["name"] = name
+                if description is not None:
+                    args["description"] = description
+                if tags is not None:
+                    args["tags"] = tags
+                if allow_non_project_dirs is not None:
+                    args["allow_non_project_dirs"] = allow_non_project_dirs
+                if backend is not None:
+                    args["backend"] = backend
+                if cwd is not None:
+                    args["cwd"] = cwd
+                if sandbox_profile is not None:
+                    args["sandbox_profile"] = sandbox_profile
+                if lease_minutes is not None:
+                    args["lease_minutes"] = lease_minutes
+                if status is not None:
+                    args["status"] = status
+                if session_id is not None:
+                    args["session_id"] = session_id
+                if command_name is not None:
+                    args["command_name"] = command_name
+                if execute is not None:
+                    args["execute"] = execute
+                if summary is not None:
+                    args["summary"] = summary
+                if artifacts is not None:
+                    args["artifacts"] = artifacts
+                if phase is not None:
+                    args["phase"] = phase
                 return await execute_tool(_tn, args)
 
         elif tool_name.startswith("provider."):

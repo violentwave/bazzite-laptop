@@ -200,7 +200,7 @@ bash scripts/start-security-tray-qt.sh
 
 ---
 
-## 4. MCP Tools Reference (182 tools)
+## 4. MCP Tools Reference (193 tools)
 
 Tools are exposed through the MCP bridge and consumed by the Unified Control Console
 as primary UX, with Newelle as a supported fallback client. Tool outputs are
@@ -225,7 +225,7 @@ truncated to 4 KB and paths are redacted.
 | `system.uptime`            | —                            | System uptime and load average                     |
 | `system.service_status`    | —                            | Status of clamav-freshclam, system-health.timer, mcp-bridge, llm-proxy |
 | `system.llm_models`        | —                            | Available modes (fast/reason/batch/code/embed), provider chains, proxy URL |
-| `system.mcp_manifest`      | —                            | All 96 tools with descriptions and args (8 KB limit) |
+| `system.mcp_manifest`      | —                            | Full allowlisted tool manifest with compact descriptions and args |
 | `system.llm_status`        | —                            | Provider health scores, token usage, active models |
 | `system.key_status`        | —                            | API key presence: "set" or "missing" per key (never values) |
 | `system.release_watch`     | —                            | Upstream dependency release updates (GitHub Releases, GHSA) |
@@ -361,6 +361,22 @@ truncated to 4 KB and paths are redacted.
 | `workflow.history_steps` | `limit`                           | List recent runs with step-level summaries         |
 | `workflow.cancel`    | `run_id`                              | Cancel pending or running steps for a run          |
 
+### workbench.* (11 tools)
+
+| Tool                         | Args                                                      | What it returns |
+|------------------------------|-----------------------------------------------------------|-----------------|
+| `workbench.project_register` | `path`, `name`, `description`, `tags`, `allow_non_project_dirs` | Register a local project under allowed roots |
+| `workbench.project_list`     | —                                                         | List registered workbench projects |
+| `workbench.project_open`     | `project_id`                                              | Mark a registered project as opened |
+| `workbench.project_status`   | `project_id`                                              | Project existence and root-policy status |
+| `workbench.session_create`   | `project_id`, `backend`, `cwd`, `sandbox_profile`, `lease_minutes` | Create a controlled agent session |
+| `workbench.session_list`     | `project_id`, `status`                                    | List workbench sessions |
+| `workbench.session_get`      | `session_id`                                              | Get one session record |
+| `workbench.session_stop`     | `session_id`                                              | Stop a workbench session |
+| `workbench.git_status`       | `project_id`                                              | Read-only git branch/dirty/change metadata |
+| `workbench.test_commands`    | `project_id`, `command_name`, `execute`                  | List safe test commands or execute a registered one |
+| `workbench.handoff_note`     | `summary`, `artifacts`, `phase`, `session_id`            | Append structured workbench handoff note |
+
 ### intel.* (2 tools)
 
 | Tool                  | Args       | What it returns                                        |
@@ -382,7 +398,7 @@ truncated to 4 KB and paths are redacted.
 
 | Tool     | Returns                           |
 |----------|-----------------------------------|
-| `health` | `{"status": "ok", "tools": 96}`   |
+| `health` | `{"status": "ok", "tools": <allowlist-count>}` |
 
 ---
 

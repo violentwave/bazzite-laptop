@@ -1,7 +1,7 @@
 # Phase Artifact Register — Bazzite AI Layer
 
 > Per-phase inventory of repo artifacts and Notion references.
-> Updated 2026-04-16.
+> Updated 2026-04-17.
 > Canonical source: Notion `Bazzite Phases` database + `git log` + repo artifacts.
 > Use this file as the artifact ledger. Use `docs/PHASE_INDEX.md` for the full chronological phase index.
 
@@ -23,9 +23,9 @@
 
 | Category | Current State |
 |----------|---------------|
-| Current completed Security Autopilot phases | `P119`, `P120` |
-| Current active phase | `P121 — Security Autopilot UI` |
-| Next gated phase | `P122 — Safe Remediation Runner` |
+| Current completed Security Autopilot phases | `P119`, `P120`, `P121`, `P122` |
+| Current active phase | None |
+| Next gated phase | `P124 — Codex/OpenCode UI Integration` |
 | Primary phase truth | Notion `Bazzite Phases` row properties |
 | Lightweight session truth | `HANDOFF.md` |
 | Standing agent rules | `docs/AGENT.md` |
@@ -327,6 +327,25 @@ The repo has complete historical coverage across the earlier tranches, but older
   - deterministic rejection for unknown/unsafe/malformed requests
   - audit + evidence emission for every attempted action
 
+### P123 — Agent Workbench Core
+- **Status**: Done
+- **Finished**: 2026-04-17
+- **Commit SHA**: pending
+- **Repo Artifacts**:
+  - `ai/agent_workbench/`
+  - `ai/mcp_bridge/tools.py`
+  - `ai/mcp_bridge/server.py`
+  - `configs/mcp-bridge-allowlist.yaml`
+  - `tests/test_agent_workbench.py`
+  - `docs/P123_PLAN.md`
+  - `docs/evidence/p123/validation.md`
+- **Notion**: P123 row in progress during implementation; done on closeout
+- **Key Output**:
+  - bounded project registry with allowed-root path policy
+  - controlled session lifecycle with backend allowlist and cwd boundary checks
+  - read-only git status summaries and safe registered test command execution
+  - 11 `workbench.*` MCP tools with allowlist contracts and drift-doc alignment
+
 ### P119 — Security Autopilot Core
 - **Status**: Done
 - **Finished**: 2026-04-16
@@ -387,6 +406,20 @@ The repo has complete historical coverage across the earlier tranches, but older
 | Package Export | `ai/security_autopilot/__init__.py` | Exports for executor request/result and approval metadata |
 | Tests | `tests/test_security_autopilot_executor.py` | Coverage for execution, rejection paths, safety checks, approval enforcement, and rollback metadata |
 
+### P123 — Agent Workbench Core
+- **Status**: Done
+- **Finished**: 2026-04-17
+
+| Type | Path | Description |
+|------|------|-------------|
+| Plan | `docs/P123_PLAN.md` | P123 scope, constraints, validation commands, and done criteria |
+| Evidence | `docs/evidence/p123/validation.md` | Validation command outputs and pass/fail summary |
+| Backend Package | `ai/agent_workbench/` | Project registry, sessions, sandbox profiles, git summary, testing hooks, and handoff helper |
+| MCP Bridge | `ai/mcp_bridge/tools.py` | Added 11 `workbench.*` handlers with stable JSON envelopes |
+| MCP Server | `ai/mcp_bridge/server.py` | Added workbench annotations and argument pass-through registration |
+| Config | `configs/mcp-bridge-allowlist.yaml` | Added allowlist entries and argument schemas for all `workbench.*` tools |
+| Tests | `tests/test_agent_workbench.py` | Coverage for path safety, persistence, session rules, command restrictions, and MCP envelopes |
+
 ## Cross-Phase Documentation
 
 ### Hub Docs (docs/ root)
@@ -414,7 +447,7 @@ The repo has complete historical coverage across the earlier tranches, but older
 1. Older historical phases intentionally remain summarized here and detailed in `docs/PHASE_INDEX.md`.
 2. Some earlier phases used batch commits, inferred historical boundaries, or alternative artifact types instead of dedicated `P{NN}_PLAN.md` documents.
 3. P80 remains a repo-vs-Notion truth reconciliation note for future cleanup.
-4. P123-P139 are planned in Notion and tracked in the roadmap doc; they are not listed here as completed artifacts yet.
+4. P124-P139 are planned in Notion and tracked in the roadmap doc; they are not listed here as completed artifacts yet.
 
 ## Cross-References
 
