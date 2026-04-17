@@ -69,7 +69,7 @@ pycairo==1.28.0
 pycparser==2.22
 pycups==2.0.4
 pydantic==2.12.5
-pydantic_core==2.41.5
+pydantic_core==2.46.2
 pydbus==0.6.0
 pyenchant==3.2.2
 pygdbmi==0.11.0.0
