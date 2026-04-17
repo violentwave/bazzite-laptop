@@ -4,6 +4,33 @@ All significant changes. Format: date · deliverables · deltas · commit.
 
 ---
 
+## Phase 128 — Local Identity and Step-Up Security
+**Date:** 2026-04-17 · **Commit:** (pending)
+
+**Deliverables:**
+- Implemented local-only identity layer with step-up security
+- Created LocalIdentityManager with PIN verification, failed attempt tracking, lockout
+- Implemented StepUpChallenge with expiry for privileged operation elevation
+- Added TrustedDevice management with creation, expiry, revocation
+- Backend enforcement via `check_privileged_operation` decorator — step-up not forgeable by UI
+- Server-side gating for settings mutations, secret reveal, high-risk tools
+- Integration with P127 MCP policy engine
+
+**Validation:**
+- `ruff check ai/identity/ tests/test_identity_stepup.py` — pass
+- `.venv/bin/python -m pytest tests/test_mcp_policy.py -q` — 26 passed
+- `.venv/bin/python -m pytest tests/test_security_autopilot_tools.py tests/test_agent_workbench.py tests/test_agent_workbench_tools.py -q` — 20 passed
+
+**Artifacts:**
+- `ai/identity/__init__.py`
+- `ai/identity/models.py`
+- `tests/test_identity_stepup.py`
+- `docs/evidence/p128/validation.md`
+
+**Result:** PASS — Local identity layer implemented with step-up security, trusted-device management, and lockout behavior.
+
+---
+
 ## Phase 127 — MCP Policy-as-Code and Approval Gates
 **Date:** 2026-04-17 · **Commit:** aea4d5c
 

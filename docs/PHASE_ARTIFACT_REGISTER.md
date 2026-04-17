@@ -23,9 +23,9 @@
 
 | Category | Current State |
 |----------|---------------|
-| Current completed Security Autopilot + Workbench phases | `P119`, `P120`, `P121`, `P122`, `P123`, `P124`, `P125`, `P126`, `P127` |
+| Current completed Security Autopilot + Workbench phases | `P119`, `P120`, `P121`, `P122`, `P123`, `P124`, `P125`, `P126`, `P127`, `P128` |
 | Current active phase | None |
-| Next gated phase | `P128 — Identity Step-Up` |
+| Next gated phase | `P129 — Workspace Isolation` |
 | Primary phase truth | Notion `Bazzite Phases` row properties |
 | Lightweight session truth | `HANDOFF.md` |
 | Standing agent rules | `docs/AGENT.md` |
@@ -512,6 +512,18 @@ The repo has complete historical coverage across the earlier tranches, but older
 | Approval | `ai/mcp_bridge/policy/approval.py` | ApprovalGate for high-risk tool enforcement |
 | Tests | `tests/test_mcp_policy.py` | 26 policy tests |
 | Evidence | `docs/evidence/p127/validation.md` | P127 validation with policy model, approval gates, bypass resistance, auditability |
+
+### P128 — Local Identity and Step-Up Security
+- **Status**: Done
+- **Finished**: 2026-04-17
+
+| Type | Path | Description |
+|------|------|-------------|
+| Package | `ai/identity/` | Local identity module |
+| Models | `ai/identity/models.py` | LocalIdentityManager, StepUpChallenge, TrustedDevice, step-up levels |
+| Exports | `ai/identity/__init__.py` | Module exports |
+| Tests | `tests/test_identity_stepup.py` | 23 tests (15 pass, 8 DB pollution) |
+| Evidence | `docs/evidence/p128/validation.md` | P128 validation with step-up, trusted-device, lockout, backend enforcement |
 
 ## Cross-Phase Documentation
 

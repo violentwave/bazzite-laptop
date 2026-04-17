@@ -31,8 +31,8 @@
 | 2026-04-10 to 2026-04-12 | P59-P69 | Frontend capability pack: P59 (branch convergence), P60 (intelligence reliability), P61 (frontend pack), P62 (pattern intel), P63 (QA layer), P64 (design/media), P65 (runtime harness), P66 (brief intake), P67 (deployment pack), P68 (GitNexus evaluation), P69 (ops runbooks) |
 | 2026-04-13 to 2026-04-15 | P70-P118 | Documentation normalization, Midnight Glass UI, runtime repair, MCP governance, provider/routing persistence, release candidate acceptance |
 | 2026-04-16 | P119-P122 | Security Autopilot foundation: core, policy, UI surfaces, and safe remediation runner |
-| 2026-04-17 | P126-P127 | Full Autopilot Acceptance Gate + MCP Policy-as-Code |
-| Next | P128+ | Identity step-up and workspace isolation |
+| 2026-04-17 | P126-P128 | Full Autopilot Acceptance Gate + MCP Policy-as-Code + Local Identity |
+| Next | P129+ | Workspace isolation |
 
 ## Phase Index
 
@@ -165,6 +165,7 @@
 | P124 | Codex/OpenCode UI Integration | Done | pending | 2026-04-17 | ui/src/components/workbench/*, ui/src/hooks/useAgentWorkbench.ts, ui/src/types/agent-workbench.ts, ui/src/app/page.tsx, ui/src/components/shell/{IconRail.tsx,CommandPalette.tsx}, tests/test_agent_workbench_tools.py, docs/P124_PLAN.md, docs/evidence/p124/* | Notion row | Added integrated Agent Workbench panel with real project/session/git/test/handoff flows and truthful degraded-state rendering |
 | P126 | Full Autopilot Acceptance Gate | Done | 7d3b17b | 2026-04-17 | docs/evidence/p126/validation.md | Notion row | Validated P119-P125 as integrated system with policy/approval gates, safety proofs, MCP/LLM health, UI build, no unrestricted AI/shell/secrets |
 | P127 | MCP Policy-as-Code and Approval Gates | Done | aea4d5c | 2026-04-17 | ai/mcp_bridge/policy/*, tests/test_mcp_policy.py, docs/evidence/p127/validation.md | Notion row | Implemented canonical MCP tool policy metadata, default-deny evaluation, approval gate enforcement, bypass resistance, auditability, policy parity with P120/P122 |
+| P128 | Local Identity and Step-Up Security | Done | (pending) | 2026-04-17 | ai/identity/*, tests/test_identity_stepup.py, docs/evidence/p128/validation.md | Notion row | Implemented local identity layer with step-up security, trusted-device management, lockout behavior, backend enforcement, P127 policy integration |
 
 ## Notion Database Reference
 
