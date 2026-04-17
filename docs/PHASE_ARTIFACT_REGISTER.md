@@ -23,9 +23,9 @@
 
 | Category | Current State |
 |----------|---------------|
-| Current completed Security Autopilot phases | `P119`, `P120`, `P121`, `P122` |
+| Current completed Security Autopilot + Workbench phases | `P119`, `P120`, `P121`, `P122`, `P123`, `P124` |
 | Current active phase | None |
-| Next gated phase | `P124 — Codex/OpenCode UI Integration` |
+| Next gated phase | `P125 — Runtime acceptance gates` |
 | Primary phase truth | Notion `Bazzite Phases` row properties |
 | Lightweight session truth | `HANDOFF.md` |
 | Standing agent rules | `docs/AGENT.md` |
@@ -346,6 +346,27 @@ The repo has complete historical coverage across the earlier tranches, but older
   - read-only git status summaries and safe registered test command execution
   - 11 `workbench.*` MCP tools with allowlist contracts and drift-doc alignment
 
+### P124 — Codex/OpenCode UI Integration
+- **Status**: Done
+- **Finished**: 2026-04-17
+- **Commit SHA**: pending
+- **Repo Artifacts**:
+  - `ui/src/components/workbench/`
+  - `ui/src/hooks/useAgentWorkbench.ts`
+  - `ui/src/types/agent-workbench.ts`
+  - `ui/src/app/page.tsx`
+  - `ui/src/components/shell/IconRail.tsx`
+  - `ui/src/components/shell/CommandPalette.tsx`
+  - `tests/test_agent_workbench_tools.py`
+  - `docs/P124_PLAN.md`
+  - `docs/evidence/p124/`
+- **Notion**: P124 row pending final Done sync with commit SHA and validation summary
+- **Key Output**:
+  - unified Agent Workbench panel integrated into console navigation and routing
+  - real project picker, bounded agent/profile controls, and session lifecycle actions
+  - read-only git diff metadata, safe registered test execution, and handoff/artifact capture
+  - explicit degraded-state rendering with no fake green states or secret exposure
+
 ### P119 — Security Autopilot Core
 - **Status**: Done
 - **Finished**: 2026-04-16
@@ -420,6 +441,23 @@ The repo has complete historical coverage across the earlier tranches, but older
 | Config | `configs/mcp-bridge-allowlist.yaml` | Added allowlist entries and argument schemas for all `workbench.*` tools |
 | Tests | `tests/test_agent_workbench.py` | Coverage for path safety, persistence, session rules, command restrictions, and MCP envelopes |
 
+### P124 — Codex/OpenCode UI Integration
+- **Status**: Done
+- **Finished**: 2026-04-17
+
+| Type | Path | Description |
+|------|------|-------------|
+| Plan | `docs/P124_PLAN.md` | P124 objective, UI scope, boundaries, and validation outcomes |
+| Evidence | `docs/evidence/p124/validation.md` | Validation command outcomes, service checks, and browser runtime notes |
+| Evidence | `docs/evidence/p124/screenshots/` | Browser screenshots for project/session/git/test/handoff and degraded MCP state |
+| UI Components | `ui/src/components/workbench/` | Workbench panel container and project/agent/session/git/test/handoff surfaces |
+| UI Hook | `ui/src/hooks/useAgentWorkbench.ts` | MCP-backed project/session/git/test/handoff orchestration with truthful errors |
+| UI Types | `ui/src/types/agent-workbench.ts` | Workbench contracts for project/session/git/test/handoff payloads |
+| UI Integration | `ui/src/app/page.tsx` | Panel routing and status integration for Agent Workbench |
+| Shell Navigation | `ui/src/components/shell/IconRail.tsx` | Added Workbench navigation entry to unified icon rail |
+| Command Palette | `ui/src/components/shell/CommandPalette.tsx` | Added Workbench navigation command |
+| Tests | `tests/test_agent_workbench_tools.py` | MCP contract coverage for P124 UI-dependent workbench envelopes |
+
 ## Cross-Phase Documentation
 
 ### Hub Docs (docs/ root)
@@ -447,7 +485,7 @@ The repo has complete historical coverage across the earlier tranches, but older
 1. Older historical phases intentionally remain summarized here and detailed in `docs/PHASE_INDEX.md`.
 2. Some earlier phases used batch commits, inferred historical boundaries, or alternative artifact types instead of dedicated `P{NN}_PLAN.md` documents.
 3. P80 remains a repo-vs-Notion truth reconciliation note for future cleanup.
-4. P124-P139 are planned in Notion and tracked in the roadmap doc; they are not listed here as completed artifacts yet.
+4. P125-P139 remain planned in Notion and tracked in the roadmap doc; they are not listed here as completed artifacts yet.
 
 ## Cross-References
 

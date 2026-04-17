@@ -12,7 +12,7 @@ The Bazzite AI Layer adds cloud-powered threat intelligence, RAG-based
 knowledge search, LLM routing, and system monitoring to the base Bazzite
 security/gaming setup.
 
-**Primary operator interface**: Unified Control Console (P83-P86 panel set)
+**Primary operator interface**: Unified Control Console (P83-P86 core panels + P124 Agent Workbench)
 **Fallback interface**: Newelle (Flatpak GTK4 chat/voice)
 **Secondary status surface**: PySide6 tray app
 
@@ -28,7 +28,7 @@ P80 (auth/2FA/recovery/Gmail) remains deferred unless completed in a separate ph
 
 ### Launch Status (P111)
 
-- **Ready now**: Unified Control Console local launch for core operator workflows (P81-P87) and Tool Control Center (P110)
+- **Ready now**: Unified Control Console local launch for core operator workflows (P81-P87), Tool Control Center (P110), and Agent Workbench panel (P124)
 - **Production Gate Passed**: P111 Final Acceptance 
 - **Partial but acceptable**: identity hardening beyond PIN-gated settings
 - **Deferred**: P80 auth/2FA/recovery/Gmail runtime flows

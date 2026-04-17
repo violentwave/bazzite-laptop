@@ -8,6 +8,7 @@ import { SecurityContainer } from "@/components/security/SecurityContainer";
 import { ShellContainer } from "@/components/shell-gateway/ShellContainer";
 import { ProjectWorkflowContainer } from "@/components/project-workflow/ProjectWorkflowContainer";
 import { ToolControlCenterContainer } from "@/components/tool-control/ToolControlCenterContainer";
+import { WorkbenchContainer } from "@/components/workbench/WorkbenchContainer";
 
 export default function Home() {
   const { activePanel } = useShell();
@@ -50,6 +51,8 @@ export default function Home() {
           <ShellContainer />
         ) : activePanel === "projects" ? (
           <ProjectWorkflowContainer />
+        ) : activePanel === "workbench" ? (
+          <WorkbenchContainer />
         ) : (
           <div className="h-full overflow-auto p-6">
             <PanelContent panel={activePanel} />
@@ -141,6 +144,23 @@ function PanelIcon({ panel }: { panel: string }) {
           <line x1="6" y1="20" x2="6" y2="14" />
         </svg>
       );
+    case "workbench":
+      return (
+        <svg
+          style={iconStyle}
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+        >
+          <path d="M3 7h18" />
+          <path d="M6 7V5a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v2" />
+          <path d="M14 7V5a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v2" />
+          <rect x="4" y="7" width="16" height="13" rx="2" />
+          <path d="M10 12h4" />
+          <path d="M12 10v4" />
+        </svg>
+      );
     case "settings":
       return (
         <svg
@@ -167,6 +187,7 @@ function getPanelTitle(panel: string): string {
     models: "Models & Providers",
     terminal: "Terminal",
     projects: "Projects & Phases",
+    workbench: "Agent Workbench",
     settings: "Settings",
   };
   return titles[panel] || "Unknown Panel";
@@ -294,6 +315,23 @@ function PanelStatus({ panel }: { panel: string }) {
           PIN Required
         </div>
       );
+    case "workbench":
+      return (
+        <div
+          className="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs"
+          style={{
+            background: "var(--base-02)",
+            color: "var(--accent-primary)",
+            border: "1px solid var(--base-04)",
+          }}
+        >
+          <span
+            className="w-2 h-2 rounded-full"
+            style={{ background: "var(--accent-primary)" }}
+          />
+          Bounded Sessions
+        </div>
+      );
     default:
       return null;
   }
@@ -309,6 +347,8 @@ function PanelContent({ panel }: { panel: string }) {
       return <TerminalPlaceholder />;
     case "projects":
       return <ProjectsPlaceholder />;
+    case "workbench":
+      return <WorkbenchContainer />;
     case "settings":
       return <SettingsPlaceholder />;
     default:

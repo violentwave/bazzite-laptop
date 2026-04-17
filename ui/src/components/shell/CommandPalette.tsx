@@ -17,7 +17,8 @@ const commands: Command[] = [
   { id: "goto-models", title: "Go to Models", shortcut: "⌘3", category: "Navigation", panel: "models" },
   { id: "goto-terminal", title: "Go to Terminal", shortcut: "⌘4", category: "Navigation", panel: "terminal" },
   { id: "goto-projects", title: "Go to Projects", shortcut: "⌘5", category: "Navigation", panel: "projects" },
-  { id: "goto-settings", title: "Go to Settings", shortcut: "⌘6", category: "Navigation", panel: "settings" },
+  { id: "goto-workbench", title: "Go to Workbench", shortcut: "⌘6", category: "Navigation", panel: "workbench" },
+  { id: "goto-settings", title: "Go to Settings", shortcut: "⌘7", category: "Navigation", panel: "settings" },
 ];
 
 export function CommandPalette() {

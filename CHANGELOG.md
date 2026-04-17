@@ -4,6 +4,26 @@ All significant changes. Format: date · deliverables · deltas · commit.
 
 ---
 
+## Phase 124 — Codex/OpenCode UI Integration
+**Date:** 2026-04-17 · **Commit:** pending
+
+**Deliverables:**
+- Added Agent Workbench navigation to the Unified Control Console shell and command palette.
+- Added `ui/src/types/agent-workbench.ts` and `ui/src/hooks/useAgentWorkbench.ts` for real MCP-backed workbench state (projects, sessions, git, tests, handoff).
+- Added integrated Workbench panel surfaces in `ui/src/components/workbench/*` for project picker, agent selector, session lifecycle, git status, test execution, and handoff artifacts.
+- Added `tests/test_agent_workbench_tools.py` for MCP tool contract coverage used by the UI.
+- Added phase docs and runtime evidence at `docs/P124_PLAN.md` and `docs/evidence/p124/*`.
+
+**Validation:**
+- `cd ui && npx tsc --noEmit`
+- `cd ui && npm run build`
+- `.venv/bin/python -m pytest tests/test_agent_workbench_tools.py -q`
+- `ruff check ai/ tests/`
+- `.venv/bin/python -m pytest tests/test_agent_workbench.py -q`
+- `python3 -c "import yaml; yaml.safe_load(open('configs/mcp-bridge-allowlist.yaml')); print('allowlist parse ok')"`
+
+---
+
 ## Phase 123 — Agent Workbench Core
 **Date:** 2026-04-17 · **Commit:** 14b0f78
 
