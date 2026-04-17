@@ -25,6 +25,7 @@ from ai.identity.models import (
     complete_step_up,
     get_identity_manager,
     require_step_up,
+    reset_identity_manager,
 )
 
 __all__ = [
@@ -38,4 +39,5 @@ __all__ = [
     "complete_step_up",
     "get_identity_manager",
     "require_step_up",
+    "reset_identity_manager",
 ]

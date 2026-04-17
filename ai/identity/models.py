@@ -378,14 +378,27 @@ class LocalIdentityManager:
 
 
 _identity_manager: LocalIdentityManager | None = None
+_test_mode = False
 
 
-def get_identity_manager() -> LocalIdentityManager:
-    """Get or create global identity manager."""
-    global _identity_manager
+def get_identity_manager(db_path: Path | None = None) -> LocalIdentityManager:
+    """Get or create global identity manager.
+
+    Args:
+        db_path: Optional override for testing. If provided, creates isolated manager.
+    """
+    global _identity_manager, _test_mode
+    if db_path is not None:
+        return LocalIdentityManager(db_path=db_path)
     if _identity_manager is None:
         _identity_manager = LocalIdentityManager()
     return _identity_manager
+
+
+def reset_identity_manager() -> None:
+    """Reset global identity manager for testing."""
+    global _identity_manager
+    _identity_manager = None
 
 
 def require_step_up(operation: str) -> dict:
