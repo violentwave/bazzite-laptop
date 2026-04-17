@@ -4,6 +4,28 @@ All significant changes. Format: date · deliverables · deltas · commit.
 
 ---
 
+## Phase 125 — Browser Runtime Acceptance
+**Date:** 2026-04-17 · **Commit:** 28bf021
+
+**Deliverables:**
+- Validated Security Autopilot UI (P121) runtime acceptance via browser inspection.
+- Validated Agent Workbench UI (P124) runtime acceptance via browser inspection.
+- Verified MCP bridge and LLM proxy health endpoints.
+- Created runtime validation evidence at `docs/evidence/p125/validation.md`.
+- Created phase plan at `docs/P125_PLAN.md`.
+
+**Validation:**
+- MCP bridge running at http://127.0.0.1:8766
+- LLM proxy health: `{"status":"ok","service":"bazzite-llm-proxy"}`
+- `cd ui && npx tsc --noEmit` — pass
+- `cd ui && npm run build` — pass
+- `ruff check ai/ tests/` — pass
+- `.venv/bin/python -m pytest tests/test_security_autopilot_tools.py tests/test_agent_workbench.py tests/test_agent_workbench_tools.py -q` — 20 passed
+
+**Scope Confirmation:** P126 (Full Autopilot Acceptance Gate) NOT implemented.
+
+---
+
 ## Phase 124 — Codex/OpenCode UI Integration
 **Date:** 2026-04-17 · **Commit:** pending
 

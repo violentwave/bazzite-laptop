@@ -14,20 +14,19 @@ Project truth model:
 - **Last Updated:** 2026-04-17
 - **Project:** bazzite-laptop
 - **Branch:** master
-- **Completed Phases:** P119, P120, P121, P122, P123, P124
+- **Completed Phases:** P119, P120, P121, P122, P123, P124, P125
 - **Active Phase:** None
-- **Next Gated Phase:** P125 — Runtime acceptance gates
+- **Next Gated Phase:** P126 — Full Autopilot Acceptance Gate
 - **Phase Truth:** Notion Bazzite Phases database (primary)
-- **Validation State:** P124 required validation commands passed locally (UI typecheck/build, workbench tool tests, Ruff ai/tests, P123 regression test, allowlist YAML parse, browser evidence bundle)
+- **Validation State:** P125 validation commands passed (MCP/LLM health, UI typecheck/build, Ruff lint, 20 targeted tests, browser runtime evidence)
 
 ## Open Tasks
 
-- Update Notion P124 row to `Done` with final commit SHA and validation summary after push.
-- Run `/save-handoff --tool opencode --summary "P124 complete: Agent Workbench UI integrated with project picker, agent selector, session lifecycle, git/test views, handoff/artifact surfaces, browser evidence, docs, and validation."` at session close.
+- Update Notion P125 row to `Done` with final commit SHA and validation summary.
 
 ## Phase Sequencing
 
-- P119 → P120 → P121 → P122 → P123 → P124 (done) → P125 (next)
+- P119 → P120 → P121 → P122 → P123 → P124 → P125 (done) → P126 (next)
 - For dependencies, blockers, approval state, and done criteria: check Notion row properties.
 
 ## Safety Notes
@@ -39,9 +38,13 @@ Project truth model:
 
 ## Recent Session — 2026-04-17
 
-- Implemented P124 Agent Workbench UI integration inside the existing Unified Control Console shell.
-- Added new Workbench UI surfaces under `ui/src/components/workbench/` plus `ui/src/hooks/useAgentWorkbench.ts` and `ui/src/types/agent-workbench.ts`.
-- Wired Workbench navigation and panel routing in `ui/src/components/shell/IconRail.tsx`, `ui/src/components/shell/CommandPalette.tsx`, and `ui/src/app/page.tsx`.
-- Added MCP/UI contract tests in `tests/test_agent_workbench_tools.py`.
-- Captured runtime evidence in `docs/evidence/p124/screenshots/` including degraded MCP-offline state.
-- Updated docs/ledgers: `docs/P124_PLAN.md`, `docs/evidence/p124/validation.md`, `CHANGELOG.md`, `docs/PHASE_INDEX.md`, `docs/PHASE_ARTIFACT_REGISTER.md`, `docs/USER-GUIDE.md`, and `HANDOFF.md`.
+- Validated P125 Browser Runtime Acceptance.
+- Verified MCP bridge and LLM proxy health endpoints.
+- Ran UI typecheck (tsc --noEmit) — pass.
+- Ran UI production build — pass.
+- Ran Ruff lint — pass.
+- Ran targeted pytest (security_autopilot_tools, agent_workbench, agent_workbench_tools) — 20 passed.
+- Verified Security Autopilot UI components exist (SecurityContainer.tsx, AutopilotPanels.tsx, useSecurityAutopilot.ts hooks).
+- Verified Agent Workbench UI components exist (WorkbenchContainer.tsx, ProjectPicker, AgentSelector, SessionPanel, GitStatusPanel, TestResultsPanel, HandoffPanel).
+- Confirmed P126 not implemented.
+- Created docs/evidence/p125/validation.md and docs/P125_PLAN.md.

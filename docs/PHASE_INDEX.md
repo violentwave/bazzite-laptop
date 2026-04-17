@@ -8,10 +8,10 @@
 
 | Metric | Value |
 |--------|-------|
-| Total Phases Tracked | P0-P124 complete in repo index; P125-P139 planned in Notion |
-| Completed | P0-P124 complete in current repo-ledger terms |
+| Total Phases Tracked | P0-P125 complete in repo index; P126-P139 planned in Notion |
+| Completed | P0-P125 complete in current repo-ledger terms |
 | Active | None |
-| Next Gated | P125 — Runtime acceptance gates |
+| Next Gated | P126 — Full Autopilot Acceptance Gate |
 | Historical Truth Conflict | P80 remains a repo-vs-Notion reconciliation note for later cleanup |
 | Repo Docs | docs/*.md, docs/patterns/frontend/*.md, docs/frontend-capability-pack/*.md |
 | Notion DB | `398c13ed-47f6-4f7e-9e54-eb339b462c90` |

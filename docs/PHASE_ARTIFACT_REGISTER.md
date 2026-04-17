@@ -23,9 +23,9 @@
 
 | Category | Current State |
 |----------|---------------|
-| Current completed Security Autopilot + Workbench phases | `P119`, `P120`, `P121`, `P122`, `P123`, `P124` |
+| Current completed Security Autopilot + Workbench phases | `P119`, `P120`, `P121`, `P122`, `P123`, `P124`, `P125` |
 | Current active phase | None |
-| Next gated phase | `P125 — Runtime acceptance gates` |
+| Next gated phase | `P126 — Full Autopilot Acceptance Gate` |
 | Primary phase truth | Notion `Bazzite Phases` row properties |
 | Lightweight session truth | `HANDOFF.md` |
 | Standing agent rules | `docs/AGENT.md` |
@@ -349,7 +349,7 @@ The repo has complete historical coverage across the earlier tranches, but older
 ### P124 — Codex/OpenCode UI Integration
 - **Status**: Done
 - **Finished**: 2026-04-17
-- **Commit SHA**: pending
+- **Commit SHA**: 28bf021
 - **Repo Artifacts**:
   - `ui/src/components/workbench/`
   - `ui/src/hooks/useAgentWorkbench.ts`
@@ -360,12 +360,26 @@ The repo has complete historical coverage across the earlier tranches, but older
   - `tests/test_agent_workbench_tools.py`
   - `docs/P124_PLAN.md`
   - `docs/evidence/p124/`
-- **Notion**: P124 row pending final Done sync with commit SHA and validation summary
 - **Key Output**:
   - unified Agent Workbench panel integrated into console navigation and routing
   - real project picker, bounded agent/profile controls, and session lifecycle actions
   - read-only git diff metadata, safe registered test execution, and handoff/artifact capture
   - explicit degraded-state rendering with no fake green states or secret exposure
+
+### P125 — Browser Runtime Acceptance
+- **Status**: Done
+- **Finished**: 2026-04-17
+- **Commit SHA**: 28bf021
+- **Repo Artifacts**:
+  - `docs/P125_PLAN.md`
+  - `docs/evidence/p125/validation.md`
+- **Key Output**:
+  - Validated Security Autopilot UI (P121) runtime acceptance
+  - Validated Agent Workbench UI (P124) runtime acceptance
+  - MCP bridge and LLM proxy health verified
+  - UI typecheck, build, lint, and tests pass
+  - Browser evidence at http://localhost:3000 shows unified console with Security and Workbench panels
+  - P126 scope NOT implemented
 
 ### P119 — Security Autopilot Core
 - **Status**: Done
