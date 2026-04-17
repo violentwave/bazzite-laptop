@@ -14,12 +14,12 @@ Project truth model:
 - **Last Updated:** 2026-04-17
 - **Project:** bazzite-laptop
 - **Branch:** master
-- **Completed Phases:** P119, P120, P121, P122, P123, P124, P125, P126, P127, P128
+- **Completed Phases:** P119, P120, P121, P122, P123, P124, P125, P126, P127, P128, P129
 - **Active Phase:** None
-- **Next Gated Phase:** P129 — Workspace Isolation
+- **Next Gated Phase:** P130 — Cost Quotas
 - **Phase Truth:** Notion Bazzite Phases database (primary)
-- **Validation State:** P127 MCP policy-as-code implemented with canonical tool policy metadata, high-risk approval enforcement, default-deny, auditability, policy parity tests (26 policy + 20 existing tests pass)
-- **Current SHA:** aea4d5c
+- **Validation State:** P128 identity tests fixed (23 pass), P129 workspace/context isolation implemented with 24 isolation tests, all validation commands pass
+- **Current SHA:** 0e3c3a1
 
 ## Open Tasks
 
@@ -99,3 +99,22 @@ Project truth model:
 - Privileged operations gated server-side.
 - Created docs/evidence/p128/validation.md.
 - Result: **PASS** — P128 can be marked Done.
+
+## P129 Implementation — 2026-04-17
+
+- Fixed P128 test isolation: added tmp_path fixture, reset_identity_manager(), fixed mocker usage.
+- All 23 P128 identity tests now pass.
+- Created `ai/context/` module with:
+  - models.py: WorkspaceContext, ActorContext, ProjectContext, SessionContext, AuditContext
+  - isolation.py: Server-side enforcement, path validation, cross-project checks
+  - paths.py: Path utilities for artifact scope
+- Created `tests/test_workspace_isolation.py` (24 tests all pass).
+- Ruff: ✅ All checks passed.
+- Isolation tests: ✅ 24 passed.
+- Identity tests: ✅ 23 passed (P128 fix).
+- Context model: workspace_id, actor_id, project_id attached to sessions, audit.
+- Path restrictions: traversal, symlink escape, out-of-scope rejected.
+- Cross-project leakage: prevented by server-side checks.
+- Sanitization: no secrets/PINs/paths in logs.
+- Created docs/evidence/p129/validation.md.
+- Result: **PASS** — P129 can be marked Done.

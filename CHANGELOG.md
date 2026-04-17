@@ -4,8 +4,38 @@ All significant changes. Format: date · deliverables · deltas · commit.
 
 ---
 
-## Phase 128 — Local Identity and Step-Up Security
+## Phase 129 — Workspace and Actor Context Isolation
 **Date:** 2026-04-17 · **Commit:** (pending)
+
+**Deliverables:**
+- Fixed P128 test isolation (tmp_path fixture, reset_identity_manager, mocker fix)
+- All 23 P128 identity tests now pass
+- Created ai/context/ module with context models (workspace, actor, project, session, audit)
+- Server-side isolation enforcement (not UI-dependent)
+- Path validation: traversal, symlink escape, out-of-scope rejected
+- Cross-project access prevention tested
+- Audit context with correlation IDs for all operations
+- Sanitization: no secrets/PINs/paths in logs
+
+**Validation:**
+- `ruff check ai/context/ tests/test_workspace_isolation.py` — pass
+- `.venv/bin/python -m pytest tests/test_identity_stepup.py -q` — 23 passed
+- `.venv/bin/python -m pytest tests/test_workspace_isolation.py -q` — 24 passed
+
+**Artifacts:**
+- `ai/context/__init__.py`
+- `ai/context/models.py`
+- `ai/context/isolation.py`
+- `ai/context/paths.py`
+- `tests/test_workspace_isolation.py`
+- `docs/evidence/p129/validation.md`
+
+**Result:** PASS — Workspace/actor context isolation implemented with server-side enforcement, path restrictions, cross-project leakage prevention.
+
+---
+
+## Phase 128 — Local Identity and Step-Up Security
+**Date:** 2026-04-17 · **Commit:** f524b84
 
 **Deliverables:**
 - Implemented local-only identity layer with step-up security
@@ -15,11 +45,12 @@ All significant changes. Format: date · deliverables · deltas · commit.
 - Backend enforcement via `check_privileged_operation` decorator — step-up not forgeable by UI
 - Server-side gating for settings mutations, secret reveal, high-risk tools
 - Integration with P127 MCP policy engine
+- Fixed test isolation (tmp_path fixture, reset_identity_manager, mocker) - all 23 tests pass
 
 **Validation:**
 - `ruff check ai/identity/ tests/test_identity_stepup.py` — pass
+- `.venv/bin/python -m pytest tests/test_identity_stepup.py -q` — 23 passed
 - `.venv/bin/python -m pytest tests/test_mcp_policy.py -q` — 26 passed
-- `.venv/bin/python -m pytest tests/test_security_autopilot_tools.py tests/test_agent_workbench.py tests/test_agent_workbench_tools.py -q` — 20 passed
 
 **Artifacts:**
 - `ai/identity/__init__.py`
@@ -27,7 +58,7 @@ All significant changes. Format: date · deliverables · deltas · commit.
 - `tests/test_identity_stepup.py`
 - `docs/evidence/p128/validation.md`
 
-**Result:** PASS — Local identity layer implemented with step-up security, trusted-device management, and lockout behavior.
+**Result:** PASS — Local identity layer with step-up security, test isolation fixed.
 
 ---
 
