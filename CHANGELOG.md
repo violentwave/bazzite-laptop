@@ -4,6 +4,34 @@ All significant changes. Format: date · deliverables · deltas · commit.
 
 ---
 
+## Phase 130 — Cost Quotas and Budget Automation
+**Date:** 2026-04-17 · **Commit:** (pending)
+
+**Deliverables:**
+- Implemented scoped budget model with token/cost limits, warning/stop thresholds
+- Created ai/budget_scoped.py with BudgetScope, Budget, BudgetManager
+- Created ai/budget_routing.py with BudgetRoutingGuard for provider constraints
+- Budget scopes: global, workspace, project, session, autopilot_run
+- Warning threshold (default 80%) and hard stop (default 100%)
+- Audit events for warning/stop/routing to budget-audit.jsonl
+- Provider routing respects budget constraints
+- No silent partial-result loss - explicit allowed/reason in responses
+
+**Validation:**
+- `ruff check ai/budget_scoped.py ai/budget_routing.py tests/test_budget_scoped.py` — pass
+- `.venv/bin/python -m pytest tests/test_budget_scoped.py -q` — 17 passed
+- `.venv/bin/python -m pytest tests/test_budget.py tests/test_identity_stepup.py tests/test_workspace_isolation.py tests/test_mcp_policy.py -q` — 84 passed
+
+**Artifacts:**
+- `ai/budget_scoped.py`
+- `ai/budget_routing.py`
+- `tests/test_budget_scoped.py`
+- `docs/evidence/p130/validation.md`
+
+**Result:** PASS — Cost quotas and budget automation implemented.
+
+---
+
 ## Phase 129 — Workspace and Actor Context Isolation
 **Date:** 2026-04-17 · **Commit:** (pending)
 

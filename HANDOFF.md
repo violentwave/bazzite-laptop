@@ -14,12 +14,12 @@ Project truth model:
 - **Last Updated:** 2026-04-17
 - **Project:** bazzite-laptop
 - **Branch:** master
-- **Completed Phases:** P119, P120, P121, P122, P123, P124, P125, P126, P127, P128, P129
+- **Completed Phases:** P119, P120, P121, P122, P123, P124, P125, P126, P127, P128, P129, P130
 - **Active Phase:** None
-- **Next Gated Phase:** P130 — Cost Quotas
+- **Next Gated Phase:** P131 — Replay Lab
 - **Phase Truth:** Notion Bazzite Phases database (primary)
-- **Validation State:** P128 identity tests fixed (23 pass), P129 workspace/context isolation implemented with 24 isolation tests, all validation commands pass
-- **Current SHA:** 0e3c3a1
+- **Validation State:** P130 cost quotas and budget automation implemented with 17 budget tests, warning/stop thresholds, routing constraints, audit events, all validation pass
+- **Current SHA:** (pending)
 
 ## Open Tasks
 
@@ -118,3 +118,19 @@ Project truth model:
 - Sanitization: no secrets/PINs/paths in logs.
 - Created docs/evidence/p129/validation.md.
 - Result: **PASS** — P129 can be marked Done.
+
+## P130 Implementation — 2026-04-17
+
+- Implemented cost quotas and budget automation.
+- Created `ai/budget_scoped.py` with BudgetScope, Budget, BudgetManager, enforcement states.
+- Created `ai/budget_routing.py` with BudgetRoutingGuard for provider routing constraints.
+- Created `tests/test_budget_scoped.py` (17 tests all pass).
+- Budget scopes: global, workspace, project, session, autopilot_run.
+- Warning threshold (default 80%) and hard stop (default 100%).
+- Audit events for warning/stop/routing to budget-audit.jsonl.
+- No silent partial-result loss - explicit allowed/reason in responses.
+- Ruff: ✅ All checks passed.
+- Budget tests: ✅ 17 passed.
+- Existing tests: ✅ 84 passed.
+- Created docs/evidence/p130/validation.md.
+- Result: **PASS** — P130 can be marked Done.

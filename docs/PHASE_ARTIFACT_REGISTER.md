@@ -23,9 +23,9 @@
 
 | Category | Current State |
 |----------|---------------|
-| Current completed Security Autopilot + Workbench phases | `P119`, `P120`, `P121`, `P122`, `P123`, `P124`, `P125`, `P126`, `P127`, `P128`, `P129` |
+| Current completed Security Autopilot + Workbench phases | `P119`, `P120`, `P121`, `P122`, `P123`, `P124`, `P125`, `P126`, `P127`, `P128`, `P129`, `P130` |
 | Current active phase | None |
-| Next gated phase | `P130 — Cost Quotas` |
+| Next gated phase | `P131 — Replay Lab` |
 | Primary phase truth | Notion `Bazzite Phases` row properties |
 | Lightweight session truth | `HANDOFF.md` |
 | Standing agent rules | `docs/AGENT.md` |
@@ -537,6 +537,17 @@ The repo has complete historical coverage across the earlier tranches, but older
 | Paths | `ai/context/paths.py` | Path utilities for artifact scope |
 | Tests | `tests/test_workspace_isolation.py` | 24 isolation tests |
 | Evidence | `docs/evidence/p129/validation.md` | P129 validation with context model, path restrictions, cross-project prevention |
+
+### P130 — Cost Quotas and Budget Automation
+- **Status**: Done
+- **Finished**: 2026-04-17
+
+| Type | Path | Description |
+|------|------|-------------|
+| Package | `ai/budget_scoped.py` | Scoped budget model with limits, warning/stop |
+| Routing | `ai/budget_routing.py` | BudgetRoutingGuard for provider constraints |
+| Tests | `tests/test_budget_scoped.py` | 17 budget tests |
+| Evidence | `docs/evidence/p130/validation.md` | P130 validation with budget model, enforcement |
 
 ## Cross-Phase Documentation
 
