@@ -10,7 +10,7 @@ attrs==26.1.0
 authlib==1.6.9
 bandit==1.9.4
 beartype==0.22.9
-boto3==1.42.73
+boto3==1.42.90
 botocore==1.42.81
 cachetools==7.0.5
 caio==0.9.25
