@@ -19,7 +19,7 @@ Project truth model:
 - **Next Gated Phase:** P135 — see Notion phase row
 - **Phase Truth:** Notion Bazzite Phases database (primary)
 - **Validation State:** P134 self-healing control plane implemented with detection checks, fixed repair actions, policy gating, approval requirements, and cooldown/no-loop behavior
-- **Current SHA:** 81daf2c
+- **Current SHA:** a89e82f
 
 ## Open Tasks
 
