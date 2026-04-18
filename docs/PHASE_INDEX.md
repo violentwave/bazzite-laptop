@@ -10,8 +10,8 @@
 | Metric | Value |
 |--------|-------|
 | Total Phases Tracked | P0-P141 tracked in repo index |
-| Completed | P0-P140 complete in current repo-ledger terms |
-| Active | P141 — Workspace Evidence Refresh and Post-closeout Polish |
+| Completed | P0-P141 complete in current repo-ledger terms |
+| Active | None |
 | Next Gated | P142 — (see Notion row) |
 | Historical Truth Conflict | P80 remains a repo-vs-Notion reconciliation note for later cleanup |
 | Repo Docs | docs/*.md, docs/patterns/frontend/*.md, docs/frontend-capability-pack/*.md |
@@ -179,7 +179,7 @@
 | P138 | Browser/Service Canary Release Automation | Done | [TBD] | 2026-04-18 | ai/canary.py, scripts/canary.sh, tests/test_canary.py, docs/P138_PLAN.md, docs/evidence/p138/validation.md | Notion row | Added canary runner with 6 stages (preflight, service health, MCP tools, UI build, policy gates, evidence bundle), non-destructive validation, fail-closed behavior |
 | P139 | Pre-P140 contract and readiness alignment | Done | 99cf063 | 2026-04-18 | HANDOFF.md, docs/AGENT.md, Notion P140 contract references | Notion row | Prepared final P140 execution contract, guardrails, and acceptance checklist path |
 | P140 | Chat Workspace and Home Screen Operator Integration | Done | f3c1795 | 2026-04-18 | ui/src/components/{chat,home,shell}/*, ui/src/hooks/{useChat,useProviders}.ts, ui/src/lib/{workspace-session-binding,thread-store,operator-runtime,home-dashboard,console-simplify}.*, docs/evidence/p140/validation.md | Notion row `346f793e-df7b-815c-9eb4-f727888095b4` | Integrated Home + Chat operator flows, truthful runtime/tool surfaces, thread organization/merge/archive UX, and closeout reconciliation |
-| P141 | Workspace Evidence Refresh and Post-closeout Polish | In Progress | (pending) | 2026-04-18 | docs/evidence/p141/screenshots/*, docs/evidence/p141/validation.md, Chat/Home wording polish files | Notion row `346f793e-df7b-81df-88dd-e7d1953e7672` | Refreshing final canonical evidence and post-closeout UX polish without reopening P140 models |
+| P141 | Workspace Evidence Refresh and Post-closeout Polish | Done | 58a2934 | 2026-04-18 | docs/evidence/p141/screenshots/*, docs/evidence/p141/validation.md, Chat/Home wording polish files | Notion row `346f793e-df7b-81df-88dd-e7d1953e7672` | Final Home/Chat evidence refresh completed with post-closeout UX polish and reconciled ledger truth |
 
 ## Notion Database Reference
 

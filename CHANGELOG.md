@@ -5,7 +5,7 @@ All significant changes. Format: date · deliverables · deltas · commit.
 ---
 
 ## Phase 141 — Workspace Evidence Refresh and Post-closeout Polish
-**Date:** 2026-04-18 · **Commit:** (pending)
+**Date:** 2026-04-18 · **Commit:** 58a2934
 
 **Deliverables:**
 - Refreshed final-state evidence with canonical P141 screenshot set under `docs/evidence/p141/screenshots/`

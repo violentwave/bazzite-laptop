@@ -15,11 +15,11 @@ Project truth model:
 - **Project:** bazzite-laptop
 - **Branch:** master
 - **Completed Phases:** P119, P120, P121, P122, P123, P124, P125, P126, P127, P128, P129, P130, P131, P132, P133, P134, P135, P136, P137, P138, P139
-- **Active Phase:** P141 — see Notion phase row
-- **Next Gated Phase:** P141 — see Notion phase row
+- **Active Phase:** P142 — see Notion phase row
+- **Next Gated Phase:** P142 — see Notion phase row
 - **Phase Truth:** Notion Bazzite Phases database (primary)
-- **Validation State:** P140 committed/pushed and closed; P141 in progress for evidence refresh and post-closeout polish.
-- **Current SHA:** f3c1795
+- **Validation State:** P140 and P141 closed. P141 evidence refresh, UX polish, and Notion reconciliation complete.
+- **Current SHA:** 58a2934
 
 ## Recent Session — 2026-04-18 (P141 start)
 
@@ -46,6 +46,10 @@ Project truth model:
   - `p141-archived-restore-flow-final.png`
   - `p141-runtime-state-final.png`
 - Added `docs/evidence/p141/validation.md` with scope/done-criteria mapping and command validation.
+- Completed closeout:
+  - `cd ui && npx tsc --noEmit` pass
+  - `cd ui && npm run build` pass
+  - Notion P141 row updated to `Done` with commit `58a2934`, validation summary, finished date, and cleared blocker.
 
 ## Recent Session — 2026-04-18 (P140)
 

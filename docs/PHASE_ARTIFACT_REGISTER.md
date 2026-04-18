@@ -680,8 +680,9 @@ The repo has complete historical coverage across the earlier tranches, but older
 | Utilities | `ui/src/lib/{workspace-session-binding,thread-store,operator-runtime,home-dashboard,console-simplify}.*` | Runtime truth, thread grouping/merge, UI simplification helpers |
 
 ### P141 — Workspace Evidence Refresh and Post-closeout Polish
-- **Status**: In Progress
-- **Finished**: 2026-04-18 (pending final commit)
+- **Status**: Done
+- **Finished**: 2026-04-18
+- **Commit SHA**: `58a2934`
 
 | Type | Path | Description |
 |------|------|-------------|
@@ -718,7 +719,7 @@ The repo has complete historical coverage across the earlier tranches, but older
 1. Older historical phases intentionally remain summarized here and detailed in `docs/PHASE_INDEX.md`.
 2. Some earlier phases used batch commits, inferred historical boundaries, or alternative artifact types instead of dedicated `P{NN}_PLAN.md` documents.
 3. P80 remains a repo-vs-Notion truth reconciliation note for future cleanup.
-4. P141 is now the active polish/evidence-refresh phase; closeout will normalize this section to Done with commit SHA and final Notion sync.
+4. P141 is complete with refreshed canonical evidence and Notion row reconciled to Done.
 
 ## Cross-References
 
