@@ -9,21 +9,24 @@ interface ToolResultCardProps {
 
 export function ToolResultCard({ toolCall }: ToolResultCardProps) {
   const [isExpanded, setIsExpanded] = useState(true);
-  const { name, arguments: args, result, status } = toolCall;
+  const { name, arguments: args, argumentsSummary, result, status } = toolCall;
 
   const isPending = status === 'pending';
   const isSuccess = status === 'success';
   const isError = status === 'error';
+  const isBlocked = status === 'blocked';
 
   return (
     <div
       className="rounded-lg border overflow-hidden motion-safe:transition-all motion-safe:duration-300"
       style={{
         background: 'var(--base-02)',
-        borderColor: isError ? 'var(--danger)' : 'var(--base-04)',
+        borderColor: isError || isBlocked ? 'var(--danger)' : 'var(--base-04)',
         borderLeftWidth: '3px',
         borderLeftColor: isError
           ? 'var(--danger)'
+          : isBlocked
+          ? 'var(--warning)'
           : isSuccess
           ? 'var(--success)'
           : 'var(--warning)',
@@ -43,6 +46,8 @@ export function ToolResultCard({ toolCall }: ToolResultCardProps) {
                 ? 'var(--warning)'
                 : isSuccess
                 ? 'var(--success)'
+                : isBlocked
+                ? 'var(--warning)'
                 : 'var(--danger)',
             }}
           >
@@ -50,6 +55,8 @@ export function ToolResultCard({ toolCall }: ToolResultCardProps) {
               <SpinnerIcon />
             ) : isSuccess ? (
               <CheckIcon />
+            ) : isBlocked ? (
+              <BlockedIcon />
             ) : (
               <ErrorIcon />
             )}
@@ -70,17 +77,26 @@ export function ToolResultCard({ toolCall }: ToolResultCardProps) {
                   ? 'rgba(245, 158, 11, 0.1)'
                   : isSuccess
                   ? 'rgba(34, 197, 94, 0.1)'
+                  : isBlocked
+                  ? 'rgba(245, 158, 11, 0.1)'
                   : 'rgba(239, 68, 68, 0.1)',
                 color: isPending
                   ? 'var(--warning)'
                   : isSuccess
                   ? 'var(--success)'
+                  : isBlocked
+                  ? 'var(--warning)'
                   : 'var(--danger)',
               }}
             >
-              {isPending ? 'Running' : isSuccess ? 'Success' : 'Error'}
+              {isPending ? 'Running' : isSuccess ? 'Success' : isBlocked ? 'Blocked' : 'Error'}
             </span>
           </div>
+          {argumentsSummary && (
+            <span className="text-[11px]" style={{ color: 'var(--text-tertiary)' }}>
+              {argumentsSummary}
+            </span>
+          )}
         </div>
 
         <div className="flex items-center gap-2">
@@ -146,12 +162,12 @@ export function ToolResultCard({ toolCall }: ToolResultCardProps) {
                 <SpinnerIcon />
                 Executing...
               </div>
-            ) : isError && result?.error ? (
+            ) : (isError || isBlocked) && result?.error ? (
               <div
                 className="text-sm p-2 rounded"
                 style={{
-                  background: 'rgba(239, 68, 68, 0.1)',
-                  color: 'var(--danger)',
+                  background: isBlocked ? 'rgba(245, 158, 11, 0.1)' : 'rgba(239, 68, 68, 0.1)',
+                  color: isBlocked ? 'var(--warning)' : 'var(--danger)',
                 }}
               >
                 {result.error}
@@ -228,6 +244,23 @@ function ErrorIcon() {
     >
       <line x1="18" x2="6" y1="6" y2="18" />
       <line x1="6" x2="18" y1="6" y2="18" />
+    </svg>
+  );
+}
+
+function BlockedIcon() {
+  return (
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      style={{ color: 'white' }}
+    >
+      <circle cx="12" cy="12" r="10" />
+      <line x1="4" x2="20" y1="12" y2="12" />
     </svg>
   );
 }

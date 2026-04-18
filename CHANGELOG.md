@@ -11,32 +11,57 @@ All significant changes. Format: date · deliverables · deltas · commit.
 - Wired hamburger/menu to actual rail toggle behavior in TopBar
 - Added persistent thread organization: recent, pinned, project-grouped
 - Added local-only storage indicator (truthful labeling)
-- Added explicit Home controls: mode/profile, provider, model (from live MCP discovery)
-- Surfaced tool capability in chat with execution trace visibility
-- Added project-bound context controls: project selector, memory policy visibility
-- Added ThreadSidebar component with thread management
-- Extended ChatProfileSelector with provider/model dropdowns
+- Added thread-side project assignment flow (move to project/folder from ThreadSidebar)
+- Added canonical runtime session binding for provider/model/mode/project and invalid-selection fail paths
+- Added truthful runtime introspection and operator action surface (`/runtime`, `/tools`, `/project`, etc.)
+- Added explicit tool trace statuses including blocked/degraded handling
+- Added distinct `Home Dashboard` panel with live project entrypoint, recent threads, security/runtime widgets, and quick actions
+- Applied Simplification Tranches A, B, C, and Refinement Pass 1 and 2:
+  - Condensed Home dashboard into summary-first cards, removing form clutter
+  - Condensed Chat Workspace header into a clean runtime strip with toggleable diagnostics
+  - Upgraded Thread Sidebar with bulk-select mode, contextual kebab menus, and clean project grouping
+  - Implemented true chronological thread merging with auditability (`sourceThreadIds`) and explicit cross-project conflict resolution
+  - Fixed runtime consistency bugs and tool discovery paths (`listTools`)
+  - Cleaned up empty-state chat, hiding advanced UI and providing minimal guidance/controls
+  - Ensured runtime tuple, bind badge, and diagnostics view derive from one consistent binding state
+  - Refined degraded-state messages to be concise and kept details in expandable diagnostics
+  - Integrated provider/model selection into empty-state WelcomeScreen
+  - Polished Thread Rail: Improved thread item layout (title, project/folder, timestamp, markers), ensured only one thread action menu can be open at a time (z-index/focus), improved keyboard accessibility for modals (Escape key closes).
+- Added pass 4E + Simplification tranches acceptance screenshot bundle for Home/Chat operator flows
 
 **Validation:**
+- `cd ui && node --test src/lib/workspace-session-binding.test.mjs src/lib/thread-store.test.mjs src/lib/operator-runtime.test.mjs src/lib/home-dashboard.test.mjs src/lib/console-simplify.test.mjs` — 24 passed
 - `cd ui && npx tsc --noEmit` — pass
 - `cd ui && npm run build` — pass
 
 **Files Modified:**
-- `ui/src/components/shell/TopBar.tsx` — wire hamburger → toggleRail
-- `ui/src/hooks/useChat.ts` — add thread persistence
-- `ui/src/types/chat.ts` — add Thread type
-- `ui/src/components/chat/ThreadSidebar.tsx` — new component
-- `ui/src/components/chat/ChatProfileSelector.tsx` — add provider/model
-- `ui/src/components/chat/ChatContainer.tsx` — integrate all components
+- `ui/src/hooks/useChat.ts` — runtime binding, operator intents/actions, degraded-state truth messaging, bulk selection, merge execution, empty-state cleanup
+- `ui/src/lib/llm-client.ts` — runtime binding headers through LLM request path
+- `ui/src/lib/workspace-session-binding.*` — runtime validation helpers + tests
+- `ui/src/lib/thread-store.*` — thread organization, merging helpers + tests
+- `ui/src/lib/operator-runtime.*` — operator grounding helpers + tests
+- `ui/src/components/chat/ThreadSidebar.tsx` — thread rename/move/archive, bulk selection, merge modals
+- `ui/src/components/chat/ChatContainer.tsx` — runtime badges, location indicator, diagnostics, operator action surface, empty-state simplification, WelcomeScreen integration
+- `ui/src/components/home/HomeContainer.tsx` — Home dashboard implementation, project creation validation
+- `ui/src/lib/home-dashboard.*` — Home widget helpers + tests
+- `ui/src/lib/console-simplify.*` — Simplification helpers + tests
+- `ui/src/components/shell/{ShellContext,IconRail,CommandPalette,TopBar}.tsx` — Home panel routing and navigation context
+- `ui/src/app/page.tsx` — Home panel render path
+- `docs/evidence/p140/screenshots/*` — acceptance evidence screenshots
+- `docs/USER-GUIDE.md` — updated with Home vs Chat responsibilities and bulk actions
 
 **Constraints Verified:**
-- Local-first truth: Thread storage labeled "Local only"
+- Local-first truth: Thread storage labeled "Local only", merged threads retain original ordering
 - No hardcoded catalogs: Providers/models from live MCP calls
 - No fake execution: Tool results show real status/duration/error
-- Midnight Glass: Consistent design tokens
-- No dead buttons: All controls functional
+- No fake widget metrics: Home widgets sourced from live hooks/runtime state
+- No dead buttons: Home/Chat controls route to live surfaces or actionable tool paths
+- No silent destruction: Original threads during merge are archived or kept based on explicit choice
+- No fake green states: empty state is truthful and minimal
+- No hidden failures: diagnostics are available when needed
+- No contradictory runtime/bind/project states: UI consistency in empty/active states
 
-**Result:** PASS — Chat workspace behaves like a real operator workspace.
+**Result:** PASS (technical acceptance, pending closeout) — Home + Chat Workspace phase contract satisfied and UI simplified; final tranche C screenshot evidence + Notion row closeout are still outstanding, so P140 remains In Progress.
 
 ---
 

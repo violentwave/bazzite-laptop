@@ -18,6 +18,17 @@ interface LLMRequestBody {
   max_tokens?: number;
 }
 
+interface RuntimeBindingOptions {
+  threadId?: string;
+  projectId?: string;
+  mode?: string;
+  provider?: string;
+  model?: string;
+  memoryPolicy?: string;
+  toolPolicy?: string;
+  attachedContextSources?: string[];
+}
+
 interface StreamCallbacks {
   onChunk: (chunk: string) => void;
   onComplete: (fullResponse: string) => void;
@@ -35,9 +46,10 @@ export async function streamChatCompletion(
     model?: string;
     temperature?: number;
     maxTokens?: number;
+    runtimeBinding?: RuntimeBindingOptions;
   } = {}
 ): Promise<() => void> {
-  const { model = 'fast', temperature = 0.7, maxTokens = 4096 } = options;
+  const { model = 'fast', temperature = 0.7, maxTokens = 4096, runtimeBinding } = options;
   
   // Convert messages to OpenAI format
   const formattedMessages = messages.map((msg) => ({
@@ -57,11 +69,20 @@ export async function streamChatCompletion(
   let fullResponse = '';
 
   try {
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+
+    if (runtimeBinding?.provider) headers['x-bazzite-provider'] = runtimeBinding.provider;
+    if (runtimeBinding?.mode) headers['x-bazzite-mode'] = runtimeBinding.mode;
+    if (runtimeBinding?.projectId) headers['x-bazzite-project-id'] = runtimeBinding.projectId;
+    if (runtimeBinding?.threadId) headers['x-bazzite-thread-id'] = runtimeBinding.threadId;
+    if (runtimeBinding?.memoryPolicy) headers['x-bazzite-memory-policy'] = runtimeBinding.memoryPolicy;
+    if (runtimeBinding?.toolPolicy) headers['x-bazzite-tool-policy'] = runtimeBinding.toolPolicy;
+
     const response = await fetch(LLM_PROXY_URL, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers,
       body: JSON.stringify(requestBody),
       signal: abortController.signal,
     });

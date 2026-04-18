@@ -1,47 +1,51 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { TaskType, TASK_TYPE_LABELS, TASK_TYPE_DESCRIPTIONS } from '@/types/providers';
-import { useProviders } from '@/hooks/useProviders';
+import { ModelInfo, ProviderInfo, TaskType, TASK_TYPE_LABELS, TASK_TYPE_DESCRIPTIONS } from '@/types/providers';
 
 const STORAGE_KEY = 'bazzite-chat-profile';
 
 const DEFAULT_PROFILE: TaskType = 'fast';
 
 interface ChatProfileSelectorProps {
+  mode?: TaskType;
+  onModeChange?: (mode: TaskType) => void;
   provider?: string;
   onProviderChange?: (provider: string) => void;
   model?: string;
   onModelChange?: (model: string) => void;
+  providers: ProviderInfo[];
+  models: ModelInfo[];
+  isLoading?: boolean;
 }
 
 export function ChatProfileSelector({ 
+  mode = DEFAULT_PROFILE,
+  onModeChange,
   provider = '', 
   onProviderChange, 
   model = '', 
-  onModelChange 
+  onModelChange,
+  providers,
+  models,
+  isLoading = false,
 }: ChatProfileSelectorProps) {
-  const [selectedProfile, setSelectedProfile] = useState<TaskType>(DEFAULT_PROFILE);
   const [isOpen, setIsOpen] = useState(false);
   const [providerOpen, setProviderOpen] = useState(false);
   const [modelOpen, setModelOpen] = useState(false);
-  
-  const { providers, models, isLoading } = useProviders();
   
   const taskTypes: TaskType[] = ['fast', 'reason', 'batch', 'code', 'embed'];
 
   useEffect(() => {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored && taskTypes.includes(stored as TaskType)) {
-      setSelectedProfile(stored as TaskType);
-      onProviderChange?.(stored as TaskType);
+      onModeChange?.(stored as TaskType);
     }
-  }, []);
+  }, [onModeChange]);
 
   const handleSelect = (profile: TaskType) => {
-    setSelectedProfile(profile);
     localStorage.setItem(STORAGE_KEY, profile);
-    onProviderChange?.(profile);
+    onModeChange?.(profile);
     setIsOpen(false);
   };
 
@@ -61,6 +65,7 @@ export function ChatProfileSelector({
     : models;
 
   const selectedProvider = providers.find(p => p.id === provider);
+  const selectedModel = availableModels.find((m) => m.id === model);
 
   return (
     <div className="flex items-center gap-2">
@@ -77,7 +82,7 @@ export function ChatProfileSelector({
           title="Select chat mode"
         >
           <ProfileIcon />
-          <span>{TASK_TYPE_LABELS[selectedProfile]}</span>
+          <span>{TASK_TYPE_LABELS[mode]}</span>
           <ChevronIcon className={`transition-transform ${isOpen ? 'rotate-180' : ''}`} />
         </button>
 
@@ -95,7 +100,7 @@ export function ChatProfileSelector({
                 onClick={() => handleSelect(type)}
                 className="w-full px-4 py-2 text-left text-sm transition-colors flex items-start gap-2"
                 style={{
-                  background: selectedProfile === type ? 'var(--base-03)' : 'transparent',
+                  background: mode === type ? 'var(--base-03)' : 'transparent',
                   color: 'var(--text-primary)',
                 }}
               >
@@ -105,7 +110,7 @@ export function ChatProfileSelector({
                     {TASK_TYPE_DESCRIPTIONS[type]}
                   </div>
                 </div>
-                {selectedProfile === type && <CheckIcon />}
+                {mode === type && <CheckIcon />}
               </button>
             ))}
           </div>
@@ -180,7 +185,7 @@ export function ChatProfileSelector({
           title="Select model"
         >
           <ModelIcon />
-          <span>{model || 'Model'}</span>
+          <span>{selectedModel?.name || model || 'Model'}</span>
           <ChevronIcon className={`transition-transform ${modelOpen ? 'rotate-180' : ''}`} />
         </button>
 

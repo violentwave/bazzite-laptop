@@ -5,13 +5,43 @@
 
 export interface Message {
   id: string;
-  role: 'user' | 'assistant' | 'tool';
+  role: 'user' | 'assistant' | 'tool' | 'system';
   content: string;
   timestamp: Date;
   toolCalls?: ToolCall[];
   attachments?: Attachment[];
   isStreaming?: boolean;
   error?: string;
+  runtimeMetadata?: RuntimeBindingMetadata;
+  sourceThreadIds?: string[]; // New: for merged threads, tracks original thread IDs
+}
+
+export type WorkspaceMode = 'fast' | 'reason' | 'batch' | 'code' | 'embed';
+
+export type ProjectHydrationState = 'selected' | 'hydrating' | 'hydrated' | 'unavailable' | 'invalid';
+
+export interface RuntimeBindingMetadata {
+  provider: string;
+  model: string;
+  mode: WorkspaceMode;
+  project_id: string;
+  project_hydration_state?: ProjectHydrationState; // New: tracks project context availability
+  memory_policy: string;
+  tool_policy: string;
+  attached_context_sources: string[];
+  bound_at: string;
+}
+
+export interface ChatWorkspaceSession {
+  thread_id: string;
+  project_id: string;
+  mode: WorkspaceMode;
+  provider: string;
+  model: string;
+  memory_policy: string;
+  tool_policy: string;
+  attached_context_sources: string[];
+  bound_at: string;
 }
 
 export interface Thread {
@@ -19,20 +49,32 @@ export interface Thread {
   title: string;
   messages: unknown[]; // Serialized format for localStorage
   projectId?: string;
+  folderPath?: string;
   createdAt: string;
   updatedAt: string;
+  created_at?: string;
+  updated_at?: string;
   isPinned: boolean;
+  isArchived?: boolean;
+  isMerged?: boolean; // New: indicates if this thread is a result of a merge
   provider?: string;
   model?: string;
+  mode?: WorkspaceMode;
+  lastProvider?: string;
+  lastModel?: string;
+  lastMode?: WorkspaceMode;
   taskType?: string;
+  workspaceSession?: ChatWorkspaceSession;
+  runtimeMetadata?: RuntimeBindingMetadata;
 }
 
 export interface ToolCall {
   id: string;
   name: string;
   arguments: Record<string, unknown>;
+  argumentsSummary?: string;
   result?: ToolResult;
-  status: 'pending' | 'success' | 'error';
+  status: 'pending' | 'success' | 'error' | 'blocked';
   timestamp: Date;
 }
 

@@ -12,13 +12,14 @@ interface Command {
 }
 
 const commands: Command[] = [
-  { id: "goto-chat", title: "Go to Chat", shortcut: "⌘1", category: "Navigation", panel: "chat" },
-  { id: "goto-security", title: "Go to Security", shortcut: "⌘2", category: "Navigation", panel: "security" },
-  { id: "goto-models", title: "Go to Models", shortcut: "⌘3", category: "Navigation", panel: "models" },
-  { id: "goto-terminal", title: "Go to Terminal", shortcut: "⌘4", category: "Navigation", panel: "terminal" },
-  { id: "goto-projects", title: "Go to Projects", shortcut: "⌘5", category: "Navigation", panel: "projects" },
-  { id: "goto-workbench", title: "Go to Workbench", shortcut: "⌘6", category: "Navigation", panel: "workbench" },
-  { id: "goto-settings", title: "Go to Settings", shortcut: "⌘7", category: "Navigation", panel: "settings" },
+  { id: "goto-home", title: "Go to Home", shortcut: "⌘1", category: "Navigation", panel: "home" },
+  { id: "goto-chat", title: "Go to Chat", shortcut: "⌘2", category: "Navigation", panel: "chat" },
+  { id: "goto-security", title: "Go to Security", shortcut: "⌘3", category: "Navigation", panel: "security" },
+  { id: "goto-models", title: "Go to Models", shortcut: "⌘4", category: "Navigation", panel: "models" },
+  { id: "goto-terminal", title: "Go to Terminal", shortcut: "⌘5", category: "Navigation", panel: "terminal" },
+  { id: "goto-projects", title: "Go to Projects", shortcut: "⌘6", category: "Navigation", panel: "projects" },
+  { id: "goto-workbench", title: "Go to Workbench", shortcut: "⌘7", category: "Navigation", panel: "workbench" },
+  { id: "goto-settings", title: "Go to Settings", shortcut: "⌘8", category: "Navigation", panel: "settings" },
 ];
 
 export function CommandPalette() {

@@ -30,10 +30,19 @@ Expected: both endpoints return `status: ok`.
 ## Core Workflows
 
 1. Open the Unified Control Console.
-2. Use chat or tool panels to run MCP tools.
-3. Use workflow panels for repeatable operations.
-4. Use runbook workflows when a task requires explicit human approval steps.
-5. Keep high-risk actions policy-gated and audit-visible.
+2. Start from the `Home Dashboard` to select/create a project, review recent chat threads, and check live runtime/security widgets.
+3. Enter `Chat Workspace` for project-bound execution and tool-assisted operator work.
+4. Use workflow panels for repeatable operations.
+5. Use runbook workflows when a task requires explicit human approval steps.
+6. Keep high-risk actions policy-gated and audit-visible.
+
+### Home vs Chat responsibilities
+
+- `Home Dashboard`: operator entry surface (project select/create, recent threads, health/security/runtime widgets, quick navigation).
+- `Chat Workspace`: active execution surface (bound provider/model/mode/project, operator actions, tool traces, degraded-state visibility).
+- Thread organization (rename/move/archive/project assignment) is managed from the Threads sidebar inside Chat Workspace.
+- Thread bulk operations are local-first and explicit: enter `Select` mode in the Threads sidebar to merge, move, or archive multiple threads.
+- Thread merge is chronological and auditable: merged threads retain source IDs in message metadata and require explicit project choice for cross-project merges.
 
 ## Security Operations
 

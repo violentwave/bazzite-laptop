@@ -39,7 +39,7 @@ const ShellContext = createContext<ShellContextType | undefined>(undefined);
 
 export function ShellProvider({ children }: { children: ReactNode }) {
   const [isRailExpanded, setIsRailExpanded] = useState(false);
-  const [activePanel, setActivePanel] = useState("chat");
+  const [activePanel, setActivePanel] = useState("home");
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [auditLog, setAuditLog] = useState<AuditEntry[]>([]);

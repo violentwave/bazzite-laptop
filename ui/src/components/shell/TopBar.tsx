@@ -3,7 +3,19 @@
 import { useShell } from "./ShellContext";
 
 export function TopBar() {
-  const { openCommandPalette, toggleNotifications, isNotificationsOpen, toggleRail, isRailExpanded } = useShell();
+  const { openCommandPalette, toggleNotifications, isNotificationsOpen, toggleRail, isRailExpanded, activePanel } = useShell();
+
+  const panelLabel: Record<string, string> = {
+    home: "Home Dashboard",
+    chat: "Chat Workspace",
+    tools: "Tool Control Center",
+    security: "Security Ops Center",
+    models: "Models & Providers",
+    terminal: "Terminal",
+    projects: "Projects & Phases",
+    workbench: "Agent Workbench",
+    settings: "Settings",
+  };
 
   return (
     <header
@@ -46,7 +58,7 @@ export function TopBar() {
         className="hidden md:flex items-center text-sm"
         style={{ color: "var(--text-tertiary)" }}
       >
-        <span>Chat Workspace</span>
+        <span>{panelLabel[activePanel] || "Control Console"}</span>
       </div>
 
       {/* Right: Actions */}
@@ -68,7 +80,7 @@ export function TopBar() {
               border: "1px solid var(--base-04)",
             }}
           >
-            ⌘K
+            Ctrl+K
           </kbd>
         </button>
 

@@ -9,6 +9,7 @@ import { ShellContainer } from "@/components/shell-gateway/ShellContainer";
 import { ProjectWorkflowContainer } from "@/components/project-workflow/ProjectWorkflowContainer";
 import { ToolControlCenterContainer } from "@/components/tool-control/ToolControlCenterContainer";
 import { WorkbenchContainer } from "@/components/workbench/WorkbenchContainer";
+import { HomeContainer } from "@/components/home/HomeContainer";
 
 export default function Home() {
   const { activePanel } = useShell();
@@ -39,6 +40,8 @@ export default function Home() {
       <div className="flex-1 overflow-hidden">
         {activePanel === "chat" ? (
           <ChatContainer />
+        ) : activePanel === "home" ? (
+          <HomeContainer />
         ) : activePanel === "tools" ? (
           <ToolControlCenterContainer />
         ) : activePanel === "models" ? (
@@ -67,6 +70,20 @@ function PanelIcon({ panel }: { panel: string }) {
   const iconStyle = { width: 20, height: 20 };
 
   switch (panel) {
+    case "home":
+      return (
+        <svg
+          style={iconStyle}
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+        >
+          <path d="M3 10.5 12 3l9 7.5" />
+          <path d="M5 9.5V21h14V9.5" />
+          <path d="M10 21v-6h4v6" />
+        </svg>
+      );
     case "chat":
       return (
         <svg
@@ -181,6 +198,7 @@ function PanelIcon({ panel }: { panel: string }) {
 
 function getPanelTitle(panel: string): string {
   const titles: Record<string, string> = {
+    home: "Home Dashboard",
     chat: "Chat Workspace",
     tools: "Tool Control Center",
     security: "Security Ops Center",
@@ -196,6 +214,23 @@ function getPanelTitle(panel: string): string {
 function PanelStatus({ panel }: { panel: string }) {
   // Different panels show different status indicators
   switch (panel) {
+    case "home":
+      return (
+        <div
+          className="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs"
+          style={{
+            background: "var(--base-02)",
+            color: "var(--accent-primary)",
+            border: "1px solid var(--base-04)",
+          }}
+        >
+          <span
+            className="w-2 h-2 rounded-full"
+            style={{ background: "var(--accent-primary)" }}
+          />
+          Live Widgets
+        </div>
+      );
     case "chat":
       return (
         <div
@@ -227,7 +262,7 @@ function PanelStatus({ panel }: { panel: string }) {
             className="w-2 h-2 rounded-full"
             style={{ background: "var(--accent-primary)" }}
           />
-          169 Tools
+          Tool Catalog
         </div>
       );
     case "security":
@@ -339,6 +374,8 @@ function PanelStatus({ panel }: { panel: string }) {
 
 function PanelContent({ panel }: { panel: string }) {
   switch (panel) {
+    case "home":
+      return <HomeContainer />;
     case "security":
       return <SecurityContainer />;
     case "models":

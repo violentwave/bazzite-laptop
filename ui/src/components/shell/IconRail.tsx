@@ -11,6 +11,12 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   {
+    id: "home",
+    icon: <HomeIcon />,
+    label: "Home",
+    zone: "public",
+  },
+  {
     id: "chat",
     icon: <ChatIcon />,
     label: "Chat",
@@ -180,6 +186,25 @@ function ChatIcon() {
       strokeLinejoin="round"
     >
       <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+    </svg>
+  );
+}
+
+function HomeIcon() {
+  return (
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M3 10.5 12 3l9 7.5" />
+      <path d="M5 9.5V21h14V9.5" />
+      <path d="M10 21v-6h4v6" />
     </svg>
   );
 }

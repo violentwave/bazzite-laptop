@@ -65,6 +65,7 @@ interface UseProvidersReturn {
   operatorAction: string | null;
   refresh: () => Promise<void>;
   lastRefresh: Date | null;
+  getModelsForProvider: (providerId: string) => ModelInfo[];
 }
 
 function formatProviderError(response: ProvidersResponse | ModelsResponse | RoutingResponse | HealthResponse): { message: string; code: string; action: string } {
@@ -225,6 +226,12 @@ export function useProviders(): UseProvidersReturn {
     }
   }, [fetchAll]);
 
+  const getModelsForProvider = useCallback(
+    (providerId: string) =>
+      models.filter((item) => item.provider === providerId && item.is_available !== false),
+    [models]
+  );
+
   useEffect(() => {
     fetchAll();
 
@@ -246,5 +253,6 @@ export function useProviders(): UseProvidersReturn {
     operatorAction,
     refresh,
     lastRefresh,
+    getModelsForProvider,
   };
 }

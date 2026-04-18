@@ -25,6 +25,8 @@ export function ChatMessage({ message, isStreaming }: ChatMessageProps) {
       );
     case 'tool':
       return <ToolMessage message={message} />;
+    case 'system':
+      return null;
     default:
       return null;
   }
@@ -88,6 +90,7 @@ function AssistantMessage({
   isStreaming?: boolean;
 }) {
   const hasToolCalls = message.toolCalls && message.toolCalls.length > 0;
+  const runtime = message.runtimeMetadata;
 
   return (
     <div className="flex justify-start mb-4 motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-left-2 motion-safe:duration-200">
@@ -122,6 +125,23 @@ function AssistantMessage({
             </span>
           )}
         </div>
+
+        {runtime && (
+          <div className="flex flex-wrap gap-1 mb-2 text-[11px]" style={{ color: 'var(--text-tertiary)' }}>
+            <span className="px-2 py-0.5 rounded" style={{ background: 'var(--base-02)', border: '1px solid var(--base-04)' }}>
+              {runtime.provider || 'provider:none'}
+            </span>
+            <span className="px-2 py-0.5 rounded" style={{ background: 'var(--base-02)', border: '1px solid var(--base-04)' }}>
+              {runtime.model || 'model:none'}
+            </span>
+            <span className="px-2 py-0.5 rounded" style={{ background: 'var(--base-02)', border: '1px solid var(--base-04)' }}>
+              {runtime.mode}
+            </span>
+            <span className="px-2 py-0.5 rounded" style={{ background: 'var(--base-02)', border: '1px solid var(--base-04)' }}>
+              {runtime.project_id || 'no-project'}
+            </span>
+          </div>
+        )}
 
         {/* Message content with markdown */}
         <div className="text-sm leading-relaxed prose prose-invert prose-sm max-w-none">
