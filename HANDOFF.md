@@ -8,7 +8,7 @@
 - Branch: master
 - Active Phase: P145 — Chat Workspace and Thread Rail Redesign
 - Notion Phase Row: https://www.notion.so/P145-Chat-Workspace-and-Thread-Rail-Redesign-346f793edf7b81d7bae2c9972d936c87
-- Last Commit: `d08478b` (`feat(p145): redesign chat workspace and thread rail`)
+- Last Commit: `01561a8` (`docs(p145): finalize closeout ledgers`)
 - Validation State: pass (`cd ui && npx tsc --noEmit`, `cd ui && npm run build`, `git diff --check`)
 
 ## Open Tasks
@@ -28,4 +28,4 @@
 ## Recent Sessions
 
 ### 2026-04-18T22:05:00Z — opencode
-Implemented P145 Chat Workspace and Thread Rail redesign with calmer chat layout, compact truthful runtime strip, progressive diagnostics/advanced controls, professional rail grouping, and fresh browser evidence under `docs/evidence/p145/`.
+Implemented P145 Chat Workspace and Thread Rail redesign with calmer chat layout, compact truthful runtime strip, progressive diagnostics/advanced controls, professional rail grouping, fresh browser evidence under `docs/evidence/p145/`, and closeout ledger updates.
