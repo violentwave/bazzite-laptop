@@ -4,6 +4,38 @@ All significant changes. Format: date · deliverables · deltas · commit.
 
 ---
 
+## Phase 144 — Home Dashboard Redesign Implementation
+**Date:** 2026-04-18 · **Commit:** pending
+
+**Deliverables:**
+- Rebuilt `Home Dashboard` as a calmer widget-driven surface with Guided/Standard/Expert presets.
+- Added reusable Home widget set under `ui/src/components/home/widgets/`:
+  - `ActiveProjectWidget`
+  - `RecentThreadsWidget`
+  - `ServicesStatusWidget`
+  - `QuickActionsWidget`
+  - `SecuritySnapshotWidget`
+  - `ActivityFeedWidget`
+  - `WidgetContainer`
+- Implemented Add Widget and Remove Widget flows in Home layout.
+- Kept Home/Chat separation intact; no chat workspace redesign was introduced in P144.
+- Wired widgets to live existing hooks/services (`useAgentWorkbench`, `useChat`, `useProviders`, `useSecurity`, `useSecurityAutopilot`) with no fake data.
+
+**Validation:**
+- `cd ui && npx tsc --noEmit` — pass
+- `cd ui && npm run build` — pass
+
+**Evidence:**
+- `docs/evidence/p144/home-happy-path.png`
+- `docs/evidence/p144/widget-add-flow.png`
+- `docs/evidence/p144/widget-remove-flow.png`
+- `docs/evidence/p144/preset-guided.png`
+- `docs/evidence/p144/preset-standard.png`
+- `docs/evidence/p144/preset-expert.png`
+- `docs/evidence/p144/active-project-flow.png`
+
+---
+
 ## Phase 143 — Adaptive Minimalist UI Redesign Spec
 **Date:** 2026-04-18 · **Commit:** pending
 

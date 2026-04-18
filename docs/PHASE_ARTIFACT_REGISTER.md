@@ -24,9 +24,9 @@
 
 | Category | Current State |
 |----------|---------------|
-| Current completed Security Autopilot + Workbench phases | `P119` through `P143` |
-| Current active phase | `P142 — Console Asset Loading and Runtime Stability Fix` |
-| Next gated phase | `P144 — see P143 spec` |
+| Current completed Security Autopilot + Workbench phases | `P119` through `P144` |
+| Current active phase | `P145 — Chat Workspace and Thread Rail Redesign` |
+| Next gated phase | `P145 — see P143 implementation map` |
 | Primary phase truth | Notion `Bazzite Phases` row properties |
 | Lightweight session truth | `HANDOFF.md` |
 | Standing agent rules | `docs/AGENT.md` |
@@ -713,6 +713,17 @@ The repo has complete historical coverage across the earlier tranches, but older
 | Catalog | `docs/P143_WIDGET_CATALOG.md` | Detailed widget specs, data sources, and visibility rules |
 | Map | `docs/P143_UI_IMPLEMENTATION_MAP.md` | Work split for P144, P145, and P146 implementation |
 
+### P144 — Home Dashboard Redesign Implementation
+- **Status**: Done
+- **Finished**: 2026-04-18
+- **Commit SHA**: pending
+
+| Type | Path | Description |
+|------|------|-------------|
+| UI Surface | `ui/src/components/home/HomeContainer.tsx` | New preset-driven widgetized Home shell with add/remove flow |
+| Widgets | `ui/src/components/home/widgets/*` | Active Project, Recent Threads, Services Status, Quick Actions, Security Snapshot, Activity Feed |
+| Evidence | `docs/evidence/p144/*.png` | Home happy path, add/remove flow, preset states, active project flow |
+
 ### P142 — Console Asset Loading and Runtime Stability Fix (Notes)
 - **Runtime Script**: `ui/scripts/dev-stable.mjs` (Clears stale Turbopack chunk caches)
 - **Config**: `ui/next.config.ts` (Disables Turbopack cache restore; Allows dev-origin hostnames)
@@ -750,7 +761,7 @@ The repo has complete historical coverage across the earlier tranches, but older
 3. P80 remains a repo-vs-Notion truth reconciliation note for future cleanup.
 4. P141 is complete with refreshed canonical evidence and Notion row reconciled to Done.
 5. P142 resolves dev asset loading instability caused by stale Turbopack chunk/cache state and blocked dev-origin HMR resources.
-6. P142 remains active until Notion row reconciliation is completed.
+6. P144 completed Home redesign implementation and evidence capture; P145 is the next implementation phase.
 
 ## Cross-References
 

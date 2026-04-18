@@ -38,7 +38,8 @@ Expected: both endpoints return `status: ok`.
 
 ### Home vs Chat responsibilities
 
-- `Home Dashboard`: operator entry surface (project select/create, recent threads, health/security/runtime widgets, quick navigation).
+- `Home Dashboard`: operator entry surface (project select/create, recent threads, health/security/runtime widgets, quick navigation) with Guided/Standard/Expert presets.
+- Home widgets are customizable in-session via `Add Widget` and per-widget `Remove` controls; `Reset Layout` restores the selected preset default.
 - `Chat Workspace`: active execution surface (bound provider/model/mode/project, operator actions, tool traces, degraded-state visibility).
 - Thread organization (rename/move/archive/project assignment) is managed from the Threads sidebar inside Chat Workspace.
 - Thread sections are intentional views: `Pinned (Priority)` and `Recent (Latest)` are highlight views, while `By Project (Remaining)` excludes already-highlighted items to avoid duplicate rows.
