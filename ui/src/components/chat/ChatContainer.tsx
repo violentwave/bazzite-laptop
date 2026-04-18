@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useChat } from "@/hooks/useChat";
 import { useProviders } from "@/hooks/useProviders";
 import { buildThreadLocationLabel } from "@/lib/thread-store";
@@ -11,6 +11,8 @@ import { ChatProfileSelector } from "./ChatProfileSelector";
 import { ThreadSidebar } from "./ThreadSidebar";
 import { ModelInfo, ProviderInfo } from "@/types/providers";
 import { TaskType } from "@/types/providers";
+import { useWorkspacePersonalization } from "@/hooks/useWorkspacePersonalization";
+import { WorkspacePreset } from "@/lib/workspace-personalization";
 
 function ThreadIcon() {
   return (
@@ -21,10 +23,18 @@ function ThreadIcon() {
 }
 
 export function ChatContainer() {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  const [showRuntimeDetails, setShowRuntimeDetails] = useState(false);
-  const [showDiagnostics, setShowDiagnostics] = useState(false);
-  const [showAdvanced, setShowAdvanced] = useState(false);
+  const {
+    preset,
+    personalization,
+    notice,
+    dismissNotice,
+    setPreset,
+    setChatVisibility,
+  } = useWorkspacePersonalization();
+  const [isSidebarOpen, setIsSidebarOpen] = useState(personalization.chat.sidebarOpen);
+  const [showRuntimeDetails, setShowRuntimeDetails] = useState(personalization.chat.showRuntimeDetails);
+  const [showDiagnostics, setShowDiagnostics] = useState(personalization.chat.showDiagnostics);
+  const [showAdvanced, setShowAdvanced] = useState(personalization.chat.showAdvanced);
   const {
     providers,
     models,
@@ -84,6 +94,27 @@ export function ChatContainer() {
 
   const hasMessages = messages.length > 0;
   const activeThread = threads.find((thread) => thread.id === activeThreadId) || null;
+
+  const diagnosticsAllowed = preset === "expert";
+  const advancedAllowed = preset !== "guided";
+
+  useEffect(() => {
+    setIsSidebarOpen(personalization.chat.sidebarOpen);
+    setShowRuntimeDetails(personalization.chat.showRuntimeDetails);
+    setShowDiagnostics(personalization.chat.showDiagnostics);
+    setShowAdvanced(personalization.chat.showAdvanced);
+  }, [personalization.chat]);
+
+  useEffect(() => {
+    if (!diagnosticsAllowed && showDiagnostics) {
+      setShowDiagnostics(false);
+      setChatVisibility({ showDiagnostics: false });
+    }
+    if (!advancedAllowed && showAdvanced) {
+      setShowAdvanced(false);
+      setChatVisibility({ showAdvanced: false });
+    }
+  }, [advancedAllowed, diagnosticsAllowed, setChatVisibility, showAdvanced, showDiagnostics]);
 
   const projectNameById = useMemo(
     () => new Map(projects.map((project) => [project.project_id, project.name || project.project_id])),
@@ -170,6 +201,26 @@ export function ChatContainer() {
       )}
 
       <div className="flex-1 min-w-0 flex flex-col h-full">
+        {notice && (
+          <div
+            className="mx-4 lg:mx-6 mt-3 mb-0 rounded-lg px-3 py-2 flex items-start justify-between gap-3"
+            style={{
+              background: notice.tone === "warning" ? "rgba(245, 158, 11, 0.12)" : "rgba(14, 165, 233, 0.12)",
+              border: `1px solid ${notice.tone === "warning" ? "rgba(245, 158, 11, 0.35)" : "rgba(14, 165, 233, 0.35)"}`,
+              color: notice.tone === "warning" ? "var(--warning)" : "var(--live-cyan)",
+            }}
+          >
+            <p className="text-sm">{notice.message}</p>
+            <button
+              onClick={dismissNotice}
+              className="rounded px-2 py-1 text-xs"
+              style={{ border: "1px solid var(--base-04)", color: "var(--text-secondary)", background: "var(--base-01)" }}
+            >
+              Dismiss
+            </button>
+          </div>
+        )}
+
         <div
           className="px-4 lg:px-6 py-3 border-b"
           style={{ borderColor: "var(--base-04)", background: "var(--base-01)" }}
@@ -177,7 +228,11 @@ export function ChatContainer() {
           <div className="flex items-start justify-between gap-3">
             <div className="flex items-start gap-2 min-w-0">
               <button
-                onClick={() => setIsSidebarOpen((prev) => !prev)}
+                onClick={() => {
+                  const next = !isSidebarOpen;
+                  setIsSidebarOpen(next);
+                  setChatVisibility({ sidebarOpen: next });
+                }}
                 className="p-2 rounded-lg transition-colors hover:bg-base-03"
                 style={{ color: "var(--text-secondary)" }}
                 title="Toggle thread rail"
@@ -203,28 +258,59 @@ export function ChatContainer() {
             </div>
 
             <div className="flex items-center gap-2 shrink-0">
-              <button
-                onClick={() => setShowDiagnostics((prev) => !prev)}
+              <label className="sr-only" htmlFor="chat-workspace-preset-select">
+                Workspace preset
+              </label>
+              <select
+                id="chat-workspace-preset-select"
+                value={preset}
+                onChange={(event) => setPreset(event.target.value as WorkspacePreset)}
                 className="px-2 py-1 rounded text-xs"
                 style={{
-                  background: showDiagnostics ? "var(--base-04)" : "var(--base-03)",
+                  background: "var(--base-03)",
                   color: "var(--text-secondary)",
                   border: "1px solid var(--base-04)",
                 }}
+                title="Workspace preset"
               >
-                {showDiagnostics ? "Hide diagnostics" : "Diagnostics"}
-              </button>
-              <button
-                onClick={() => setShowAdvanced((prev) => !prev)}
-                className="px-2 py-1 rounded text-xs"
-                style={{
-                  background: showAdvanced ? "var(--base-04)" : "var(--base-03)",
-                  color: "var(--text-secondary)",
-                  border: "1px solid var(--base-04)",
-                }}
-              >
-                {showAdvanced ? "Hide controls" : "Advanced"}
-              </button>
+                <option value="guided">Guided</option>
+                <option value="standard">Standard</option>
+                <option value="expert">Expert</option>
+              </select>
+              {diagnosticsAllowed && (
+                <button
+                  onClick={() => {
+                    const next = !showDiagnostics;
+                    setShowDiagnostics(next);
+                    setChatVisibility({ showDiagnostics: next });
+                  }}
+                  className="px-2 py-1 rounded text-xs"
+                  style={{
+                    background: showDiagnostics ? "var(--base-04)" : "var(--base-03)",
+                    color: "var(--text-secondary)",
+                    border: "1px solid var(--base-04)",
+                  }}
+                >
+                  {showDiagnostics ? "Hide diagnostics" : "Diagnostics"}
+                </button>
+              )}
+              {advancedAllowed && (
+                <button
+                  onClick={() => {
+                    const next = !showAdvanced;
+                    setShowAdvanced(next);
+                    setChatVisibility({ showAdvanced: next });
+                  }}
+                  className="px-2 py-1 rounded text-xs"
+                  style={{
+                    background: showAdvanced ? "var(--base-04)" : "var(--base-03)",
+                    color: "var(--text-secondary)",
+                    border: "1px solid var(--base-04)",
+                  }}
+                >
+                  {showAdvanced ? "Hide controls" : "Advanced"}
+                </button>
+              )}
             </div>
           </div>
 
@@ -240,6 +326,16 @@ export function ChatContainer() {
               models={getModelsForProvider(currentProvider)}
               isLoading={providersLoading}
             />
+            <span
+              className="text-[11px] px-2 py-1 rounded"
+              style={{
+                color: "var(--text-tertiary)",
+                border: "1px solid var(--base-04)",
+                background: "var(--base-02)",
+              }}
+            >
+              Preset {preset}: {preset === "guided" ? "minimal controls" : preset === "standard" ? "balanced controls" : "diagnostics enabled"}
+            </span>
           </div>
         </div>
 
@@ -261,7 +357,11 @@ export function ChatContainer() {
                 </span>
               )}
               <button
-                onClick={() => setShowRuntimeDetails((prev) => !prev)}
+                onClick={() => {
+                  const next = !showRuntimeDetails;
+                  setShowRuntimeDetails(next);
+                  setChatVisibility({ showRuntimeDetails: next });
+                }}
                 className="px-2 py-0.5 rounded"
                 style={{
                   background: "var(--base-03)",
@@ -294,7 +394,7 @@ export function ChatContainer() {
           )}
         </div>
 
-        {showAdvanced && (
+        {advancedAllowed && showAdvanced && (
           <div
             className="px-4 lg:px-6 py-2 border-b"
             style={{ borderColor: "var(--base-04)", background: "var(--base-01)" }}
@@ -320,7 +420,7 @@ export function ChatContainer() {
           </div>
         )}
 
-        {showDiagnostics && (
+        {diagnosticsAllowed && showDiagnostics && (
           <div
             className="px-4 lg:px-6 py-3 border-b"
             style={{ borderColor: "var(--base-04)", background: "var(--base-01)" }}

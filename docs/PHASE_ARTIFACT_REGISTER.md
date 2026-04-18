@@ -24,9 +24,9 @@
 
 | Category | Current State |
 |----------|---------------|
-| Current completed Security Autopilot + Workbench phases | `P119` through `P145` |
-| Current active phase | `P145 — Chat Workspace and Thread Rail Redesign` |
-| Next gated phase | `P146 — Workspace Personalization and Preset Persistence` |
+| Current completed Security Autopilot + Workbench phases | `P119` through `P146` |
+| Current active phase | `P146 — Workspace Personalization and Preset Persistence` |
+| Next gated phase | `P147 — UI Redesign Tranche Acceptance Gate` |
 | Primary phase truth | Notion `Bazzite Phases` row properties |
 | Lightweight session truth | `HANDOFF.md` |
 | Standing agent rules | `docs/AGENT.md` |
@@ -738,6 +738,20 @@ The repo has complete historical coverage across the earlier tranches, but older
 | Evidence | `docs/evidence/p145/*.png` | Chat happy path, thread rail final, archive/restore, merge, bulk actions, runtime strip, diagnostics state, project-bound state |
 | Validation | `docs/evidence/p145/validation.md` | P145 scope execution log, validation commands, and done-criteria check |
 
+### P146 — Workspace Personalization and Preset Persistence
+- **Status**: Done
+- **Finished**: 2026-04-18
+- **Commit SHA**: pending
+
+| Type | Path | Description |
+|------|------|-------------|
+| Personalization Model | `ui/src/lib/workspace-personalization.ts` | Canonical local-first schema, preset defaults, and normalization/fallback behavior |
+| Personalization Hook | `ui/src/hooks/useWorkspacePersonalization.ts` | Shared Home/Chat persistence handling, notices, and mutation helpers |
+| Home Integration | `ui/src/components/home/HomeContainer.tsx` | Preset persistence, widget selection/order persistence, reorder controls, explicit clear/fallback notice |
+| Chat Integration | `ui/src/components/chat/ChatContainer.tsx` | Preset-aware optional surfaces, diagnostics visibility rules, persistent chat surface preferences |
+| Evidence | `docs/evidence/p146/*.png` | Preset switching, widget add/remove, layout persistence, diagnostics by preset, Standard fallback notice |
+| Validation | `docs/evidence/p146/validation.md` | P146 scope implementation + command and done-criteria verification |
+
 ### P142 — Console Asset Loading and Runtime Stability Fix (Notes)
 - **Runtime Script**: `ui/scripts/dev-stable.mjs` (Clears stale Turbopack chunk caches)
 - **Config**: `ui/next.config.ts` (Disables Turbopack cache restore; Allows dev-origin hostnames)
@@ -775,7 +789,7 @@ The repo has complete historical coverage across the earlier tranches, but older
 3. P80 remains a repo-vs-Notion truth reconciliation note for future cleanup.
 4. P141 is complete with refreshed canonical evidence and Notion row reconciled to Done.
 5. P142 resolves dev asset loading instability caused by stale Turbopack chunk/cache state and blocked dev-origin HMR resources.
-6. P145 completed Chat Workspace and thread rail redesign implementation and evidence capture; P146 is the next implementation phase.
+6. P146 completed workspace personalization and preset persistence implementation and evidence capture; P147 is the next gated tranche.
 
 ## Cross-References
 

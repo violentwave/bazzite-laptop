@@ -4,6 +4,32 @@ All significant changes. Format: date · deliverables · deltas · commit.
 
 ---
 
+## Phase 146 — Workspace Personalization and Preset Persistence
+**Date:** 2026-04-18 · **Commit:** pending
+
+**Deliverables:**
+- Added a shared local-first workspace personalization model for Home and Chat.
+- Implemented durable Guided / Standard / Expert preset persistence.
+- Implemented Home widget visibility persistence and widget ordering persistence (move up/down controls + reload durability).
+- Implemented Chat optional-surface persistence (runtime details, diagnostics, advanced controls) with preset-based visibility rules.
+- Added explicit fallback to Standard preset with visible notice when personalization storage is unavailable or cleared.
+- Preserved P145 chat/thread rail redesign behavior and P140-P145 runtime/project/archive truth surfaces.
+
+**Validation:**
+- `cd ui && npx tsc --noEmit` — pass
+- `cd ui && npm run build` — pass
+- `git diff --check` — pass
+
+**Evidence:**
+- `docs/evidence/p146/preset-guided.png`
+- `docs/evidence/p146/preset-standard.png`
+- `docs/evidence/p146/preset-expert.png`
+- `docs/evidence/p146/widget-add-remove.png`
+- `docs/evidence/p146/layout-persistence-after-reload.png`
+- `docs/evidence/p146/diagnostics-visibility-by-preset.png`
+- `docs/evidence/p146/fallback-standard-notice.png`
+- `docs/evidence/p146/validation.md`
+
 ## Phase 145 — Chat Workspace and Thread Rail Redesign
 **Date:** 2026-04-18 · **Commit:** d08478b
 

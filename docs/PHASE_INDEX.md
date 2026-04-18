@@ -1,6 +1,6 @@
 # Phase Index — Bazzite AI Layer
 
-> Master index of repo-tracked phases through P145.
+> Master index of repo-tracked phases through P146.
 > Updated 2026-04-18.
 > Source of truth: Notion `Bazzite Phases` database + `git log`; Notion row properties are authoritative when repo docs lag.
 > Note: references to legacy assistant/tray surfaces are historical phase records, not active runtime guidance.
@@ -9,10 +9,10 @@
 
 | Metric | Value |
 |--------|-------|
-| Total Phases Tracked | P0-P145 tracked in repo index |
-| Completed | P0-P145 complete in current repo-ledger terms |
-| Active | P145 (Chat Workspace and thread rail redesign closeout) |
-| Next Gated | P146 — (see P143 implementation map) |
+| Total Phases Tracked | P0-P146 tracked in repo index |
+| Completed | P0-P146 complete in current repo-ledger terms |
+| Active | P146 (Workspace personalization and preset persistence closeout) |
+| Next Gated | P147 — (see P143 implementation map) |
 | Historical Truth Conflict | P80 remains a repo-vs-Notion reconciliation note for later cleanup |
 | Repo Docs | docs/*.md, docs/patterns/frontend/*.md, docs/frontend-capability-pack/*.md |
 | Notion DB | `398c13ed-47f6-4f7e-9e54-eb339b462c90` |
@@ -184,6 +184,7 @@
 | P143 | Adaptive Minimalist UI Redesign Spec | Done | pending | 2026-04-18 | docs/P143_UI_REDESIGN_SPEC.md, docs/P143_WIDGET_CATALOG.md, docs/P143_UI_IMPLEMENTATION_MAP.md | Notion row | Spec-only phase; source of truth for P144-P146 implementation |
 | P144 | Home Dashboard Redesign Implementation | Done | pending | 2026-04-18 | ui/src/components/home/HomeContainer.tsx, ui/src/components/home/widgets/*, docs/evidence/p144/* | Notion row | Rebuilt Home to widget-based preset-driven layout with live project/thread/runtime/security data and add/remove widget flow |
 | P145 | Chat Workspace and Thread Rail Redesign | Done | d08478b | 2026-04-18 | ui/src/components/chat/{ChatContainer,ThreadSidebar,ChatMessage,ChatInput}.tsx, ui/src/lib/console-simplify.js, docs/evidence/p145/* | Notion row `346f793e-df7b-81d7-bae2-c9972d936c87` | Implemented calmer chat workspace, compact truthful runtime strip, progressive diagnostics, professional thread rail grouping, and polished archive/restore/merge/bulk flows |
+| P146 | Workspace Personalization and Preset Persistence | Done | pending | 2026-04-18 | ui/src/lib/workspace-personalization.ts, ui/src/hooks/useWorkspacePersonalization.ts, ui/src/components/{home/HomeContainer,chat/ChatContainer}.tsx, docs/evidence/p146/* | Notion row `346f793e-df7b-8172-9192-d21af39c0da8` | Added durable local-first preset/widget/layout personalization, chat visibility rules by preset, and explicit Standard fallback notice for unavailable/cleared persistence |
 
 ## Notion Database Reference
 

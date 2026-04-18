@@ -39,9 +39,12 @@ Expected: both endpoints return `status: ok`.
 ### Home vs Chat responsibilities
 
 - `Home Dashboard`: operator entry surface (project select/create, recent threads, health/security/runtime widgets, quick navigation) with Guided/Standard/Expert presets.
-- Home widgets are customizable in-session via `Add Widget` and per-widget `Remove` controls; `Reset Layout` restores the selected preset default.
+- Home widgets are customizable in-session via `Add Widget`, per-widget `Remove`, and widget `Move up` / `Move down` controls; `Reset Layout` restores the selected preset default.
+- Workspace personalization is local-first and persistent across reloads for preset, Home widget visibility/order, and Chat optional surfaces.
 - `Chat Workspace`: active execution surface (bound provider/model/mode/project, operator actions, tool traces, degraded-state visibility).
 - Chat header is summary-first: current thread + project context, compact runtime strip, and collapsible diagnostics/advanced controls.
+- Chat diagnostics/advanced visibility follows preset rules (`Guided` minimal, `Standard` balanced, `Expert` diagnostics-capable) and persists locally.
+- If personalization storage is unavailable or cleared, the console explicitly notifies operators and falls back to the `Standard` preset.
 - Thread organization (rename/move/archive/project assignment) is managed from the `Thread Rail` inside Chat Workspace.
 - Thread rail views are explicit: `Active` groups into pinned/recent/by-project, and `Archived` is a dedicated restore-focused view.
 - Thread bulk operations are local-first and explicit: enter `Select` mode in the Threads sidebar to merge, move, or archive multiple threads.
