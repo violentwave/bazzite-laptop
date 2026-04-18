@@ -8,14 +8,13 @@
 - Branch: master
 - Active Phase: P145 — Chat Workspace and Thread Rail Redesign
 - Notion Phase Row: https://www.notion.so/P145-Chat-Workspace-and-Thread-Rail-Redesign-346f793edf7b81d7bae2c9972d936c87
-- Last Commit: pending (local changes not committed yet)
+- Last Commit: `d08478b` (`feat(p145): redesign chat workspace and thread rail`)
 - Validation State: pass (`cd ui && npx tsc --noEmit`, `cd ui && npm run build`, `git diff --check`)
 
 ## Open Tasks
 
-- Commit P145 implementation + docs/evidence updates.
 - Update Notion P145 row (`Status`, `Validation Summary`, `Commit SHA`, `Finished At`, clear `Blocker`).
-- Push to `origin/master` if requested.
+- Push `master` to `origin/master` if requested.
 
 ## Blockers
 

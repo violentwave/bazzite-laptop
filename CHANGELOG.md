@@ -5,7 +5,7 @@ All significant changes. Format: date · deliverables · deltas · commit.
 ---
 
 ## Phase 145 — Chat Workspace and Thread Rail Redesign
-**Date:** 2026-04-18 · **Commit:** pending
+**Date:** 2026-04-18 · **Commit:** d08478b
 
 **Deliverables:**
 - Redesigned `Chat Workspace` around calmer hierarchy with a compact truthful runtime strip and progressive disclosure for diagnostics and advanced controls.

@@ -727,7 +727,7 @@ The repo has complete historical coverage across the earlier tranches, but older
 ### P145 — Chat Workspace and Thread Rail Redesign
 - **Status**: Done
 - **Finished**: 2026-04-18
-- **Commit SHA**: pending
+- **Commit SHA**: `d08478b`
 
 | Type | Path | Description |
 |------|------|-------------|
