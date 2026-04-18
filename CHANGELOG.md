@@ -5,7 +5,7 @@ All significant changes. Format: date · deliverables · deltas · commit.
 ---
 
 ## Phase 146 — Workspace Personalization and Preset Persistence
-**Date:** 2026-04-18 · **Commit:** pending
+**Date:** 2026-04-18 · **Commit:** b758dea
 
 **Deliverables:**
 - Added a shared local-first workspace personalization model for Home and Chat.

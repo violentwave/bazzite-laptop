@@ -8,12 +8,11 @@
 - Branch: master
 - Active Phase: P146 — Workspace Personalization and Preset Persistence
 - Notion Phase Row: https://www.notion.so/P146-Workspace-Personalization-and-Preset-Persistence-346f793edf7b81729192d21af39c0da8
-- Last Commit: pending (local changes not committed yet)
+- Last Commit: `b758dea` (`feat(p146): add workspace personalization persistence`)
 - Validation State: pass (`cd ui && npx tsc --noEmit`, `cd ui && npm run build`, `git diff --check`)
 
 ## Open Tasks
 
-- Commit P146 implementation and evidence/ledger updates.
 - Update Notion P146 row (`Status`, `Validation Summary`, `Commit SHA`, `Finished At`, clear `Blocker`).
 - Push commit(s) to `origin/master`.
 
