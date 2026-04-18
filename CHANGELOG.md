@@ -4,6 +4,42 @@ All significant changes. Format: date · deliverables · deltas · commit.
 
 ---
 
+## Phase 140 — Chat Workspace and Home Screen Operator Integration
+**Date:** 2026-04-18 · **Commit:** (pending)
+
+**Deliverables:**
+- Wired hamburger/menu to actual rail toggle behavior in TopBar
+- Added persistent thread organization: recent, pinned, project-grouped
+- Added local-only storage indicator (truthful labeling)
+- Added explicit Home controls: mode/profile, provider, model (from live MCP discovery)
+- Surfaced tool capability in chat with execution trace visibility
+- Added project-bound context controls: project selector, memory policy visibility
+- Added ThreadSidebar component with thread management
+- Extended ChatProfileSelector with provider/model dropdowns
+
+**Validation:**
+- `cd ui && npx tsc --noEmit` — pass
+- `cd ui && npm run build` — pass
+
+**Files Modified:**
+- `ui/src/components/shell/TopBar.tsx` — wire hamburger → toggleRail
+- `ui/src/hooks/useChat.ts` — add thread persistence
+- `ui/src/types/chat.ts` — add Thread type
+- `ui/src/components/chat/ThreadSidebar.tsx` — new component
+- `ui/src/components/chat/ChatProfileSelector.tsx` — add provider/model
+- `ui/src/components/chat/ChatContainer.tsx` — integrate all components
+
+**Constraints Verified:**
+- Local-first truth: Thread storage labeled "Local only"
+- No hardcoded catalogs: Providers/models from live MCP calls
+- No fake execution: Tool results show real status/duration/error
+- Midnight Glass: Consistent design tokens
+- No dead buttons: All controls functional
+
+**Result:** PASS — Chat workspace behaves like a real operator workspace.
+
+---
+
 ## Phase 137 — Deployment Profiles and Environment Packaging
 **Date:** 2026-04-17 · **Commit:** 5f2431c
 

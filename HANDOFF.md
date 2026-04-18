@@ -11,15 +11,26 @@ Project truth model:
 ## Current State
 
 - **Last Tool:** OpenCode
-- **Last Updated:** 2026-04-17
+- **Last Updated:** 2026-04-18
 - **Project:** bazzite-laptop
 - **Branch:** master
-- **Completed Phases:** P119, P120, P121, P122, P123, P124, P125, P126, P127, P128, P129, P130, P131, P132, P133, P134, P135, P136, P137, P138
+- **Completed Phases:** P119, P120, P121, P122, P123, P124, P125, P126, P127, P128, P129, P130, P131, P132, P133, P134, P135, P136, P137, P138, P139, P140
 - **Active Phase:** None
-- **Next Gated Phase:** P139 — see Notion phase row
+- **Next Gated Phase:** P141 — see Notion phase row
 - **Phase Truth:** Notion Bazzite Phases database (primary)
-- **Validation State:** P135 integration governance implemented with default-deny policy, scope requirements, redaction, and audit linkage
-- **Current SHA:** [TBD]
+- **Validation State:** P140 Chat Workspace implemented with working hamburger/rail toggle, thread persistence (local-only), provider/model controls from live MCP, tool execution visibility, project context controls
+- **Current SHA:** (pending commit)
+
+## Recent Session — 2026-04-18 (P140)
+
+- Wired hamburger/menu to actual rail toggle in TopBar
+- Added thread persistence with localStorage (truthfully labeled "Local only")
+- Created ThreadSidebar component with pinned/recent organization
+- Extended ChatProfileSelector with provider/model dropdowns (live from MCP)
+- Added ProjectSelector to chat toolbar
+- UI build validation passes (tsc --noEmit, npm run build)
+- Added docs/evidence/p140/validation.md
+- Added CHANGELOG.md entry
 
 ## Recent Session — 2026-04-18 (P138)
 

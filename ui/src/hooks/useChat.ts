@@ -2,10 +2,96 @@
 
 import { useReducer, useCallback, useRef, useState, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
-import { Message, Conversation, Attachment, ContextPin, TokenUsage } from '@/types/chat';
+import { Message, Thread, Attachment, ContextPin, TokenUsage, ToolCall, ToolResult } from '@/types/chat';
 import { streamChatCompletion } from '@/lib/llm-client';
 import { checkLLMProxyHealth } from '@/lib/llm-client';
 import { checkMCPBridgeHealth, executeTool, formatToolResult } from '@/lib/mcp-client';
+
+const THREADS_STORAGE_KEY = 'bazzite-chat-threads';
+const ACTIVE_THREAD_KEY = 'bazzite-active-thread';
+
+interface ThreadStore {
+  version: number;
+  threads: Thread[];
+  activeThreadId: string | null;
+}
+
+function loadThreadStore(): ThreadStore {
+  if (typeof window === 'undefined') {
+    return { version: 1, threads: [], activeThreadId: null };
+  }
+  try {
+    const stored = localStorage.getItem(THREADS_STORAGE_KEY);
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      return { version: 1, threads: [], activeThreadId: null, ...parsed };
+    }
+  } catch {
+    // Ignore parse errors
+  }
+  return { version: 1, threads: [], activeThreadId: null };
+}
+
+function saveThreadStore(store: ThreadStore): void {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.setItem(THREADS_STORAGE_KEY, JSON.stringify(store));
+  } catch {
+    // Ignore storage errors
+  }
+}
+
+function serializeMessages(msgs: Message[]): Record<string, unknown>[] {
+  return msgs.map(m => ({
+    ...m,
+    timestamp: m.timestamp instanceof Date ? m.timestamp.toISOString() : m.timestamp,
+    toolCalls: m.toolCalls?.map(tc => ({
+      ...tc,
+      timestamp: tc.timestamp instanceof Date ? tc.timestamp.toISOString() : tc.timestamp,
+    })),
+    attachments: m.attachments?.map(a => ({ ...a })),
+  }));
+}
+
+interface SerializedMessage {
+  id: string;
+  role: 'user' | 'assistant' | 'tool';
+  content: string;
+  timestamp: string;
+  toolCalls?: SerializedToolCall[];
+  attachments?: Attachment[];
+  isStreaming?: boolean;
+  error?: string;
+}
+
+interface SerializedToolCall {
+  id: string;
+  name: string;
+  arguments: Record<string, unknown>;
+  result?: ToolResult;
+  status: 'pending' | 'success' | 'error';
+  timestamp: string;
+}
+
+function deserializeMessages(msgs: unknown[]): Message[] {
+  return (msgs as SerializedMessage[]).map((m) => ({
+    id: m.id,
+    role: m.role,
+    content: m.content,
+    timestamp: new Date(m.timestamp),
+    toolCalls: m.toolCalls?.map((tc) => ({
+      id: tc.id,
+      name: tc.name,
+      arguments: tc.arguments,
+      result: tc.result,
+      status: tc.status,
+      timestamp: new Date(tc.timestamp),
+    })),
+    attachments: m.attachments,
+    isStreaming: m.isStreaming,
+    error: m.error,
+  }));
+}
 
 interface ChatState {
   messages: Message[];
@@ -103,11 +189,170 @@ export function useChat() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const streamingContentRef = useRef('');
   const assistantIdRef = useRef<string | null>(null);
+  
+  // Thread management state
+  const [threadStore, setThreadStore] = useState<ThreadStore>(() => loadThreadStore());
+  const [activeThreadId, setActiveThreadId] = useState<string | null>(threadStore.activeThreadId);
+  const [currentProvider, setCurrentProvider] = useState<string>('');
+  const [currentModel, setCurrentModel] = useState<string>('');
+  const [currentProjectId, setCurrentProjectId] = useState<string>('');
+
+  // Load messages from active thread on mount
+  useEffect(() => {
+    if (activeThreadId) {
+      const thread = threadStore.threads.find(t => t.id === activeThreadId);
+      if (thread && thread.messages.length > 0) {
+        const deserialized = deserializeMessages(thread.messages);
+        deserialized.forEach(msg => dispatch({ type: 'ADD_MESSAGE', payload: msg }));
+      }
+    }
+  }, []);
+
+  // Save thread to storage when messages change
+  const saveCurrentThread = useCallback(() => {
+    if (!activeThreadId) return;
+    
+    const serialized = serializeMessages(state.messages);
+    const updatedStore = {
+      ...threadStore,
+      threads: threadStore.threads.map(t => 
+        t.id === activeThreadId 
+          ? { 
+              ...t, 
+              messages: serialized,
+              updatedAt: new Date().toISOString(),
+              provider: currentProvider || t.provider,
+              model: currentModel || t.model,
+              projectId: currentProjectId || t.projectId,
+            }
+          : t
+      ),
+    };
+    
+    setThreadStore(updatedStore);
+    saveThreadStore(updatedStore);
+  }, [activeThreadId, threadStore, state.messages, currentProvider, currentModel, currentProjectId]);
+
+  // Auto-save when messages change (debounced)
+  useEffect(() => {
+    if (activeThreadId && state.messages.length > 0) {
+      const timer = setTimeout(saveCurrentThread, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [state.messages, activeThreadId, saveCurrentThread]);
 
   // Scroll to bottom when messages change
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [state.messages, state.streamingContent]);
+
+  // Thread management functions
+  const createThread = useCallback((title?: string) => {
+    const newThread: Thread = {
+      id: uuidv4(),
+      title: title || `Chat ${new Date().toLocaleDateString()}`,
+      messages: [],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      isPinned: false,
+      provider: currentProvider,
+      model: currentModel,
+      projectId: currentProjectId,
+    };
+    
+    const updatedStore = {
+      ...threadStore,
+      threads: [newThread, ...threadStore.threads],
+      activeThreadId: newThread.id,
+    };
+    
+    setThreadStore(updatedStore);
+    setActiveThreadId(newThread.id);
+    saveThreadStore(updatedStore);
+    dispatch({ type: 'CLEAR_MESSAGES' });
+    
+    return newThread;
+  }, [threadStore, currentProvider, currentModel, currentProjectId]);
+
+  const loadThread = useCallback((threadId: string) => {
+    const thread = threadStore.threads.find(t => t.id === threadId);
+    if (!thread) return;
+    
+    // Save current thread first
+    if (activeThreadId) {
+      saveCurrentThread();
+    }
+    
+    // Clear current messages and load new ones
+    dispatch({ type: 'CLEAR_MESSAGES' });
+    
+    if (thread.messages.length > 0) {
+      const deserialized = deserializeMessages(thread.messages as unknown[]);
+      deserialized.forEach(msg => dispatch({ type: 'ADD_MESSAGE', payload: msg }));
+    }
+    
+    // Update active thread
+    setActiveThreadId(threadId);
+    if (thread.provider) setCurrentProvider(thread.provider);
+    if (thread.model) setCurrentModel(thread.model);
+    if (thread.projectId) setCurrentProjectId(thread.projectId);
+    
+    const updatedStore = { ...threadStore, activeThreadId: threadId };
+    setThreadStore(updatedStore);
+    saveThreadStore(updatedStore);
+  }, [threadStore, activeThreadId, saveCurrentThread]);
+
+  const deleteThread = useCallback((threadId: string) => {
+    const updatedStore = {
+      ...threadStore,
+      threads: threadStore.threads.filter(t => t.id !== threadId),
+      activeThreadId: activeThreadId === threadId ? null : activeThreadId,
+    };
+    
+    setThreadStore(updatedStore);
+    if (activeThreadId === threadId) {
+      setActiveThreadId(null);
+      dispatch({ type: 'CLEAR_MESSAGES' });
+    }
+    saveThreadStore(updatedStore);
+  }, [threadStore, activeThreadId]);
+
+  const togglePinThread = useCallback((threadId: string) => {
+    const updatedStore = {
+      ...threadStore,
+      threads: threadStore.threads.map(t => 
+        t.id === threadId ? { ...t, isPinned: !t.isPinned } : t
+      ),
+    };
+    
+    setThreadStore(updatedStore);
+    saveThreadStore(updatedStore);
+  }, [threadStore]);
+
+  const getThreads = useCallback(() => threadStore.threads, [threadStore]);
+  
+  const getPinnedThreads = useCallback(() => 
+    threadStore.threads.filter(t => t.isPinned), [threadStore]);
+  
+  const getRecentThreads = useCallback(() => 
+    threadStore.threads
+      .filter(t => !t.isPinned)
+      .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
+      .slice(0, 10), [threadStore]);
+  
+  const getThreadsByProject = useCallback((projectId: string) => 
+    threadStore.threads.filter(t => t.projectId === projectId), [threadStore]);
+
+  const updateThreadTitle = useCallback((threadId: string, title: string) => {
+    const updatedStore = {
+      ...threadStore,
+      threads: threadStore.threads.map(t => 
+        t.id === threadId ? { ...t, title, updatedAt: new Date().toISOString() } : t
+      ),
+    };
+    setThreadStore(updatedStore);
+    saveThreadStore(updatedStore);
+  }, [threadStore]);
 
   const sendMessage = useCallback(
     async (content: string) => {
@@ -380,7 +625,7 @@ export function useChat() {
     contextPins: state.contextPins,
     tokenUsage: state.tokenUsage,
     error: state.error,
-    currentModel: state.currentModel,
+    taskType: state.currentModel,
     sendMessage,
     stopGeneration,
     addAttachment,
@@ -388,5 +633,23 @@ export function useChat() {
     clearMessages,
     setModel,
     messagesEndRef,
+    // Thread management
+    threads: getThreads(),
+    pinnedThreads: getPinnedThreads(),
+    recentThreads: getRecentThreads(),
+    activeThreadId,
+    createThread,
+    loadThread,
+    deleteThread,
+    togglePinThread,
+    updateThreadTitle,
+    getThreadsByProject,
+    // Context controls
+    currentProvider,
+    setCurrentProvider,
+    currentModel: currentModel || state.currentModel,
+    setCurrentModel,
+    currentProjectId,
+    setCurrentProjectId,
   };
 }

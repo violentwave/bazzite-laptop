@@ -3,7 +3,7 @@
 import { useShell } from "./ShellContext";
 
 export function TopBar() {
-  const { openCommandPalette, toggleNotifications, isNotificationsOpen } = useShell();
+  const { openCommandPalette, toggleNotifications, isNotificationsOpen, toggleRail, isRailExpanded } = useShell();
 
   return (
     <header
@@ -16,9 +16,11 @@ export function TopBar() {
       {/* Left: Logo and App Menu */}
       <div className="flex items-center gap-3">
         <button
+          onClick={toggleRail}
           className="p-2 rounded-md hover:bg-base-03 transition-colors"
           style={{ color: "var(--text-secondary)" }}
-          aria-label="Open menu"
+          aria-label="Toggle navigation rail"
+          title={isRailExpanded ? "Collapse navigation" : "Expand navigation"}
         >
           <MenuIcon />
         </button>

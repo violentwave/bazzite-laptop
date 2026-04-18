@@ -1,6 +1,6 @@
 /**
  * Chat Workspace Types
- * P80 - Chat Workspace
+ * P80 - Chat Workspace, P140 - Thread Persistence
  */
 
 export interface Message {
@@ -12,6 +12,19 @@ export interface Message {
   attachments?: Attachment[];
   isStreaming?: boolean;
   error?: string;
+}
+
+export interface Thread {
+  id: string;
+  title: string;
+  messages: unknown[]; // Serialized format for localStorage
+  projectId?: string;
+  createdAt: string;
+  updatedAt: string;
+  isPinned: boolean;
+  provider?: string;
+  model?: string;
+  taskType?: string;
 }
 
 export interface ToolCall {
