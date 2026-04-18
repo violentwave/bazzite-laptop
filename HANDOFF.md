@@ -19,7 +19,7 @@ Project truth model:
 - **Next Gated Phase:** P134 — see Notion phase row
 - **Phase Truth:** Notion Bazzite Phases database (primary)
 - **Validation State:** P132 human-in-the-loop runbooks added with machine-readable workflow metadata, explicit approval/escalation semantics, and validation pass
-- **Current SHA:** cb50d35
+- **Current SHA:** ae06d55
 
 ## Open Tasks
 

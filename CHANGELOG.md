@@ -5,7 +5,7 @@ All significant changes. Format: date · deliverables · deltas · commit.
 ---
 
 ## Phase 133 — Memory, Artifact, and Provenance Graph
-**Date:** 2026-04-17 · **Commit:** pending
+**Date:** 2026-04-17 · **Commit:** ae06d55
 
 **Deliverables:**
 - Added `ai/provenance.py` with LanceDB-backed provenance nodes/edges and scoped retrieval
