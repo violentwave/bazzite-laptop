@@ -1,8 +1,15 @@
-"""Slack MCP tool handlers."""
+"""Slack MCP tool handlers with optional governance integration."""
 
 from typing import Any
 
+from ai.integration_governance import (
+    IntegrationContext,
+    get_governance,
+    redact_integration_payload,
+)
 from ai.slack.client import SlackClient, get_slack_config, is_slack_configured
+
+_governance_enabled = True
 
 
 async def handle_slack_list_channels(args: dict[str, Any]) -> dict[str, Any]:
@@ -14,6 +21,12 @@ async def handle_slack_list_channels(args: dict[str, Any]) -> dict[str, Any]:
     Returns:
         List of channels.
     """
+    if _governance_enabled:
+        gov = get_governance()
+        result = gov.evaluate("slack.list_channels", IntegrationContext(), args)
+        if not result.allowed:
+            return {"error": result.reason, "governance": "blocked"}
+
     if not is_slack_configured():
         return {"error": "Slack not configured: missing bot token in keys.env"}
 
@@ -39,6 +52,12 @@ async def handle_slack_post_message(args: dict[str, Any]) -> dict[str, Any]:
     Returns:
         Message result.
     """
+    if _governance_enabled:
+        gov = get_governance()
+        result = gov.evaluate("slack.post_message", IntegrationContext(), args)
+        if not result.allowed:
+            return {"error": result.reason, "governance": "blocked"}
+
     if not is_slack_configured():
         return {"error": "Slack not configured: missing bot token in keys.env"}
 
@@ -48,12 +67,14 @@ async def handle_slack_post_message(args: dict[str, Any]) -> dict[str, Any]:
     if not channel or not text:
         return {"error": "Missing required arguments: channel, text"}
 
+    safe_text = redact_integration_payload({"text": text})["text"]
+
     client = get_slack_config()
     slack = SlackClient(client)
 
     try:
         thread_ts = args.get("thread_ts")
-        result = slack.post_message(channel, text, thread_ts=thread_ts)
+        result = slack.post_message(channel, safe_text, thread_ts=thread_ts)
         return {
             "ok": True,
             "channel": result.get("channel"),
@@ -75,6 +96,12 @@ async def handle_slack_list_users(args: dict[str, Any]) -> dict[str, Any]:
     Returns:
         List of users.
     """
+    if _governance_enabled:
+        gov = get_governance()
+        result = gov.evaluate("slack.list_users", IntegrationContext(), args)
+        if not result.allowed:
+            return {"error": result.reason, "governance": "blocked"}
+
     if not is_slack_configured():
         return {"error": "Slack not configured: missing bot token in keys.env"}
 
@@ -99,6 +126,12 @@ async def handle_slack_get_history(args: dict[str, Any]) -> dict[str, Any]:
     Returns:
         Messages from channel.
     """
+    if _governance_enabled:
+        gov = get_governance()
+        result = gov.evaluate("slack.get_history", IntegrationContext(), args)
+        if not result.allowed:
+            return {"error": result.reason, "governance": "blocked"}
+
     if not is_slack_configured():
         return {"error": "Slack not configured: missing bot token in keys.env"}
 

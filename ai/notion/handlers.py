@@ -1,8 +1,14 @@
-"""Notion MCP tool handlers."""
+"""Notion MCP tool handlers with optional governance integration."""
 
 from typing import Any
 
+from ai.integration_governance import (
+    IntegrationContext,
+    get_governance,
+)
 from ai.notion.client import NotionClient, get_notion_config, is_notion_configured
+
+_governance_enabled = True
 
 
 async def handle_notion_search(args: dict[str, Any]) -> dict[str, Any]:
@@ -14,6 +20,12 @@ async def handle_notion_search(args: dict[str, Any]) -> dict[str, Any]:
     Returns:
         Search results.
     """
+    if _governance_enabled:
+        gov = get_governance()
+        result = gov.evaluate("notion.search", IntegrationContext(), args)
+        if not result.allowed:
+            return {"error": result.reason, "governance": "blocked"}
+
     if not is_notion_configured():
         return {"error": "Notion not configured: missing API key in keys.env"}
 
@@ -41,6 +53,12 @@ async def handle_notion_get_page(args: dict[str, Any]) -> dict[str, Any]:
     Returns:
         Page data.
     """
+    if _governance_enabled:
+        gov = get_governance()
+        result = gov.evaluate("notion.get_page", IntegrationContext(), args)
+        if not result.allowed:
+            return {"error": result.reason, "governance": "blocked"}
+
     if not is_notion_configured():
         return {"error": "Notion not configured: missing API key in keys.env"}
 
@@ -69,6 +87,12 @@ async def handle_notion_get_page_content(args: dict[str, Any]) -> dict[str, Any]
     Returns:
         Page content blocks.
     """
+    if _governance_enabled:
+        gov = get_governance()
+        result = gov.evaluate("notion.get_page_content", IntegrationContext(), args)
+        if not result.allowed:
+            return {"error": result.reason, "governance": "blocked"}
+
     if not is_notion_configured():
         return {"error": "Notion not configured: missing API key in keys.env"}
 
@@ -97,6 +121,12 @@ async def handle_notion_query_database(args: dict[str, Any]) -> dict[str, Any]:
     Returns:
         Database query results.
     """
+    if _governance_enabled:
+        gov = get_governance()
+        result = gov.evaluate("notion.query_database", IntegrationContext(), args)
+        if not result.allowed:
+            return {"error": result.reason, "governance": "blocked"}
+
     if not is_notion_configured():
         return {"error": "Notion not configured: missing API key in keys.env"}
 

@@ -14,16 +14,28 @@ Project truth model:
 - **Last Updated:** 2026-04-17
 - **Project:** bazzite-laptop
 - **Branch:** master
-- **Completed Phases:** P119, P120, P121, P122, P123, P124, P125, P126, P127, P128, P129, P130, P131, P132, P133, P134
+- **Completed Phases:** P119, P120, P121, P122, P123, P124, P125, P126, P127, P128, P129, P130, P131, P132, P133, P134, P135
 - **Active Phase:** None
-- **Next Gated Phase:** P135 — see Notion phase row
+- **Next Gated Phase:** P136 — see Notion phase row
 - **Phase Truth:** Notion Bazzite Phases database (primary)
-- **Validation State:** P134 self-healing control plane implemented with detection checks, fixed repair actions, policy gating, approval requirements, and cooldown/no-loop behavior
-- **Current SHA:** a89e82f
+- **Validation State:** P135 integration governance implemented with default-deny policy, scope requirements, redaction, and audit linkage
+- **Current SHA:** eedd8db
 
 ## Open Tasks
 
-- None — P134 validation passed
+- None — P135 validation passed
+
+## Recent Session — 2026-04-17 (P135)
+
+- Implemented `ai/integration_governance.py` with action registry and policy evaluation.
+- Added 15 governable integration actions: 6 Notion, 5 Slack, 3 GitHub.
+- Added governance layer to existing Notion handlers (search, get_page, get_page_content, query_database).
+- Added governance layer to Slack handlers (list_channels, list_users, post_message, get_history).
+- Added redaction for sensitive paths and secrets in outbound payloads.
+- Added `tests/test_integration_governance.py` (26 tests).
+- Validation passed:
+  - `.venv/bin/python -m pytest tests/test_integration_governance.py tests/test_phase_control*.py -q` (83 passed)
+  - `ruff check ai/ tests/` (pass)
 
 ## Recent Session — 2026-04-17 (P134)
 
