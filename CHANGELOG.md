@@ -4,6 +4,43 @@ All significant changes. Format: date · deliverables · deltas · commit.
 
 ---
 
+## Phase 136 — Retention, Privacy, and Export Controls
+**Date:** 2026-04-17 · **Commit:** [TBD]
+
+**Deliverables:**
+- Added `ai/retention_privacy.py` with retention policies for 7 data classes
+- Added redaction for secrets: api_key, token, sk-*, xoxb-*
+- Added redaction for paths: /home/*, /var/home/*, /root/*
+- Added redaction for PII: SSN patterns
+- Added export bundle generation with metadata and integrity
+- Added context isolation respecting P129 boundaries
+- Added `tests/test_retention_privacy.py` with 24 tests
+
+**Validation:**
+- `.venv/bin/python -m pytest tests/test_retention_privacy.py -q` — 24 passed
+- `ruff check ai/ tests/` — pass
+
+**Artifacts:**
+- `ai/retention_privacy.py`
+- `tests/test_retention_privacy.py`
+- `docs/P136_PLAN.md`
+- `docs/evidence/p136/validation.md`
+
+**Data Classes:**
+- security_findings (90 days), incidents (365 days), plans (180 days)
+- audit_logs (730 days), agent_artifacts (90 days)
+- knowledge_base (365 days), provenance (365 days)
+
+**Safety Proofs:**
+- No raw secrets in export
+- No raw paths in export
+- Evidence not auto-deletable
+- Warnings for redactions
+
+**Result:** PASS — Retention, privacy, and export controls implemented.
+
+---
+
 ## Phase 134 — Self-healing Control Plane
 **Date:** 2026-04-17 · **Commit:** 81daf2c
 
@@ -35,6 +72,37 @@ All significant changes. Format: date · deliverables · deltas · commit.
 - Audit/evidence — state persists to disk with cooldowns
 
 **Result:** PASS — Self-healing control plane implemented with detection, fixed actions, policy gating, approval requirements, and loop prevention.
+
+---
+
+## Phase 135 — Integration Governance for Notion, Slack, GitHub Actions
+**Date:** 2026-04-17 · **Commit:** eedd8db
+
+**Deliverables:**
+- Added `ai/integration_governance.py` with action registry and policy evaluation
+- Added 15 governable actions: 6 Notion, 5 Slack, 3 GitHub
+- Added governance layer to Notion handlers: search, get_page, get_page_content, query_database
+- Added governance layer to Slack handlers: list_channels, list_users, post_message, get_history
+- Added redaction for sensitive paths and secrets in outbound payloads
+- Added `tests/test_integration_governance.py` with 26 tests
+
+**Validation:**
+- `.venv/bin/python -m pytest tests/test_integration_governance.py -q` — 26 passed
+- `ruff check ai/ tests/` — pass
+
+**Artifacts:**
+- `ai/integration_governance.py`
+- `tests/test_integration_governance.py`
+- `docs/P135_PLAN.md`
+- `docs/evidence/p135/validation.md`
+
+**Safety Proofs:**
+- Default-deny for unknown actions
+- Scope and attribution requirements enforced
+- Redaction applied before outbound content
+- Audit linkage to compliance events
+
+**Result:** PASS — Integration governance implemented with default-deny policy, scope requirements, and audit linkage.
 
 ---
 

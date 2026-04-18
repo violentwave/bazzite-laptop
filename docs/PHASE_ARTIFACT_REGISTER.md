@@ -24,9 +24,9 @@
 
 | Category | Current State |
 |----------|---------------|
-| Current completed Security Autopilot + Workbench phases | `P119`, `P120`, `P121`, `P122`, `P123`, `P124`, `P125`, `P126`, `P127`, `P128`, `P129`, `P130`, `P131`, `P132`, `P133` |
+| Current completed Security Autopilot + Workbench phases | `P119`, `P120`, `P121`, `P122`, `P123`, `P124`, `P125`, `P126`, `P127`, `P128`, `P129`, `P130`, `P131`, `P132`, `P133`, `P134`, `P135`, `P136` |
 | Current active phase | None |
-| Next gated phase | `P134 — see Notion row` |
+| Next gated phase | `P137 — see Notion row` |
 | Primary phase truth | Notion `Bazzite Phases` row properties |
 | Lightweight session truth | `HANDOFF.md` |
 | Standing agent rules | `docs/AGENT.md` |
@@ -593,6 +593,41 @@ The repo has complete historical coverage across the earlier tranches, but older
 | Allowlist | `configs/mcp-bridge-allowlist.yaml` | Added provenance MCP tool definitions and scoped args |
 | Tests | `tests/test_provenance_graph.py` | Insert/link/query/scoping/redaction coverage for provenance graph |
 | Evidence | `docs/evidence/p133/validation.md` | P133 validation with schema, scoped query proof, redacted output examples |
+
+### P134 — Self-healing Control Plane
+- **Status**: Done
+- **Finished**: 2026-04-17
+
+| Type | Path | Description |
+|------|------|-------------|
+| Plan | `docs/P134_PLAN.md` | P134 scope, self-healing model, validation commands |
+| Module | `ai/self_healing.py` | Coordinator with detection checks, fixed repair actions, cooldown, policy gating |
+| Tests | `tests/test_self_healing.py` | Detection checks, repair actions, cooldown, approval gating, degraded state visibility |
+| Evidence | `docs/evidence/p134/validation.md` | P134 validation with 30 passing tests and safety proofs |
+
+### P135 — Integration Governance for Notion, Slack, GitHub Actions
+- **Status**: Done
+- **Finished**: 2026-04-17
+
+| Type | Path | Description |
+|------|------|-------------|
+| Plan | `docs/P135_PLAN.md` | P135 scope, governance model, validation commands |
+| Module | `ai/integration_governance.py` | Action registry, policy evaluation, default-deny enforcement |
+| Integration | `ai/notion/handlers.py` | Governance layer for Notion MCP tools |
+| Integration | `ai/slack/handlers.py` | Governance layer for Slack MCP tools |
+| Tests | `tests/test_integration_governance.py` | Action registry, policy gating, redaction tests |
+| Evidence | `docs/evidence/p135/validation.md` | P135 validation with scoped actions and audit linkage |
+
+### P136 — Retention, Privacy, and Export Controls
+- **Status**: Done
+- **Finished**: 2026-04-17
+
+| Type | Path | Description |
+|------|------|-------------|
+| Plan | `docs/P136_PLAN.md` | P136 scope, retention model, validation commands |
+| Module | `ai/retention_privacy.py` | Retention policies, redaction engine, export bundle generator |
+| Tests | `tests/test_retention_privacy.py` | Retention rules, redaction, export, context isolation tests |
+| Evidence | `docs/evidence/p136/validation.md` | P136 validation with data classes and safety proofs | |
 
 ## Cross-Phase Documentation
 

@@ -63,6 +63,31 @@ security/workbench/phase flows:
 All provenance queries require `workspace_id` and support optional
 `actor_id`/`project_id`/`session_id` filters to enforce scoped retrieval.
 
+## Data Retention and Privacy
+
+The system stores data across 7 retention classes:
+
+| Data Class | Retention | Description |
+|------------|-----------|-------------|
+| security_findings | 90 days | Scan results, CVE reports |
+| incidents | 365 days | Active and resolved incidents |
+| plans | 180 days | Remediation action tracking |
+| audit_logs | 730 days | Compliance audit trail |
+| agent_artifacts | 90 days | Agent workbench content |
+| knowledge_base | 365 days | RAG vector store |
+| provenance | 365 days | Provenance records |
+
+All outbound data is redacted for secrets (api_key, token, sk-*, xoxb-*), paths (/home/*, /var/home/*, /root/*), and PII before display or export.
+
+## Exporting Data
+
+Export bundles include:
+- Export timestamp and source metadata
+- SHA256 integrity hash
+- Redacted content only (no raw secrets/paths)
+
+Use the retention manager to generate compliant export bundles.
+
 ## Troubleshooting
 
 If MCP bridge is unavailable:

@@ -9,10 +9,10 @@
 
 | Metric | Value |
 |--------|-------|
-| Total Phases Tracked | P0-P133 complete in repo index; P134-P139 planned in Notion |
-| Completed | P0-P133 complete in current repo-ledger terms |
+| Total Phases Tracked | P0-P136 complete in repo index; P137-P139 planned in Notion |
+| Completed | P0-P136 complete in current repo-ledger terms |
 | Active | None |
-| Next Gated | P134 — (see Notion row) |
+| Next Gated | P137 — (see Notion row) |
 | Historical Truth Conflict | P80 remains a repo-vs-Notion reconciliation note for later cleanup |
 | Repo Docs | docs/*.md, docs/patterns/frontend/*.md, docs/frontend-capability-pack/*.md |
 | Notion DB | `398c13ed-47f6-4f7e-9e54-eb339b462c90` |
@@ -174,6 +174,7 @@
 | P133 | Memory, Artifact, and Provenance Graph | Done | f4a578b | 2026-04-17 | ai/provenance.py, ai/security_autopilot/executor.py, ai/agent_workbench/handoff.py, ai/mcp_bridge/tools.py, configs/mcp-bridge-allowlist.yaml, tests/test_provenance_graph.py, docs/P133_PLAN.md, docs/evidence/p133/validation.md | Notion row | Added scoped provenance graph linking incidents, evidence, actions, sessions, diffs, tests, artifacts, memory, and phase records with attribution and redaction |
 | P134 | Self-healing Control Plane | Done | 81daf2c | 2026-04-17 | ai/self_healing.py, tests/test_self_healing.py, docs/P134_PLAN.md, docs/evidence/p134/validation.md | Notion row | Added detection checks for service health/timers/providers/LLM, fixed allowlisted repair actions, policy gating, approval-gated restart, cooldown/no-loop prevention, and degradation state visibility |
 | P135 | Integration Governance for Notion, Slack, and GitHub Actions | Done | eedd8db | 2026-04-17 | ai/integration_governance.py, ai/notion/handlers.py, ai/slack/handlers.py, tests/test_integration_governance.py, docs/P135_PLAN.md, docs/evidence/p135/validation.md | Notion row | Added integration action registry with risk metadata, default-deny for unknown actions, scope/attribution requirements, redaction for sensitive content, and audit linkage for Notion/Slack/GitHub operations |
+| P136 | Retention, Privacy, and Export Controls | Done | [TBD] | 2026-04-17 | ai/retention_privacy.py, tests/test_retention_privacy.py, docs/P136_PLAN.md, docs/evidence/p136/validation.md | Notion row | Added retention policies for 7 data classes, redaction for secrets/PII/paths, export bundle generation with metadata and integrity verification |
 
 ## Notion Database Reference
 

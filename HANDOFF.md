@@ -14,12 +14,24 @@ Project truth model:
 - **Last Updated:** 2026-04-17
 - **Project:** bazzite-laptop
 - **Branch:** master
-- **Completed Phases:** P119, P120, P121, P122, P123, P124, P125, P126, P127, P128, P129, P130, P131, P132, P133, P134, P135
+- **Completed Phases:** P119, P120, P121, P122, P123, P124, P125, P126, P127, P128, P129, P130, P131, P132, P133, P134, P135, P136
 - **Active Phase:** None
-- **Next Gated Phase:** P136 — see Notion phase row
+- **Next Gated Phase:** P137 — see Notion phase row
 - **Phase Truth:** Notion Bazzite Phases database (primary)
 - **Validation State:** P135 integration governance implemented with default-deny policy, scope requirements, redaction, and audit linkage
-- **Current SHA:** eedd8db
+- **Current SHA:** [TBD]
+
+## Recent Session — 2026-04-17 (P136)
+
+- Implemented retention policies for 7 data classes (security_findings, incidents, plans, audit_logs, agent_artifacts, knowledge_base, provenance).
+- Implemented redaction for secrets (api_key, token, sk-*, xoxb-*), paths (/home/*, /var/home/*, /root/*), and PII (SSN patterns).
+- Implemented export bundle generation with metadata, redaction, and integrity verification.
+- Added `ai/retention_privacy.py` with RetentionPrivacyManager.
+- Added `tests/test_retention_privacy.py` (24 tests all pass).
+- Added `docs/P136_PLAN.md` and `docs/evidence/p136/validation.md`.
+- Validation passed:
+  - `.venv/bin/python -m pytest tests/test_retention_privacy.py -q` (24 passed)
+  - `ruff check ai/ tests/` (pass)
 
 ## Open Tasks
 
