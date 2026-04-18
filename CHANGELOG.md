@@ -5,7 +5,7 @@ All significant changes. Format: date · deliverables · deltas · commit.
 ---
 
 ## Phase 133 — Memory, Artifact, and Provenance Graph
-**Date:** 2026-04-17 · **Commit:** ae06d55
+**Date:** 2026-04-17 · **Commit:** f4a578b
 
 **Deliverables:**
 - Added `ai/provenance.py` with LanceDB-backed provenance nodes/edges and scoped retrieval
@@ -59,7 +59,7 @@ All significant changes. Format: date · deliverables · deltas · commit.
 ---
 
 ## Phase 132 — Human-in-the-loop Orchestration Runbooks
-**Date:** 2026-04-17 · **Commit:** 9e7e963
+**Date:** 2026-04-17 · **Commit:** f266c4b
 
 **Deliverables:**
 - Added high-risk operator runbook corpus under `docs/runbooks/`
@@ -92,7 +92,7 @@ escalation semantics aligned to P122/P127/P128 and P131 decision support.
 ---
 
 ## Phase 131 — Routing Evaluation and Replay Lab
-**Date:** 2026-04-17 · **Commit:** 7e32900
+**Date:** 2026-04-17 · **Commit:** 661d3a8
 
 **Deliverables:**
 - Added evaluation-only routing replay module in `ai/routing_replay.py`
