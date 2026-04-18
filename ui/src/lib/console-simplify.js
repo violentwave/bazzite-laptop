@@ -52,19 +52,36 @@ export function buildRuntimeStrip({
   runtimeHealth,
   availableTools,
   degradedStates,
+  hasActiveThread,
 }) {
   const provider = workspaceSession?.provider || 'none';
   const model = workspaceSession?.model || 'none';
   const mode = workspaceSession?.mode || 'fast';
   const project = workspaceSession?.project_id || 'no-project';
+  const hasRuntimeSelection = Boolean(workspaceSession?.provider && workspaceSession?.model);
 
   const bindingState = runtimeBinding?.status || 'pending';
-  const statusTone = bindingState === 'bound' ? 'success' : bindingState === 'invalid' ? 'danger' : 'warning';
+  const status = !hasActiveThread
+    ? 'No thread'
+    : bindingState === 'bound'
+      ? 'Bound'
+      : bindingState === 'invalid'
+        ? 'Invalid selection'
+        : hasRuntimeSelection
+          ? 'Configured'
+          : 'Pending setup';
+
+  const statusTone =
+    status === 'Bound'
+      ? 'success'
+      : status === 'Invalid selection'
+        ? 'danger'
+        : 'warning';
 
   return {
     summary: `${provider} / ${model} / ${mode} / ${project}`,
     location: currentLocationLabel || 'No active thread',
-    status: bindingState === 'bound' ? 'Bound' : bindingState === 'invalid' ? 'Invalid selection' : 'Pending bind',
+    status,
     statusTone,
     details: [
       `MCP: ${runtimeHealth?.mcpHealthy ? 'healthy' : 'degraded'}`,

@@ -1,6 +1,7 @@
 import { groupThreads } from './thread-store.js';
 
 export const THREADS_STORAGE_KEY = 'bazzite-chat-threads';
+export const CHAT_SELECTED_PROJECT_KEY = 'bazzite-chat-selected-project';
 
 export function extractRecentThreads(store, limit = 6) {
   if (!store || typeof store !== 'object') {

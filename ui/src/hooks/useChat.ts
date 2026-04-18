@@ -46,6 +46,7 @@ import {
   setThreadArchivedState,
   updateThreadInStore,
 } from '@/lib/thread-store';
+import { CHAT_SELECTED_PROJECT_KEY } from '@/lib/home-dashboard';
 
 const THREADS_STORAGE_KEY = 'bazzite-chat-threads';
 const ACTIVE_THREAD_KEY = 'bazzite-active-thread';
@@ -118,6 +119,33 @@ function saveThreadStore(store: ThreadStore): void {
     localStorage.setItem(THREADS_STORAGE_KEY, JSON.stringify(store));
   } catch {
     // Ignore storage errors
+  }
+}
+
+function loadPreferredProjectId(): string {
+  if (typeof window === 'undefined') {
+    return '';
+  }
+  try {
+    return (localStorage.getItem(CHAT_SELECTED_PROJECT_KEY) || '').trim();
+  } catch {
+    return '';
+  }
+}
+
+function savePreferredProjectId(projectId: string): void {
+  if (typeof window === 'undefined') {
+    return;
+  }
+  try {
+    const normalized = (projectId || '').trim();
+    if (!normalized) {
+      localStorage.removeItem(CHAT_SELECTED_PROJECT_KEY);
+      return;
+    }
+    localStorage.setItem(CHAT_SELECTED_PROJECT_KEY, normalized);
+  } catch {
+    // Ignore local storage failures.
   }
 }
 
@@ -362,6 +390,7 @@ export function useChat(options: UseChatOptions = {}) {
 
   const setCurrentProjectId = useCallback((projectId: string) => {
     setSessionPatch({ project_id: projectId });
+    savePreferredProjectId(projectId);
   }, [setSessionPatch]);
 
   const setCurrentProvider = useCallback((providerId: string) => {
@@ -465,6 +494,62 @@ export function useChat(options: UseChatOptions = {}) {
 
     return () => clearInterval(interval);
   }, []);
+
+  useEffect(() => {
+    if (workspaceSession.project_id) {
+      return;
+    }
+    const preferredProjectId = loadPreferredProjectId();
+    if (!preferredProjectId) {
+      return;
+    }
+    setSessionPatch({ project_id: preferredProjectId });
+  }, [setSessionPatch, workspaceSession.project_id]);
+
+  useEffect(() => {
+    if (!workspaceSession.project_id) {
+      return;
+    }
+    savePreferredProjectId(workspaceSession.project_id);
+  }, [workspaceSession.project_id]);
+
+  useEffect(() => {
+    if (!activeThreadId) {
+      setRuntimeBinding({ status: 'pending', error: null });
+      return;
+    }
+
+    if (providers.length === 0 || models.length === 0) {
+      setRuntimeBinding((previous) =>
+        previous.status === 'invalid' ? previous : { status: 'pending', error: null }
+      );
+      return;
+    }
+
+    const validation = validateWorkspaceSessionBinding(
+      {
+        ...workspaceSession,
+        thread_id: activeThreadId,
+      },
+      providers,
+      models
+    );
+
+    if (!validation.valid) {
+      setRuntimeBinding({
+        status: 'invalid',
+        error: validation.error || 'Invalid runtime binding.',
+      });
+      return;
+    }
+
+    setRuntimeBinding({ status: 'bound', error: null });
+  }, [
+    activeThreadId,
+    workspaceSession,
+    providers,
+    models,
+  ]);
 
   useEffect(() => {
     if (!workspaceSession.provider && providers.length > 0) {
@@ -637,15 +722,15 @@ export function useChat(options: UseChatOptions = {}) {
     // Update active thread and validate project context
     setActiveThreadId(threadId);
     
-    let targetProjectId = '';
-    if (thread.workspaceSession?.project_id) {
-      setWorkspaceSession(thread.workspaceSession);
-      targetProjectId = thread.workspaceSession.project_id;
-    } else {
-      targetProjectId = thread.projectId || '';
-      setWorkspaceSession((previous) => ({
-        ...previous,
-        thread_id: threadId,
+      let targetProjectId = '';
+      if (thread.workspaceSession?.project_id) {
+        setWorkspaceSession(thread.workspaceSession);
+        targetProjectId = thread.workspaceSession.project_id;
+      } else {
+        targetProjectId = thread.projectId || loadPreferredProjectId();
+        setWorkspaceSession((previous) => ({
+          ...previous,
+          thread_id: threadId,
         provider: thread.provider || previous.provider,
         model: thread.model || previous.model,
         project_id: targetProjectId,
@@ -903,9 +988,8 @@ export function useChat(options: UseChatOptions = {}) {
             },
           },
         });
-  const runtimeDegradedStates = getRuntimeDegradedStates(workspaceSession);
 
-  return {
+        return {
           success: false,
           blocked: true,
           error: 'MCP bridge unavailable',
@@ -1058,7 +1142,7 @@ export function useChat(options: UseChatOptions = {}) {
         const introspection = buildRuntimeIntrospectionResponse({
           topic: intent.topic,
           session: boundSession,
-          runtimeBinding,
+          runtimeBinding: { status: 'bound', error: null },
           mcpHealthy,
           project: activeProject,
           toolPolicy: boundSession.tool_policy,

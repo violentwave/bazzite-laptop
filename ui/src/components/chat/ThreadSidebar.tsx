@@ -308,7 +308,7 @@ export function ThreadSidebar({
         {pinnedThreads.length > 0 && (
           <section>
             <div className="px-4 py-1 text-xs font-medium uppercase" style={{ color: "var(--text-tertiary)" }}>
-              Pinned
+              Pinned (Priority)
             </div>
             {pinnedThreads.map((thread) => (
               <ThreadItem key={thread.id} thread={thread} />
@@ -319,7 +319,7 @@ export function ThreadSidebar({
         {recentThreads.length > 0 && (
           <section>
             <div className="px-4 py-1 text-xs font-medium uppercase" style={{ color: "var(--text-tertiary)" }}>
-              Recent
+              Recent (Latest)
             </div>
             {recentThreads.map((thread) => (
               <ThreadItem key={thread.id} thread={thread} />
@@ -330,7 +330,10 @@ export function ThreadSidebar({
         {groupedThreadsByProject.length > 0 && (
           <section>
             <div className="px-4 py-1 text-xs font-medium uppercase" style={{ color: "var(--text-tertiary)" }}>
-              By Project
+              By Project (Remaining)
+            </div>
+            <div className="px-4 pb-1 text-[11px]" style={{ color: "var(--text-tertiary)" }}>
+              Threads already shown in Pinned/Recent are omitted here.
             </div>
             {groupedThreadsByProject.map((group) => (
               <div key={group.projectId || "unassigned"} className="mb-3">

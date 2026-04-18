@@ -32,6 +32,7 @@ export function buildRuntimeStrip(input: {
   runtimeHealth: { mcpHealthy: boolean; llmHealthy: boolean };
   availableTools: string[];
   degradedStates: string[];
+  hasActiveThread?: boolean;
 }): {
   summary: string;
   location: string;

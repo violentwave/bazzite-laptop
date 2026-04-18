@@ -8,6 +8,7 @@ import { useProviders } from "@/hooks/useProviders";
 import { useSecurity } from "@/hooks/useSecurity";
 import { callMCPTool } from "@/lib/mcp-client";
 import {
+  CHAT_SELECTED_PROJECT_KEY,
   THREADS_STORAGE_KEY,
   buildProjectRegisterArgs,
   extractRecentThreads,
@@ -170,6 +171,9 @@ export function HomeContainer() {
         return;
       }
       await openProject(selectedProjectId);
+      if (typeof window !== "undefined") {
+        localStorage.setItem(CHAT_SELECTED_PROJECT_KEY, selectedProjectId);
+      }
       setActivePanel(panel);
     },
     [openProject, selectedProjectId, setActivePanel]
@@ -255,6 +259,9 @@ export function HomeContainer() {
       await refreshProjects();
       setSelectedProjectId(response.project.project_id);
       await openProject(response.project.project_id);
+      if (typeof window !== "undefined") {
+        localStorage.setItem(CHAT_SELECTED_PROJECT_KEY, response.project.project_id);
+      }
 
       setProjectNameInput("");
       setProjectPathInput("");

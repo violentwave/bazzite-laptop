@@ -7,6 +7,7 @@ import { MCPResponse } from '@/types/chat';
 
 const MCP_BRIDGE_URL = 'http://127.0.0.1:8766';
 const MCP_ENDPOINT = `${MCP_BRIDGE_URL}/mcp`;
+const MCP_RPC_TIMEOUT_MS = 10000;
 
 let mcpSessionId: string | null = null;
 let initializePromise: Promise<void> | null = null;
@@ -86,6 +87,7 @@ async function initializeSession(): Promise<void> {
       method: 'POST',
       headers: buildHeaders(),
       body: JSON.stringify(initPayload),
+      signal: AbortSignal.timeout(MCP_RPC_TIMEOUT_MS),
     });
 
     if (!initResponse.ok) {
@@ -110,6 +112,7 @@ async function initializeSession(): Promise<void> {
         method: 'notifications/initialized',
         params: {},
       }),
+      signal: AbortSignal.timeout(MCP_RPC_TIMEOUT_MS),
     });
   })();
 
@@ -136,6 +139,7 @@ async function callRpc(method: string, params: Record<string, unknown>): Promise
       method: 'POST',
       headers: buildHeaders(),
       body: JSON.stringify(payload),
+      signal: AbortSignal.timeout(MCP_RPC_TIMEOUT_MS),
     });
 
     if (!response.ok) {

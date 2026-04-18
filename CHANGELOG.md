@@ -4,6 +4,58 @@ All significant changes. Format: date · deliverables · deltas · commit.
 
 ---
 
+## Phase 143 — Adaptive Minimalist UI Redesign Spec
+**Date:** 2026-04-18 · **Commit:** pending
+
+**Deliverables:**
+- Analyzed the extracted redesign bundle at `/home/lch/projects/bazzite-redesign/redesign_ui/`.
+- Produced comprehensive redesign specification docs: `docs/P143_UI_REDESIGN_SPEC.md`, `docs/P143_WIDGET_CATALOG.md`, and `docs/P143_UI_IMPLEMENTATION_MAP.md`.
+- Defined modular widget-based Home Dashboard architecture with Guided/Standard/Expert presets.
+- Defined the Chat Workspace and thread-rail implementation targets without changing production UI in this phase.
+- Mapped follow-on implementation into P144, P145, and P146.
+
+---
+
+## Phase 142 — Console Asset Loading and Runtime Stability Fix
+**Date:** 2026-04-18 · **Commit:** pending
+
+**Deliverables:**
+- Identified root cause for white/unstyled console regressions as `_next/static` dev chunk failures (HTTP 500) under stale Turbopack cache/chunk state.
+- Added a stable dev launcher that clears stale chunk cache paths before `next dev` startup:
+  - `ui/scripts/dev-stable.mjs`
+- Wired `scripts/start-console-ui.sh` to prefer the stable dev launcher path.
+- Reduced cache mismatch risk by disabling Turbopack persisted dev cache restore:
+  - `ui/next.config.ts` (`experimental.turbopackFileSystemCacheForDev: false`)
+- Added local dev-origin compatibility to stop blocked HMR resource loading on `127.0.0.1`:
+  - `ui/next.config.ts` (`allowedDevOrigins: ['127.0.0.1', 'localhost']`)
+- Added MCP RPC timeout guards to prevent Home/Workbench project loading from hanging indefinitely:
+  - `ui/src/lib/mcp-client.ts` (`AbortSignal.timeout(10000)` on initialize and RPC requests)
+- Cleaned runtime truth so chat status is derived from one canonical active-thread session state and no longer shows contradictory pending/no-project states in happy-path evidence.
+- Reduced thread rail duplication by making `By Project` show remaining active threads not already highlighted in Pinned/Recent.
+- Captured final canonical happy-path evidence set for Home -> project -> Chat (bound runtime) and thread workflows.
+
+**Validation:**
+- `cd ui && npx tsc --noEmit` — pass
+- `cd ui && npm run build` — pass
+- `cd ui && node --test src/lib/workspace-session-binding.test.mjs src/lib/thread-store.test.mjs src/lib/console-simplify.test.mjs` — pass (26/26)
+- `curl -s http://127.0.0.1:3000` — returns HTML with stylesheet and chunk links
+- `curl -s http://127.0.0.1:8766/health` — `{"status":"ok",...}`
+- `curl -s http://127.0.0.1:8767/health` — `{"status":"ok",...}`
+- Static asset probe after fix: all referenced `_next/static/*` assets on `/` return 200 (`ASSET_ERROR_COUNT 0`)
+- Browser runtime check: no repeated `/_next/webpack-hmr` cross-origin websocket failures when validating via `127.0.0.1`
+
+**Artifacts:**
+- `docs/evidence/p142/validation.md`
+- `docs/evidence/p142/screenshots/p142-home-dashboard-happy-path.png`
+- `docs/evidence/p142/screenshots/p142-active-project-success.png`
+- `docs/evidence/p142/screenshots/p142-chat-workspace-bound-happy-path.png`
+- `docs/evidence/p142/screenshots/p142-thread-organization-final.png`
+- `docs/evidence/p142/screenshots/p142-bulk-select-final.png`
+- `docs/evidence/p142/screenshots/p142-merge-modal-final.png`
+- `docs/evidence/p142/screenshots/p142-archived-restore-final.png`
+
+**Result:** Stabilized in repo scope; Notion row reconciliation still pending external write-path availability.
+
 ## Phase 141 — Workspace Evidence Refresh and Post-closeout Polish
 **Date:** 2026-04-18 · **Commit:** 58a2934
 

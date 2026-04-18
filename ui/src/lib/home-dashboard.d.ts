@@ -1,4 +1,5 @@
 export const THREADS_STORAGE_KEY: string;
+export const CHAT_SELECTED_PROJECT_KEY: string;
 
 export type HomeThreadSummary = {
   id: string;

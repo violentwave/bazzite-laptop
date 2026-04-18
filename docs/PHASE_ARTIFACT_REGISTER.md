@@ -24,9 +24,9 @@
 
 | Category | Current State |
 |----------|---------------|
-| Current completed Security Autopilot + Workbench phases | `P119` through `P140` |
-| Current active phase | `P141 — Workspace Evidence Refresh and Post-closeout Polish` |
-| Next gated phase | `P142 — see Notion row` |
+| Current completed Security Autopilot + Workbench phases | `P119` through `P143` |
+| Current active phase | `P142 — Console Asset Loading and Runtime Stability Fix` |
+| Next gated phase | `P144 — see P143 spec` |
 | Primary phase truth | Notion `Bazzite Phases` row properties |
 | Lightweight session truth | `HANDOFF.md` |
 | Standing agent rules | `docs/AGENT.md` |
@@ -692,6 +692,35 @@ The repo has complete historical coverage across the earlier tranches, but older
 | UI Polish | `ui/src/components/chat/ChatContainer.tsx` | Runtime/degraded wording polish |
 | UI Polish | `ui/src/components/home/HomeContainer.tsx` | Project registration backend-aligned helper guidance |
 
+### P142 — Console Asset Loading and Runtime Stability Fix
+- **Status**: In Progress
+- **Finished**: pending
+- **Commit SHA**: pending
+
+| Type | Path | Description |
+|------|------|-------------|
+| Validation | `docs/evidence/p142/validation.md` | Root cause, fix scope, command validation, and asset-status evidence |
+| Evidence | `docs/evidence/p142/screenshots/` | Canonical Home/Project/Chat happy-path + thread workflow screenshots |
+
+### P143 — Adaptive Minimalist UI Redesign Spec
+- **Status**: Done
+- **Finished**: 2026-04-18
+- **Commit SHA**: pending
+
+| Type | Path | Description |
+|------|------|-------------|
+| Spec | `docs/P143_UI_REDESIGN_SPEC.md` | Core redesign goals, IA, and visual hierarchy rules |
+| Catalog | `docs/P143_WIDGET_CATALOG.md` | Detailed widget specs, data sources, and visibility rules |
+| Map | `docs/P143_UI_IMPLEMENTATION_MAP.md` | Work split for P144, P145, and P146 implementation |
+
+### P142 — Console Asset Loading and Runtime Stability Fix (Notes)
+- **Runtime Script**: `ui/scripts/dev-stable.mjs` (Clears stale Turbopack chunk caches)
+- **Config**: `ui/next.config.ts` (Disables Turbopack cache restore; Allows dev-origin hostnames)
+- **Script Wiring**: `scripts/start-console-ui.sh` (Routes to stable launcher)
+- **Runtime Client**: `ui/src/lib/mcp-client.ts` (MCP RPC timeout guards)
+| Runtime State | `ui/src/hooks/useChat.ts` | Canonical binding truth + project handoff sync for Home -> Chat happy-path |
+| Thread Grouping | `ui/src/lib/thread-store.js` | Removes duplicate highlighted rows from `By Project` section |
+
 ## Cross-Phase Documentation
 
 ### Hub Docs (docs/ root)
@@ -720,6 +749,8 @@ The repo has complete historical coverage across the earlier tranches, but older
 2. Some earlier phases used batch commits, inferred historical boundaries, or alternative artifact types instead of dedicated `P{NN}_PLAN.md` documents.
 3. P80 remains a repo-vs-Notion truth reconciliation note for future cleanup.
 4. P141 is complete with refreshed canonical evidence and Notion row reconciled to Done.
+5. P142 resolves dev asset loading instability caused by stale Turbopack chunk/cache state and blocked dev-origin HMR resources.
+6. P142 remains active until Notion row reconciliation is completed.
 
 ## Cross-References
 

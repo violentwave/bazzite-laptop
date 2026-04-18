@@ -173,14 +173,19 @@ export function groupThreads(threads, projects = []) {
   // Recent threads are non-pinned, non-archived, most recent
   const recentCandidates = byUpdated.filter((thread) => !pinnedIds.has(thread.id));
   const recent = recentCandidates.slice(0, 12); // Top 12 recent
+  const recentIds = new Set(recent.map((thread) => thread.id));
+  const highlightedIds = new Set([...pinnedIds, ...recentIds]);
 
   const nameById = new Map(
     (projects || []).map((project) => [project.project_id, project.name || project.project_id])
   );
 
   const buckets = new Map();
-  // All active threads go into project buckets
-  for (const thread of active) { // Iterate over all active threads
+  // By Project shows remaining active threads not already highlighted
+  for (const thread of active) {
+    if (highlightedIds.has(thread.id)) {
+      continue;
+    }
     const projectId = thread.projectId || ''; // Ensure projectId is always a string
     const bucketKey = projectId || '__unassigned__';
     if (!buckets.has(bucketKey)) {

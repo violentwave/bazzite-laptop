@@ -1,6 +1,6 @@
 # Phase Index — Bazzite AI Layer
 
-> Master index of repo-tracked phases through P141.
+> Master index of repo-tracked phases through P143.
 > Updated 2026-04-18.
 > Source of truth: Notion `Bazzite Phases` database + `git log`; Notion row properties are authoritative when repo docs lag.
 > Note: references to legacy assistant/tray surfaces are historical phase records, not active runtime guidance.
@@ -9,10 +9,10 @@
 
 | Metric | Value |
 |--------|-------|
-| Total Phases Tracked | P0-P141 tracked in repo index |
+| Total Phases Tracked | P0-P143 tracked in repo index |
 | Completed | P0-P141 complete in current repo-ledger terms |
-| Active | None |
-| Next Gated | P142 — (see Notion row) |
+| Active | P142 (stabilization + Notion reconciliation pending) |
+| Next Gated | P144 — (see P143 spec) |
 | Historical Truth Conflict | P80 remains a repo-vs-Notion reconciliation note for later cleanup |
 | Repo Docs | docs/*.md, docs/patterns/frontend/*.md, docs/frontend-capability-pack/*.md |
 | Notion DB | `398c13ed-47f6-4f7e-9e54-eb339b462c90` |
@@ -180,6 +180,8 @@
 | P139 | Pre-P140 contract and readiness alignment | Done | 99cf063 | 2026-04-18 | HANDOFF.md, docs/AGENT.md, Notion P140 contract references | Notion row | Prepared final P140 execution contract, guardrails, and acceptance checklist path |
 | P140 | Chat Workspace and Home Screen Operator Integration | Done | f3c1795 | 2026-04-18 | ui/src/components/{chat,home,shell}/*, ui/src/hooks/{useChat,useProviders}.ts, ui/src/lib/{workspace-session-binding,thread-store,operator-runtime,home-dashboard,console-simplify}.*, docs/evidence/p140/validation.md | Notion row `346f793e-df7b-815c-9eb4-f727888095b4` | Integrated Home + Chat operator flows, truthful runtime/tool surfaces, thread organization/merge/archive UX, and closeout reconciliation |
 | P141 | Workspace Evidence Refresh and Post-closeout Polish | Done | 58a2934 | 2026-04-18 | docs/evidence/p141/screenshots/*, docs/evidence/p141/validation.md, Chat/Home wording polish files | Notion row `346f793e-df7b-81df-88dd-e7d1953e7672` | Final Home/Chat evidence refresh completed with post-closeout UX polish and reconciled ledger truth |
+| P142 | Console Asset Loading and Runtime Stability Fix | In Progress | pending | pending | ui/scripts/dev-stable.mjs, scripts/start-console-ui.sh, ui/next.config.ts, ui/src/lib/mcp-client.ts, ui/src/hooks/useChat.ts, ui/src/lib/thread-store.js, docs/evidence/p142/validation.md, docs/evidence/p142/screenshots/* | Notion row `346f793e-df7b-8031-a3ab-cb048203415d` | White-shell regression mitigated and happy-path evidence refreshed; awaiting final Notion row reconciliation before Done |
+| P143 | Adaptive Minimalist UI Redesign Spec | Done | pending | 2026-04-18 | docs/P143_UI_REDESIGN_SPEC.md, docs/P143_WIDGET_CATALOG.md, docs/P143_UI_IMPLEMENTATION_MAP.md | Notion row | Spec-only phase; source of truth for P144-P146 implementation |
 
 ## Notion Database Reference
 

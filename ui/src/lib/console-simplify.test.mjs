@@ -40,6 +40,7 @@ test('buildRuntimeStrip preserves runtime truth fields', () => {
     runtimeHealth: { mcpHealthy: true, llmHealthy: true },
     availableTools: ['system.uptime', 'providers.discover'],
     degradedStates: [],
+    hasActiveThread: true,
   });
 
   assert.match(strip.summary, /openai/);

@@ -41,6 +41,7 @@ Expected: both endpoints return `status: ok`.
 - `Home Dashboard`: operator entry surface (project select/create, recent threads, health/security/runtime widgets, quick navigation).
 - `Chat Workspace`: active execution surface (bound provider/model/mode/project, operator actions, tool traces, degraded-state visibility).
 - Thread organization (rename/move/archive/project assignment) is managed from the Threads sidebar inside Chat Workspace.
+- Thread sections are intentional views: `Pinned (Priority)` and `Recent (Latest)` are highlight views, while `By Project (Remaining)` excludes already-highlighted items to avoid duplicate rows.
 - Thread bulk operations are local-first and explicit: enter `Select` mode in the Threads sidebar to merge, move, or archive multiple threads.
 - Thread merge is chronological and auditable: merged threads retain source IDs in message metadata and require explicit project choice for cross-project merges.
 - Archive destination is explicit: archived threads move to the `Archived` section in the Threads sidebar and return via thread actions `Restore`.
@@ -137,6 +138,16 @@ source .venv/bin/activate
 ruff check ai/ tests/ scripts/
 python -m pytest tests/ -x -q --tb=short
 ```
+
+If the console appears as unstyled white HTML during local UI development:
+
+```bash
+bash scripts/start-console-ui.sh
+```
+
+The launcher uses a stable dev path that clears stale Turbopack chunk caches before startup.
+
+For browser checks on `http://127.0.0.1:3000`, dev-origin access is explicitly allowed so HMR/runtime assets are not blocked during local validation.
 
 ## Compatibility and History
 

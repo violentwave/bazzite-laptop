@@ -92,6 +92,7 @@ export function ChatContainer() {
     runtimeHealth,
     availableTools,
     degradedStates: runtimeDegradedStates,
+    hasActiveThread: Boolean(activeThreadId),
   });
 
   const handleCreateThread = (options?: { title?: string; projectId?: string; folderPath?: string; inheritProjectContext?: boolean }) => {

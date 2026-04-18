@@ -130,6 +130,10 @@ else
     echo "  Stop:   Press Ctrl+C"
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     echo ""
-    
-    npm run dev
+
+    if [[ -f "$UI_DIR/scripts/dev-stable.mjs" ]]; then
+        node "$UI_DIR/scripts/dev-stable.mjs"
+    else
+        npm run dev
+    fi
 fi

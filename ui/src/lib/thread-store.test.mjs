@@ -83,9 +83,38 @@ test('groups threads by pinned/recent/project', () => {
   const grouped = groupThreads(makeStore().threads, projects);
   assert.deepEqual(grouped.pinned.map((thread) => thread.id), ['t-1']);
   assert.deepEqual(grouped.recent.map((thread) => thread.id), ['t-2', 't-3']);
-  assert.equal(grouped.byProject[0].projectId, 'bazzite-laptop');
-  assert.equal(grouped.byProject[1].projectId, 'security');
-  assert.equal(grouped.byProject[2].projectId, '');
+  assert.equal(grouped.byProject.length, 0);
+});
+
+test('byProject keeps non-highlighted active threads only', () => {
+  const store = makeStore();
+  for (let i = 0; i < 13; i += 1) {
+    store.threads.push(
+      normalizeThread({
+        id: `t-extra-${i}`,
+        title: `Extra ${i}`,
+        messages: [],
+        isPinned: false,
+        projectId: i === 12 ? 'bazzite-laptop' : 'security',
+        createdAt: `2026-04-17T0${Math.min(i, 9)}:00:00.000Z`,
+        updatedAt: `2026-04-17T0${Math.min(i, 9)}:00:00.000Z`,
+      })
+    );
+  }
+
+  const grouped = groupThreads(store.threads, projects);
+  assert.ok(grouped.byProject.length >= 1);
+
+  const highlightedIds = new Set([
+    ...grouped.pinned.map((thread) => thread.id),
+    ...grouped.recent.map((thread) => thread.id),
+  ]);
+
+  const byProjectIds = grouped.byProject.flatMap((group) => group.threads.map((thread) => thread.id));
+  assert.ok(byProjectIds.length > 0);
+  byProjectIds.forEach((threadId) => {
+    assert.equal(highlightedIds.has(threadId), false);
+  });
 });
 
 test('builds current project/location label for chat header display', () => {
