@@ -5,7 +5,7 @@ All significant changes. Format: date · deliverables · deltas · commit.
 ---
 
 ## Phase 137 — Deployment Profiles and Environment Packaging
-**Date:** 2026-04-17 · **Commit:** [TBD]
+**Date:** 2026-04-17 · **Commit:** 5f2431c
 
 **Deliverables:**
 - Added `ai/deployment_profiles.py` with three deployment profiles
@@ -40,7 +40,7 @@ All significant changes. Format: date · deliverables · deltas · commit.
 ---
 
 ## Phase 136 — Retention, Privacy, and Export Controls
-**Date:** 2026-04-17 · **Commit:** [TBD]
+**Date:** 2026-04-17 · **Commit:** 5f2431c
 
 **Deliverables:**
 - Added `ai/retention_privacy.py` with retention policies for 7 data classes

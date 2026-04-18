@@ -641,6 +641,18 @@ The repo has complete historical coverage across the earlier tranches, but older
 | Tests | `tests/test_deployment_profiles.py` | Profile loading, validation, safety proofs |
 | Evidence | `docs/evidence/p137/validation.md` | P137 validation with 21 passing tests |
 
+### P138 — Browser/Service Canary Release Automation
+- **Status**: Done
+- **Finished**: 2026-04-18
+
+| Type | Path | Description |
+|------|------|-------------|
+| Plan | `docs/P138_PLAN.md` | P138 scope, canary stages, validation commands |
+| Module | `ai/canary.py` | Canary runner with 6 stages, evidence bundle |
+| Script | `scripts/canary.sh` | Operator entry point for canary |
+| Tests | `tests/test_canary.py` | 14 tests for canary validation |
+| Evidence | `docs/evidence/p138/validation.md` | P138 validation with health checks |
+
 ## Cross-Phase Documentation
 
 ### Hub Docs (docs/ root)

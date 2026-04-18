@@ -14,12 +14,27 @@ Project truth model:
 - **Last Updated:** 2026-04-17
 - **Project:** bazzite-laptop
 - **Branch:** master
-- **Completed Phases:** P119, P120, P121, P122, P123, P124, P125, P126, P127, P128, P129, P130, P131, P132, P133, P134, P135, P136, P137
+- **Completed Phases:** P119, P120, P121, P122, P123, P124, P125, P126, P127, P128, P129, P130, P131, P132, P133, P134, P135, P136, P137, P138
 - **Active Phase:** None
-- **Next Gated Phase:** P138 — see Notion phase row
+- **Next Gated Phase:** P139 — see Notion phase row
 - **Phase Truth:** Notion Bazzite Phases database (primary)
 - **Validation State:** P135 integration governance implemented with default-deny policy, scope requirements, redaction, and audit linkage
 - **Current SHA:** [TBD]
+
+## Recent Session — 2026-04-18 (P138)
+
+- Implemented canary release automation with 6 stages.
+- Added ai/canary.py with preflight, service health, MCP tools, UI build, policy gates.
+- Added scripts/canary.sh operator entry point.
+- Added tests/test_canary.py (14 tests all pass).
+- Added docs/P138_PLAN.md and docs/evidence/p138/validation.md.
+- Validation passed:
+  - curl -s http://127.0.0.1:8766/health (OK)
+  - curl -s http://127.0.0.1:8767/health (OK)
+  - cd ui && npm run build (OK)
+  - pytest tests/test_canary.py -q (14 passed)
+- Evidence bundle generated with failure summary
+- Non-destructive, fail-closed, no secrets in output
 
 ## Recent Session — 2026-04-17 (P137)
 
