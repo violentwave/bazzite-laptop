@@ -1808,6 +1808,47 @@ async def _execute_python_tool(tool_name: str, tool_def: dict, args: dict) -> st
             )
             return _truncate(result)
 
+        elif tool_name == "provenance.timeline":
+            from ai.provenance import get_provenance_graph  # noqa: PLC0415
+
+            graph = get_provenance_graph()
+            result = graph.query_timeline(
+                workspace_id=args.get("workspace_id", ""),
+                actor_id=args.get("actor_id") or None,
+                project_id=args.get("project_id") or None,
+                session_id=args.get("session_id") or None,
+                record_id=args.get("record_id") or None,
+                limit=int(args.get("limit", 50)),
+            )
+            return _truncate(_redact_paths(json.dumps(result, indent=2)))
+
+        elif tool_name == "provenance.explain":
+            from ai.provenance import get_provenance_graph  # noqa: PLC0415
+
+            graph = get_provenance_graph()
+            result = graph.explain_record(
+                workspace_id=args.get("workspace_id", ""),
+                actor_id=args.get("actor_id") or None,
+                project_id=args.get("project_id") or None,
+                session_id=args.get("session_id") or None,
+                record_id=args.get("record_id", ""),
+                depth=int(args.get("depth", 2)),
+            )
+            return _truncate(_redact_paths(json.dumps(result, indent=2)))
+
+        elif tool_name == "provenance.what_changed":
+            from ai.provenance import get_provenance_graph  # noqa: PLC0415
+
+            graph = get_provenance_graph()
+            result = graph.query_what_changed(
+                workspace_id=args.get("workspace_id", ""),
+                actor_id=args.get("actor_id") or None,
+                project_id=args.get("project_id") or None,
+                session_id=args.get("session_id") or None,
+                limit=int(args.get("limit", 50)),
+            )
+            return _truncate(_redact_paths(json.dumps(result, indent=2)))
+
         elif tool_name == "system.provider_status":
             from ai.provider_intel import get_intel  # noqa: PLC0415
 

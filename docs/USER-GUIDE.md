@@ -51,6 +51,18 @@ Policy reminders:
 - No destructive remediation without policy and approval gates
 - No key material in logs, prompts, or commits
 
+## Provenance Queries
+
+Use provenance tools to answer timeline and attribution questions across
+security/workbench/phase flows:
+
+- `provenance.timeline` for scoped event history
+- `provenance.explain` for why/evidence chain around one record
+- `provenance.what_changed` for scoped git/test/artifact/handoff deltas
+
+All provenance queries require `workspace_id` and support optional
+`actor_id`/`project_id`/`session_id` filters to enforce scoped retrieval.
+
 ## Troubleshooting
 
 If MCP bridge is unavailable:

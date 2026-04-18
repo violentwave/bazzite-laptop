@@ -4,8 +4,40 @@ All significant changes. Format: date · deliverables · deltas · commit.
 
 ---
 
+## Phase 133 — Memory, Artifact, and Provenance Graph
+**Date:** 2026-04-17 · **Commit:** pending
+
+**Deliverables:**
+- Added `ai/provenance.py` with LanceDB-backed provenance nodes/edges and scoped retrieval
+- Linked security lineage: finding/incident/evidence/recommendation/action/execution/audit
+- Linked workbench lineage: session/git diff/tests/artifacts/handoff/phase
+- Added redaction-safe provenance storage for secrets and sensitive local paths
+- Added MCP query APIs: `provenance.timeline`, `provenance.explain`, `provenance.what_changed`
+- Added tests in `tests/test_provenance_graph.py`
+- Added phase plan/evidence docs (`docs/P133_PLAN.md`, `docs/evidence/p133/validation.md`)
+
+**Validation:**
+- `.venv/bin/python -m pytest tests/test_provenance_graph.py -q` — 5 passed
+- `ruff check ai/ tests/` — pass
+- `.venv/bin/python -m pytest tests/test_mcp_policy.py tests/test_security_autopilot_tools.py tests/test_agent_workbench.py tests/test_workflow_runbooks.py -q` — 48 passed
+- `.venv/bin/python -m pytest tests/test_security_autopilot_executor.py -q` — 9 passed
+
+**Artifacts:**
+- `ai/provenance.py`
+- `ai/security_autopilot/executor.py`
+- `ai/agent_workbench/handoff.py`
+- `ai/mcp_bridge/tools.py`
+- `configs/mcp-bridge-allowlist.yaml`
+- `tests/test_provenance_graph.py`
+- `docs/P133_PLAN.md`
+- `docs/evidence/p133/validation.md`
+
+**Result:** PASS — Provenance graph implemented with scoped attribution and redaction-safe storage across security, workbench, artifact, memory, and phase record paths.
+
+---
+
 ## Cleanup Sweep - Deprecated Newelle/PySide Runtime Surfaces
-**Date:** 2026-04-17 · **Commit:** (pending)
+**Date:** 2026-04-17 · **Commit:** cb50d35
 
 **Deliverables:**
 - Removed deprecated runtime wrapper scripts: `scripts/newelle-exec.sh`, `scripts/newelle-sudo.sh`

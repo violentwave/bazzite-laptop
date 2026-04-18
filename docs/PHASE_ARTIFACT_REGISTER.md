@@ -24,9 +24,9 @@
 
 | Category | Current State |
 |----------|---------------|
-| Current completed Security Autopilot + Workbench phases | `P119`, `P120`, `P121`, `P122`, `P123`, `P124`, `P125`, `P126`, `P127`, `P128`, `P129`, `P130`, `P131`, `P132` |
+| Current completed Security Autopilot + Workbench phases | `P119`, `P120`, `P121`, `P122`, `P123`, `P124`, `P125`, `P126`, `P127`, `P128`, `P129`, `P130`, `P131`, `P132`, `P133` |
 | Current active phase | None |
-| Next gated phase | `P133 — Provenance Graph` |
+| Next gated phase | `P134 — see Notion row` |
 | Primary phase truth | Notion `Bazzite Phases` row properties |
 | Lightweight session truth | `HANDOFF.md` |
 | Standing agent rules | `docs/AGENT.md` |
@@ -579,6 +579,21 @@ The repo has complete historical coverage across the earlier tranches, but older
 | Tests | `tests/test_workflow_runbooks.py` | Registry integration, manual approval step checks, workflow handler surfacing |
 | Evidence | `docs/evidence/p132/validation.md` | P132 validation with inventory, command results, and limitations |
 
+### P133 — Memory, Artifact, and Provenance Graph
+- **Status**: Done
+- **Finished**: 2026-04-17
+
+| Type | Path | Description |
+|------|------|-------------|
+| Plan | `docs/P133_PLAN.md` | P133 scope, provenance model, and validation commands |
+| Module | `ai/provenance.py` | LanceDB-backed provenance nodes/edges, scoped queries, redaction-safe storage |
+| Integration | `ai/security_autopilot/executor.py` | Records remediation execution provenance chain with evidence/audit attribution |
+| Integration | `ai/agent_workbench/handoff.py` | Records session/handoff/artifact lineage links |
+| MCP Surface | `ai/mcp_bridge/tools.py` | Exposes `provenance.timeline`, `provenance.explain`, `provenance.what_changed` |
+| Allowlist | `configs/mcp-bridge-allowlist.yaml` | Added provenance MCP tool definitions and scoped args |
+| Tests | `tests/test_provenance_graph.py` | Insert/link/query/scoping/redaction coverage for provenance graph |
+| Evidence | `docs/evidence/p133/validation.md` | P133 validation with schema, scoped query proof, redacted output examples |
+
 ## Cross-Phase Documentation
 
 ### Hub Docs (docs/ root)
@@ -606,7 +621,7 @@ The repo has complete historical coverage across the earlier tranches, but older
 1. Older historical phases intentionally remain summarized here and detailed in `docs/PHASE_INDEX.md`.
 2. Some earlier phases used batch commits, inferred historical boundaries, or alternative artifact types instead of dedicated `P{NN}_PLAN.md` documents.
 3. P80 remains a repo-vs-Notion truth reconciliation note for future cleanup.
-4. P133-P139 remain planned in Notion and tracked in the roadmap doc; they are not listed here as completed artifacts yet.
+4. P134-P139 remain planned in Notion and tracked in the roadmap doc; they are not listed here as completed artifacts yet.
 
 ## Cross-References
 

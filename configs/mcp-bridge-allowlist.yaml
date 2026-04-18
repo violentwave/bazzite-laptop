@@ -866,6 +866,98 @@ tools:
         default: 5
         description: "Number of memories to return"
 
+  provenance.timeline:
+    description: "Scoped provenance timeline with attribution"
+    source: python
+    module: ai.provenance
+    args:
+      workspace_id:
+        type: string
+        required: true
+        max_length: 128
+      actor_id:
+        type: string
+        required: false
+        max_length: 128
+      project_id:
+        type: string
+        required: false
+        max_length: 128
+      session_id:
+        type: string
+        required: false
+        max_length: 128
+      record_id:
+        type: string
+        required: false
+        max_length: 128
+      limit:
+        type: integer
+        required: false
+        min: 1
+        max: 200
+        default: 50
+
+  provenance.explain:
+    description: "Explain provenance chain for a scoped record"
+    source: python
+    module: ai.provenance
+    args:
+      workspace_id:
+        type: string
+        required: true
+        max_length: 128
+      record_id:
+        type: string
+        required: true
+        max_length: 128
+      actor_id:
+        type: string
+        required: false
+        max_length: 128
+      project_id:
+        type: string
+        required: false
+        max_length: 128
+      session_id:
+        type: string
+        required: false
+        max_length: 128
+      depth:
+        type: integer
+        required: false
+        min: 1
+        max: 4
+        default: 2
+
+  provenance.what_changed:
+    description: "Scoped provenance summary of code/test/artifact changes"
+    source: python
+    module: ai.provenance
+    args:
+      workspace_id:
+        type: string
+        required: true
+        max_length: 128
+      actor_id:
+        type: string
+        required: false
+        max_length: 128
+      project_id:
+        type: string
+        required: false
+        max_length: 128
+      session_id:
+        type: string
+        required: false
+        max_length: 128
+      limit:
+        type: integer
+        required: false
+        min: 1
+        max: 200
+        default: 50
+
   system.provider_status:
     description: "Per-provider health, latency, error rates, and routing scores"
     source: python

@@ -14,17 +14,37 @@ Project truth model:
 - **Last Updated:** 2026-04-17
 - **Project:** bazzite-laptop
 - **Branch:** master
-- **Completed Phases:** P119, P120, P121, P122, P123, P124, P125, P126, P127, P128, P129, P130, P131, P132
+- **Completed Phases:** P119, P120, P121, P122, P123, P124, P125, P126, P127, P128, P129, P130, P131, P132, P133
 - **Active Phase:** None
-- **Next Gated Phase:** P133 — Provenance Graph
+- **Next Gated Phase:** P134 — see Notion phase row
 - **Phase Truth:** Notion Bazzite Phases database (primary)
 - **Validation State:** P132 human-in-the-loop runbooks added with machine-readable workflow metadata, explicit approval/escalation semantics, and validation pass
-- **Current SHA:** 21f325c
+- **Current SHA:** cb50d35
 
 ## Open Tasks
 
-- Update Notion P132 row to Done with final commit SHA, approval state approved, and validation summary.
+- Update Notion P133 row to Done with final commit SHA and validation summary.
 - Resolve legacy Notion row metadata drift where commit SHAs are pending.
+
+## Recent Session — 2026-04-17 (P133)
+
+- Implemented `ai/provenance.py` LanceDB-backed provenance graph in existing `VECTOR_DB_DIR`.
+- Added scoped provenance query APIs: timeline, explain, and what-changed.
+- Added redaction for secret-like values and sensitive local paths before provenance persistence.
+- Integrated provenance recording into remediation execution (`ai/security_autopilot/executor.py`).
+- Integrated provenance recording into workbench handoff flow (`ai/agent_workbench/handoff.py`).
+- Exposed provenance MCP tools in allowlist and dispatcher:
+  - `provenance.timeline`
+  - `provenance.explain`
+  - `provenance.what_changed`
+- Added `tests/test_provenance_graph.py` (insert/link/retrieve/scoping/redaction coverage).
+- Added `docs/P133_PLAN.md` and `docs/evidence/p133/validation.md`.
+- Validation passed:
+  - `.venv/bin/python -m pytest tests/test_provenance_graph.py -q` (5 passed)
+  - `ruff check ai/ tests/` (pass)
+  - `.venv/bin/python -m pytest tests/test_mcp_policy.py tests/test_security_autopilot_tools.py tests/test_agent_workbench.py tests/test_workflow_runbooks.py -q` (48 passed)
+  - `.venv/bin/python -m pytest tests/test_security_autopilot_executor.py -q` (9 passed)
+- Notion MCP query timed out during this run; Notion closeout pending.
 
 ## Recent Session — 2026-04-17 (Cleanup Sweep)
 

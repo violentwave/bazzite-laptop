@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import logging
 import re
 from collections.abc import Callable
 from dataclasses import asdict, dataclass, field
@@ -26,6 +27,8 @@ from ai.security_autopilot.policy import (
     SecurityAutopilotPolicy,
     redact_policy_payload,
 )
+
+logger = logging.getLogger(__name__)
 
 
 def _utc_now() -> str:
@@ -450,6 +453,33 @@ class SafeRemediationExecutor:
         stored_event = self.audit_ledger.append_event(event)
         result.audit_event_id = stored_event.event_id
         result.evidence_bundle_id = bundle.bundle_id
+
+        try:
+            from ai.provenance import get_provenance_graph  # noqa: PLC0415
+
+            graph = get_provenance_graph()
+            payload = request.payload if isinstance(request.payload, dict) else {}
+            graph.record_security_execution(
+                incident_id=payload.get("incident_id"),
+                finding_id=payload.get("finding_id"),
+                evidence_bundle_id=bundle.bundle_id,
+                recommendation_id=str(
+                    payload.get("recommendation_id") or next_id("recommendation")
+                ),
+                action_id=result.action_id,
+                execution_id=result.request_id,
+                audit_event_id=stored_event.event_id,
+                policy_decision=result.policy_decision,
+                workspace_id=str(payload.get("workspace_id") or "ws-local"),
+                actor_id=request.actor,
+                project_id=str(payload.get("project_id") or ""),
+                session_id=str(payload.get("session_id") or ""),
+                phase=str(payload.get("phase") or ""),
+                source_tool=f"security.executor.{result.action_id}",
+            )
+        except Exception as exc:
+            logger.debug("Provenance security execution recording skipped: %s", exc)
+
         return result
 
     @staticmethod
