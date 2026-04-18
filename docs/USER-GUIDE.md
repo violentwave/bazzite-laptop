@@ -43,6 +43,7 @@ Expected: both endpoints return `status: ok`.
 - Thread organization (rename/move/archive/project assignment) is managed from the Threads sidebar inside Chat Workspace.
 - Thread bulk operations are local-first and explicit: enter `Select` mode in the Threads sidebar to merge, move, or archive multiple threads.
 - Thread merge is chronological and auditable: merged threads retain source IDs in message metadata and require explicit project choice for cross-project merges.
+- Archive destination is explicit: archived threads move to the `Archived` section in the Threads sidebar and return via thread actions `Restore`.
 
 ## Security Operations
 

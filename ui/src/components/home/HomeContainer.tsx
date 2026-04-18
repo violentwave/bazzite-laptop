@@ -491,6 +491,9 @@ export function HomeContainer() {
       {showCreateProjectModal && (
         <ModalFrame title="Register Project" onClose={() => setShowCreateProjectModal(false)}>
           <div className="grid grid-cols-1 gap-2">
+            <p className="text-xs" style={{ color: "var(--text-tertiary)" }}>
+              Use an absolute path. System directories and the agent repository root are blocked.
+            </p>
             <input
               value={projectNameInput}
               onChange={(event) => setProjectNameInput(event.target.value)}

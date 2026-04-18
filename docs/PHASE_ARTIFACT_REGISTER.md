@@ -1,7 +1,7 @@
 # Phase Artifact Register — Bazzite AI Layer
 
 > Per-phase inventory of repo artifacts and Notion references.
-> Updated 2026-04-17.
+> Updated 2026-04-18.
 > Canonical source: Notion `Bazzite Phases` database + `git log` + repo artifacts.
 > Use this file as the artifact ledger. Use `docs/PHASE_INDEX.md` for the full chronological phase index.
 > Note: any legacy assistant/tray references are historical artifact labels.
@@ -24,9 +24,9 @@
 
 | Category | Current State |
 |----------|---------------|
-| Current completed Security Autopilot + Workbench phases | `P119`, `P120`, `P121`, `P122`, `P123`, `P124`, `P125`, `P126`, `P127`, `P128`, `P129`, `P130`, `P131`, `P132`, `P133`, `P134`, `P135`, `P136` |
-| Current active phase | None |
-| Next gated phase | `P137 — see Notion row` |
+| Current completed Security Autopilot + Workbench phases | `P119` through `P140` |
+| Current active phase | `P141 — Workspace Evidence Refresh and Post-closeout Polish` |
+| Next gated phase | `P142 — see Notion row` |
 | Primary phase truth | Notion `Bazzite Phases` row properties |
 | Lightweight session truth | `HANDOFF.md` |
 | Standing agent rules | `docs/AGENT.md` |
@@ -653,6 +653,44 @@ The repo has complete historical coverage across the earlier tranches, but older
 | Tests | `tests/test_canary.py` | 14 tests for canary validation |
 | Evidence | `docs/evidence/p138/validation.md` | P138 validation with health checks |
 
+### P139 — Pre-P140 Contract and Readiness Alignment
+- **Status**: Done
+- **Finished**: 2026-04-18
+
+| Type | Path | Description |
+|------|------|-------------|
+| Session Pointer | `HANDOFF.md` | Active phase pointer and execution contract handoff |
+| Rules | `docs/AGENT.md` | Source-of-truth, gating, and validation policy alignment |
+| Ledger | Notion P139 row | Readiness and dependency reconciliation before P140 execution |
+
+### P140 — Chat Workspace and Home Screen Operator Integration
+- **Status**: Done
+- **Finished**: 2026-04-18
+
+| Type | Path | Description |
+|------|------|-------------|
+| Changelog | `CHANGELOG.md` | P140 integration + acceptance closeout summary |
+| Session Pointer | `HANDOFF.md` | P140 completion history and closure notes |
+| Guide | `docs/USER-GUIDE.md` | Home vs Chat responsibilities, bulk operations, merge behavior |
+| Evidence | `docs/evidence/p140/validation.md` | P140 acceptance and closure validation |
+| UI Surface | `ui/src/components/home/HomeContainer.tsx` | Home dashboard entrypoint, project flow, runtime/security summaries |
+| UI Surface | `ui/src/components/chat/ChatContainer.tsx` | Runtime strip, action surface, diagnostics, chat execution flow |
+| UI Surface | `ui/src/components/chat/ThreadSidebar.tsx` | Thread organization, bulk actions, merge/archive/restore flows |
+| Hook | `ui/src/hooks/useChat.ts` | Thread persistence, runtime binding, action execution, merge policy |
+| Utilities | `ui/src/lib/{workspace-session-binding,thread-store,operator-runtime,home-dashboard,console-simplify}.*` | Runtime truth, thread grouping/merge, UI simplification helpers |
+
+### P141 — Workspace Evidence Refresh and Post-closeout Polish
+- **Status**: In Progress
+- **Finished**: 2026-04-18 (pending final commit)
+
+| Type | Path | Description |
+|------|------|-------------|
+| Evidence | `docs/evidence/p141/screenshots/` | Fresh canonical final-state Home/Chat evidence set |
+| Validation | `docs/evidence/p141/validation.md` | P141 scope execution and done-criteria verification |
+| UI Polish | `ui/src/components/chat/ThreadSidebar.tsx` | Archive destination/restore path wording polish |
+| UI Polish | `ui/src/components/chat/ChatContainer.tsx` | Runtime/degraded wording polish |
+| UI Polish | `ui/src/components/home/HomeContainer.tsx` | Project registration backend-aligned helper guidance |
+
 ## Cross-Phase Documentation
 
 ### Hub Docs (docs/ root)
@@ -680,7 +718,7 @@ The repo has complete historical coverage across the earlier tranches, but older
 1. Older historical phases intentionally remain summarized here and detailed in `docs/PHASE_INDEX.md`.
 2. Some earlier phases used batch commits, inferred historical boundaries, or alternative artifact types instead of dedicated `P{NN}_PLAN.md` documents.
 3. P80 remains a repo-vs-Notion truth reconciliation note for future cleanup.
-4. P134-P139 remain planned in Notion and tracked in the roadmap doc; they are not listed here as completed artifacts yet.
+4. P141 is now the active polish/evidence-refresh phase; closeout will normalize this section to Done with commit SHA and final Notion sync.
 
 ## Cross-References
 

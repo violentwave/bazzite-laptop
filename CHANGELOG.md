@@ -4,8 +4,36 @@ All significant changes. Format: date · deliverables · deltas · commit.
 
 ---
 
-## Phase 140 — Chat Workspace and Home Screen Operator Integration
+## Phase 141 — Workspace Evidence Refresh and Post-closeout Polish
 **Date:** 2026-04-18 · **Commit:** (pending)
+
+**Deliverables:**
+- Refreshed final-state evidence with canonical P141 screenshot set under `docs/evidence/p141/screenshots/`
+- Added explicit archive destination/restore guidance in thread sidebar UX
+- Reduced runtime/degraded presentation noise while preserving truthful state rendering
+- Clarified project registration constraints in Home modal (absolute path + blocked locations)
+- Reconciled docs for post-closeout acceptance evidence
+
+**Validation:**
+- `cd ui && npx tsc --noEmit` — pass
+- `cd ui && npm run build` — pass
+
+**Canonical evidence set:**
+- `docs/evidence/p141/screenshots/p141-home-dashboard-final.png`
+- `docs/evidence/p141/screenshots/p141-active-project-flow-final.png`
+- `docs/evidence/p141/screenshots/p141-chat-workspace-final.png`
+- `docs/evidence/p141/screenshots/p141-thread-organization-final.png`
+- `docs/evidence/p141/screenshots/p141-bulk-select-final.png`
+- `docs/evidence/p141/screenshots/p141-merge-modal-final.png`
+- `docs/evidence/p141/screenshots/p141-archived-restore-flow-final.png`
+- `docs/evidence/p141/screenshots/p141-runtime-state-final.png`
+
+**Result:** PASS — post-closeout polish complete and final screenshot evidence refreshed.
+
+---
+
+## Phase 140 — Chat Workspace and Home Screen Operator Integration
+**Date:** 2026-04-18 · **Commit:** f3c1795
 
 **Deliverables:**
 - Wired hamburger/menu to actual rail toggle behavior in TopBar
@@ -61,7 +89,7 @@ All significant changes. Format: date · deliverables · deltas · commit.
 - No hidden failures: diagnostics are available when needed
 - No contradictory runtime/bind/project states: UI consistency in empty/active states
 
-**Result:** PASS (technical acceptance, pending closeout) — Home + Chat Workspace phase contract satisfied and UI simplified; final tranche C screenshot evidence + Notion row closeout are still outstanding, so P140 remains In Progress.
+**Result:** PASS (closed) — P140 checklist satisfied, evidence captured, and Notion row reconciled to Done.
 
 ---
 

@@ -350,6 +350,9 @@ export function ThreadSidebar({
             <div className="px-4 py-1 text-xs font-medium uppercase" style={{ color: "var(--text-tertiary)" }}>
               Archived
             </div>
+            <div className="px-4 pb-1 text-[11px]" style={{ color: "var(--text-tertiary)" }}>
+              Hidden from active lists. Use thread actions to Restore to bring a thread back.
+            </div>
             {archivedThreads.map((thread) => (
               <ThreadItem key={thread.id} thread={thread} />
             ))}
@@ -408,8 +411,11 @@ export function ThreadSidebar({
               className="text-xs px-2 py-1 rounded disabled:opacity-50"
               style={{ background: "var(--base-03)", color: "var(--warning)", border: "1px solid var(--base-04)" }}
             >
-              Archive
+              Archive to Archived
             </button>
+          </div>
+          <div className="text-[11px]" style={{ color: "var(--text-tertiary)" }}>
+            Archived threads move to the Archived section and can be restored from thread actions.
           </div>
         </div>
       ) : (
@@ -633,7 +639,7 @@ export function ThreadSidebar({
                 checked={mergeArchiveOriginals}
                 onChange={(event) => setMergeArchiveOriginals(event.target.checked)}
               />
-              Archive original threads
+              Archive original threads to Archived
             </label>
             <div className="flex gap-2 mt-3">
               <button

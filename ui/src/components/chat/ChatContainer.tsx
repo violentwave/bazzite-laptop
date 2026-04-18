@@ -185,7 +185,7 @@ export function ChatContainer() {
               </>
             )}
             <div className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
-              Threads own organization
+              Local threads, organized in sidebar
             </div>
           </div>
         </div>
@@ -239,7 +239,7 @@ export function ChatContainer() {
                   className="text-[11px] rounded px-2 py-1"
                   style={{ background: 'rgba(245, 158, 11, 0.1)', color: 'var(--warning)' }}
                 >
-                  Degraded ({runtimeStrip.degraded.length})
+                  Degraded: {runtimeStrip.degraded.length}
                 </span>
               )}
             </div>

@@ -18,8 +18,34 @@ Project truth model:
 - **Active Phase:** P141 — see Notion phase row
 - **Next Gated Phase:** P141 — see Notion phase row
 - **Phase Truth:** Notion Bazzite Phases database (primary)
-- **Validation State:** P140 closed. Acceptance checklist complete, Tranche C screenshot evidence captured, Notion row reconciled to Done.
-- **Current SHA:** 99cf063
+- **Validation State:** P140 committed/pushed and closed; P141 in progress for evidence refresh and post-closeout polish.
+- **Current SHA:** f3c1795
+
+## Recent Session — 2026-04-18 (P141 start)
+
+- Ran required preflight in order:
+  - read `HANDOFF.md`
+  - queried Notion P141 row (`346f793e-df7b-81df-88dd-e7d1953e7672`) and used row properties as authoritative
+  - read `docs/AGENT.md`
+  - checked git status/branch and `.venv/bin/python --version`
+- Verified P140 closeout was local-only and completed required gate before P141:
+  - committed pending P140 work: `f3c1795`
+  - pushed `master` to `origin/master`
+  - confirmed clean status before starting P141
+- Implemented initial P141 UX polish:
+  - archive destination/restore copy clarity in `ThreadSidebar`
+  - concise runtime/degraded wording in `ChatContainer`
+  - backend-aligned registration helper copy in `HomeContainer`
+- Captured fresh canonical P141 screenshot set under `docs/evidence/p141/screenshots/`:
+  - `p141-home-dashboard-final.png`
+  - `p141-active-project-flow-final.png`
+  - `p141-chat-workspace-final.png`
+  - `p141-thread-organization-final.png`
+  - `p141-bulk-select-final.png`
+  - `p141-merge-modal-final.png`
+  - `p141-archived-restore-flow-final.png`
+  - `p141-runtime-state-final.png`
+- Added `docs/evidence/p141/validation.md` with scope/done-criteria mapping and command validation.
 
 ## Recent Session — 2026-04-18 (P140)
 

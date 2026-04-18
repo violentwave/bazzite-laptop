@@ -1,7 +1,7 @@
 # Phase Index — Bazzite AI Layer
 
-> Master index of repo-tracked phases through P134.
-> Updated 2026-04-17.
+> Master index of repo-tracked phases through P141.
+> Updated 2026-04-18.
 > Source of truth: Notion `Bazzite Phases` database + `git log`; Notion row properties are authoritative when repo docs lag.
 > Note: references to legacy assistant/tray surfaces are historical phase records, not active runtime guidance.
 
@@ -9,10 +9,10 @@
 
 | Metric | Value |
 |--------|-------|
-| Total Phases Tracked | P0-P136 complete in repo index; P137-P139 planned in Notion |
-| Completed | P0-P136 complete in current repo-ledger terms |
-| Active | None |
-| Next Gated | P137 — (see Notion row) |
+| Total Phases Tracked | P0-P141 tracked in repo index |
+| Completed | P0-P140 complete in current repo-ledger terms |
+| Active | P141 — Workspace Evidence Refresh and Post-closeout Polish |
+| Next Gated | P142 — (see Notion row) |
 | Historical Truth Conflict | P80 remains a repo-vs-Notion reconciliation note for later cleanup |
 | Repo Docs | docs/*.md, docs/patterns/frontend/*.md, docs/frontend-capability-pack/*.md |
 | Notion DB | `398c13ed-47f6-4f7e-9e54-eb339b462c90` |
@@ -177,6 +177,9 @@
 | P136 | Retention, Privacy, and Export Controls | Done | fc2e8bd | 2026-04-17 | ai/retention_privacy.py, tests/test_retention_privacy.py, docs/P136_PLAN.md, docs/evidence/p136/validation.md | Notion row | Added retention policies for 7 data classes, redaction for secrets/PII/paths, export bundle generation with metadata and integrity verification |
 | P137 | Deployment Profiles and Environment Packaging | Done | 5f2431c | 2026-04-17 | ai/deployment_profiles.py, tests/test_deployment_profiles.py, docs/deploy/profiles.md, docs/P137_PLAN.md, docs/evidence/p137/validation.md | Notion row | Added three deployment profiles (local-only, security-autopilot, agent-workbench) with fail-closed validation, key presence checks without secrets, service/health endpoint validation, startup/shutdown documentation |
 | P138 | Browser/Service Canary Release Automation | Done | [TBD] | 2026-04-18 | ai/canary.py, scripts/canary.sh, tests/test_canary.py, docs/P138_PLAN.md, docs/evidence/p138/validation.md | Notion row | Added canary runner with 6 stages (preflight, service health, MCP tools, UI build, policy gates, evidence bundle), non-destructive validation, fail-closed behavior |
+| P139 | Pre-P140 contract and readiness alignment | Done | 99cf063 | 2026-04-18 | HANDOFF.md, docs/AGENT.md, Notion P140 contract references | Notion row | Prepared final P140 execution contract, guardrails, and acceptance checklist path |
+| P140 | Chat Workspace and Home Screen Operator Integration | Done | f3c1795 | 2026-04-18 | ui/src/components/{chat,home,shell}/*, ui/src/hooks/{useChat,useProviders}.ts, ui/src/lib/{workspace-session-binding,thread-store,operator-runtime,home-dashboard,console-simplify}.*, docs/evidence/p140/validation.md | Notion row `346f793e-df7b-815c-9eb4-f727888095b4` | Integrated Home + Chat operator flows, truthful runtime/tool surfaces, thread organization/merge/archive UX, and closeout reconciliation |
+| P141 | Workspace Evidence Refresh and Post-closeout Polish | In Progress | (pending) | 2026-04-18 | docs/evidence/p141/screenshots/*, docs/evidence/p141/validation.md, Chat/Home wording polish files | Notion row `346f793e-df7b-81df-88dd-e7d1953e7672` | Refreshing final canonical evidence and post-closeout UX polish without reopening P140 models |
 
 ## Notion Database Reference
 
