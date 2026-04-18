@@ -627,7 +627,19 @@ The repo has complete historical coverage across the earlier tranches, but older
 | Plan | `docs/P136_PLAN.md` | P136 scope, retention model, validation commands |
 | Module | `ai/retention_privacy.py` | Retention policies, redaction engine, export bundle generator |
 | Tests | `tests/test_retention_privacy.py` | Retention rules, redaction, export, context isolation tests |
-| Evidence | `docs/evidence/p136/validation.md` | P136 validation with data classes and safety proofs | |
+| Evidence | `docs/evidence/p136/validation.md` | P136 validation with data classes and safety proofs |
+
+### P137 — Deployment Profiles and Environment Packaging
+- **Status**: Done
+- **Finished**: 2026-04-17
+
+| Type | Path | Description |
+|------|------|-------------|
+| Plan | `docs/P137_PLAN.md` | P137 scope, profile definitions, validation commands |
+| Module | `ai/deployment_profiles.py` | Profile registry, validation checks, fail-closed behavior |
+| Profile Docs | `docs/deploy/profiles.md` | Operator-facing startup/shutdown/troubleshooting docs |
+| Tests | `tests/test_deployment_profiles.py` | Profile loading, validation, safety proofs |
+| Evidence | `docs/evidence/p137/validation.md` | P137 validation with 21 passing tests |
 
 ## Cross-Phase Documentation
 

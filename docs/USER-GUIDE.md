@@ -88,6 +88,22 @@ Export bundles include:
 
 Use the retention manager to generate compliant export bundles.
 
+## Deployment Profiles
+
+Validate your deployment with profiles:
+
+```bash
+source .venv/bin/activate
+python -m pytest tests/test_deployment_profiles.py -q
+```
+
+Three profiles available:
+- **local-only**: Core services (LLM proxy, MCP bridge)
+- **security-autopilot**: + Security scanning
+- **agent-workbench**: + Agent Workbench
+
+See `docs/deploy/profiles.md` for full startup/shutdown/troubleshooting docs.
+
 ## Troubleshooting
 
 If MCP bridge is unavailable:

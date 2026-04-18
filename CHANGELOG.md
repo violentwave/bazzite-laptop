@@ -4,6 +4,41 @@ All significant changes. Format: date · deliverables · deltas · commit.
 
 ---
 
+## Phase 137 — Deployment Profiles and Environment Packaging
+**Date:** 2026-04-17 · **Commit:** [TBD]
+
+**Deliverables:**
+- Added `ai/deployment_profiles.py` with three deployment profiles
+- Added local-only: core services (LLM proxy, MCP bridge) validation
+- Added security-autopilot: + API key presence checks
+- Added agent-workbench: + workbench config validation
+- Added fail-closed on missing critical dependencies
+- Added key presence checks without exposing secrets
+- Added `docs/deploy/profiles.md` with startup/shutdown/troubleshooting
+- Added `tests/test_deployment_profiles.py` with 21 tests
+
+**Validation:**
+- `ruff check scripts/ ai/ tests/` — pass
+- `.venv/bin/python -m pytest tests/test_deployment_profiles.py -q` — 21 passed
+- `cd ui && npm run build` — pass
+
+**Artifacts:**
+- `ai/deployment_profiles.py`
+- `tests/test_deployment_profiles.py`
+- `docs/deploy/profiles.md`
+- `docs/P137_PLAN.md`
+- `docs/evidence/p137/validation.md`
+
+**Safety Proofs:**
+- No secrets in validation output
+- Fail-closed on missing services/ports
+- No auto-start without operator approval
+- Critical checks required: service, mcp, llm, repo, venv
+
+**Result:** PASS — Deployment profiles implemented with three modes.
+
+---
+
 ## Phase 136 — Retention, Privacy, and Export Controls
 **Date:** 2026-04-17 · **Commit:** [TBD]
 

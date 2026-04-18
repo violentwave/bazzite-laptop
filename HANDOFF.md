@@ -14,12 +14,25 @@ Project truth model:
 - **Last Updated:** 2026-04-17
 - **Project:** bazzite-laptop
 - **Branch:** master
-- **Completed Phases:** P119, P120, P121, P122, P123, P124, P125, P126, P127, P128, P129, P130, P131, P132, P133, P134, P135, P136
+- **Completed Phases:** P119, P120, P121, P122, P123, P124, P125, P126, P127, P128, P129, P130, P131, P132, P133, P134, P135, P136, P137
 - **Active Phase:** None
-- **Next Gated Phase:** P137 — see Notion phase row
+- **Next Gated Phase:** P138 — see Notion phase row
 - **Phase Truth:** Notion Bazzite Phases database (primary)
 - **Validation State:** P135 integration governance implemented with default-deny policy, scope requirements, redaction, and audit linkage
 - **Current SHA:** [TBD]
+
+## Recent Session — 2026-04-17 (P137)
+
+- Implemented deployment profiles with three modes: local-only, security-autopilot, agent-workbench.
+- Added ai/deployment_profiles.py with validation checks, fail-closed behavior.
+- Added tests/test_deployment_profiles.py (21 tests all pass).
+- Added docs/deploy/profiles.md with startup/shutdown/troubleshooting docs.
+- Validation passed:
+  - ruff check scripts/ ai/ tests/ (pass)
+  - pytest tests/test_deployment_profiles.py -q (21 passed)
+  - cd ui && npm run build (pass)
+- No secrets exposed in validation output (key presence shows "configured" only)
+- Fail-closed on missing critical dependencies
 
 ## Recent Session — 2026-04-17 (P136)
 
