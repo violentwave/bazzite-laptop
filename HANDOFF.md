@@ -14,17 +14,30 @@ Project truth model:
 - **Last Updated:** 2026-04-17
 - **Project:** bazzite-laptop
 - **Branch:** master
-- **Completed Phases:** P119, P120, P121, P122, P123, P124, P125, P126, P127, P128, P129, P130, P131, P132, P133
+- **Completed Phases:** P119, P120, P121, P122, P123, P124, P125, P126, P127, P128, P129, P130, P131, P132, P133, P134
 - **Active Phase:** None
-- **Next Gated Phase:** P134 — see Notion phase row
+- **Next Gated Phase:** P135 — see Notion phase row
 - **Phase Truth:** Notion Bazzite Phases database (primary)
-- **Validation State:** P132 human-in-the-loop runbooks added with machine-readable workflow metadata, explicit approval/escalation semantics, and validation pass
-- **Current SHA:** f4a578b
+- **Validation State:** P134 self-healing control plane implemented with detection checks, fixed repair actions, policy gating, approval requirements, and cooldown/no-loop behavior
+- **Current SHA:** 81daf2c
 
 ## Open Tasks
 
-- Repo/Notion reconciliation preflight complete for P131-P133.
-- P134 remains Planned without implementation per user scope boundary.
+- None — P134 validation passed
+
+## Recent Session — 2026-04-17 (P134)
+
+- Implemented `ai/self_healing.py` with detection checks and fixed allowlisted repair actions.
+- Added detection checks: service_health, timer_health, provider_health, llm_status.
+- Added repair actions: probe_health, retry_timer_check, retry_provider_discovery, request_llm_proxy_restart, request_mcp_bridge_restart.
+- Added cooldown/no-loop prevention (60+ second cooldowns).
+- Added approval gating for high-risk/destructive actions (restart requires approval).
+- Added degradation state visibility in decision payloads.
+- Added redaction for secrets and sensitive paths.
+- Added `tests/test_self_healing.py` (30 tests).
+- Validation passed:
+  - `.venv/bin/python -m pytest tests/test_self_healing.py -q` (30 passed)
+  - `ruff check ai/ tests/` (pass)
 
 ## Recent Session — 2026-04-17 (P133)
 

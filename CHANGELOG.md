@@ -4,6 +4,40 @@ All significant changes. Format: date · deliverables · deltas · commit.
 
 ---
 
+## Phase 134 — Self-healing Control Plane
+**Date:** 2026-04-17 · **Commit:** 81daf2c
+
+**Deliverables:**
+- Added `ai/self_healing.py` with detection checks for service health, timers, providers, LLM status
+- Added fixed allowlisted repair actions: probe_health, retry_timer_check, retry_provider_discovery
+- Added approval-gated repair actions: request_llm_proxy_restart, request_mcp_bridge_restart
+- Added cooldown/no-loop prevention (60+ second cooldowns)
+- Added policy gating for all actions
+- Added degraded state visibility in decision payloads
+- Added redaction for secrets and sensitive paths
+- Added `tests/test_self_healing.py` with 30 tests
+
+**Validation:**
+- `.venv/bin/python -m pytest tests/test_self_healing.py -q` — 30 passed
+- `ruff check ai/ tests/` — pass
+
+**Artifacts:**
+- `ai/self_healing.py`
+- `tests/test_self_healing.py`
+- `docs/P134_PLAN.md`
+- `docs/evidence/p134/validation.md`
+
+**Safety Proofs:**
+- No arbitrary shell — all actions fixed-name to existing MCP tools
+- No uncontrolled loops — cooldown prevents rapid retry
+- Destructive requires approval — restart blocked without explicit approval
+- Degraded state visible — explain_decision includes degraded_state_visible
+- Audit/evidence — state persists to disk with cooldowns
+
+**Result:** PASS — Self-healing control plane implemented with detection, fixed actions, policy gating, approval requirements, and loop prevention.
+
+---
+
 ## Phase 133 — Memory, Artifact, and Provenance Graph
 **Date:** 2026-04-17 · **Commit:** f4a578b
 

@@ -1,6 +1,6 @@
 # Phase Index — Bazzite AI Layer
 
-> Master index of repo-tracked phases through P133.
+> Master index of repo-tracked phases through P134.
 > Updated 2026-04-17.
 > Source of truth: Notion `Bazzite Phases` database + `git log`; Notion row properties are authoritative when repo docs lag.
 > Note: references to legacy assistant/tray surfaces are historical phase records, not active runtime guidance.
@@ -172,6 +172,7 @@
 | P131 | Routing Evaluation and Replay Lab | Done | 661d3a8 | 2026-04-17 | ai/routing_replay.py, docs/routing_replay/*, tests/test_routing_replay.py, docs/evidence/p131/validation.md | Notion row | Added deterministic replay fixtures and explanation payloads comparing routing across health/cost/latency/task type/failover and P130 budget constraints |
 | P132 | Human-in-the-loop Orchestration Runbooks | Done | f266c4b | 2026-04-17 | docs/runbooks/*, docs/runbooks/workflows/*, ai/workflows/runbooks.py, tests/test_runbooks.py, tests/test_workflow_runbooks.py, docs/evidence/p132/validation.md | Notion row | Added explicit high-risk operator runbooks, machine-readable workflow metadata, and truthful manual-step/approval-state surfacing via workflow handlers |
 | P133 | Memory, Artifact, and Provenance Graph | Done | f4a578b | 2026-04-17 | ai/provenance.py, ai/security_autopilot/executor.py, ai/agent_workbench/handoff.py, ai/mcp_bridge/tools.py, configs/mcp-bridge-allowlist.yaml, tests/test_provenance_graph.py, docs/P133_PLAN.md, docs/evidence/p133/validation.md | Notion row | Added scoped provenance graph linking incidents, evidence, actions, sessions, diffs, tests, artifacts, memory, and phase records with attribution and redaction |
+| P134 | Self-healing Control Plane | Done | 81daf2c | 2026-04-17 | ai/self_healing.py, tests/test_self_healing.py, docs/P134_PLAN.md, docs/evidence/p134/validation.md | Notion row | Added detection checks for service health/timers/providers/LLM, fixed allowlisted repair actions, policy gating, approval-gated restart, cooldown/no-loop prevention, and degradation state visibility |
 
 ## Notion Database Reference
 
