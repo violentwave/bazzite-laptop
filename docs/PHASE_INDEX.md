@@ -1,6 +1,6 @@
 # Phase Index — Bazzite AI Layer
 
-> Master index of repo-tracked phases through P144.
+> Master index of repo-tracked phases through P145.
 > Updated 2026-04-18.
 > Source of truth: Notion `Bazzite Phases` database + `git log`; Notion row properties are authoritative when repo docs lag.
 > Note: references to legacy assistant/tray surfaces are historical phase records, not active runtime guidance.
@@ -9,10 +9,10 @@
 
 | Metric | Value |
 |--------|-------|
-| Total Phases Tracked | P0-P144 tracked in repo index |
-| Completed | P0-P143 complete in current repo-ledger terms |
-| Active | P144 (Home Dashboard redesign implementation) |
-| Next Gated | P145 — (see P143 implementation map) |
+| Total Phases Tracked | P0-P145 tracked in repo index |
+| Completed | P0-P145 complete in current repo-ledger terms |
+| Active | P145 (Chat Workspace and thread rail redesign closeout) |
+| Next Gated | P146 — (see P143 implementation map) |
 | Historical Truth Conflict | P80 remains a repo-vs-Notion reconciliation note for later cleanup |
 | Repo Docs | docs/*.md, docs/patterns/frontend/*.md, docs/frontend-capability-pack/*.md |
 | Notion DB | `398c13ed-47f6-4f7e-9e54-eb339b462c90` |
@@ -183,6 +183,7 @@
 | P142 | Console Asset Loading and Runtime Stability Fix | In Progress | pending | pending | ui/scripts/dev-stable.mjs, scripts/start-console-ui.sh, ui/next.config.ts, ui/src/lib/mcp-client.ts, ui/src/hooks/useChat.ts, ui/src/lib/thread-store.js, docs/evidence/p142/validation.md, docs/evidence/p142/screenshots/* | Notion row `346f793e-df7b-8031-a3ab-cb048203415d` | White-shell regression mitigated and happy-path evidence refreshed; awaiting final Notion row reconciliation before Done |
 | P143 | Adaptive Minimalist UI Redesign Spec | Done | pending | 2026-04-18 | docs/P143_UI_REDESIGN_SPEC.md, docs/P143_WIDGET_CATALOG.md, docs/P143_UI_IMPLEMENTATION_MAP.md | Notion row | Spec-only phase; source of truth for P144-P146 implementation |
 | P144 | Home Dashboard Redesign Implementation | Done | pending | 2026-04-18 | ui/src/components/home/HomeContainer.tsx, ui/src/components/home/widgets/*, docs/evidence/p144/* | Notion row | Rebuilt Home to widget-based preset-driven layout with live project/thread/runtime/security data and add/remove widget flow |
+| P145 | Chat Workspace and Thread Rail Redesign | Done | pending | 2026-04-18 | ui/src/components/chat/{ChatContainer,ThreadSidebar,ChatMessage,ChatInput}.tsx, ui/src/lib/console-simplify.js, docs/evidence/p145/* | Notion row `346f793e-df7b-81d7-bae2-c9972d936c87` | Implemented calmer chat workspace, compact truthful runtime strip, progressive diagnostics, professional thread rail grouping, and polished archive/restore/merge/bulk flows |
 
 ## Notion Database Reference
 

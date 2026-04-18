@@ -4,6 +4,32 @@ All significant changes. Format: date · deliverables · deltas · commit.
 
 ---
 
+## Phase 145 — Chat Workspace and Thread Rail Redesign
+**Date:** 2026-04-18 · **Commit:** pending
+
+**Deliverables:**
+- Redesigned `Chat Workspace` around calmer hierarchy with a compact truthful runtime strip and progressive disclosure for diagnostics and advanced controls.
+- Reworked `ThreadSidebar` into a professional navigator with explicit `Active` and `Archived` views, cleaner row metadata, reduced duplication, and clearer project/folder context.
+- Preserved and polished operator flows: archive/restore, merge, move, rename, and bulk actions.
+- Preserved truth surfaces from P140-P142: runtime binding/project state consistency, local archive history visibility, and merge chronology behavior.
+- Refined message/composer presentation in `ChatMessage` and `ChatInput` without introducing backend/runtime/account changes.
+
+**Validation:**
+- `cd ui && npx tsc --noEmit` — pass
+- `cd ui && npm run build` — pass
+- `git diff --check` — pass
+
+**Evidence:**
+- `docs/evidence/p145/chat-happy-path.png`
+- `docs/evidence/p145/thread-rail-final.png`
+- `docs/evidence/p145/archive-restore-flow.png`
+- `docs/evidence/p145/merge-modal-final.png`
+- `docs/evidence/p145/bulk-actions-final.png`
+- `docs/evidence/p145/runtime-strip-final.png`
+- `docs/evidence/p145/diagnostics-collapsed-vs-expanded.png`
+- `docs/evidence/p145/project-bound-chat-state.png`
+- `docs/evidence/p145/validation.md`
+
 ## Phase 144 — Home Dashboard Redesign Implementation
 **Date:** 2026-04-18 · **Commit:** pending
 

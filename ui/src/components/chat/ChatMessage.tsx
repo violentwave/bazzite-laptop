@@ -36,9 +36,10 @@ function UserMessage({ message }: { message: Message }) {
   return (
     <div className="flex justify-end mb-4 motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-right-2 motion-safe:duration-200">
       <div
-        className="max-w-[80%] rounded-2xl rounded-tr-sm px-4 py-3"
+        className="max-w-[80%] rounded-2xl rounded-tr-sm px-4 py-3 border"
         style={{
-          background: 'var(--base-03)',
+          background: 'var(--base-02)',
+          borderColor: 'var(--base-04)',
           color: 'var(--text-primary)',
         }}
       >
@@ -95,9 +96,10 @@ function AssistantMessage({
   return (
     <div className="flex justify-start mb-4 motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-left-2 motion-safe:duration-200">
       <div
-        className="max-w-[90%] rounded-lg pl-4 py-2"
+        className="max-w-[90%] rounded-xl px-4 py-3 border"
         style={{
-          borderLeft: '3px solid var(--accent-primary)',
+          borderColor: 'var(--base-04)',
+          background: 'var(--base-01)',
           color: 'var(--text-primary)',
         }}
       >

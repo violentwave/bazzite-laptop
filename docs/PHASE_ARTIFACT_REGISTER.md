@@ -24,9 +24,9 @@
 
 | Category | Current State |
 |----------|---------------|
-| Current completed Security Autopilot + Workbench phases | `P119` through `P144` |
+| Current completed Security Autopilot + Workbench phases | `P119` through `P145` |
 | Current active phase | `P145 — Chat Workspace and Thread Rail Redesign` |
-| Next gated phase | `P145 — see P143 implementation map` |
+| Next gated phase | `P146 — Workspace Personalization and Preset Persistence` |
 | Primary phase truth | Notion `Bazzite Phases` row properties |
 | Lightweight session truth | `HANDOFF.md` |
 | Standing agent rules | `docs/AGENT.md` |
@@ -724,6 +724,20 @@ The repo has complete historical coverage across the earlier tranches, but older
 | Widgets | `ui/src/components/home/widgets/*` | Active Project, Recent Threads, Services Status, Quick Actions, Security Snapshot, Activity Feed |
 | Evidence | `docs/evidence/p144/*.png` | Home happy path, add/remove flow, preset states, active project flow |
 
+### P145 — Chat Workspace and Thread Rail Redesign
+- **Status**: Done
+- **Finished**: 2026-04-18
+- **Commit SHA**: pending
+
+| Type | Path | Description |
+|------|------|-------------|
+| UI Surface | `ui/src/components/chat/ChatContainer.tsx` | Redesigned chat workspace shell with compact truthful runtime strip and progressive diagnostics/advanced controls |
+| Thread Navigator | `ui/src/components/chat/ThreadSidebar.tsx` | Professional rail grouping, active/archived views, cleaner row metadata, and polished archive/restore/merge/bulk flows |
+| Message + Composer Polish | `ui/src/components/chat/{ChatMessage,ChatInput}.tsx` | Calmer message and composer presentation while preserving runtime truth behaviors |
+| Runtime Helper | `ui/src/lib/console-simplify.js` | Updated runtime strip wording/state labels for concise truthful presentation |
+| Evidence | `docs/evidence/p145/*.png` | Chat happy path, thread rail final, archive/restore, merge, bulk actions, runtime strip, diagnostics state, project-bound state |
+| Validation | `docs/evidence/p145/validation.md` | P145 scope execution log, validation commands, and done-criteria check |
+
 ### P142 — Console Asset Loading and Runtime Stability Fix (Notes)
 - **Runtime Script**: `ui/scripts/dev-stable.mjs` (Clears stale Turbopack chunk caches)
 - **Config**: `ui/next.config.ts` (Disables Turbopack cache restore; Allows dev-origin hostnames)
@@ -761,7 +775,7 @@ The repo has complete historical coverage across the earlier tranches, but older
 3. P80 remains a repo-vs-Notion truth reconciliation note for future cleanup.
 4. P141 is complete with refreshed canonical evidence and Notion row reconciled to Done.
 5. P142 resolves dev asset loading instability caused by stale Turbopack chunk/cache state and blocked dev-origin HMR resources.
-6. P144 completed Home redesign implementation and evidence capture; P145 is the next implementation phase.
+6. P145 completed Chat Workspace and thread rail redesign implementation and evidence capture; P146 is the next implementation phase.
 
 ## Cross-References
 

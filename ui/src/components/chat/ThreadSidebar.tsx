@@ -31,12 +31,17 @@ interface ThreadSidebarProps {
   onToggleBulkSelectMode?: () => void;
   onToggleThreadSelection?: (threadId: string) => void;
   onClearThreadSelection?: () => void;
-  onMergeThreads?: (threadIdsToMerge: string[], newTitle: string, mergePolicy: { projectId?: string; folderPath?: string; archiveOriginals: boolean }) => Promise<string | null>;
+  onMergeThreads?: (
+    threadIdsToMerge: string[],
+    newTitle: string,
+    mergePolicy: { projectId?: string; folderPath?: string; archiveOriginals: boolean }
+  ) => Promise<string | null>;
   onMoveSelectedThreadsToProject?: (projectId: string, folderPath?: string) => void;
   onArchiveSelectedThreads?: () => void;
 }
 
 type ThreadAction = "rename" | "move" | "archive" | "restore" | "delete";
+type RailView = "active" | "archived";
 
 export function ThreadSidebar({
   threads,
@@ -64,6 +69,7 @@ export function ThreadSidebar({
   onMoveSelectedThreadsToProject,
   onArchiveSelectedThreads,
 }: ThreadSidebarProps) {
+  const [activeView, setActiveView] = useState<RailView>("active");
   const [activeMenuThreadId, setActiveMenuThreadId] = useState<string | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showRenameModal, setShowRenameModal] = useState(false);
@@ -162,46 +168,66 @@ export function ThreadSidebar({
 
     return (
       <div
-        className="group px-3 py-2 rounded-lg transition-colors relative"
-        style={{ background: isActive || isSelected ? "var(--base-03)" : "transparent" }}
+        className="group px-3 py-2.5 rounded-xl transition-colors relative border"
+        style={{
+          background: isActive || isSelected ? "var(--base-03)" : "transparent",
+          borderColor: isActive || isSelected ? "var(--base-04)" : "transparent",
+        }}
       >
-        <div className="flex items-center gap-2">
+        <div className="flex items-start gap-2">
           {isBulkSelectMode && onToggleThreadSelection && (
             <input
               type="checkbox"
               checked={isSelected}
               onChange={() => onToggleThreadSelection(thread.id)}
-              className="mr-1"
+              className="mt-1"
             />
           )}
           {!isBulkSelectMode && (
             <button
               onClick={() => onTogglePin(thread.id)}
-              className={`shrink-0 p-1 rounded transition-colors ${thread.isPinned ? "text-accent-primary" : "text-tertiary"}`}
+              className={`shrink-0 p-1 mt-0.5 rounded transition-colors ${thread.isPinned ? "text-accent-primary" : "text-tertiary"}`}
               title={thread.isPinned ? "Unpin" : "Pin"}
             >
               <PinIcon isPinned={thread.isPinned} />
             </button>
           )}
 
-          <button onClick={() => onSelectThread(thread.id)} className="flex-1 min-w-0 text-left" title={thread.title} disabled={isBulkSelectMode}>
+          <button
+            onClick={() => onSelectThread(thread.id)}
+            className="flex-1 min-w-0 text-left"
+            title={thread.title}
+            disabled={isBulkSelectMode}
+          >
             <div className="text-sm font-medium truncate flex items-center gap-1" style={{ color: "var(--text-primary)" }}>
               {thread.title}
-              {thread.isMerged && (
-                <span className="text-[10px] px-1.5 py-0.5 rounded" style={{ background: 'var(--base-04)', color: 'var(--text-secondary)' }}>Merged</span>
-              )}
             </div>
-            {(thread.projectId || thread.folderPath) && (
-              <div className="text-[11px] truncate" style={{ color: "var(--text-tertiary)" }}>
-                {projectLabel}
-                {thread.folderPath ? ` / ${thread.folderPath}` : ""}
-              </div>
-            )}
+            <div className="mt-1 text-[11px] truncate" style={{ color: "var(--text-tertiary)" }}>
+              {projectLabel}
+              {thread.folderPath ? ` / ${thread.folderPath}` : ""}
+            </div>
+            <div className="mt-1.5 flex items-center gap-1.5">
+              {thread.isMerged && (
+                <span
+                  className="text-[10px] px-1.5 py-0.5 rounded"
+                  style={{ background: "var(--base-04)", color: "var(--text-secondary)" }}
+                >
+                  Merged
+                </span>
+              )}
+              {thread.isArchived && (
+                <span
+                  className="text-[10px] px-1.5 py-0.5 rounded"
+                  style={{ background: "rgba(245, 158, 11, 0.12)", color: "var(--warning)" }}
+                >
+                  Archived
+                </span>
+              )}
+              <span className="text-[10px]" style={{ color: "var(--text-tertiary)" }}>
+                {formatDate(thread.updatedAt)}
+              </span>
+            </div>
           </button>
-
-          <span className="text-xs shrink-0" style={{ color: "var(--text-tertiary)" }}>
-            {formatDate(thread.updatedAt)}
-          </span>
 
           {!isBulkSelectMode && (
             <div className="relative">
@@ -220,7 +246,7 @@ export function ThreadSidebar({
               {activeMenuThreadId === thread.id && (
                 <div
                   ref={menuRef}
-                  className="absolute right-0 top-8 z-30 min-w-[132px] rounded-lg py-1"
+                  className="absolute right-0 top-8 z-30 min-w-[152px] rounded-lg py-1"
                   style={{
                     background: "var(--base-01)",
                     border: "1px solid var(--base-04)",
@@ -230,7 +256,7 @@ export function ThreadSidebar({
                   {getThreadActionItems(thread).map((action) => (
                     <button
                       key={action.id}
-                      onClick={() => runThreadAction(thread, action.id)}
+                      onClick={() => runThreadAction(thread, action.id as ThreadAction)}
                       className="w-full text-left px-3 py-1.5 text-xs transition-colors hover:bg-base-02"
                       style={{
                         color:
@@ -253,20 +279,22 @@ export function ThreadSidebar({
     );
   };
 
+  const activeCount = threads.length - archivedThreads.length;
+
   return (
     <div
-      className="h-full flex flex-col w-80 shrink-0"
+      className="h-full flex flex-col w-[22rem] shrink-0"
       style={{ background: "var(--base-01)", borderRight: "1px solid var(--base-04)" }}
     >
       <div className="flex items-center justify-between px-4 py-3 border-b" style={{ borderColor: "var(--base-04)" }}>
-        <h3 className="text-sm font-medium" style={{ color: "var(--text-primary)" }}>
-          Threads
+        <h3 className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>
+          Thread Rail
         </h3>
         <div className="flex items-center gap-1">
           {onToggleBulkSelectMode && (
             <button
               onClick={onToggleBulkSelectMode}
-              className={`text-[10px] px-1.5 py-1 rounded transition-colors mr-1 ${isBulkSelectMode ? 'bg-accent-primary text-white' : 'hover:bg-base-03 text-secondary'}`}
+              className={`text-[11px] px-2 py-1 rounded transition-colors ${isBulkSelectMode ? "bg-accent-primary text-white" : "hover:bg-base-03 text-secondary"}`}
               style={!isBulkSelectMode ? { color: "var(--text-secondary)", border: "1px solid var(--base-04)" } : undefined}
               title={isBulkSelectMode ? "Cancel bulk select" : "Bulk select"}
             >
@@ -298,67 +326,98 @@ export function ThreadSidebar({
         className="px-4 py-2 text-xs border-b"
         style={{ color: "var(--text-tertiary)", borderColor: "var(--base-04)", background: "var(--base-02)" }}
       >
-        <span className="flex items-center gap-1">
-          <span className="w-1.5 h-1.5 rounded-full bg-warning" />
-          Local only
-        </span>
+        Local-first storage · archive and restore remain explicit.
+      </div>
+
+      <div className="px-3 py-2 border-b flex items-center gap-2" style={{ borderColor: "var(--base-04)" }}>
+        <button
+          onClick={() => setActiveView("active")}
+          className="text-xs px-2 py-1 rounded"
+          style={{
+            background: activeView === "active" ? "var(--base-04)" : "transparent",
+            color: activeView === "active" ? "var(--text-primary)" : "var(--text-secondary)",
+            border: "1px solid var(--base-04)",
+          }}
+        >
+          Active ({activeCount})
+        </button>
+        <button
+          onClick={() => setActiveView("archived")}
+          className="text-xs px-2 py-1 rounded"
+          style={{
+            background: activeView === "archived" ? "var(--base-04)" : "transparent",
+            color: activeView === "archived" ? "var(--text-primary)" : "var(--text-secondary)",
+            border: "1px solid var(--base-04)",
+          }}
+        >
+          Archived ({archivedThreads.length})
+        </button>
       </div>
 
       <div className="flex-1 overflow-y-auto py-2 space-y-4">
-        {pinnedThreads.length > 0 && (
-          <section>
-            <div className="px-4 py-1 text-xs font-medium uppercase" style={{ color: "var(--text-tertiary)" }}>
-              Pinned (Priority)
-            </div>
-            {pinnedThreads.map((thread) => (
-              <ThreadItem key={thread.id} thread={thread} />
-            ))}
-          </section>
-        )}
-
-        {recentThreads.length > 0 && (
-          <section>
-            <div className="px-4 py-1 text-xs font-medium uppercase" style={{ color: "var(--text-tertiary)" }}>
-              Recent (Latest)
-            </div>
-            {recentThreads.map((thread) => (
-              <ThreadItem key={thread.id} thread={thread} />
-            ))}
-          </section>
-        )}
-
-        {groupedThreadsByProject.length > 0 && (
-          <section>
-            <div className="px-4 py-1 text-xs font-medium uppercase" style={{ color: "var(--text-tertiary)" }}>
-              By Project (Remaining)
-            </div>
-            <div className="px-4 pb-1 text-[11px]" style={{ color: "var(--text-tertiary)" }}>
-              Threads already shown in Pinned/Recent are omitted here.
-            </div>
-            {groupedThreadsByProject.map((group) => (
-              <div key={group.projectId || "unassigned"} className="mb-3">
-                <div className="px-4 py-1 text-[11px] font-medium" style={{ color: "var(--text-secondary)" }}>
-                  {group.projectName}
+        {activeView === "active" && (
+          <>
+            {pinnedThreads.length > 0 && (
+              <section>
+                <div className="px-4 py-1 text-[11px] font-medium uppercase" style={{ color: "var(--text-tertiary)" }}>
+                  Pinned
                 </div>
-                {group.threads.map((thread) => (
+                {pinnedThreads.map((thread) => (
                   <ThreadItem key={thread.id} thread={thread} />
                 ))}
-              </div>
-            ))}
-          </section>
+              </section>
+            )}
+
+            {recentThreads.length > 0 && (
+              <section>
+                <div className="px-4 py-1 text-[11px] font-medium uppercase" style={{ color: "var(--text-tertiary)" }}>
+                  Recent
+                </div>
+                {recentThreads.map((thread) => (
+                  <ThreadItem key={thread.id} thread={thread} />
+                ))}
+              </section>
+            )}
+
+            {groupedThreadsByProject.length > 0 && (
+              <section>
+                <div className="px-4 py-1 text-[11px] font-medium uppercase" style={{ color: "var(--text-tertiary)" }}>
+                  By Project
+                </div>
+                <div className="px-4 pb-1 text-[11px]" style={{ color: "var(--text-tertiary)" }}>
+                  Threads already shown in pinned/recent are omitted.
+                </div>
+                {groupedThreadsByProject.map((group) => (
+                  <div key={group.projectId || "unassigned"} className="mb-3">
+                    <div className="px-4 py-1 text-[11px] font-medium" style={{ color: "var(--text-secondary)" }}>
+                      {group.projectName}
+                    </div>
+                    {group.threads.map((thread) => (
+                      <ThreadItem key={thread.id} thread={thread} />
+                    ))}
+                  </div>
+                ))}
+              </section>
+            )}
+          </>
         )}
 
-        {archivedThreads.length > 0 && (
+        {activeView === "archived" && (
           <section>
-            <div className="px-4 py-1 text-xs font-medium uppercase" style={{ color: "var(--text-tertiary)" }}>
-              Archived
+            <div className="px-4 py-1 text-[11px] font-medium uppercase" style={{ color: "var(--text-tertiary)" }}>
+              Archived Threads
             </div>
-            <div className="px-4 pb-1 text-[11px]" style={{ color: "var(--text-tertiary)" }}>
-              Hidden from active lists. Use thread actions to Restore to bring a thread back.
+            <div className="px-4 pb-2 text-[11px]" style={{ color: "var(--text-tertiary)" }}>
+              Archived threads are hidden from active lists. Use the thread menu to restore.
             </div>
             {archivedThreads.map((thread) => (
               <ThreadItem key={thread.id} thread={thread} />
             ))}
+            {archivedThreads.length === 0 && (
+              <div className="px-4 py-6 text-sm" style={{ color: "var(--text-tertiary)" }}>
+                No archived threads.
+              </div>
+            )}
           </section>
         )}
 
@@ -414,11 +473,18 @@ export function ThreadSidebar({
               className="text-xs px-2 py-1 rounded disabled:opacity-50"
               style={{ background: "var(--base-03)", color: "var(--warning)", border: "1px solid var(--base-04)" }}
             >
-              Archive to Archived
+              Archive
+            </button>
+            <button
+              onClick={onClearThreadSelection}
+              className="text-xs px-2 py-1 rounded"
+              style={{ background: "var(--base-01)", color: "var(--text-secondary)", border: "1px solid var(--base-04)" }}
+            >
+              Clear
             </button>
           </div>
           <div className="text-[11px]" style={{ color: "var(--text-tertiary)" }}>
-            Archived threads move to the Archived section and can be restored from thread actions.
+            Merging preserves chronology. Archive keeps originals for restore/history.
           </div>
         </div>
       ) : (
@@ -428,7 +494,7 @@ export function ThreadSidebar({
       )}
 
       {showCreateModal && (
-        <ModalFrame title="Create Thread" onClose={() => setShowCreateModal(false)}>
+        <ModalFrame title="Create thread" onClose={() => setShowCreateModal(false)}>
           <input
             value={newThreadTitle}
             onChange={(event) => setNewThreadTitle(event.target.value)}
@@ -495,7 +561,7 @@ export function ThreadSidebar({
       )}
 
       {showRenameModal && selectedThread && (
-        <ModalFrame title="Rename Thread" onClose={() => setShowRenameModal(false)}>
+        <ModalFrame title="Rename thread" onClose={() => setShowRenameModal(false)}>
           <input
             value={renameDraft}
             onChange={(event) => setRenameDraft(event.target.value)}
@@ -528,7 +594,7 @@ export function ThreadSidebar({
       )}
 
       {showMoveModal && (selectedThread || isBulkSelectMode) && (
-        <ModalFrame title="Move Thread(s)" onClose={() => setShowMoveModal(false)}>
+        <ModalFrame title="Move thread(s)" onClose={() => setShowMoveModal(false)}>
           <select
             value={moveProjectId}
             onChange={(event) => setMoveProjectId(event.target.value)}
@@ -577,7 +643,7 @@ export function ThreadSidebar({
       )}
 
       {showDeleteModal && selectedThread && (
-        <ModalFrame title="Delete Thread" onClose={() => setShowDeleteModal(false)}>
+        <ModalFrame title="Delete thread" onClose={() => setShowDeleteModal(false)}>
           <p className="text-xs" style={{ color: "var(--text-secondary)" }}>
             Delete local thread "{selectedThread.title}"?
           </p>
@@ -604,10 +670,10 @@ export function ThreadSidebar({
       )}
 
       {showMergeModal && (
-        <ModalFrame title="Merge Threads" onClose={() => setShowMergeModal(false)}>
+        <ModalFrame title="Merge threads" onClose={() => setShowMergeModal(false)}>
           <div className="flex flex-col gap-2">
             <p className="text-xs" style={{ color: "var(--text-secondary)" }}>
-              Merge {selectedThreadIds?.length || 0} threads into a single chronological thread.
+              Merge {selectedThreadIds?.length || 0} threads into one chronological thread.
             </p>
             <input
               value={mergeTitle}
@@ -642,8 +708,11 @@ export function ThreadSidebar({
                 checked={mergeArchiveOriginals}
                 onChange={(event) => setMergeArchiveOriginals(event.target.checked)}
               />
-              Archive original threads to Archived
+              Archive original threads after merge
             </label>
+            <div className="text-[11px]" style={{ color: "var(--text-tertiary)" }}>
+              Archive keeps originals in history and enables restore.
+            </div>
             <div className="flex gap-2 mt-3">
               <button
                 onClick={async () => {
@@ -660,7 +729,7 @@ export function ThreadSidebar({
                 className="text-xs px-2 py-1 rounded"
                 style={{ background: "var(--accent-primary)", color: "white" }}
               >
-                Merge Threads
+                Merge threads
               </button>
               <button
                 onClick={() => setShowMergeModal(false)}
@@ -688,12 +757,12 @@ function ModalFrame({
 }) {
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
+      if (event.key === "Escape") {
         onClose();
       }
     };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
   }, [onClose]);
 
   return (

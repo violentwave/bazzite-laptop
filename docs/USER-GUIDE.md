@@ -41,8 +41,9 @@ Expected: both endpoints return `status: ok`.
 - `Home Dashboard`: operator entry surface (project select/create, recent threads, health/security/runtime widgets, quick navigation) with Guided/Standard/Expert presets.
 - Home widgets are customizable in-session via `Add Widget` and per-widget `Remove` controls; `Reset Layout` restores the selected preset default.
 - `Chat Workspace`: active execution surface (bound provider/model/mode/project, operator actions, tool traces, degraded-state visibility).
-- Thread organization (rename/move/archive/project assignment) is managed from the Threads sidebar inside Chat Workspace.
-- Thread sections are intentional views: `Pinned (Priority)` and `Recent (Latest)` are highlight views, while `By Project (Remaining)` excludes already-highlighted items to avoid duplicate rows.
+- Chat header is summary-first: current thread + project context, compact runtime strip, and collapsible diagnostics/advanced controls.
+- Thread organization (rename/move/archive/project assignment) is managed from the `Thread Rail` inside Chat Workspace.
+- Thread rail views are explicit: `Active` groups into pinned/recent/by-project, and `Archived` is a dedicated restore-focused view.
 - Thread bulk operations are local-first and explicit: enter `Select` mode in the Threads sidebar to merge, move, or archive multiple threads.
 - Thread merge is chronological and auditable: merged threads retain source IDs in message metadata and require explicit project choice for cross-project merges.
 - Archive destination is explicit: archived threads move to the `Archived` section in the Threads sidebar and return via thread actions `Restore`.

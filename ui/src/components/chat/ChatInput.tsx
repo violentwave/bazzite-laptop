@@ -145,7 +145,7 @@ export function ChatInput({
       <div
         className="rounded-xl border"
         style={{
-          background: 'var(--base-02)',
+          background: 'var(--base-01)',
           borderColor: isDragging ? 'var(--accent-primary)' : 'var(--base-04)',
         }}
       >
@@ -262,17 +262,17 @@ export function ChatInput({
         </div>
 
         {/* Footer */}
-        <div
-          className="flex items-center justify-between px-4 py-2 text-xs border-t"
-          style={{
-            borderColor: 'var(--base-04)',
-            color: 'var(--text-tertiary)',
-          }}
-        >
-          <div className="flex items-center gap-4">
-            <span>Shift + Enter for new line</span>
-            <span>Max file size: 10MB</span>
-          </div>
+          <div
+            className="flex items-center justify-between px-4 py-2 text-xs border-t"
+            style={{
+              borderColor: 'var(--base-04)',
+              color: 'var(--text-tertiary)',
+            }}
+          >
+            <div className="flex items-center gap-4">
+              <span>Shift + Enter for newline</span>
+              <span>Max file size 10MB</span>
+            </div>
           <div className="flex items-center gap-2">
             {isStreaming && (
               <span className="flex items-center gap-1 animate-pulse">

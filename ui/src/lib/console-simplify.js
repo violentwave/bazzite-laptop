@@ -68,7 +68,7 @@ export function buildRuntimeStrip({
       : bindingState === 'invalid'
         ? 'Invalid selection'
         : hasRuntimeSelection
-          ? 'Configured'
+          ? 'Ready'
           : 'Pending setup';
 
   const statusTone =
@@ -79,7 +79,7 @@ export function buildRuntimeStrip({
         : 'warning';
 
   return {
-    summary: `${provider} / ${model} / ${mode} / ${project}`,
+    summary: `${provider} · ${model} · ${mode} · ${project}`,
     location: currentLocationLabel || 'No active thread',
     status,
     statusTone,
